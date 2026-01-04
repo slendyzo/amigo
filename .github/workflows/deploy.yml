@@ -24,32 +24,57 @@ jobs:
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
+          command_timeout: 20m
+          script_stop: true
           script: |
-            cd ~/amigo
+            set -e
+
+            echo "=== Starting deployment ==="
+
+            cd ~/amigo || { echo "ERROR: ~/amigo directory not found"; exit 1; }
+            echo "Working directory: $(pwd)"
 
             # Pull latest code
-            git pull origin main
+            echo "=== Pulling latest code ==="
+            git fetch origin main
+            git reset --hard origin/main
+            echo "Current commit: $(git rev-parse HEAD)"
 
             # Set build info
             export BUILD_ID=$(git rev-parse --short HEAD)
             export BUILD_DATE=$(date +"%d %b %Y, %H:%M")
+            echo "Build ID: $BUILD_ID"
+            echo "Build Date: $BUILD_DATE"
 
             # Enable BuildKit for better caching
             export DOCKER_BUILDKIT=1
             export COMPOSE_DOCKER_CLI_BUILD=1
 
-            # Build with cache (don't stop the running container yet)
+            # Build with cache
+            echo "=== Building Docker image ==="
             docker compose build \
               --build-arg NEXT_PUBLIC_BUILD_ID=$BUILD_ID \
               --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE" \
-              --build-arg BUILDKIT_INLINE_CACHE=1
+              --build-arg BUILDKIT_INLINE_CACHE=1 \
+              --progress=plain 2>&1 | tail -50
 
-            # Quick restart (only ~2-3 seconds downtime)
+            # Quick restart
+            echo "=== Restarting container ==="
             docker compose up -d --force-recreate --no-build
 
-            # Clean up old images (keep last 2)
+            # Clean up old images
             docker image prune -f
 
             # Show status
+            echo "=== Deployment complete ==="
             echo "Deployed build: $BUILD_ID @ $BUILD_DATE"
             docker compose ps
+
+            # Verify the container is running
+            if docker compose ps | grep -q "Up"; then
+              echo "SUCCESS: Container is running"
+            else
+              echo "ERROR: Container failed to start"
+              docker compose logs --tail=20
+              exit 1
+            fi
