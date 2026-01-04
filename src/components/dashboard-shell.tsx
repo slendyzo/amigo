@@ -3,41 +3,42 @@
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import MobileNav from "./mobile-nav";
 import GlobalAddButton from "./global-add-button";
 import type { ReactNode } from "react";
 
-// Navigation grouped by section
+// Navigation grouped by section (keys for translation)
 const navigationGroups = [
   {
     items: [
-      { name: "Overview", href: "/dashboard", icon: "home" },
-      { name: "Expenses", href: "/dashboard/expenses", icon: "list" },
+      { key: "overview", href: "/dashboard", icon: "home" },
+      { key: "expenses", href: "/dashboard/expenses", icon: "list" },
     ],
   },
   {
     items: [
-      { name: "Incomes", href: "/dashboard/incomes", icon: "dollar" },
-      { name: "Recurring", href: "/dashboard/recurring", icon: "repeat" },
+      { key: "incomes", href: "/dashboard/incomes", icon: "dollar" },
+      { key: "recurring", href: "/dashboard/recurring", icon: "repeat" },
     ],
   },
   {
     items: [
-      { name: "Projects", href: "/dashboard/projects", icon: "folder" },
-      { name: "Categories", href: "/dashboard/categories", icon: "tag" },
-      { name: "Bank Accounts", href: "/dashboard/accounts", icon: "credit-card" },
+      { key: "projects", href: "/dashboard/projects", icon: "folder" },
+      { key: "categories", href: "/dashboard/categories", icon: "tag" },
+      { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
     ],
   },
   {
     items: [
-      { name: "Import", href: "/dashboard/import", icon: "upload" },
-      { name: "Import History", href: "/dashboard/imports", icon: "history" },
+      { key: "import", href: "/dashboard/import", icon: "upload" },
+      { key: "importHistory", href: "/dashboard/imports", icon: "history" },
     ],
   },
   {
     items: [
-      { name: "Mappings", href: "/dashboard/mappings", icon: "key" },
-      { name: "Settings", href: "/dashboard/settings", icon: "settings" },
+      { key: "mappings", href: "/dashboard/mappings", icon: "key" },
+      { key: "settings", href: "/dashboard/settings", icon: "settings" },
     ],
   },
 ];
@@ -108,6 +109,8 @@ interface DashboardShellProps {
 
 export default function DashboardShell({ children, userEmail }: DashboardShellProps) {
   const pathname = usePathname();
+  const t = useTranslations("nav");
+  const tCommon = useTranslations("common");
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
@@ -146,7 +149,7 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
                   const active = isActive(item.href);
                   return (
                     <Link
-                      key={item.name}
+                      key={item.key}
                       href={item.href}
                       className={`
                         flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
@@ -157,7 +160,7 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
                       `}
                     >
                       {icons[item.icon]}
-                      {item.name}
+                      {t(item.key)}
                     </Link>
                   );
                 })}
@@ -204,7 +207,7 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
               onClick={handleSignOut}
               className="text-sm text-slate-500 hover:text-slate-900 px-3 py-1.5 rounded-lg hover:bg-slate-100 transition-colors"
             >
-              Sign out
+              {t("signOut")}
             </button>
           </div>
         </header>

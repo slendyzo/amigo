@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 
 type Stats = {
   totalExpenses: number;
@@ -17,6 +18,7 @@ type Workspace = {
   name: string;
   monthlyBudget: number | null;
   defaultCurrency: string;
+  language: string;
 };
 
 type RecurringIncome = {
@@ -37,7 +39,15 @@ const CURRENCIES = [
   { code: "PLN", symbol: "zł", name: "Polish Zloty" },
 ];
 
+const LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "pt-PT", name: "Português (Portugal)" },
+  { code: "fr-FR", name: "Français (France)" },
+];
+
 export default function SettingsPage() {
+  const t = useTranslations("settings");
+  const tCommon = useTranslations("common");
   const [stats, setStats] = useState<Stats | null>(null);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [recurringIncomes, setRecurringIncomes] = useState<RecurringIncome[]>([]);
@@ -48,6 +58,7 @@ export default function SettingsPage() {
   // Budget form
   const [monthlyBudget, setMonthlyBudget] = useState("");
   const [currency, setCurrency] = useState("EUR");
+  const [language, setLanguage] = useState("en");
 
   // Salary form
   const [showSalaryModal, setShowSalaryModal] = useState(false);
@@ -84,6 +95,7 @@ export default function SettingsPage() {
         setWorkspace(data.workspace);
         setMonthlyBudget(data.workspace.monthlyBudget?.toString() || "");
         setCurrency(data.workspace.defaultCurrency || "EUR");
+        setLanguage(data.workspace.language || "en");
       }
 
       // Fetch expenses stats
@@ -158,19 +170,29 @@ export default function SettingsPage() {
         body: JSON.stringify({
           monthlyBudget,
           defaultCurrency: currency,
+          language,
         }),
       });
 
       if (response.ok) {
         const data = await response.json();
         setWorkspace(data.workspace);
-        setSaveMessage({ type: "success", text: "Budget settings saved!" });
+
+        // Update the locale cookie when language changes
+        document.cookie = `NEXT_LOCALE=${language}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`;
+
+        setSaveMessage({ type: "success", text: t("saved") });
         setTimeout(() => setSaveMessage(null), 3000);
+
+        // Refresh to apply new language
+        if (data.workspace.language !== workspace?.language) {
+          window.location.reload();
+        }
       } else {
         throw new Error("Failed to save");
       }
     } catch {
-      setSaveMessage({ type: "error", text: "Failed to save settings" });
+      setSaveMessage({ type: "error", text: t("saveFailed") });
     } finally {
       setIsSaving(false);
     }
@@ -309,38 +331,38 @@ export default function SettingsPage() {
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+        <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
         <p className="text-slate-500 text-sm mt-1">
-          Manage your budget, income, and preferences
+          {t("subtitle")}
         </p>
       </div>
 
       {/* Account Stats */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Account Overview</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t("accountOverview")}</h2>
         {isLoading ? (
-          <div className="text-slate-500">Loading...</div>
+          <div className="text-slate-500">{tCommon("loading")}</div>
         ) : stats ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-slate-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-slate-900">{stats.totalExpenses}</div>
-              <div className="text-sm text-slate-500">Total Expenses</div>
+              <div className="text-sm text-slate-500">{t("totalExpenses")}</div>
             </div>
             <div className="bg-slate-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-slate-900">
                 {getCurrencySymbol(currency)}{stats.totalAmount.toFixed(2)}
               </div>
-              <div className="text-sm text-slate-500">Total Spent</div>
+              <div className="text-sm text-slate-500">{t("totalSpent")}</div>
             </div>
             <div className="bg-slate-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-green-600">
                 {getCurrencySymbol(currency)}{stats.totalIncomeAmount.toFixed(2)}
               </div>
-              <div className="text-sm text-slate-500">Total Income</div>
+              <div className="text-sm text-slate-500">{t("totalIncome")}</div>
             </div>
             <div className="bg-slate-50 rounded-lg p-4">
               <div className="text-2xl font-bold text-slate-900">{stats.totalProjects}</div>
-              <div className="text-sm text-slate-500">Projects</div>
+              <div className="text-sm text-slate-500">{t("projects")}</div>
             </div>
           </div>
         ) : null}
@@ -348,16 +370,16 @@ export default function SettingsPage() {
 
       {/* Budget Settings */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">Budget & Currency</h2>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t("budgetAndCurrency")}</h2>
         <div className="space-y-4">
           {/* Monthly Budget */}
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Monthly Budget
+                {t("monthlyBudget")}
               </label>
               <p className="text-xs text-slate-500">
-                Set your target monthly spending limit
+                {t("monthlyBudgetDescription")}
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -376,10 +398,10 @@ export default function SettingsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center gap-4">
             <div className="flex-1">
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Default Currency
+                {t("currency")}
               </label>
               <p className="text-xs text-slate-500">
-                Used for displaying totals and new entries
+                {t("currencyDescription")}
               </p>
             </div>
             <select
@@ -390,6 +412,29 @@ export default function SettingsPage() {
               {CURRENCIES.map((c) => (
                 <option key={c.code} value={c.code}>
                   {c.symbol} {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Language */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                {t("language")}
+              </label>
+              <p className="text-xs text-slate-500">
+                {t("languageDescription")}
+              </p>
+            </div>
+            <select
+              value={language}
+              onChange={(e) => setLanguage(e.target.value)}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+            >
+              {LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  {l.name}
                 </option>
               ))}
             </select>
@@ -412,7 +457,7 @@ export default function SettingsPage() {
             disabled={isSaving}
             className="px-4 py-2 bg-[#0070f3] text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
           >
-            {isSaving ? "Saving..." : "Save Budget Settings"}
+            {isSaving ? tCommon("loading") : t("saveSettings")}
           </button>
         </div>
       </div>

@@ -135,6 +135,7 @@ model Workspace {
   // Budget settings
   monthlyBudget    Decimal? @db.Decimal(12, 2) // Target monthly spending limit
   defaultCurrency  String   @default("EUR")
+  language         String   @default("en") // User's preferred language (en, pt-PT, fr-FR)
 
   // Relations
   owner        User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)

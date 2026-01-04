@@ -3,28 +3,29 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, type ReactNode } from "react";
+import { useTranslations } from "next-intl";
 
 // Primary tabs for bottom navigation (most used features)
 const primaryTabs = [
-  { name: "Home", href: "/dashboard", icon: "home" },
-  { name: "Expenses", href: "/dashboard/expenses", icon: "list" },
-  { name: "Projects", href: "/dashboard/projects", icon: "folder" },
-  { name: "More", href: "#menu", icon: "menu", isAction: true },
+  { key: "home", href: "/dashboard", icon: "home" },
+  { key: "expenses", href: "/dashboard/expenses", icon: "list" },
+  { key: "projects", href: "/dashboard/projects", icon: "folder" },
+  { key: "more", href: "#menu", icon: "menu", isAction: true },
 ];
 
 // All navigation items for the drawer menu
 const allNavItems = [
-  { name: "Overview", href: "/dashboard", icon: "home" },
-  { name: "Expenses", href: "/dashboard/expenses", icon: "list" },
-  { name: "Incomes", href: "/dashboard/incomes", icon: "dollar" },
-  { name: "Recurring", href: "/dashboard/recurring", icon: "repeat" },
-  { name: "Projects", href: "/dashboard/projects", icon: "folder" },
-  { name: "Categories", href: "/dashboard/categories", icon: "tag" },
-  { name: "Mappings", href: "/dashboard/mappings", icon: "key" },
-  { name: "Bank Accounts", href: "/dashboard/accounts", icon: "credit-card" },
-  { name: "Import", href: "/dashboard/import", icon: "upload" },
-  { name: "Import History", href: "/dashboard/imports", icon: "history" },
-  { name: "Settings", href: "/dashboard/settings", icon: "settings" },
+  { key: "overview", href: "/dashboard", icon: "home" },
+  { key: "expenses", href: "/dashboard/expenses", icon: "list" },
+  { key: "incomes", href: "/dashboard/incomes", icon: "dollar" },
+  { key: "recurring", href: "/dashboard/recurring", icon: "repeat" },
+  { key: "projects", href: "/dashboard/projects", icon: "folder" },
+  { key: "categories", href: "/dashboard/categories", icon: "tag" },
+  { key: "mappings", href: "/dashboard/mappings", icon: "key" },
+  { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
+  { key: "import", href: "/dashboard/import", icon: "upload" },
+  { key: "importHistory", href: "/dashboard/imports", icon: "history" },
+  { key: "settings", href: "/dashboard/settings", icon: "settings" },
 ];
 
 const icons: Record<string, ReactNode> = {
@@ -110,6 +111,7 @@ interface MobileNavProps {
 export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNavProps) {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const t = useTranslations("nav");
 
   // Close menu on route change
   useEffect(() => {
@@ -126,7 +128,7 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
     return () => document.body.classList.remove("modal-open");
   }, [isMenuOpen]);
 
-  const handleTabClick = (item: typeof primaryTabs[0], e: React.MouseEvent) => {
+  const handleTabClick = (item: (typeof primaryTabs)[0], e: React.MouseEvent) => {
     if (item.isAction) {
       e.preventDefault();
       if (item.href === "#menu") {
@@ -166,19 +168,19 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
             if (item.isAction) {
               return (
                 <button
-                  key={item.name}
+                  key={item.key}
                   onClick={(e) => handleTabClick(item, e)}
                   className="flex flex-col items-center justify-center w-16 h-full tap-none transition-colors text-slate-500 active:text-slate-900"
                 >
                   {icons[item.icon]}
-                  <span className="text-xs mt-0.5">{item.name}</span>
+                  <span className="text-xs mt-0.5">{t(item.key)}</span>
                 </button>
               );
             }
 
             return (
               <Link
-                key={item.name}
+                key={item.key}
                 href={item.href}
                 className={`flex flex-col items-center justify-center w-16 h-full tap-none transition-colors ${
                   active
@@ -187,7 +189,7 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
                 }`}
               >
                 {icons[item.icon]}
-                <span className="text-xs mt-0.5">{item.name}</span>
+                <span className="text-xs mt-0.5">{t(item.key)}</span>
               </Link>
             );
           })}
@@ -211,7 +213,7 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
         {/* Drawer Header */}
         <div className="flex items-center justify-between p-4 border-b border-slate-200 safe-top">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Menu</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{t("menu")}</h2>
             {userEmail && (
               <p className="text-sm text-slate-500 truncate max-w-[200px]">{userEmail}</p>
             )}
@@ -231,7 +233,7 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
 
             return (
               <Link
-                key={item.name}
+                key={item.key}
                 href={item.href}
                 onClick={() => setIsMenuOpen(false)}
                 className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-colors tap-none ${
@@ -241,7 +243,7 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
                 }`}
               >
                 {icons[item.icon]}
-                {item.name}
+                {t(item.key)}
               </Link>
             );
           })}
@@ -257,7 +259,7 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
               </svg>
-              Sign Out
+              {t("signOut")}
             </button>
           </div>
         )}

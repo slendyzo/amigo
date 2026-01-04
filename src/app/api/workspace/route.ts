@@ -28,6 +28,7 @@ export async function GET() {
         name: membership.workspace.name,
         monthlyBudget: membership.workspace.monthlyBudget,
         defaultCurrency: membership.workspace.defaultCurrency,
+        language: membership.workspace.language,
       },
     });
   } catch (error) {
@@ -49,7 +50,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { monthlyBudget, defaultCurrency, name } = body;
+    const { monthlyBudget, defaultCurrency, name, language } = body;
 
     const membership = await prisma.workspaceMember.findFirst({
       where: { userId: session.user.id },
@@ -68,6 +69,7 @@ export async function PUT(request: NextRequest) {
           ? (monthlyBudget === "" || monthlyBudget === null ? null : parseFloat(monthlyBudget))
           : undefined,
         defaultCurrency: defaultCurrency || undefined,
+        language: language || undefined,
       },
     });
 
@@ -77,6 +79,7 @@ export async function PUT(request: NextRequest) {
         name: workspace.name,
         monthlyBudget: workspace.monthlyBudget,
         defaultCurrency: workspace.defaultCurrency,
+        language: workspace.language,
       },
     });
   } catch (error) {
