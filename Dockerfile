@@ -1,8 +1,5 @@
-# syntax=docker/dockerfile:1
-
 # Amigo Production Dockerfile
 # Optimized multi-stage build for Next.js 15 with Prisma
-# Uses BuildKit cache mounts for faster rebuilds
 
 # Stage 1: Dependencies (cached unless package.json changes)
 FROM node:22-alpine AS deps
@@ -13,9 +10,7 @@ WORKDIR /app
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
-# Use cache mount for npm cache
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci
+RUN npm ci
 
 # Stage 2: Builder
 FROM node:22-alpine AS builder
@@ -27,7 +22,7 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy prisma schema first (changes less often)
 COPY prisma ./prisma/
 
-# Generate Prisma client (cached if schema unchanged)
+# Generate Prisma client
 RUN npx prisma generate
 
 # Copy source files (this layer invalidates on code changes)
@@ -38,15 +33,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
 # Build info args (passed from docker build)
-# These are at the end to avoid cache invalidation
 ARG NEXT_PUBLIC_BUILD_ID=dev
 ARG NEXT_PUBLIC_BUILD_DATE=unknown
 ENV NEXT_PUBLIC_BUILD_ID=$NEXT_PUBLIC_BUILD_ID
 ENV NEXT_PUBLIC_BUILD_DATE=$NEXT_PUBLIC_BUILD_DATE
 
-# Use cache mount for Next.js cache
-RUN --mount=type=cache,target=/app/.next/cache \
-    npm run build
+RUN npm run build
 
 # Stage 3: Production Runner
 FROM node:22-alpine AS runner

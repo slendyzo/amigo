@@ -46,16 +46,11 @@ jobs:
             echo "Build ID: $BUILD_ID"
             echo "Build Date: $BUILD_DATE"
 
-            # Enable BuildKit for better caching
-            export DOCKER_BUILDKIT=1
-            export COMPOSE_DOCKER_CLI_BUILD=1
-
-            # Build with cache (no pipe to preserve exit code)
+            # Build the Docker image
             echo "=== Building Docker image ==="
             docker compose build \
               --build-arg NEXT_PUBLIC_BUILD_ID="$BUILD_ID" \
-              --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE" \
-              --progress=plain
+              --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE"
 
             # Quick restart
             echo "=== Restarting container ==="
