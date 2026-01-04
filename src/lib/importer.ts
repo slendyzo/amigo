@@ -261,6 +261,8 @@ export async function importExpensesFromExcel(
   };
   const processedSheets: string[] = [];
   const recurringCandidates: RecurringCandidate[] = [];
+  let latestSheetDate: Date | null = null;
+  let latestSheetName: string | null = null;
 
   // Default mapping (legacy format)
   const columnMapping: ColumnMapping = mapping || {
@@ -320,6 +322,14 @@ export async function importExpensesFromExcel(
       );
       const sheetDate = parseSheetDate(sheetName);
 
+      // Track the latest (most recent) sheet by date
+      if (sheetDate && !isProjectSheet) {
+        if (!latestSheetDate || sheetDate > latestSheetDate) {
+          latestSheetDate = sheetDate;
+          latestSheetName = sheetName;
+        }
+      }
+
       console.log(`\nProcessing sheet: "${sheetName}" (isProject: ${isProjectSheet})`);
       processedSheets.push(sheetName);
 
@@ -327,6 +337,7 @@ export async function importExpensesFromExcel(
       let lastValidDate: Date | null = null; // Track last seen date for inheritance
       let firstDateSeen = false; // Track if we've seen a date yet (rows before first date are recurring)
       const sheetRecurringNames = new Set<string>(); // Track recurring candidates per sheet
+      const sheetRecurringCandidates: RecurringCandidate[] = []; // Temp storage for this sheet's recurring
 
       worksheet.eachRow((row, rowNumber) => {
         // Skip header rows
@@ -362,6 +373,7 @@ export async function importExpensesFromExcel(
 
         // Track recurring candidates: expenses without dates that appear before any dated entries
         // These are typically subscription/fixed costs listed at the top of the sheet
+        // NOTE: We collect per-sheet but only use the LATEST sheet's candidates later
         if (!originalHadDate && !firstDateSeen && !isProjectSheet) {
           // This is a recurring candidate - expense without date at top of sheet
           const normalizedName = rawName.toLowerCase().trim();
@@ -370,7 +382,7 @@ export async function importExpensesFromExcel(
             const type = determineExpenseType(rawName, false, false);
             // Only add SURVIVAL_FIXED and SURVIVAL_VARIABLE as recurring candidates
             if (type === ExpenseType.SURVIVAL_FIXED || type === ExpenseType.SURVIVAL_VARIABLE) {
-              recurringCandidates.push({
+              sheetRecurringCandidates.push({
                 name: rawName,
                 amount,
                 type,
@@ -425,6 +437,26 @@ export async function importExpensesFromExcel(
       });
 
       console.log(`  → Processed ${rowsProcessed} rows from "${sheetName}"`);
+
+      // Store recurring candidates temporarily - we'll decide which to use after processing all sheets
+      if (sheetRecurringCandidates.length > 0) {
+        // Tag these candidates with sheet info for later filtering
+        (worksheet as unknown as { _recurringCandidates: RecurringCandidate[] })._recurringCandidates = sheetRecurringCandidates;
+      }
+    }
+
+    // IMPORTANT: Only use recurring candidates from the LATEST sheet (most recent month)
+    // This prevents old subscriptions that no longer exist from being auto-generated
+    if (latestSheetName) {
+      console.log(`\nLatest sheet detected: "${latestSheetName}" (${latestSheetDate?.toISOString().slice(0, 7)})`);
+
+      // Find the worksheet and get its recurring candidates
+      const latestWorksheet = workbook.worksheets.find(ws => ws.name === latestSheetName);
+      if (latestWorksheet) {
+        const latestCandidates = (latestWorksheet as unknown as { _recurringCandidates?: RecurringCandidate[] })._recurringCandidates || [];
+        recurringCandidates.push(...latestCandidates);
+        console.log(`  → Using ${latestCandidates.length} recurring candidates from latest sheet only`);
+      }
     }
 
     console.log(`\nTotal rows to import: ${allParsedRows.length}`);

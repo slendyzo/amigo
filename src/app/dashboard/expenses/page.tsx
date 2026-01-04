@@ -67,7 +67,7 @@ export default function ExpensesPage() {
   const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>(
     `${currentYear}-${String(currentMonth).padStart(2, "0")}`
   );
-  const [expandedYear, setExpandedYear] = useState<number | null>(null);
+  const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
   // Pagination
   const [page, setPage] = useState(0);
@@ -207,20 +207,17 @@ export default function ExpensesPage() {
     return result;
   }, [sortedExpenses, sortOrder]);
 
-  // Compute available years from expenses (for older years dropdown)
+  // Compute available years from expenses
   const availableYears = useMemo(() => {
     const years = new Set<number>();
+    // Always include current year
+    years.add(currentYear);
     expenses.forEach((e) => {
       const year = new Date(e.date).getFullYear();
       years.add(year);
     });
     return Array.from(years).sort((a, b) => b - a); // Most recent first
-  }, [expenses]);
-
-  // Get older years (not current year)
-  const olderYears = useMemo(() => {
-    return availableYears.filter((y) => y < currentYear);
-  }, [availableYears, currentYear]);
+  }, [expenses, currentYear]);
 
   const typeColors: Record<string, string> = {
     SURVIVAL_FIXED: "bg-blue-100 text-blue-700",
@@ -270,8 +267,38 @@ export default function ExpensesPage() {
         </button>
       </div>
 
-      {/* Month Filter Bar - Mobile optimized horizontal scroll */}
+      {/* Year & Month Filter Bar */}
       <div className="bg-white rounded-xl p-2 md:p-4 shadow-sm border border-slate-200">
+        {/* Year selector */}
+        <div className="flex gap-2 items-center mb-2 pb-2 border-b border-slate-100">
+          <span className="text-xs text-slate-500 font-medium mr-1">Year:</span>
+          {availableYears.map((year) => (
+            <button
+              key={year}
+              onClick={() => {
+                setSelectedYear(year);
+                // If current filter is for a different year, reset to first month of new year
+                if (selectedMonthFilter !== "all") {
+                  const filterYear = parseInt(selectedMonthFilter.split("-")[0]);
+                  if (filterYear !== year) {
+                    // Select January of the new year, or current month if it's current year
+                    const targetMonth = year === currentYear ? currentMonth : 0;
+                    setSelectedMonthFilter(`${year}-${String(targetMonth).padStart(2, "0")}`);
+                  }
+                }
+              }}
+              className={`px-3 py-1 rounded-full text-sm font-medium transition-colors tap-none ${
+                selectedYear === year
+                  ? "bg-slate-700 text-white"
+                  : "bg-slate-100 text-slate-600 active:bg-slate-200 md:hover:bg-slate-200"
+              }`}
+            >
+              {year}
+            </button>
+          ))}
+        </div>
+
+        {/* Month selector */}
         <div className="flex gap-2 items-center overflow-x-auto scrollbar-hide pb-1">
           {/* All button */}
           <button
@@ -285,11 +312,12 @@ export default function ExpensesPage() {
             All
           </button>
 
-          {/* Current year months */}
+          {/* Months for selected year */}
           {MONTHS.map((month, index) => {
-            const monthKey = `${currentYear}-${String(index).padStart(2, "0")}`;
+            const monthKey = `${selectedYear}-${String(index).padStart(2, "0")}`;
             const isSelected = selectedMonthFilter === monthKey;
-            const isFuture = index > currentMonth;
+            // Only disable future months in current year
+            const isFuture = selectedYear === currentYear && index > currentMonth;
             return (
               <button
                 key={monthKey}
@@ -307,69 +335,6 @@ export default function ExpensesPage() {
               </button>
             );
           })}
-
-          {/* Older years dropdown */}
-          {olderYears.length > 0 && (
-            <div className="relative ml-2">
-              <button
-                onClick={() => setExpandedYear(expandedYear ? null : olderYears[0])}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1 ${
-                  expandedYear || (selectedMonthFilter !== "all" && parseInt(selectedMonthFilter.split("-")[0]) < currentYear)
-                    ? "bg-slate-700 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                Older
-                <svg className={`w-4 h-4 transition-transform ${expandedYear ? "rotate-180" : ""}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-
-              {expandedYear && (
-                <div className="absolute top-full left-0 mt-2 bg-white rounded-lg shadow-lg border border-slate-200 p-2 z-10 min-w-[200px]">
-                  {/* Year tabs */}
-                  <div className="flex gap-1 mb-2 pb-2 border-b border-slate-100">
-                    {olderYears.map((year) => (
-                      <button
-                        key={year}
-                        onClick={() => setExpandedYear(year)}
-                        className={`px-2 py-1 rounded text-sm font-medium transition-colors ${
-                          expandedYear === year
-                            ? "bg-slate-700 text-white"
-                            : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                        }`}
-                      >
-                        {year}
-                      </button>
-                    ))}
-                  </div>
-                  {/* Months for selected older year */}
-                  <div className="grid grid-cols-3 gap-1">
-                    {MONTHS.map((month, index) => {
-                      const monthKey = `${expandedYear}-${String(index).padStart(2, "0")}`;
-                      const isSelected = selectedMonthFilter === monthKey;
-                      return (
-                        <button
-                          key={monthKey}
-                          onClick={() => {
-                            setSelectedMonthFilter(monthKey);
-                            setExpandedYear(null);
-                          }}
-                          className={`px-2 py-1.5 rounded text-sm transition-colors ${
-                            isSelected
-                              ? "bg-[#0070f3] text-white"
-                              : "hover:bg-slate-100 text-slate-600"
-                          }`}
-                        >
-                          {month.slice(0, 3)}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
 
