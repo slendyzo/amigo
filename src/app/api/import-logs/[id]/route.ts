@@ -138,8 +138,8 @@ export async function DELETE(
 
     // Get unique project IDs that have expenses from this import
     const projectIdsFromImport = new Set<string>();
-    expensesWithProjects.forEach((expense) => {
-      expense.projects.forEach((project) => {
+    expensesWithProjects.forEach((expense: { id: string; projects: { id: string; name: string }[] }) => {
+      expense.projects.forEach((project: { id: string; name: string }) => {
         projectIdsFromImport.add(project.id);
       });
     });

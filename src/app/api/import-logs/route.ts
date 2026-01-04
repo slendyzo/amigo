@@ -35,7 +35,16 @@ export async function GET(request: NextRequest) {
     });
 
     // Map to include expense count
-    const logsWithCount = importLogs.map((log) => ({
+    const logsWithCount = importLogs.map((log: {
+      id: string;
+      fileName: string;
+      fileType: string;
+      rowsTotal: number;
+      rowsSuccess: number;
+      rowsFailed: number;
+      createdAt: Date;
+      _count: { expenses: number };
+    }) => ({
       id: log.id,
       fileName: log.fileName,
       fileType: log.fileType,
