@@ -37,10 +37,19 @@ export type RecurringCandidate = {
   type: ExpenseType;
 };
 
+export type DuplicateInfo = {
+  date: string;
+  name: string;
+  amount: number;
+  existingId: string;
+};
+
 export type ImporterResult = {
   success: boolean;
   imported: number;
   failed: number;
+  skipped: number; // Number of duplicates skipped
+  replaced: number; // Number of duplicates replaced
   errors: string[];
   stats: {
     survivalFixed: number;
@@ -52,6 +61,7 @@ export type ImporterResult = {
   sheets: string[];
   recurringCandidates: RecurringCandidate[];
   recurringTemplatesCreated: number;
+  duplicatesFound: number; // Total duplicates detected
 };
 
 export type ParsedRow = {
@@ -240,6 +250,17 @@ function convertXlsToXlsx(buffer: Buffer): Buffer {
   return Buffer.from(xlsxBuffer);
 }
 
+export type DuplicateHandling = "skip" | "replace";
+
+/**
+ * Create a unique key for expense matching (date + normalized name + amount)
+ */
+function createExpenseKey(date: Date, name: string, amount: number): string {
+  const dateStr = date.toISOString().split("T")[0]; // YYYY-MM-DD
+  const normalizedName = name.toLowerCase().trim();
+  return `${dateStr}|${normalizedName}|${amount.toFixed(2)}`;
+}
+
 /**
  * Main importer function with custom column mapping
  */
@@ -248,7 +269,8 @@ export async function importExpensesFromExcel(
   workspaceId: string,
   userId: string,
   fileName: string,
-  mapping?: ColumnMapping
+  mapping?: ColumnMapping,
+  duplicateHandling: DuplicateHandling = "skip"
 ): Promise<ImporterResult> {
   const errors: string[] = [];
   const allParsedRows: ParsedRow[] = [];
@@ -291,11 +313,14 @@ export async function importExpensesFromExcel(
           success: false,
           imported: 0,
           failed: 0,
+          skipped: 0,
+          replaced: 0,
           errors: ["Failed to read .xls file. The file may be corrupted or in an unsupported format."],
           stats: { ...stats, incomes: 0 },
           sheets: [],
           recurringCandidates: [],
           recurringTemplatesCreated: 0,
+          duplicatesFound: 0,
         };
       }
     }
@@ -352,10 +377,9 @@ export async function importExpensesFromExcel(
 
         // Skip empty rows or total rows
         if (!rawName || rawName.toLowerCase() === "total") return;
-        if (!rawAmount) return;
 
-        // Parse amount - check raw value for positive/negative detection
-        const rawAmountValue = parseAmountRaw(rawAmount);
+        // Parse amount - handles empty/null as 0
+        const rawAmountValue = rawAmount ? parseAmountRaw(rawAmount) : 0;
         const amount = Math.abs(rawAmountValue);
         // Determine if this should be an income (positive value when splitExpensesIncomes is enabled)
         const isIncome = columnMapping.splitExpensesIncomes && rawAmountValue > 0;
@@ -370,7 +394,7 @@ export async function importExpensesFromExcel(
         // Track recurring candidates: expenses without dates that appear before any dated entries
         // These are typically subscription/fixed costs listed at the top of the sheet
         // NOTE: We collect per-sheet but only use the LATEST sheet's candidates later
-        // IMPORTANT: Include €0 expenses here - they're variable costs like utilities
+        // IMPORTANT: Include €0/empty expenses here - they're variable costs like utilities
         if (!originalHadDate && !firstDateSeen && !isProjectSheet) {
           // This is a recurring candidate - expense without date at top of sheet
           const normalizedName = rawName.toLowerCase().trim();
@@ -388,8 +412,8 @@ export async function importExpensesFromExcel(
           }
         }
 
-        // Skip zero amounts for regular expense creation (but we already captured recurring candidates above)
-        if (amount === 0) {
+        // Skip zero/empty amounts for regular expense creation (but we already captured recurring candidates above)
+        if (!rawAmount || amount === 0) {
           return;
         }
 
@@ -468,11 +492,14 @@ export async function importExpensesFromExcel(
         success: false,
         imported: 0,
         failed: 0,
+        skipped: 0,
+        replaced: 0,
         errors: ["No valid expense rows found. Please check your column mapping."],
         stats,
         sheets: processedSheets,
         recurringCandidates: [],
         recurringTemplatesCreated: 0,
+        duplicatesFound: 0,
       };
     }
 
@@ -548,51 +575,168 @@ export async function importExpensesFromExcel(
       }
     }
 
-    let totalCreated = 0;
+    // DUPLICATE DETECTION: Fetch existing expenses for this workspace
+    const existingExpenses = await prisma.expense.findMany({
+      where: { workspaceId },
+      select: { id: true, date: true, name: true, amount: true },
+    });
 
-    // Insert incomes in batch
+    // Create a map of existing expense keys -> ids for quick lookup
+    const existingExpenseMap = new Map<string, string>();
+    for (const exp of existingExpenses) {
+      const key = createExpenseKey(exp.date, exp.name, Number(exp.amount));
+      existingExpenseMap.set(key, exp.id);
+    }
+
+    // Also check incomes for duplicates
+    const existingIncomes = await prisma.income.findMany({
+      where: { workspaceId },
+      select: { id: true, date: true, name: true, amount: true },
+    });
+
+    const existingIncomeMap = new Map<string, string>();
+    for (const inc of existingIncomes) {
+      const key = createExpenseKey(inc.date, inc.name, Number(inc.amount));
+      existingIncomeMap.set(key, inc.id);
+    }
+
+    let totalCreated = 0;
+    let totalSkipped = 0;
+    let totalReplaced = 0;
+    let duplicatesFound = 0;
+
+    // Process incomes with duplicate handling
     if (incomeRows.length > 0) {
-      const incomeData = incomeRows.map((row) => ({
+      const newIncomes: typeof incomeRows = [];
+      const duplicateIncomeIds: string[] = [];
+
+      for (const row of incomeRows) {
+        const key = createExpenseKey(row.date!, row.name, row.amount);
+        const existingId = existingIncomeMap.get(key);
+
+        if (existingId) {
+          duplicatesFound++;
+          if (duplicateHandling === "replace") {
+            duplicateIncomeIds.push(existingId);
+            newIncomes.push(row);
+          } else {
+            totalSkipped++;
+          }
+        } else {
+          newIncomes.push(row);
+        }
+      }
+
+      // Delete duplicates if replacing
+      if (duplicateIncomeIds.length > 0) {
+        await prisma.income.deleteMany({
+          where: { id: { in: duplicateIncomeIds } },
+        });
+        totalReplaced += duplicateIncomeIds.length;
+      }
+
+      // Insert new incomes
+      if (newIncomes.length > 0) {
+        const incomeData = newIncomes.map((row) => ({
+          workspaceId,
+          name: row.name,
+          amount: row.amount,
+          currency: "EUR",
+          amountEur: row.amount,
+          date: row.date!,
+          isRecurring: false,
+        }));
+
+        const incomeResult = await prisma.income.createMany({
+          data: incomeData,
+        });
+        totalCreated += incomeResult.count;
+        console.log(`  → Created ${incomeResult.count} incomes (${totalSkipped} skipped as duplicates)`);
+      }
+    }
+
+    // Process regular expenses with duplicate handling
+    const newRegularExpenses: typeof regularExpenses = [];
+    const duplicateExpenseIds: string[] = [];
+
+    for (const row of regularExpenses) {
+      const key = createExpenseKey(row.date!, row.name, row.amount);
+      const existingId = existingExpenseMap.get(key);
+
+      if (existingId) {
+        duplicatesFound++;
+        if (duplicateHandling === "replace") {
+          duplicateExpenseIds.push(existingId);
+          newRegularExpenses.push(row);
+        } else {
+          totalSkipped++;
+        }
+      } else {
+        newRegularExpenses.push(row);
+      }
+    }
+
+    // Delete duplicates if replacing
+    if (duplicateExpenseIds.length > 0) {
+      await prisma.expense.deleteMany({
+        where: { id: { in: duplicateExpenseIds } },
+      });
+      totalReplaced += duplicateExpenseIds.length;
+    }
+
+    // Insert new regular expenses in batch
+    if (newRegularExpenses.length > 0) {
+      const regularExpenseData = newRegularExpenses.map((row) => ({
         workspaceId,
+        categoryId: defaultCategory!.id,
+        importLogId: importLog.id,
         name: row.name,
+        rawInput: row.rawInput,
+        type: row.type,
+        status: "PAID" as const,
         amount: row.amount,
         currency: "EUR",
         amountEur: row.amount,
         date: row.date!,
-        isRecurring: false,
       }));
 
-      const incomeResult = await prisma.income.createMany({
-        data: incomeData,
-      });
-      totalCreated += incomeResult.count;
-      console.log(`  → Created ${incomeResult.count} incomes`);
-    }
-
-    // Insert regular expenses in batch (no project relation)
-    const regularExpenseData = regularExpenses.map((row) => ({
-      workspaceId,
-      categoryId: defaultCategory!.id,
-      importLogId: importLog.id,
-      name: row.name,
-      rawInput: row.rawInput,
-      type: row.type,
-      status: "PAID" as const,
-      amount: row.amount,
-      currency: "EUR",
-      amountEur: row.amount,
-      date: row.date!,
-    }));
-
-    if (regularExpenseData.length > 0) {
       const regularResult = await prisma.expense.createMany({
         data: regularExpenseData,
       });
       totalCreated += regularResult.count;
     }
 
-    // Insert project expenses individually (to support many-to-many relation)
+    // Process project expenses with duplicate handling
+    const duplicateProjectExpenseIds: string[] = [];
+    const newProjectExpenses: typeof projectExpenses = [];
+
     for (const row of projectExpenses) {
+      const key = createExpenseKey(row.date!, row.name, row.amount);
+      const existingId = existingExpenseMap.get(key);
+
+      if (existingId) {
+        duplicatesFound++;
+        if (duplicateHandling === "replace") {
+          duplicateProjectExpenseIds.push(existingId);
+          newProjectExpenses.push(row);
+        } else {
+          totalSkipped++;
+        }
+      } else {
+        newProjectExpenses.push(row);
+      }
+    }
+
+    // Delete duplicates if replacing
+    if (duplicateProjectExpenseIds.length > 0) {
+      await prisma.expense.deleteMany({
+        where: { id: { in: duplicateProjectExpenseIds } },
+      });
+      totalReplaced += duplicateProjectExpenseIds.length;
+    }
+
+    // Insert project expenses individually (to support many-to-many relation)
+    for (const row of newProjectExpenses) {
       const projectId = projectMap[row.sheetName.toLowerCase()];
       await prisma.expense.create({
         data: {
@@ -614,6 +758,8 @@ export async function importExpensesFromExcel(
       });
       totalCreated++;
     }
+
+    console.log(`  → Duplicate handling: ${duplicatesFound} duplicates found, ${totalSkipped} skipped, ${totalReplaced} replaced`);
 
     // Update import log with actual success count
     await prisma.importLog.update({
@@ -669,11 +815,14 @@ export async function importExpensesFromExcel(
       success: true,
       imported: totalCreated,
       failed: errors.length,
+      skipped: totalSkipped,
+      replaced: totalReplaced,
       errors: errors.slice(0, 20),
       stats,
       sheets: processedSheets,
       recurringCandidates: dedupedRecurring,
       recurringTemplatesCreated,
+      duplicatesFound,
     };
   } catch (error) {
     console.error("Import error:", error);
@@ -683,11 +832,14 @@ export async function importExpensesFromExcel(
       success: false,
       imported: 0,
       failed: allParsedRows.length,
+      skipped: 0,
+      replaced: 0,
       errors,
       stats,
       sheets: processedSheets,
       recurringCandidates: [],
       recurringTemplatesCreated: 0,
+      duplicatesFound: 0,
     };
   }
 }
@@ -700,7 +852,8 @@ export async function importExpensesFromCSV(
   workspaceId: string,
   userId: string,
   fileName: string,
-  mapping?: ColumnMapping
+  mapping?: ColumnMapping,
+  duplicateHandling: DuplicateHandling = "skip"
 ): Promise<ImporterResult> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Sheet1");
@@ -717,7 +870,7 @@ export async function importExpensesFromCSV(
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
-  return importExpensesFromExcel(Buffer.from(buffer), workspaceId, userId, fileName, mapping);
+  return importExpensesFromExcel(Buffer.from(buffer), workspaceId, userId, fileName, mapping, duplicateHandling);
 }
 
 function parseCsvLine(line: string, delimiter: string): string[] {
@@ -747,7 +900,8 @@ export async function importExpensesFromPDF(
   buffer: Buffer,
   workspaceId: string,
   userId: string,
-  fileName: string
+  fileName: string,
+  duplicateHandling: DuplicateHandling = "skip"
 ): Promise<ImporterResult> {
   const errors: string[] = [];
   const allParsedRows: ParsedRow[] = [];
@@ -859,11 +1013,14 @@ export async function importExpensesFromPDF(
         success: false,
         imported: 0,
         failed: 0,
+        skipped: 0,
+        replaced: 0,
         errors: ["No expenses found in PDF. The file format may not be supported. Try exporting your bank statement as CSV or Excel instead."],
         stats,
         sheets: ["PDF"],
         recurringCandidates: [],
         recurringTemplatesCreated: 0,
+        duplicatesFound: 0,
       };
     }
 
@@ -891,40 +1048,94 @@ export async function importExpensesFromPDF(
       },
     });
 
-    // Insert expenses
-    const expenseData = allParsedRows.map((row) => ({
-      workspaceId,
-      categoryId: defaultCategory!.id,
-      importLogId: importLog.id,
-      name: row.name,
-      rawInput: row.rawInput,
-      type: row.type,
-      status: "PAID" as const,
-      amount: row.amount,
-      currency: "EUR",
-      amountEur: row.amount,
-      date: row.date!,
-    }));
-
-    const result = await prisma.expense.createMany({
-      data: expenseData,
+    // DUPLICATE DETECTION: Fetch existing expenses for this workspace
+    const existingExpenses = await prisma.expense.findMany({
+      where: { workspaceId },
+      select: { id: true, date: true, name: true, amount: true },
     });
+
+    const existingExpenseMap = new Map<string, string>();
+    for (const exp of existingExpenses) {
+      const key = createExpenseKey(exp.date, exp.name, Number(exp.amount));
+      existingExpenseMap.set(key, exp.id);
+    }
+
+    let totalCreated = 0;
+    let totalSkipped = 0;
+    let totalReplaced = 0;
+    let duplicatesFound = 0;
+
+    // Check each row for duplicates
+    const newExpenses: typeof allParsedRows = [];
+    const duplicateExpenseIds: string[] = [];
+
+    for (const row of allParsedRows) {
+      const key = createExpenseKey(row.date!, row.name, row.amount);
+      const existingId = existingExpenseMap.get(key);
+
+      if (existingId) {
+        duplicatesFound++;
+        if (duplicateHandling === "replace") {
+          duplicateExpenseIds.push(existingId);
+          newExpenses.push(row);
+        } else {
+          totalSkipped++;
+        }
+      } else {
+        newExpenses.push(row);
+      }
+    }
+
+    // Delete duplicates if replacing
+    if (duplicateExpenseIds.length > 0) {
+      await prisma.expense.deleteMany({
+        where: { id: { in: duplicateExpenseIds } },
+      });
+      totalReplaced = duplicateExpenseIds.length;
+    }
+
+    // Insert new expenses
+    if (newExpenses.length > 0) {
+      const expenseData = newExpenses.map((row) => ({
+        workspaceId,
+        categoryId: defaultCategory!.id,
+        importLogId: importLog.id,
+        name: row.name,
+        rawInput: row.rawInput,
+        type: row.type,
+        status: "PAID" as const,
+        amount: row.amount,
+        currency: "EUR",
+        amountEur: row.amount,
+        date: row.date!,
+      }));
+
+      const result = await prisma.expense.createMany({
+        data: expenseData,
+      });
+      totalCreated = result.count;
+    }
+
+    console.log(`  → Duplicate handling: ${duplicatesFound} duplicates found, ${totalSkipped} skipped, ${totalReplaced} replaced`);
 
     // Update import log
     await prisma.importLog.update({
       where: { id: importLog.id },
-      data: { rowsSuccess: result.count },
+      data: { rowsSuccess: totalCreated },
     });
 
     return {
       success: true,
-      imported: result.count,
+      imported: totalCreated,
       failed: errors.length,
+      skipped: totalSkipped,
+      replaced: totalReplaced,
       errors: errors.slice(0, 20),
       stats,
       sheets: ["PDF"],
       recurringCandidates: [],
       recurringTemplatesCreated: 0,
+      duplicatesFound,
     };
   } catch (error) {
     console.error("PDF import error:", error);
@@ -934,11 +1145,14 @@ export async function importExpensesFromPDF(
       success: false,
       imported: 0,
       failed: 0,
+      skipped: 0,
+      replaced: 0,
       errors: ["Failed to parse PDF file. The file may be corrupted, password-protected, or in an unsupported format."],
       stats,
       sheets: [],
       recurringCandidates: [],
       recurringTemplatesCreated: 0,
+      duplicatesFound: 0,
     };
   }
 }

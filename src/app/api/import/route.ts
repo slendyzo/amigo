@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { importExpensesFromExcel, importExpensesFromCSV, importExpensesFromPDF, ColumnMapping } from "@/lib/importer";
+import { importExpensesFromExcel, importExpensesFromCSV, importExpensesFromPDF, ColumnMapping, DuplicateHandling } from "@/lib/importer";
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +29,11 @@ export async function POST(request: Request) {
     const formData = await request.formData();
     const file = formData.get("file") as File | null;
     const mappingJson = formData.get("mapping") as string | null;
+    const duplicateHandlingValue = formData.get("duplicateHandling") as string | null;
+
+    // Default to "skip" if not provided
+    const duplicateHandling: DuplicateHandling =
+      duplicateHandlingValue === "replace" ? "replace" : "skip";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -56,7 +61,8 @@ export async function POST(request: Request) {
         workspace.id,
         session.user.id,
         fileName,
-        mapping
+        mapping,
+        duplicateHandling
       );
     } else if (fileType === "xlsx" || fileType === "xls") {
       const buffer = await file.arrayBuffer();
@@ -65,7 +71,8 @@ export async function POST(request: Request) {
         workspace.id,
         session.user.id,
         fileName,
-        mapping
+        mapping,
+        duplicateHandling
       );
     } else if (fileType === "pdf") {
       const buffer = await file.arrayBuffer();
@@ -73,7 +80,8 @@ export async function POST(request: Request) {
         Buffer.from(buffer),
         workspace.id,
         session.user.id,
-        fileName
+        fileName,
+        duplicateHandling
       );
     } else {
       return NextResponse.json(
@@ -85,6 +93,9 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: result.success,
       imported: result.imported,
+      skipped: result.skipped,
+      replaced: result.replaced,
+      duplicatesFound: result.duplicatesFound,
       stats: result.stats,
       errors: result.errors,
       sheets: result.sheets,

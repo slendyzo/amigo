@@ -40,6 +40,9 @@ type RecurringCandidate = {
 type ImportResponse = {
   success: boolean;
   imported: number;
+  skipped?: number;
+  replaced?: number;
+  duplicatesFound?: number;
   stats: ImportStats;
   errors: string[];
   sheets?: string[];
@@ -58,6 +61,7 @@ type ColumnMapping = {
 };
 
 type Step = "upload" | "mapping" | "importing" | "result";
+type DuplicateHandling = "skip" | "replace";
 
 export default function ImportPage() {
   const router = useRouter();
@@ -68,6 +72,7 @@ export default function ImportPage() {
   const [preview, setPreview] = useState<PreviewResponse | null>(null);
   const [result, setResult] = useState<ImportResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [duplicateHandling, setDuplicateHandling] = useState<DuplicateHandling>("skip");
 
   // Column mapping state
   const [mapping, setMapping] = useState<ColumnMapping>({
@@ -91,6 +96,7 @@ export default function ImportPage() {
 
       const formData = new FormData();
       formData.append("file", selectedFile);
+      formData.append("duplicateHandling", duplicateHandling);
 
       try {
         const response = await fetch("/api/import", {
@@ -187,6 +193,7 @@ export default function ImportPage() {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("mapping", JSON.stringify(mapping));
+    formData.append("duplicateHandling", duplicateHandling);
 
     try {
       const response = await fetch("/api/import", {
@@ -209,7 +216,7 @@ export default function ImportPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [file, mapping]);
+  }, [file, mapping, duplicateHandling]);
 
   const resetImport = () => {
     setStep("upload");
@@ -217,6 +224,7 @@ export default function ImportPage() {
     setPreview(null);
     setResult(null);
     setError(null);
+    setDuplicateHandling("skip");
     setMapping({
       dateColumn: null,
       nameColumn: 1,
@@ -495,6 +503,47 @@ export default function ImportPage() {
                 </label>
               </div>
 
+              {/* Duplicate Handling */}
+              <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
+                <div className="flex items-start gap-3">
+                  <svg className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                  <div className="flex-1">
+                    <span className="font-medium text-slate-900">
+                      How to handle duplicate entries?
+                    </span>
+                    <p className="text-sm text-slate-500 mt-0.5 mb-3">
+                      If we find entries with the same date, name, and amount already in your account:
+                    </p>
+                    <div className="flex gap-3">
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="duplicateHandling"
+                          value="skip"
+                          checked={duplicateHandling === "skip"}
+                          onChange={() => setDuplicateHandling("skip")}
+                          className="w-4 h-4 border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
+                        />
+                        <span className="text-sm text-slate-700">Skip duplicates</span>
+                      </label>
+                      <label className="flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="duplicateHandling"
+                          value="replace"
+                          checked={duplicateHandling === "replace"}
+                          onChange={() => setDuplicateHandling("replace")}
+                          className="w-4 h-4 border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
+                        />
+                        <span className="text-sm text-slate-700">Replace duplicates</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               {/* Sheet Selection */}
               {preview.sheets.length > 1 && (
                 <div>
@@ -695,6 +744,11 @@ export default function ImportPage() {
               {result.success
                 ? `Successfully imported ${result.imported} expenses!`
                 : `Import completed with issues. ${result.imported} expenses imported.`}
+              {result.duplicatesFound && result.duplicatesFound > 0 && (
+                <span className="ml-2">
+                  ({result.duplicatesFound} duplicate{result.duplicatesFound !== 1 ? 's' : ''} found: {result.skipped || 0} skipped, {result.replaced || 0} replaced)
+                </span>
+              )}
             </div>
 
             {/* Stats */}
@@ -722,6 +776,31 @@ export default function ImportPage() {
                 </div>
               )}
             </div>
+
+            {/* Duplicate Detection Summary */}
+            {result.duplicatesFound && result.duplicatesFound > 0 && (
+              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+                <div className="flex items-center gap-2 mb-2">
+                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                  </svg>
+                  <p className="font-medium text-amber-700">
+                    Duplicate entries detected
+                  </p>
+                </div>
+                <p className="text-sm text-amber-600">
+                  Found {result.duplicatesFound} duplicate{result.duplicatesFound !== 1 ? 's' : ''} (same date, name, and amount).{' '}
+                  {(result.skipped ?? 0) > 0 && (
+                    <span className="font-medium">{result.skipped} skipped</span>
+                  )}
+                  {(result.skipped ?? 0) > 0 && (result.replaced ?? 0) > 0 && ', '}
+                  {(result.replaced ?? 0) > 0 && (
+                    <span className="font-medium">{result.replaced} replaced</span>
+                  )}
+                  .
+                </p>
+              </div>
+            )}
 
             {/* Recurring Templates Created */}
             {result.recurringTemplatesCreated && result.recurringTemplatesCreated > 0 && (
