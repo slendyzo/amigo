@@ -27,7 +27,7 @@ jobs:
           command_timeout: 20m
           script_stop: true
           script: |
-            set -e
+            set -eo pipefail
 
             echo "=== Starting deployment ==="
 
@@ -41,8 +41,8 @@ jobs:
             echo "Current commit: $(git rev-parse HEAD)"
 
             # Set build info
-            export BUILD_ID=$(git rev-parse --short HEAD)
-            export BUILD_DATE=$(date +"%d %b %Y, %H:%M")
+            BUILD_ID=$(git rev-parse --short HEAD)
+            BUILD_DATE=$(date +"%d %b %Y, %H:%M")
             echo "Build ID: $BUILD_ID"
             echo "Build Date: $BUILD_DATE"
 
@@ -50,17 +50,20 @@ jobs:
             export DOCKER_BUILDKIT=1
             export COMPOSE_DOCKER_CLI_BUILD=1
 
-            # Build with cache
+            # Build with cache (no pipe to preserve exit code)
             echo "=== Building Docker image ==="
             docker compose build \
-              --build-arg NEXT_PUBLIC_BUILD_ID=$BUILD_ID \
+              --build-arg NEXT_PUBLIC_BUILD_ID="$BUILD_ID" \
               --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE" \
-              --build-arg BUILDKIT_INLINE_CACHE=1 \
-              --progress=plain 2>&1 | tail -50
+              --progress=plain
 
             # Quick restart
             echo "=== Restarting container ==="
             docker compose up -d --force-recreate --no-build
+
+            # Wait for container to be healthy
+            echo "=== Waiting for container to start ==="
+            sleep 5
 
             # Clean up old images
             docker image prune -f
@@ -75,6 +78,6 @@ jobs:
               echo "SUCCESS: Container is running"
             else
               echo "ERROR: Container failed to start"
-              docker compose logs --tail=20
+              docker compose logs --tail=50
               exit 1
             fi
