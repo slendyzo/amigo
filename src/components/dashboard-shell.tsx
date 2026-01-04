@@ -7,18 +7,39 @@ import MobileNav from "./mobile-nav";
 import GlobalAddButton from "./global-add-button";
 import type { ReactNode } from "react";
 
-const navigation = [
-  { name: "Overview", href: "/dashboard", icon: "home" },
-  { name: "Expenses", href: "/dashboard/expenses", icon: "list" },
-  { name: "Incomes", href: "/dashboard/incomes", icon: "dollar" },
-  { name: "Recurring", href: "/dashboard/recurring", icon: "repeat" },
-  { name: "Projects", href: "/dashboard/projects", icon: "folder" },
-  { name: "Categories", href: "/dashboard/categories", icon: "tag" },
-  { name: "Mappings", href: "/dashboard/mappings", icon: "key" },
-  { name: "Bank Accounts", href: "/dashboard/accounts", icon: "credit-card" },
-  { name: "Import", href: "/dashboard/import", icon: "upload" },
-  { name: "Import History", href: "/dashboard/imports", icon: "history" },
-  { name: "Settings", href: "/dashboard/settings", icon: "settings" },
+// Navigation grouped by section
+const navigationGroups = [
+  {
+    items: [
+      { name: "Overview", href: "/dashboard", icon: "home" },
+      { name: "Expenses", href: "/dashboard/expenses", icon: "list" },
+    ],
+  },
+  {
+    items: [
+      { name: "Incomes", href: "/dashboard/incomes", icon: "dollar" },
+      { name: "Recurring", href: "/dashboard/recurring", icon: "repeat" },
+    ],
+  },
+  {
+    items: [
+      { name: "Projects", href: "/dashboard/projects", icon: "folder" },
+      { name: "Categories", href: "/dashboard/categories", icon: "tag" },
+      { name: "Bank Accounts", href: "/dashboard/accounts", icon: "credit-card" },
+    ],
+  },
+  {
+    items: [
+      { name: "Import", href: "/dashboard/import", icon: "upload" },
+      { name: "Import History", href: "/dashboard/imports", icon: "history" },
+    ],
+  },
+  {
+    items: [
+      { name: "Mappings", href: "/dashboard/mappings", icon: "key" },
+      { name: "Settings", href: "/dashboard/settings", icon: "settings" },
+    ],
+  },
 ];
 
 const icons: Record<string, ReactNode> = {
@@ -114,27 +135,35 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-6 space-y-1">
-          {navigation.map((item) => {
-            const active = isActive(item.href);
-
-            return (
-              <Link
-                key={item.name}
-                href={item.href}
-                className={`
-                  flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
-                  ${active
-                    ? "bg-[#0070f3] text-white"
-                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                  }
-                `}
-              >
-                {icons[item.icon]}
-                {item.name}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
+          {navigationGroups.map((group, groupIndex) => (
+            <div key={groupIndex}>
+              {groupIndex > 0 && (
+                <div className="my-3 border-t border-slate-200" />
+              )}
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`
+                        flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                        ${active
+                          ? "bg-[#0070f3] text-white"
+                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        }
+                      `}
+                    >
+                      {icons[item.icon]}
+                      {item.name}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </nav>
 
         {/* Footer */}
