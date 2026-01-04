@@ -1,3 +1,4 @@
+import Link from "next/link";
 import InstallPrompt from "@/components/install-prompt";
 
 export default function Home() {
@@ -17,6 +18,23 @@ export default function Home() {
           Get Started
         </a>
       </div>
+      <footer className="absolute bottom-6 text-center text-sm text-slate-400">
+        <p>
+          Open source on{" "}
+          <a
+            href="https://github.com/slendyzo/amigo"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[#0070f3] hover:underline"
+          >
+            GitHub
+          </a>
+          {" · "}
+          <Link href="/terms" className="text-[#0070f3] hover:underline">
+            Terms of Service
+          </Link>
+        </p>
+      </footer>
       <InstallPrompt />
     </main>
   );

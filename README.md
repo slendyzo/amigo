@@ -202,6 +202,18 @@ openssl rand -base64 32
 4. Push to branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
+## Disclaimer
+
+**USE AT YOUR OWN RISK.** This software is provided "as is", without warranty of any kind. The authors and contributors are not responsible for any financial decisions made based on data from this application, any data loss or corruption, any security breaches or unauthorized access, or any direct, indirect, incidental, or consequential damages.
+
+This is personal finance tracking software intended for informational purposes only. It is **not** financial advice, tax advice, or a substitute for professional financial guidance. Always consult qualified professionals for financial decisions.
+
+By using this software, you acknowledge that:
+- You are solely responsible for the accuracy of your data
+- You use this application at your own risk
+- The developers make no guarantees about uptime, data integrity, or security
+- This is open-source software maintained by volunteers
+
 ## License
 
 MIT License - see [LICENSE](LICENSE) for details.

@@ -145,6 +145,20 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
               Build: {process.env.NEXT_PUBLIC_BUILD_ID || "dev"}<br />
               {process.env.NEXT_PUBLIC_BUILD_DATE || new Date().toLocaleDateString("en-GB")}
             </div>
+            <div className="mt-2">
+              <a
+                href="https://github.com/slendyzo/amigo"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-slate-600"
+              >
+                GitHub
+              </a>
+              {" · "}
+              <Link href="/terms" className="hover:text-slate-600">
+                Terms
+              </Link>
+            </div>
           </div>
         </div>
       </aside>
