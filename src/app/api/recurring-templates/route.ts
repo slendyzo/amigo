@@ -98,3 +98,41 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Failed to create template" }, { status: 500 });
   }
 }
+
+// DELETE - Bulk delete recurring templates
+export async function DELETE(request: Request) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const { ids } = body;
+
+    if (!ids || !Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: "Template IDs are required" }, { status: 400 });
+    }
+
+    const workspace = await prisma.workspace.findFirst({
+      where: { members: { some: { userId: session.user.id } } },
+    });
+
+    if (!workspace) {
+      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
+    }
+
+    // Delete templates that belong to this workspace
+    const result = await prisma.recurringTemplate.deleteMany({
+      where: {
+        id: { in: ids },
+        workspaceId: workspace.id,
+      },
+    });
+
+    return NextResponse.json({ deleted: result.count });
+  } catch (error) {
+    console.error("Bulk delete recurring templates error:", error);
+    return NextResponse.json({ error: "Failed to delete templates" }, { status: 500 });
+  }
+}

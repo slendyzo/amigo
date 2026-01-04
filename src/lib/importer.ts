@@ -357,10 +357,6 @@ export async function importExpensesFromExcel(
         // Parse amount - check raw value for positive/negative detection
         const rawAmountValue = parseAmountRaw(rawAmount);
         const amount = Math.abs(rawAmountValue);
-        if (amount === 0) {
-          return; // Skip zero amounts silently
-        }
-
         // Determine if this should be an income (positive value when splitExpensesIncomes is enabled)
         const isIncome = columnMapping.splitExpensesIncomes && rawAmountValue > 0;
 
@@ -374,6 +370,7 @@ export async function importExpensesFromExcel(
         // Track recurring candidates: expenses without dates that appear before any dated entries
         // These are typically subscription/fixed costs listed at the top of the sheet
         // NOTE: We collect per-sheet but only use the LATEST sheet's candidates later
+        // IMPORTANT: Include €0 expenses here - they're variable costs like utilities
         if (!originalHadDate && !firstDateSeen && !isProjectSheet) {
           // This is a recurring candidate - expense without date at top of sheet
           const normalizedName = rawName.toLowerCase().trim();
@@ -384,11 +381,16 @@ export async function importExpensesFromExcel(
             if (type === ExpenseType.SURVIVAL_FIXED || type === ExpenseType.SURVIVAL_VARIABLE) {
               sheetRecurringCandidates.push({
                 name: rawName,
-                amount,
+                amount, // Amount can be 0 for variable expenses like utilities
                 type,
               });
             }
           }
+        }
+
+        // Skip zero amounts for regular expense creation (but we already captured recurring candidates above)
+        if (amount === 0) {
+          return;
         }
 
         // DATE INHERITANCE: If no date in this row, use the last valid date
@@ -620,17 +622,24 @@ export async function importExpensesFromExcel(
     });
 
     // Create recurring templates from candidates (skip if already exists)
+    // First, fetch all existing templates for this workspace to do proper duplicate detection
+    const existingTemplates = await prisma.recurringTemplate.findMany({
+      where: { workspaceId },
+      select: { name: true },
+    });
+    const existingNormalizedNames = new Set(
+      existingTemplates.map(t => t.name.toLowerCase().trim())
+    );
+
     let recurringTemplatesCreated = 0;
     for (const candidate of dedupedRecurring) {
-      // Check if template already exists with similar name
-      const existing = await prisma.recurringTemplate.findFirst({
-        where: {
-          workspaceId,
-          name: { equals: candidate.name, mode: "insensitive" },
-        },
-      });
+      // Check if template already exists with normalized name comparison
+      const normalizedCandidateName = candidate.name.toLowerCase().trim();
+      const alreadyExists = existingNormalizedNames.has(normalizedCandidateName);
 
-      if (!existing) {
+      if (!alreadyExists) {
+        // Add to set to prevent duplicates within the same import batch
+        existingNormalizedNames.add(normalizedCandidateName);
         // Auto-generate is true for both SURVIVAL_FIXED and SURVIVAL_VARIABLE
         // - Fixed expenses (like Spotify) have their amount pre-filled
         // - Variable expenses (like utilities) start at €0 and user fills in the actual amount
