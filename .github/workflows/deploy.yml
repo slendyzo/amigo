@@ -34,12 +34,20 @@ jobs:
             export BUILD_ID=$(git rev-parse --short HEAD)
             export BUILD_DATE=$(date +"%d %b %Y, %H:%M")
 
-            # Rebuild and restart container with build args
-            docker compose down
-            docker compose build --build-arg NEXT_PUBLIC_BUILD_ID=$BUILD_ID --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE"
-            docker compose up -d
+            # Enable BuildKit for better caching
+            export DOCKER_BUILDKIT=1
+            export COMPOSE_DOCKER_CLI_BUILD=1
 
-            # Clean up old images
+            # Build with cache (don't stop the running container yet)
+            docker compose build \
+              --build-arg NEXT_PUBLIC_BUILD_ID=$BUILD_ID \
+              --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE" \
+              --build-arg BUILDKIT_INLINE_CACHE=1
+
+            # Quick restart (only ~2-3 seconds downtime)
+            docker compose up -d --force-recreate --no-build
+
+            # Clean up old images (keep last 2)
             docker image prune -f
 
             # Show status
