@@ -11,6 +11,8 @@ type Expense = {
   amount: number;
   type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
   date: string;
+  isRecurring?: boolean;
+  recurringTemplateId?: string | null;
   category: { id: string; name: string } | null;
   bankAccount: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
@@ -430,9 +432,16 @@ export default function ExpensesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {group.expenses.map((expense) => (
-                    <tr key={expense.id} className="hover:bg-slate-50">
+                    <tr key={expense.id} className={expense.isRecurring ? "bg-blue-50/60 hover:bg-blue-100/60" : "hover:bg-slate-50"}>
                       <td className="px-4 py-3 text-sm text-slate-600">
-                        {new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        <div className="flex items-center gap-1.5">
+                          {expense.isRecurring && (
+                            <svg className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                          {new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                        </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="text-sm font-medium text-slate-900">{expense.name}</div>
@@ -492,10 +501,19 @@ export default function ExpensesPage() {
                 {group.expenses.map((expense) => (
                   <div
                     key={expense.id}
-                    className="px-3 py-3 flex items-start justify-between active:bg-slate-50 tap-none"
+                    className={`px-3 py-3 flex items-start justify-between tap-none ${
+                      expense.isRecurring
+                        ? "bg-blue-50/60 active:bg-blue-100/60"
+                        : "active:bg-slate-50"
+                    }`}
                   >
                     <div className="flex-1 min-w-0 mr-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
+                        {expense.isRecurring && (
+                          <svg className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
+                          </svg>
+                        )}
                         <p className="font-medium text-slate-900 text-sm truncate max-w-[160px]">{expense.name}</p>
                         {expense.projects && expense.projects.length > 0 && expense.projects.map((project) => (
                           <span key={project.id} className="px-1.5 py-0.5 text-[10px] rounded bg-amber-100 text-amber-700">

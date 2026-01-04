@@ -63,7 +63,14 @@ export async function GET(request: Request) {
         orderBy: { date: "desc" },
         take: limit,
         skip: offset,
-        include: {
+        select: {
+          id: true,
+          name: true,
+          amount: true,
+          type: true,
+          date: true,
+          isRecurring: true,
+          recurringTemplateId: true,
           category: true,
           bankAccount: true,
           projects: true,

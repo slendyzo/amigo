@@ -95,6 +95,7 @@ function getCellValue(cell: ExcelJS.Cell): unknown {
 
 /**
  * Parse Excel date (handles serial numbers and Date objects)
+ * Returns a date that may need year correction - use correctYearIfNeeded() after collecting all dates
  */
 function parseExcelDate(value: unknown): Date | null {
   if (!value) return null;
@@ -115,10 +116,24 @@ function parseExcelDate(value: unknown): Date | null {
     if (!str || str.toLowerCase() === "total") return null;
 
     // Try DD/MM/YYYY or DD-MM-YYYY
-    const dmyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    const dmyMatch = str.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{1,4})$/);
     if (dmyMatch) {
-      const [, day, month, year] = dmyMatch;
-      const fullYear = year.length === 2 ? 2000 + parseInt(year) : parseInt(year);
+      const [, day, month, yearStr] = dmyMatch;
+      let fullYear = parseInt(yearStr);
+
+      // Handle 2-digit years
+      if (yearStr.length === 2) {
+        fullYear = 2000 + fullYear;
+      }
+      // Handle 3-digit years (typos like "202" instead of "2025")
+      else if (yearStr.length === 3) {
+        // Assume it's a typo - will be corrected later by correctYearIfNeeded()
+        // For now, try to make a reasonable guess: "202" -> 2020 (will be corrected)
+        fullYear = fullYear * 10; // 202 -> 2020
+      }
+      // Handle very old years that are likely typos (like 2018 in midst of 2025 data)
+      // This will be corrected later by correctYearIfNeeded()
+
       return new Date(fullYear, parseInt(month) - 1, parseInt(day));
     }
 
@@ -128,6 +143,85 @@ function parseExcelDate(value: unknown): Date | null {
   }
 
   return null;
+}
+
+/**
+ * Collect all years from parsed dates and find the dominant year
+ * A year is considered dominant if it appears significantly more than others
+ */
+function findDominantYear(dates: (Date | null)[]): number | null {
+  const yearCounts = new Map<number, number>();
+
+  for (const date of dates) {
+    if (date) {
+      const year = date.getFullYear();
+      yearCounts.set(year, (yearCounts.get(year) || 0) + 1);
+    }
+  }
+
+  if (yearCounts.size === 0) return null;
+
+  // Find the year with the most occurrences
+  let dominantYear = 0;
+  let maxCount = 0;
+
+  for (const [year, count] of yearCounts) {
+    if (count > maxCount) {
+      maxCount = count;
+      dominantYear = year;
+    }
+  }
+
+  // Return dominant year if it appears in at least 60% of dates
+  // or if it appears more than 3 times more than any other year
+  const totalDates = dates.filter(d => d !== null).length;
+  const threshold = Math.max(3, totalDates * 0.6);
+
+  if (maxCount >= threshold) {
+    return dominantYear;
+  }
+
+  // Also accept if the dominant year is recent and makes sense
+  const currentYear = new Date().getFullYear();
+  if (dominantYear >= currentYear - 1 && dominantYear <= currentYear + 1) {
+    return dominantYear;
+  }
+
+  return null;
+}
+
+/**
+ * Correct year typos based on the dominant year
+ * Handles:
+ * - 3-digit years like "202" (missing digit) -> use dominant year
+ * - Outlier years that differ significantly from dominant (likely typos)
+ */
+function correctYearIfNeeded(date: Date, dominantYear: number | null): Date {
+  if (!dominantYear) return date;
+
+  const year = date.getFullYear();
+
+  // If year looks like a truncated version of dominant year, fix it
+  // e.g., "202" (stored as 2020) should become 2025 if dominant is 2025
+  const dominantStr = dominantYear.toString();
+  const yearStr = year.toString();
+
+  // Check if this looks like a 3-digit typo that we expanded to 4 digits
+  // e.g., 202 -> 2020, but should be 2025
+  if (yearStr.endsWith("0") && dominantStr.startsWith(yearStr.slice(0, -1))) {
+    // The year 2020 from input "202" should become dominantYear (e.g., 2025)
+    return new Date(dominantYear, date.getMonth(), date.getDate());
+  }
+
+  // Check for obvious outliers (years that differ by more than 2 from dominant)
+  // This catches typos like "2018" when everything else is "2025"
+  const yearDiff = Math.abs(year - dominantYear);
+  if (yearDiff > 2) {
+    console.log(`  → Auto-correcting year typo: ${year} → ${dominantYear} (outlier)`);
+    return new Date(dominantYear, date.getMonth(), date.getDate());
+  }
+
+  return date;
 }
 
 /**
@@ -501,6 +595,27 @@ export async function importExpensesFromExcel(
         recurringTemplatesCreated: 0,
         duplicatesFound: 0,
       };
+    }
+
+    // YEAR CORRECTION PHASE: Fix year typos based on dominant year
+    const allDates = allParsedRows.map(row => row.date);
+    const dominantYear = findDominantYear(allDates);
+    if (dominantYear) {
+      console.log(`\nDominant year detected: ${dominantYear}`);
+      let correctionsMade = 0;
+      for (const row of allParsedRows) {
+        if (row.date) {
+          const originalYear = row.date.getFullYear();
+          const correctedDate = correctYearIfNeeded(row.date, dominantYear);
+          if (correctedDate.getFullYear() !== originalYear) {
+            row.date = correctedDate;
+            correctionsMade++;
+          }
+        }
+      }
+      if (correctionsMade > 0) {
+        console.log(`  → Corrected ${correctionsMade} date(s) with year typos`);
+      }
     }
 
     // Deduplicate recurring candidates by normalized name
@@ -1022,6 +1137,27 @@ export async function importExpensesFromPDF(
         recurringTemplatesCreated: 0,
         duplicatesFound: 0,
       };
+    }
+
+    // YEAR CORRECTION PHASE: Fix year typos based on dominant year
+    const allDates = allParsedRows.map(row => row.date);
+    const dominantYear = findDominantYear(allDates);
+    if (dominantYear) {
+      console.log(`\nDominant year detected: ${dominantYear}`);
+      let correctionsMade = 0;
+      for (const row of allParsedRows) {
+        if (row.date) {
+          const originalYear = row.date.getFullYear();
+          const correctedDate = correctYearIfNeeded(row.date, dominantYear);
+          if (correctedDate.getFullYear() !== originalYear) {
+            row.date = correctedDate;
+            correctionsMade++;
+          }
+        }
+      }
+      if (correctionsMade > 0) {
+        console.log(`  → Corrected ${correctionsMade} date(s) with year typos`);
+      }
     }
 
     // Get or create default category
