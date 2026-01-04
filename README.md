@@ -48,10 +48,11 @@ Your friendly expense tracker - a modern personal finance app built with Next.js
 ## Getting Started
 
 ### Prerequisites
-- Node.js 18+
+- Node.js 22+ (for development)
 - PostgreSQL database (or [Neon](https://neon.tech) account)
+- Docker & Docker Compose (for self-hosting)
 
-### Installation
+### Local Development
 
 1. **Clone the repository**
    ```bash
@@ -88,6 +89,163 @@ Your friendly expense tracker - a modern personal finance app built with Next.js
    ```
 
    Open [http://localhost:3000](http://localhost:3000)
+
+---
+
+## Self-Hosting with Docker
+
+The easiest way to self-host Amigo is with Docker. The image is optimized with multi-stage builds and BuildKit caching for fast rebuilds.
+
+### Quick Start (Docker Compose)
+
+1. **Clone and configure**
+   ```bash
+   git clone https://github.com/slendyzo/amigo.git
+   cd amigo
+   cp .env.example .env
+   ```
+
+2. **Edit `.env`** with your database and auth settings:
+   ```env
+   DATABASE_URL="postgresql://user:password@your-db-host/amigo?sslmode=require"
+   AUTH_SECRET="your-secret-here"
+   AUTH_URL="https://your-domain.com"
+   ```
+
+   Generate AUTH_SECRET:
+   ```bash
+   openssl rand -base64 32
+   ```
+
+3. **Build and run**
+   ```bash
+   # Enable BuildKit for faster builds (recommended)
+   export DOCKER_BUILDKIT=1
+   export COMPOSE_DOCKER_CLI_BUILD=1
+
+   # Build the image
+   docker compose build
+
+   # Start the container
+   docker compose up -d
+   ```
+
+4. **Access at** `http://localhost:3000` (or your configured domain)
+
+### Manual Docker Build
+
+```bash
+# Build the image
+docker build -t amigo:latest .
+
+# Run the container
+docker run -d \
+  --name amigo \
+  -p 3000:3000 \
+  -e DATABASE_URL="your-connection-string" \
+  -e AUTH_SECRET="your-secret" \
+  -e AUTH_URL="https://your-domain.com" \
+  -e AUTH_TRUST_HOST=true \
+  amigo:latest
+```
+
+### Updating Your Deployment
+
+```bash
+cd amigo
+git pull origin main
+
+# Rebuild with BuildKit caching (fast - typically 30-60s)
+export DOCKER_BUILDKIT=1
+docker compose build
+
+# Restart with minimal downtime (~2-3 seconds)
+docker compose up -d --force-recreate --no-build
+
+# Clean up old images
+docker image prune -f
+```
+
+### Reverse Proxy (Nginx/Caddy)
+
+For production, put Amigo behind a reverse proxy with HTTPS.
+
+**Caddy example** (automatic HTTPS):
+```
+amigo.yourdomain.com {
+    reverse_proxy localhost:3000
+}
+```
+
+**Nginx example**:
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name amigo.yourdomain.com;
+
+    ssl_certificate /path/to/cert.pem;
+    ssl_certificate_key /path/to/key.pem;
+
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+    }
+}
+```
+
+### Database Setup
+
+Amigo uses PostgreSQL. You can use:
+
+- **[Neon](https://neon.tech)** - Free tier available, serverless PostgreSQL
+- **Local PostgreSQL** - Run your own instance
+- **Docker PostgreSQL** - Add to docker-compose.yml:
+
+```yaml
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: amigo
+      POSTGRES_PASSWORD: your-password
+      POSTGRES_DB: amigo
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  amigo:
+    # ... existing amigo config ...
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://amigo:your-password@db:5432/amigo
+
+volumes:
+  postgres_data:
+```
+
+After starting, run migrations:
+```bash
+docker compose exec amigo npx prisma migrate deploy
+```
+
+### Health Check
+
+The container includes a health check endpoint at `/api/health`. Docker will automatically restart unhealthy containers.
+
+```bash
+# Check container health
+docker compose ps
+curl http://localhost:3000/api/health
+```
 
 ## Project Structure
 
