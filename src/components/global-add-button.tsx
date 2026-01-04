@@ -43,9 +43,10 @@ export default function GlobalAddButton() {
   return (
     <>
       {/* Desktop floating button - hidden on mobile (mobile uses bottom nav) */}
+      {/* Positioned higher to avoid overlapping pagination controls */}
       <button
         onClick={() => setIsModalOpen(true)}
-        className="hidden md:flex fixed bottom-8 right-8 w-14 h-14 rounded-full bg-[#0070f3] text-white items-center justify-center shadow-lg hover:bg-[#0060df] transition-all hover:scale-105 active:scale-95 z-40"
+        className="hidden md:flex fixed bottom-24 right-8 w-14 h-14 rounded-full bg-[#0070f3] text-white items-center justify-center shadow-lg hover:bg-[#0060df] transition-all hover:scale-105 active:scale-95 z-40"
         title="Add expense (n)"
       >
         <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
