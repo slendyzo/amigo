@@ -20,7 +20,7 @@ export default async function DashboardPage({
   // Only prompt once - skip if they already dismissed it this session
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { username: true },
+    select: { username: true, name: true },
   });
 
   if (!user?.username && params.skipUsername !== "true") {
@@ -146,10 +146,13 @@ export default async function DashboardPage({
     excludeFromBudget: e.excludeFromBudget,
   });
 
+  // Use username (nickname) if set, otherwise fall back to name or "User"
+  const displayName = user?.username || user?.name || session.user.name || "User";
+
   return (
     <DashboardOverview
       workspaceId={workspace.id}
-      userName={session.user.name || "User"}
+      userName={displayName}
       initialExpenses={expenses.map(transformExpense)}
       initialPreviousMonthExpenses={previousMonthExpenses.map(transformExpense)}
       projects={projects}

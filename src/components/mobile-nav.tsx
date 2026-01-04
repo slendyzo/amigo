@@ -8,7 +8,6 @@ import { useState, useEffect, type ReactNode } from "react";
 const primaryTabs = [
   { name: "Home", href: "/dashboard", icon: "home" },
   { name: "Expenses", href: "/dashboard/expenses", icon: "list" },
-  { name: "Add", href: "#add", icon: "plus", isAction: true },
   { name: "Projects", href: "/dashboard/projects", icon: "folder" },
   { name: "More", href: "#menu", icon: "menu", isAction: true },
 ];
@@ -130,11 +129,15 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
   const handleTabClick = (item: typeof primaryTabs[0], e: React.MouseEvent) => {
     if (item.isAction) {
       e.preventDefault();
-      if (item.href === "#add" && onAddClick) {
-        onAddClick();
-      } else if (item.href === "#menu") {
+      if (item.href === "#menu") {
         setIsMenuOpen(true);
       }
+    }
+  };
+
+  const handleAddClick = () => {
+    if (onAddClick) {
+      onAddClick();
     }
   };
 
@@ -145,9 +148,18 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
 
   return (
     <>
+      {/* Floating Add Button - Bottom right */}
+      <button
+        onClick={handleAddClick}
+        className="md:hidden fixed right-4 bottom-24 w-14 h-14 rounded-full bg-[#0070f3] text-white flex items-center justify-center shadow-lg z-50 active:scale-95 transition-transform tap-none"
+        aria-label="Add expense"
+      >
+        {icons.plus}
+      </button>
+
       {/* Bottom Tab Bar - Only visible on mobile */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 safe-bottom">
-        <div className="flex items-center justify-around h-16">
+        <div className="flex items-center justify-around h-16 pb-1">
           {primaryTabs.map((item) => {
             const active = !item.isAction && isActive(item.href);
 
@@ -156,22 +168,10 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
                 <button
                   key={item.name}
                   onClick={(e) => handleTabClick(item, e)}
-                  className={`flex flex-col items-center justify-center w-16 h-full tap-none transition-colors ${
-                    item.href === "#add"
-                      ? "text-white"
-                      : "text-slate-500 active:text-slate-900"
-                  }`}
+                  className="flex flex-col items-center justify-center w-16 h-full tap-none transition-colors text-slate-500 active:text-slate-900"
                 >
-                  {item.href === "#add" ? (
-                    <div className="w-12 h-12 rounded-full bg-[#0070f3] flex items-center justify-center shadow-lg -mt-4">
-                      {icons[item.icon]}
-                    </div>
-                  ) : (
-                    <>
-                      {icons[item.icon]}
-                      <span className="text-xs mt-0.5">{item.name}</span>
-                    </>
-                  )}
+                  {icons[item.icon]}
+                  <span className="text-xs mt-0.5">{item.name}</span>
                 </button>
               );
             }
