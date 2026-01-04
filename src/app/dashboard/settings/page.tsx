@@ -23,6 +23,7 @@ type RecurringIncome = {
   id: string;
   name: string;
   amount: number;
+  amountEur: number;
   currency: string;
   type: string;
   dayOfMonth: number | null;
@@ -463,8 +464,15 @@ export default function SettingsPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
-                  <div className="text-xl font-bold text-green-600">
-                    {getCurrencySymbol(income.currency || "EUR")}{Number(income.amount).toFixed(2)}
+                  <div className="text-right">
+                    <div className="text-xl font-bold text-green-600">
+                      {getCurrencySymbol(income.currency || "EUR")}{Number(income.amount).toFixed(2)}
+                    </div>
+                    {income.currency && income.currency !== "EUR" && (
+                      <div className="text-xs text-slate-500">
+                        ~{"\u20ac"}{Number(income.amountEur).toFixed(2)} EUR
+                      </div>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <button

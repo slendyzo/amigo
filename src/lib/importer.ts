@@ -599,6 +599,10 @@ export async function importExpensesFromExcel(
       });
 
       if (!existing) {
+        // Auto-generate is true for fixed expenses with amounts (like Spotify)
+        // and false for variable expenses (like utilities) so user can fill in later
+        const shouldAutoGenerate = candidate.type === ExpenseType.SURVIVAL_FIXED && candidate.amount > 0;
+
         await prisma.recurringTemplate.create({
           data: {
             workspaceId,
@@ -608,10 +612,11 @@ export async function importExpensesFromExcel(
             currency: "EUR",
             interval: "MONTHLY",
             isActive: true,
+            autoGenerate: shouldAutoGenerate,
           },
         });
         recurringTemplatesCreated++;
-        console.log(`  Created recurring template: ${candidate.name}`);
+        console.log(`  Created recurring template: ${candidate.name} (autoGenerate: ${shouldAutoGenerate})`);
       }
     }
 

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { IncomeType, RecurrenceInterval } from "@prisma/client";
+import { convertToEur } from "@/lib/currency";
 
 // GET /api/incomes/[id] - Get single income
 export async function GET(
@@ -85,6 +86,10 @@ export async function PUT(
     }
 
     const parsedAmount = amount !== undefined ? parseFloat(amount) : Number(existing.amount);
+    const incomeCurrency = currency || existing.currency;
+
+    // Convert to EUR for consistent totals
+    const { amountEur, exchangeRate } = await convertToEur(parsedAmount, incomeCurrency);
 
     const income = await prisma.income.update({
       where: { id },
@@ -93,8 +98,8 @@ export async function PUT(
         description: description !== undefined ? description : existing.description,
         type: type ? (type as IncomeType) : existing.type,
         amount: parsedAmount,
-        currency: currency || existing.currency,
-        amountEur: parsedAmount, // TODO: Add currency conversion
+        currency: incomeCurrency,
+        amountEur: amountEur,
         date: date ? new Date(date) : existing.date,
         bankAccountId: bankAccountId !== undefined ? (bankAccountId || null) : existing.bankAccountId,
         isRecurring: isRecurring !== undefined ? isRecurring : existing.isRecurring,
@@ -106,7 +111,12 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({ income });
+    return NextResponse.json({
+      income: {
+        ...income,
+        exchangeRate: incomeCurrency !== "EUR" ? exchangeRate : undefined,
+      }
+    });
   } catch (error) {
     console.error("Update income error:", error);
     return NextResponse.json({ error: "Failed to update income" }, { status: 500 });

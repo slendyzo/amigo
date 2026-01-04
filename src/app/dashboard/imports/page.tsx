@@ -14,11 +14,23 @@ type ImportLog = {
   createdAt: string;
 };
 
+type EmptyProject = {
+  id: string;
+  name: string;
+};
+
+type DeleteConfirmation = {
+  log: ImportLog;
+  emptyProjects: EmptyProject[];
+  deleteEmptyProjects: boolean;
+} | null;
+
 export default function ImportsPage() {
   const router = useRouter();
   const [importLogs, setImportLogs] = useState<ImportLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteConfirmation, setDeleteConfirmation] = useState<DeleteConfirmation>(null);
 
   useEffect(() => {
     fetchImportLogs();
@@ -39,14 +51,43 @@ export default function ImportsPage() {
     }
   };
 
-  const handleDelete = async (log: ImportLog) => {
-    const confirmMsg = `Are you sure you want to delete this import batch?\n\nFile: ${log.fileName}\nExpenses: ${log.expenseCount}\n\nThis will permanently delete all ${log.expenseCount} expenses from this import.`;
-
-    if (!confirm(confirmMsg)) return;
-
-    setDeletingId(log.id);
+  const handleDeleteClick = async (log: ImportLog) => {
+    // First, check what would be affected
     try {
-      const response = await fetch(`/api/import-logs/${log.id}`, {
+      const response = await fetch(`/api/import-logs/${log.id}?checkOnly=true`, {
+        method: "DELETE",
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.hasEmptyProjects) {
+          // Show confirmation modal with empty projects info
+          setDeleteConfirmation({
+            log,
+            emptyProjects: data.emptyProjects,
+            deleteEmptyProjects: false,
+          });
+        } else {
+          // No empty projects, proceed with simple confirmation
+          const confirmMsg = `Delete this import batch?\n\nFile: ${log.fileName}\nExpenses: ${log.expenseCount}\n\nThis will permanently delete all ${log.expenseCount} expenses.`;
+          if (confirm(confirmMsg)) {
+            executeDelete(log.id, false);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Failed to check import log:", error);
+      alert("Failed to check import batch");
+    }
+  };
+
+  const executeDelete = async (logId: string, deleteEmptyProjects: boolean) => {
+    setDeletingId(logId);
+    setDeleteConfirmation(null);
+
+    try {
+      const url = `/api/import-logs/${logId}${deleteEmptyProjects ? "?deleteEmptyProjects=true" : ""}`;
+      const response = await fetch(url, {
         method: "DELETE",
       });
 
@@ -154,7 +195,7 @@ export default function ImportsPage() {
                 {/* Actions */}
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => handleDelete(log)}
+                    onClick={() => handleDeleteClick(log)}
                     disabled={deletingId === log.id}
                     className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
                   >
@@ -198,6 +239,82 @@ export default function ImportsPage() {
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal for Empty Projects */}
+      {deleteConfirmation && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900">Delete Import?</h3>
+            </div>
+
+            <p className="text-slate-600 mb-4">
+              Deleting <strong>{deleteConfirmation.log.fileName}</strong> will remove{" "}
+              <strong>{deleteConfirmation.log.expenseCount}</strong> expenses.
+            </p>
+
+            {deleteConfirmation.emptyProjects.length > 0 && (
+              <div className="mb-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                <p className="text-sm font-medium text-slate-700 mb-2">
+                  These projects will become empty:
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {deleteConfirmation.emptyProjects.map((project) => (
+                    <span
+                      key={project.id}
+                      className="px-2 py-1 text-sm rounded-full bg-amber-100 text-amber-700"
+                    >
+                      {project.name}
+                    </span>
+                  ))}
+                </div>
+
+                <label className="flex items-center gap-2 mt-3 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={deleteConfirmation.deleteEmptyProjects}
+                    onChange={(e) =>
+                      setDeleteConfirmation({
+                        ...deleteConfirmation,
+                        deleteEmptyProjects: e.target.checked,
+                      })
+                    }
+                    className="w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
+                  />
+                  <span className="text-sm text-slate-700">
+                    Also delete these empty projects
+                  </span>
+                </label>
+              </div>
+            )}
+
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteConfirmation(null)}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() =>
+                  executeDelete(
+                    deleteConfirmation.log.id,
+                    deleteConfirmation.deleteEmptyProjects
+                  )
+                }
+                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

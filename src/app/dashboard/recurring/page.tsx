@@ -22,6 +22,7 @@ type Template = {
   interval: string;
   dayOfMonth: number | null;
   isActive: boolean;
+  autoGenerate: boolean;
   lastGenerated: string | null;
   nextDue: string | null;
   category: Category | null;
@@ -67,6 +68,7 @@ export default function RecurringTemplatesPage() {
     dayOfMonth: "", // Empty = no specific date (just monthly)
     categoryId: "",
     bankAccountId: "",
+    autoGenerate: false, // Auto-create expense at month start
   });
 
   useEffect(() => {
@@ -132,6 +134,7 @@ export default function RecurringTemplatesPage() {
           dayOfMonth: "",
           categoryId: "",
           bankAccountId: "",
+          autoGenerate: false,
         });
         setIsCreating(false);
         fetchTemplates();
@@ -237,6 +240,7 @@ export default function RecurringTemplatesPage() {
       dayOfMonth: template.dayOfMonth?.toString() || "",
       categoryId: template.category?.id || "",
       bankAccountId: template.bankAccount?.id || "",
+      autoGenerate: template.autoGenerate || false,
     });
     setEditingId(template.id);
     setIsCreating(false);
@@ -251,6 +255,7 @@ export default function RecurringTemplatesPage() {
       dayOfMonth: "",
       categoryId: "",
       bankAccountId: "",
+      autoGenerate: false,
     });
     setIsCreating(true);
     setEditingId(null);
@@ -433,6 +438,27 @@ export default function RecurringTemplatesPage() {
               </p>
             </div>
           </div>
+
+          {/* Auto-generate toggle */}
+          <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={formData.autoGenerate}
+                onChange={(e) => setFormData({ ...formData, autoGenerate: e.target.checked })}
+                className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+              />
+              <div>
+                <span className="font-medium text-slate-900">Auto-generate at month start</span>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {formData.type === "SURVIVAL_FIXED" || formData.amount
+                    ? "Expense will be created automatically with the fixed amount"
+                    : "Expense will be created with \u20ac0.00 - update when bill arrives"}
+                </p>
+              </div>
+            </label>
+          </div>
+
           <div className="flex gap-3 mt-4">
             <button
               onClick={handleCreate}
@@ -559,6 +585,23 @@ export default function RecurringTemplatesPage() {
                           <a href="/dashboard/accounts" className="text-blue-500 hover:underline">Manage accounts</a>
                         </p>
                       </div>
+                      {/* Auto-generate toggle in edit */}
+                      <div className="lg:col-span-2">
+                        <label className="flex items-center gap-3 cursor-pointer p-3 bg-slate-50 rounded-lg">
+                          <input
+                            type="checkbox"
+                            checked={formData.autoGenerate}
+                            onChange={(e) => setFormData({ ...formData, autoGenerate: e.target.checked })}
+                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div>
+                            <span className="text-sm font-medium text-slate-900">Auto-generate</span>
+                            <p className="text-xs text-slate-500">
+                              {formData.amount ? "Creates with fixed amount" : "Creates at \u20ac0.00"}
+                            </p>
+                          </div>
+                        </label>
+                      </div>
                     </div>
                     <div className="flex gap-2 pt-2">
                       <button
@@ -609,10 +652,23 @@ export default function RecurringTemplatesPage() {
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-slate-500 mt-0.5">
-                          {template.dayOfMonth ? `Day ${template.dayOfMonth}` : 'Monthly'} •
-                          {template.amount ? ` €${Number(template.amount).toFixed(2)}` : ' Variable amount'} •
-                          {template._count.expenses} expenses generated
+                        <div className="text-sm text-slate-500 mt-0.5 flex items-center gap-1 flex-wrap">
+                          <span>{template.dayOfMonth ? `Day ${template.dayOfMonth}` : 'Monthly'}</span>
+                          <span>•</span>
+                          <span>{template.amount ? `\u20ac${Number(template.amount).toFixed(2)}` : 'Variable'}</span>
+                          <span>•</span>
+                          <span>{template._count.expenses} generated</span>
+                          {template.autoGenerate && (
+                            <>
+                              <span>•</span>
+                              <span className="text-green-600 flex items-center gap-0.5">
+                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                </svg>
+                                Auto
+                              </span>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>

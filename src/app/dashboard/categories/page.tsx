@@ -122,6 +122,11 @@ export default function CategoriesPage() {
         </button>
       </div>
 
+      {/* Info Note */}
+      <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm text-slate-600">
+        <span className="font-medium">Note:</span> Categories marked with a lock icon are system defaults and cannot be deleted. Your expenses will be auto-categorized based on keyword mappings.
+      </div>
+
       {/* Categories List */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         {isLoading ? (
@@ -147,7 +152,6 @@ export default function CategoriesPage() {
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">Name</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">Type</th>
                 <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">Expenses</th>
                 <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">Actions</th>
               </tr>
@@ -156,18 +160,16 @@ export default function CategoriesPage() {
               {categories.map((category) => (
                 <tr key={category.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">
-                    <span className="font-medium text-slate-900">{category.name}</span>
-                  </td>
-                  <td className="px-4 py-3">
-                    {category.isSystem ? (
-                      <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                        System
-                      </span>
-                    ) : (
-                      <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-700">
-                        Custom
-                      </span>
-                    )}
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-slate-900">{category.name}</span>
+                      {category.isSystem && (
+                        <span title="System category - cannot be deleted">
+                          <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                          </svg>
+                        </span>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-600 text-right">
                     {category._count?.expenses || 0}

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { IncomeType, RecurrenceInterval } from "@prisma/client";
+import { convertToEur } from "@/lib/currency";
 
 // GET /api/incomes - List all incomes
 export async function GET(request: NextRequest) {
@@ -123,6 +124,10 @@ export async function POST(request: NextRequest) {
 
     const parsedAmount = parseFloat(amount);
     const incomeDate = date ? new Date(date) : new Date();
+    const incomeCurrency = currency || "EUR";
+
+    // Convert to EUR for consistent totals
+    const { amountEur, exchangeRate } = await convertToEur(parsedAmount, incomeCurrency);
 
     const income = await prisma.income.create({
       data: {
@@ -131,8 +136,8 @@ export async function POST(request: NextRequest) {
         description: description || null,
         type: (type as IncomeType) || IncomeType.OTHER,
         amount: parsedAmount,
-        currency: currency || "EUR",
-        amountEur: parsedAmount, // TODO: Add currency conversion
+        currency: incomeCurrency,
+        amountEur: amountEur,
         date: incomeDate,
         bankAccountId: bankAccountId || null,
         isRecurring: isRecurring || false,
@@ -144,7 +149,13 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    return NextResponse.json({ income }, { status: 201 });
+    // Return with exchange rate info
+    return NextResponse.json({
+      income: {
+        ...income,
+        exchangeRate: incomeCurrency !== "EUR" ? exchangeRate : undefined,
+      }
+    }, { status: 201 });
   } catch (error) {
     console.error("Failed to create income:", error);
     return NextResponse.json(

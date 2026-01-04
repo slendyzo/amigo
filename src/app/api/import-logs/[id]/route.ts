@@ -78,6 +78,9 @@ export async function GET(
 }
 
 // DELETE /api/import-logs/:id - Delete an import batch and all its expenses
+// Query params:
+//   - deleteEmptyProjects: "true" to also delete projects that become empty
+//   - checkOnly: "true" to only check what would be affected without deleting
 export async function DELETE(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -85,6 +88,9 @@ export async function DELETE(
   try {
     const session = await auth();
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const deleteEmptyProjects = searchParams.get("deleteEmptyProjects") === "true";
+    const checkOnly = searchParams.get("checkOnly") === "true";
 
     if (!session?.user?.id) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -119,6 +125,60 @@ export async function DELETE(
 
     const expenseCount = importLog._count.expenses;
 
+    // Find expenses from this import that are linked to projects
+    const expensesWithProjects = await prisma.expense.findMany({
+      where: { importLogId: id },
+      select: {
+        id: true,
+        projects: {
+          select: { id: true, name: true },
+        },
+      },
+    });
+
+    // Get unique project IDs that have expenses from this import
+    const projectIdsFromImport = new Set<string>();
+    expensesWithProjects.forEach((expense) => {
+      expense.projects.forEach((project) => {
+        projectIdsFromImport.add(project.id);
+      });
+    });
+
+    // Check which projects would become empty after deletion
+    const emptyProjects: { id: string; name: string }[] = [];
+
+    for (const projectId of projectIdsFromImport) {
+      // Count expenses in this project that are NOT from this import
+      const otherExpensesCount = await prisma.expense.count({
+        where: {
+          projects: { some: { id: projectId } },
+          importLogId: { not: id },
+        },
+      });
+
+      if (otherExpensesCount === 0) {
+        // This project will be empty after deletion
+        const project = await prisma.project.findUnique({
+          where: { id: projectId },
+          select: { id: true, name: true },
+        });
+        if (project) {
+          emptyProjects.push(project);
+        }
+      }
+    }
+
+    // If checkOnly, return info about what would be affected
+    if (checkOnly) {
+      return NextResponse.json({
+        success: true,
+        checkOnly: true,
+        expenseCount,
+        emptyProjects,
+        hasEmptyProjects: emptyProjects.length > 0,
+      });
+    }
+
     // Delete all expenses linked to this import batch
     await prisma.expense.deleteMany({
       where: { importLogId: id },
@@ -129,10 +189,22 @@ export async function DELETE(
       where: { id },
     });
 
+    // Optionally delete empty projects
+    let deletedProjects = 0;
+    if (deleteEmptyProjects && emptyProjects.length > 0) {
+      const projectIds = emptyProjects.map((p) => p.id);
+      const deleteResult = await prisma.project.deleteMany({
+        where: { id: { in: projectIds } },
+      });
+      deletedProjects = deleteResult.count;
+    }
+
     return NextResponse.json({
       success: true,
       message: `Deleted import batch and ${expenseCount} expenses`,
       deletedExpenses: expenseCount,
+      deletedProjects,
+      emptyProjects: deleteEmptyProjects ? [] : emptyProjects,
     });
   } catch (error) {
     console.error("Failed to delete import log:", error);

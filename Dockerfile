@@ -28,6 +28,12 @@ RUN npx prisma generate
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Build info args (passed from docker build)
+ARG NEXT_PUBLIC_BUILD_ID=dev
+ARG NEXT_PUBLIC_BUILD_DATE=unknown
+ENV NEXT_PUBLIC_BUILD_ID=$NEXT_PUBLIC_BUILD_ID
+ENV NEXT_PUBLIC_BUILD_DATE=$NEXT_PUBLIC_BUILD_DATE
+
 RUN npm run build
 
 # Stage 3: Production Runner

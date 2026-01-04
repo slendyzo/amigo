@@ -18,6 +18,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      allowDangerousEmailAccountLinking: true,
     }),
     Credentials({
       name: "credentials",
@@ -62,9 +63,13 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id;
+      }
+      // Pass provider info to session for debugging
+      if (account) {
+        token.provider = account.provider;
       }
       return token;
     },
@@ -73,6 +78,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id as string;
       }
       return session;
+    },
+  },
+  events: {
+    async createUser({ user }) {
+      // Auto-create workspace for new OAuth users
+      if (user.id && user.email) {
+        const existingMembership = await prisma.workspaceMember.findFirst({
+          where: { userId: user.id },
+        });
+
+        if (!existingMembership) {
+          const workspace = await prisma.workspace.create({
+            data: {
+              name: "Personal",
+              type: "PERSONAL",
+              ownerId: user.id,
+              members: {
+                create: {
+                  userId: user.id,
+                  role: "OWNER",
+                },
+              },
+            },
+          });
+
+          // Create default "Uncategorized" category
+          await prisma.category.create({
+            data: {
+              workspaceId: workspace.id,
+              name: "Uncategorized",
+              isSystem: true,
+            },
+          });
+        }
+      }
     },
   },
 });

@@ -30,12 +30,18 @@ jobs:
             # Pull latest code
             git pull origin main
 
-            # Rebuild and restart container
+            # Set build info
+            export BUILD_ID=$(git rev-parse --short HEAD)
+            export BUILD_DATE=$(date +"%d %b %Y, %H:%M")
+
+            # Rebuild and restart container with build args
             docker compose down
-            docker compose up -d --build
+            docker compose build --build-arg NEXT_PUBLIC_BUILD_ID=$BUILD_ID --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE"
+            docker compose up -d
 
             # Clean up old images
             docker image prune -f
 
             # Show status
+            echo "Deployed build: $BUILD_ID @ $BUILD_DATE"
             docker compose ps

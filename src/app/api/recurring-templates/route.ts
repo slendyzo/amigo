@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId } = body;
+    const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId, autoGenerate } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -82,6 +82,7 @@ export async function POST(request: Request) {
         dayOfMonth: parsedDayOfMonth, // null = no specific day (monthly)
         categoryId: categoryId || null,
         bankAccountId: bankAccountId || null,
+        autoGenerate: autoGenerate || false,
         nextDue,
         isActive: true,
       },

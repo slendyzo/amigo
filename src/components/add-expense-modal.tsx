@@ -30,9 +30,9 @@ type AddExpenseModalProps = {
 export default function AddExpenseModal({
   isOpen,
   onClose,
-  categories = [],
-  bankAccounts = [],
-  projects = [],
+  categories: propCategories,
+  bankAccounts: propBankAccounts,
+  projects: propProjects,
 }: AddExpenseModalProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -50,29 +50,75 @@ export default function AddExpenseModal({
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const [showNewTagInput, setShowNewTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState("");
-  const [localProjects, setLocalProjects] = useState<Project[]>(projects);
-  const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+  const [localProjects, setLocalProjects] = useState<Project[]>(propProjects || []);
+  const [localCategories, setLocalCategories] = useState<Category[]>(propCategories || []);
+  const [localBankAccounts, setLocalBankAccounts] = useState<BankAccount[]>(propBankAccounts || []);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isDataLoading, setIsDataLoading] = useState(false);
+
+  // Fetch data if not provided via props
+  useEffect(() => {
+    if (isOpen && !propCategories && !propProjects && !propBankAccounts) {
+      const fetchData = async () => {
+        setIsDataLoading(true);
+        try {
+          const [catRes, projRes, bankRes] = await Promise.all([
+            fetch("/api/categories"),
+            fetch("/api/projects"),
+            fetch("/api/bank-accounts"),
+          ]);
+          const [catData, projData, bankData] = await Promise.all([
+            catRes.json(),
+            projRes.json(),
+            bankRes.json(),
+          ]);
+          if (catData.categories) setLocalCategories(catData.categories);
+          if (projData.projects) setLocalProjects(projData.projects);
+          if (bankData.bankAccounts) setLocalBankAccounts(bankData.bankAccounts);
+        } catch (err) {
+          console.error("Failed to fetch modal data:", err);
+        } finally {
+          setIsDataLoading(false);
+        }
+      };
+      fetchData();
+    }
+  }, [isOpen, propCategories, propProjects, propBankAccounts]);
 
   // Update local categories when props change (compare by content to avoid infinite loops)
   useEffect(() => {
-    const categoriesJson = JSON.stringify(categories);
-    const localCatJson = JSON.stringify(localCategories);
-    if (categoriesJson !== localCatJson) {
-      setLocalCategories(categories);
+    if (propCategories) {
+      const categoriesJson = JSON.stringify(propCategories);
+      const localCatJson = JSON.stringify(localCategories);
+      if (categoriesJson !== localCatJson) {
+        setLocalCategories(propCategories);
+      }
     }
-  }, [categories, localCategories]);
+  }, [propCategories, localCategories]);
 
   // Update local projects when props change (compare by content to avoid infinite loops)
   useEffect(() => {
-    const projectsJson = JSON.stringify(projects);
-    const localJson = JSON.stringify(localProjects);
-    if (projectsJson !== localJson) {
-      setLocalProjects(projects);
+    if (propProjects) {
+      const projectsJson = JSON.stringify(propProjects);
+      const localJson = JSON.stringify(localProjects);
+      if (projectsJson !== localJson) {
+        setLocalProjects(propProjects);
+      }
     }
-  }, [projects, localProjects]);
+  }, [propProjects, localProjects]);
+
+  // Update local bank accounts when props change
+  useEffect(() => {
+    if (propBankAccounts) {
+      const bankJson = JSON.stringify(propBankAccounts);
+      const localJson = JSON.stringify(localBankAccounts);
+      if (bankJson !== localJson) {
+        setLocalBankAccounts(propBankAccounts);
+      }
+    }
+  }, [propBankAccounts, localBankAccounts]);
 
   // Focus input when modal opens
   useEffect(() => {
@@ -421,7 +467,7 @@ export default function AddExpenseModal({
                     />
                   </div>
                 </div>
-                {bankAccounts.length > 0 && (
+                {localBankAccounts.length > 0 && (
                   <div>
                     <label className="block text-xs font-medium text-slate-600 mb-1">
                       Bank Account
@@ -432,7 +478,7 @@ export default function AddExpenseModal({
                       className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                     >
                       <option value="">None</option>
-                      {bankAccounts.map((acc) => (
+                      {localBankAccounts.map((acc) => (
                         <option key={acc.id} value={acc.id}>
                           {acc.name}
                         </option>

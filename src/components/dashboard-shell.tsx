@@ -4,6 +4,7 @@ import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import MobileNav from "./mobile-nav";
+import GlobalAddButton from "./global-add-button";
 import type { ReactNode } from "react";
 
 const navigation = [
@@ -139,7 +140,11 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
         {/* Footer */}
         <div className="p-4 border-t border-slate-200">
           <div className="text-xs text-slate-400">
-            Amigo v0.1.0
+            <div>Amigo v0.1.0</div>
+            <div className="mt-1 opacity-75">
+              Build: {process.env.NEXT_PUBLIC_BUILD_ID || "dev"}<br />
+              {process.env.NEXT_PUBLIC_BUILD_DATE || new Date().toLocaleDateString("en-GB")}
+            </div>
           </div>
         </div>
       </aside>
@@ -178,6 +183,9 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
         userEmail={userEmail}
         onSignOut={handleSignOut}
       />
+
+      {/* Global Add Button (desktop floating button + modal) */}
+      <GlobalAddButton />
     </div>
   );
 }

@@ -313,6 +313,8 @@ model RecurringTemplate {
   dayOfMonth    Int?               // 1-31, for monthly recurrence
   dayOfWeek     Int?               // 0-6, for weekly recurrence
 
+  // Auto-generation settings
+  autoGenerate  Boolean            @default(false)  // If true, auto-create at month start
   isActive      Boolean            @default(true)
   lastGenerated DateTime?          // Last time an expense was auto-created
   nextDue       DateTime?          // Next scheduled generation

@@ -57,7 +57,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId, isActive } = body;
+    const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId, isActive, autoGenerate } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -106,6 +106,7 @@ export async function PUT(
         categoryId: categoryId !== undefined ? (categoryId || null) : existing.categoryId,
         bankAccountId: bankAccountId !== undefined ? (bankAccountId || null) : existing.bankAccountId,
         isActive: isActive !== undefined ? isActive : existing.isActive,
+        autoGenerate: autoGenerate !== undefined ? autoGenerate : existing.autoGenerate,
         nextDue,
       },
       include: {

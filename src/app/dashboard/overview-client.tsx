@@ -113,6 +113,23 @@ export default function DashboardOverview({
     return () => window.removeEventListener("openQuickAdd", handleQuickAdd);
   }, []);
 
+  // Auto-generate recurring expenses for current month (runs once on mount)
+  useEffect(() => {
+    const autoGenerateRecurring = async () => {
+      try {
+        const response = await fetch("/api/recurring-templates/generate");
+        const data = await response.json();
+        if (data.generated > 0) {
+          // Refresh expenses if any were auto-generated
+          router.refresh();
+        }
+      } catch (error) {
+        console.error("Auto-generate recurring expenses failed:", error);
+      }
+    };
+    autoGenerateRecurring();
+  }, [router]);
+
   // Month navigation for swipe
   const goToPreviousMonth = useCallback(() => {
     setHasFilterChanged(true);
