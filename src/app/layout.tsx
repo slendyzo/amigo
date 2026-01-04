@@ -10,6 +10,16 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "Amigo",
   description: "Your friendly expense tracker",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Amigo",
+  },
+  icons: {
+    icon: "/icons/icon-192.svg",
+    apple: "/icons/icon-192.svg",
+  },
 };
 
 export default function RootLayout({
