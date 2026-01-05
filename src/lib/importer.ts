@@ -516,6 +516,7 @@ export async function importExpensesFromExcel(
           lastValidDate = parsedDate; // Update the last valid date
           firstDateSeen = true; // Mark that we've seen a date
         } else if (lastValidDate) {
+          console.log(`    Date inheritance: "${rawName}" inherits ${lastValidDate.toISOString().slice(0, 10)} from previous row`);
           parsedDate = lastValidDate; // Inherit from previous row
         }
 
@@ -690,27 +691,35 @@ export async function importExpensesFromExcel(
       }
     }
 
-    // DUPLICATE DETECTION: Fetch existing expenses for this workspace
-    const existingExpenses = await prisma.expense.findMany({
-      where: { workspaceId },
+    // DUPLICATE DETECTION: Only for SURVIVAL_FIXED and SURVIVAL_VARIABLE (recurring) expenses
+    // Regular LIFESTYLE expenses should NEVER be considered duplicates - you can go to the
+    // same store, use the same service, or take the same transport multiple times!
+    const existingRecurringExpenses = await prisma.expense.findMany({
+      where: {
+        workspaceId,
+        type: { in: ["SURVIVAL_FIXED", "SURVIVAL_VARIABLE"] }
+      },
       select: { id: true, date: true, name: true, amount: true },
     });
 
-    // Create a map of existing expense keys -> ids for quick lookup
+    // Create a map of existing recurring expense keys -> ids for quick lookup
     const existingExpenseMap = new Map<string, string>();
-    for (const exp of existingExpenses) {
+    for (const exp of existingRecurringExpenses) {
       const key = createExpenseKey(exp.date, exp.name, Number(exp.amount));
       existingExpenseMap.set(key, exp.id);
     }
 
-    // Also check incomes for duplicates
-    const existingIncomes = await prisma.income.findMany({
-      where: { workspaceId },
+    // Also check incomes for duplicates (salary/recurring incomes only)
+    const existingRecurringIncomes = await prisma.income.findMany({
+      where: {
+        workspaceId,
+        isRecurring: true
+      },
       select: { id: true, date: true, name: true, amount: true },
     });
 
     const existingIncomeMap = new Map<string, string>();
-    for (const inc of existingIncomes) {
+    for (const inc of existingRecurringIncomes) {
       const key = createExpenseKey(inc.date, inc.name, Number(inc.amount));
       existingIncomeMap.set(key, inc.id);
     }
@@ -720,73 +729,54 @@ export async function importExpensesFromExcel(
     let totalReplaced = 0;
     let duplicatesFound = 0;
 
-    // Process incomes with duplicate handling
+    // Process incomes - no duplicate checking for regular incomes
+    // (you can receive multiple payments of the same amount on the same day)
     if (incomeRows.length > 0) {
-      const newIncomes: typeof incomeRows = [];
-      const duplicateIncomeIds: string[] = [];
+      // Insert all incomes directly - no duplicate detection for regular incomes
+      const incomeData = incomeRows.map((row) => ({
+        workspaceId,
+        name: row.name,
+        amount: row.amount,
+        currency: "EUR",
+        amountEur: row.amount,
+        date: row.date!,
+        isRecurring: false,
+      }));
 
-      for (const row of incomeRows) {
-        const key = createExpenseKey(row.date!, row.name, row.amount);
-        const existingId = existingIncomeMap.get(key);
-
-        if (existingId) {
-          duplicatesFound++;
-          if (duplicateHandling === "replace") {
-            duplicateIncomeIds.push(existingId);
-            newIncomes.push(row);
-          } else {
-            totalSkipped++;
-          }
-        } else {
-          newIncomes.push(row);
-        }
-      }
-
-      // Delete duplicates if replacing
-      if (duplicateIncomeIds.length > 0) {
-        await prisma.income.deleteMany({
-          where: { id: { in: duplicateIncomeIds } },
-        });
-        totalReplaced += duplicateIncomeIds.length;
-      }
-
-      // Insert new incomes
-      if (newIncomes.length > 0) {
-        const incomeData = newIncomes.map((row) => ({
-          workspaceId,
-          name: row.name,
-          amount: row.amount,
-          currency: "EUR",
-          amountEur: row.amount,
-          date: row.date!,
-          isRecurring: false,
-        }));
-
-        const incomeResult = await prisma.income.createMany({
-          data: incomeData,
-        });
-        totalCreated += incomeResult.count;
-        console.log(`  → Created ${incomeResult.count} incomes (${totalSkipped} skipped as duplicates)`);
-      }
+      const incomeResult = await prisma.income.createMany({
+        data: incomeData,
+      });
+      totalCreated += incomeResult.count;
+      console.log(`  → Created ${incomeResult.count} incomes`);
     }
 
     // Process regular expenses with duplicate handling
+    // IMPORTANT: Only check duplicates for SURVIVAL_FIXED and SURVIVAL_VARIABLE (recurring) expenses
+    // LIFESTYLE expenses are NEVER duplicates - you can shop at the same store multiple times!
     const newRegularExpenses: typeof regularExpenses = [];
     const duplicateExpenseIds: string[] = [];
 
     for (const row of regularExpenses) {
-      const key = createExpenseKey(row.date!, row.name, row.amount);
-      const existingId = existingExpenseMap.get(key);
+      // Only check for duplicates on recurring expense types
+      const isRecurringType = row.type === ExpenseType.SURVIVAL_FIXED || row.type === ExpenseType.SURVIVAL_VARIABLE;
 
-      if (existingId) {
-        duplicatesFound++;
-        if (duplicateHandling === "replace") {
-          duplicateExpenseIds.push(existingId);
-          newRegularExpenses.push(row);
+      if (isRecurringType) {
+        const key = createExpenseKey(row.date!, row.name, row.amount);
+        const existingId = existingExpenseMap.get(key);
+
+        if (existingId) {
+          duplicatesFound++;
+          if (duplicateHandling === "replace") {
+            duplicateExpenseIds.push(existingId);
+            newRegularExpenses.push(row);
+          } else {
+            totalSkipped++;
+          }
         } else {
-          totalSkipped++;
+          newRegularExpenses.push(row);
         }
       } else {
+        // LIFESTYLE and other expense types are NEVER duplicates - always import them
         newRegularExpenses.push(row);
       }
     }
@@ -1184,14 +1174,18 @@ export async function importExpensesFromPDF(
       },
     });
 
-    // DUPLICATE DETECTION: Fetch existing expenses for this workspace
-    const existingExpenses = await prisma.expense.findMany({
-      where: { workspaceId },
+    // DUPLICATE DETECTION: Only for recurring expense types (SURVIVAL_FIXED/VARIABLE)
+    // LIFESTYLE expenses are NEVER duplicates - you can have multiple transactions per day!
+    const existingRecurringExpenses = await prisma.expense.findMany({
+      where: {
+        workspaceId,
+        type: { in: ["SURVIVAL_FIXED", "SURVIVAL_VARIABLE"] }
+      },
       select: { id: true, date: true, name: true, amount: true },
     });
 
     const existingExpenseMap = new Map<string, string>();
-    for (const exp of existingExpenses) {
+    for (const exp of existingRecurringExpenses) {
       const key = createExpenseKey(exp.date, exp.name, Number(exp.amount));
       existingExpenseMap.set(key, exp.id);
     }
@@ -1201,23 +1195,31 @@ export async function importExpensesFromPDF(
     let totalReplaced = 0;
     let duplicatesFound = 0;
 
-    // Check each row for duplicates
+    // Check each row - only check duplicates for recurring expense types
     const newExpenses: typeof allParsedRows = [];
     const duplicateExpenseIds: string[] = [];
 
     for (const row of allParsedRows) {
-      const key = createExpenseKey(row.date!, row.name, row.amount);
-      const existingId = existingExpenseMap.get(key);
+      // Only check duplicates for SURVIVAL_FIXED and SURVIVAL_VARIABLE
+      const isRecurringType = row.type === ExpenseType.SURVIVAL_FIXED || row.type === ExpenseType.SURVIVAL_VARIABLE;
 
-      if (existingId) {
-        duplicatesFound++;
-        if (duplicateHandling === "replace") {
-          duplicateExpenseIds.push(existingId);
-          newExpenses.push(row);
+      if (isRecurringType) {
+        const key = createExpenseKey(row.date!, row.name, row.amount);
+        const existingId = existingExpenseMap.get(key);
+
+        if (existingId) {
+          duplicatesFound++;
+          if (duplicateHandling === "replace") {
+            duplicateExpenseIds.push(existingId);
+            newExpenses.push(row);
+          } else {
+            totalSkipped++;
+          }
         } else {
-          totalSkipped++;
+          newExpenses.push(row);
         }
       } else {
+        // LIFESTYLE expenses are NEVER duplicates - always import them
         newExpenses.push(row);
       }
     }
@@ -1252,7 +1254,7 @@ export async function importExpensesFromPDF(
       totalCreated = result.count;
     }
 
-    console.log(`  → Duplicate handling: ${duplicatesFound} duplicates found, ${totalSkipped} skipped, ${totalReplaced} replaced`);
+    console.log(`  → Recurring duplicates: ${duplicatesFound} found, ${totalSkipped} skipped, ${totalReplaced} replaced`);
 
     // Update import log
     await prisma.importLog.update({

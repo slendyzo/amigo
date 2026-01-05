@@ -466,13 +466,13 @@ export default function SettingsPage() {
       <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Recurring Income</h2>
-            <p className="text-sm text-slate-500">Set up your salary or regular income</p>
+            <h2 className="text-lg font-semibold text-slate-900">{t("recurringIncome")}</h2>
+            <p className="text-sm text-slate-500">{t("salaryDescription")}</p>
           </div>
           <button
             onClick={() => {
               setEditingSalaryId(null);
-              setSalaryName("Salary");
+              setSalaryName(t("salary"));
               setSalaryAmount("");
               setSalaryCurrency("EUR");
               setSalaryDay("1");
@@ -483,7 +483,7 @@ export default function SettingsPage() {
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Add Income
+            {t("addSalary")}
           </button>
         </div>
 
@@ -492,8 +492,8 @@ export default function SettingsPage() {
             <svg className="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p>No recurring income set up</p>
-            <p className="text-xs mt-1">Add your salary to track income vs expenses</p>
+            <p>{t("noRecurringIncome")}</p>
+            <p className="text-xs mt-1">{t("addSalaryHint")}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -505,7 +505,7 @@ export default function SettingsPage() {
                 <div>
                   <div className="font-medium text-slate-900">{income.name}</div>
                   <div className="text-sm text-slate-500">
-                    {income.dayOfMonth ? `Day ${income.dayOfMonth} of each month` : "Monthly"}
+                    {income.dayOfMonth ? t("dayOfMonth", { day: income.dayOfMonth }) : t("monthly")}
                   </div>
                 </div>
                 <div className="flex items-center gap-4">
@@ -548,16 +548,16 @@ export default function SettingsPage() {
       <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">Extra Incomes</h2>
+            <h2 className="text-lg font-semibold text-slate-900">{t("extraIncomes")}</h2>
             <p className="text-sm text-slate-500">
-              Track one-time income like sales, gifts, refunds, and more
+              {t("extraIncomesDescription")}
             </p>
           </div>
           <a
             href="/dashboard/incomes"
             className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2"
           >
-            Manage Incomes
+            {t("manageIncomes")}
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
@@ -567,7 +567,7 @@ export default function SettingsPage() {
 
       {/* Danger Zone */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-red-200">
-        <h2 className="text-lg font-semibold text-red-600 mb-4">Danger Zone</h2>
+        <h2 className="text-lg font-semibold text-red-600 mb-4">{t("dangerZone")}</h2>
 
         {deleteSuccess && (
           <div className="mb-4 p-3 rounded-lg bg-green-50 text-green-700 text-sm">
@@ -577,31 +577,31 @@ export default function SettingsPage() {
 
         <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
           <div>
-            <div className="font-medium text-slate-900">Delete All Expenses</div>
+            <div className="font-medium text-slate-900">{t("deleteAllExpenses")}</div>
             <div className="text-sm text-slate-500">
-              Permanently remove all {stats?.totalExpenses || 0} expenses from your account
+              {t("deleteAllExpensesCount", { count: stats?.totalExpenses || 0 })}
             </div>
           </div>
           <button
             onClick={() => setShowDeleteConfirm(true)}
             className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
           >
-            Delete All
+            {t("deleteAll")}
           </button>
         </div>
 
         <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg mt-4">
           <div>
-            <div className="font-medium text-slate-900">Delete Account</div>
+            <div className="font-medium text-slate-900">{t("deleteAccount")}</div>
             <div className="text-sm text-slate-500">
-              Permanently delete your account and all associated data
+              {t("deleteAccountDescription")}
             </div>
           </div>
           <button
             onClick={() => setShowDeleteAccountConfirm(true)}
             className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
           >
-            Delete Account
+            {t("deleteAccount")}
           </button>
         </div>
       </div>
@@ -616,27 +616,27 @@ export default function SettingsPage() {
           <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 bg-green-50">
               <h2 className="text-lg font-semibold text-green-700">
-                {editingSalaryId ? "Edit Recurring Income" : "Add Recurring Income"}
+                {editingSalaryId ? t("editRecurringIncome") : t("addRecurringIncome")}
               </h2>
             </div>
 
             <div className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Name
+                  {t("name")}
                 </label>
                 <input
                   type="text"
                   value={salaryName}
                   onChange={(e) => setSalaryName(e.target.value)}
-                  placeholder="e.g., Salary, Freelance"
+                  placeholder={t("salaryNamePlaceholder")}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Amount
+                  {t("amount")}
                 </label>
                 <div className="flex gap-2">
                   <select
@@ -660,7 +660,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Day of Month
+                  {t("dayOfMonthLabel")}
                 </label>
                 <input
                   type="number"
@@ -672,7 +672,7 @@ export default function SettingsPage() {
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
                 <p className="text-xs text-slate-500 mt-1">
-                  The day you typically receive this income
+                  {t("dayOfMonthHint")}
                 </p>
               </div>
 
@@ -681,14 +681,14 @@ export default function SettingsPage() {
                   onClick={() => setShowSalaryModal(false)}
                   className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   onClick={handleSaveSalary}
                   disabled={isSaving || !salaryAmount}
                   className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 text-white font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
-                  {isSaving ? "Saving..." : editingSalaryId ? "Update" : "Add Income"}
+                  {isSaving ? tCommon("loading") : editingSalaryId ? tCommon("save") : t("addSalary")}
                 </button>
               </div>
             </div>
@@ -710,14 +710,13 @@ export default function SettingsPage() {
           <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 bg-red-50">
               <h2 className="text-lg font-semibold text-red-600">
-                Delete All Expenses?
+                {t("deleteAllExpensesTitle")}
               </h2>
             </div>
 
             <div className="p-6 space-y-4">
               <div className="text-slate-600">
-                This action <strong>cannot be undone</strong>. This will permanently delete{" "}
-                <strong>{stats?.totalExpenses || 0} expenses</strong> from your account.
+                {t("deleteAllExpensesWarning", { count: stats?.totalExpenses || 0 })}
               </div>
 
               {deleteError && (
@@ -728,7 +727,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Type <span className="font-mono bg-slate-100 px-1">DELETE ALL</span> to confirm
+                  {t("typeDeleteAllConfirm")}
                 </label>
                 <input
                   type="text"
@@ -749,14 +748,14 @@ export default function SettingsPage() {
                   }}
                   className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   onClick={handleDeleteAllExpenses}
                   disabled={isDeleting || deleteConfirmText !== "DELETE ALL"}
                   className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isDeleting ? "Deleting..." : "Delete All Expenses"}
+                  {isDeleting ? tCommon("loading") : t("deleteAllExpenses")}
                 </button>
               </div>
             </div>
@@ -778,20 +777,20 @@ export default function SettingsPage() {
           <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 bg-red-50">
               <h2 className="text-lg font-semibold text-red-600">
-                Delete Your Account?
+                {t("deleteAccountTitle")}
               </h2>
             </div>
 
             <div className="p-6 space-y-4">
               <div className="text-slate-600">
-                This action <strong>cannot be undone</strong>. This will permanently delete:
+                {t("deleteAccountWarning")}
               </div>
               <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
-                <li>Your user account</li>
-                <li>All your expenses and incomes</li>
-                <li>All your categories and projects</li>
-                <li>All your bank accounts and import history</li>
-                <li>All workspace data (if you&apos;re the only member)</li>
+                <li>{t("deleteAccountItem1")}</li>
+                <li>{t("deleteAccountItem2")}</li>
+                <li>{t("deleteAccountItem3")}</li>
+                <li>{t("deleteAccountItem4")}</li>
+                <li>{t("deleteAccountItem5")}</li>
               </ul>
 
               {deleteAccountError && (
@@ -802,7 +801,7 @@ export default function SettingsPage() {
 
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
-                  Type <span className="font-mono bg-slate-100 px-1">DELETE MY ACCOUNT</span> to confirm
+                  {t("typeDeleteAccountConfirm")}
                 </label>
                 <input
                   type="text"
@@ -823,14 +822,14 @@ export default function SettingsPage() {
                   }}
                   className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   onClick={handleDeleteAccount}
                   disabled={isDeletingAccount || deleteAccountConfirmText !== "DELETE MY ACCOUNT"}
                   className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-white font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  {isDeletingAccount ? "Deleting..." : "Delete My Account"}
+                  {isDeletingAccount ? tCommon("loading") : t("deleteAccount")}
                 </button>
               </div>
             </div>
