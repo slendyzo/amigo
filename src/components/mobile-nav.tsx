@@ -251,9 +251,16 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
           })}
         </nav>
 
-        {/* Sign Out Button */}
-        {onSignOut && (
-          <div className="p-4 border-t border-slate-200 safe-bottom">
+        {/* Build Info & Sign Out */}
+        <div className="p-4 border-t border-slate-200 safe-bottom space-y-3">
+          {/* Build Version */}
+          <div className="text-center text-xs text-slate-400">
+            <p>Build: {process.env.NEXT_PUBLIC_BUILD_ID || "dev"}</p>
+            <p>{process.env.NEXT_PUBLIC_BUILD_DATE || ""}</p>
+          </div>
+
+          {/* Sign Out Button */}
+          {onSignOut && (
             <button
               onClick={onSignOut}
               className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-base font-medium text-red-600 bg-red-50 active:bg-red-100 tap-none transition-colors"
@@ -263,8 +270,8 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
               </svg>
               {t("signOut")}
             </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </>
   );
