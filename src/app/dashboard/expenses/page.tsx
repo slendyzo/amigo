@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
 
@@ -40,13 +41,26 @@ type GroupedExpenses = {
   total: number;
 };
 
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
-
 export default function ExpensesPage() {
   const router = useRouter();
+  const t = useTranslations("expenses");
+  const tTime = useTranslations("time");
+  const tCommon = useTranslations("common");
+
+  // Get translated month names
+  const MONTHS = [
+    tTime("months.january"), tTime("months.february"), tTime("months.march"),
+    tTime("months.april"), tTime("months.may"), tTime("months.june"),
+    tTime("months.july"), tTime("months.august"), tTime("months.september"),
+    tTime("months.october"), tTime("months.november"), tTime("months.december")
+  ];
+
+  const SHORT_MONTHS = [
+    tTime("monthsShort.jan"), tTime("monthsShort.feb"), tTime("monthsShort.mar"),
+    tTime("monthsShort.apr"), tTime("monthsShort.may"), tTime("monthsShort.jun"),
+    tTime("monthsShort.jul"), tTime("monthsShort.aug"), tTime("monthsShort.sep"),
+    tTime("monthsShort.oct"), tTime("monthsShort.nov"), tTime("monthsShort.dec")
+  ];
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -300,10 +314,10 @@ export default function ExpensesPage() {
   };
 
   const typeLabels: Record<string, string> = {
-    SURVIVAL_FIXED: "Living (Fixed)",
-    SURVIVAL_VARIABLE: "Living (Variable)",
-    LIFESTYLE: "Lifestyle",
-    PROJECT: "Project",
+    SURVIVAL_FIXED: t("types.fixed"),
+    SURVIVAL_VARIABLE: t("types.variable"),
+    LIFESTYLE: t("types.lifestyle"),
+    PROJECT: t("types.project"),
   };
 
   return (
@@ -311,18 +325,18 @@ export default function ExpensesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">Expenses</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-slate-500 text-xs md:text-sm mt-0.5 md:mt-1">
             {selectedMonthFilter !== "all" ? (
               <>
-                {sortedExpenses.length} expenses in {
+                {sortedExpenses.length} {t("title").toLowerCase()} {
                   selectedMonthFilter === `${currentYear}-${String(currentMonth).padStart(2, "0")}`
-                    ? "this month"
+                    ? tTime("thisMonth").toLowerCase()
                     : MONTHS[parseInt(selectedMonthFilter.split("-")[1])] + " " + selectedMonthFilter.split("-")[0]
                 }
               </>
             ) : (
-              <>{total} total expenses</>
+              <>{total} {t("total").toLowerCase()} {t("title").toLowerCase()}</>
             )}
           </p>
         </div>
@@ -334,7 +348,7 @@ export default function ExpensesPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Expense
+          {t("addExpense")}
         </button>
       </div>
 
@@ -342,7 +356,7 @@ export default function ExpensesPage() {
       <div className="bg-white rounded-xl p-2 md:p-4 shadow-sm border border-slate-200">
         {/* Year selector */}
         <div className="flex gap-2 items-center mb-2 pb-2 border-b border-slate-100">
-          <span className="text-xs text-slate-500 font-medium mr-1">Year:</span>
+          <span className="text-xs text-slate-500 font-medium mr-1">{t("year")}:</span>
           {availableYears.map((year) => (
             <button
               key={year}
@@ -380,7 +394,7 @@ export default function ExpensesPage() {
                 : "bg-slate-100 text-slate-600 active:bg-slate-200 md:hover:bg-slate-200"
             }`}
           >
-            All
+            {tCommon("all")}
           </button>
 
           {/* Months for selected year */}
@@ -402,7 +416,7 @@ export default function ExpensesPage() {
                     : "bg-slate-100 text-slate-600 active:bg-slate-200 md:hover:bg-slate-200"
                 }`}
               >
-                {month.slice(0, 3)}
+                {SHORT_MONTHS[index]}
               </button>
             );
           })}
@@ -418,7 +432,7 @@ export default function ExpensesPage() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search expenses..."
+              placeholder={t("searchPlaceholder")}
               className="w-full rounded-lg border border-slate-300 px-4 py-2.5 md:py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
             />
           </div>
@@ -432,24 +446,24 @@ export default function ExpensesPage() {
               }}
               className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
             >
-              <option value="">All Types</option>
-              <option value="SURVIVAL_FIXED">Fixed</option>
-              <option value="SURVIVAL_VARIABLE">Variable</option>
-              <option value="LIFESTYLE">Lifestyle</option>
-              <option value="PROJECT">Project</option>
+              <option value="">{t("filterByType")}</option>
+              <option value="SURVIVAL_FIXED">{t("types.fixed")}</option>
+              <option value="SURVIVAL_VARIABLE">{t("types.variable")}</option>
+              <option value="LIFESTYLE">{t("types.lifestyle")}</option>
+              <option value="PROJECT">{t("types.project")}</option>
             </select>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as "date" | "amount")}
               className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
             >
-              <option value="date">By Date</option>
-              <option value="amount">By Amount</option>
+              <option value="date">{t("sortByDate")}</option>
+              <option value="amount">{t("sortByAmount")}</option>
             </select>
             <button
               onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
               className="flex-shrink-0 p-2 rounded-lg border border-slate-300 active:bg-slate-50 md:hover:bg-slate-50 tap-none"
-              title={sortOrder === "desc" ? "Newest/Highest first" : "Oldest/Lowest first"}
+              title={sortOrder === "desc" ? t("descending") : t("ascending")}
             >
               {sortOrder === "desc" ? (
                 <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -469,11 +483,11 @@ export default function ExpensesPage() {
                 setPageSize(val === "all" ? "all" : parseInt(val));
               }}
               className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-              title="Items per page"
+              title={tCommon("filter")}
             >
               <option value="50">50</option>
               <option value="100">100</option>
-              <option value="all">All</option>
+              <option value="all">{tCommon("all")}</option>
             </select>
           </div>
         </div>
@@ -482,11 +496,11 @@ export default function ExpensesPage() {
       {/* Expenses Grouped by Month */}
       {isLoading ? (
         <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
-          Loading...
+          {tCommon("loading")}
         </div>
       ) : displayedGroupedExpenses.length === 0 ? (
         <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
-          No expenses found
+          {t("noExpenses")}
         </div>
       ) : (
         <div className="space-y-4 md:space-y-6">
@@ -505,12 +519,12 @@ export default function ExpensesPage() {
               <table className="hidden md:table w-full">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
                   <tr>
-                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Date</th>
-                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Description</th>
-                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Type</th>
-                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Category</th>
-                    <th className="text-right px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Amount</th>
-                    <th className="text-right px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">Actions</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("date")}</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("description")}</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("type")}</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("category")}</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("amount")}</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -557,7 +571,7 @@ export default function ExpensesPage() {
                           <button
                             onClick={() => setEditingExpense(expense)}
                             className="text-slate-500 hover:text-slate-700 p-1"
-                            title="Edit"
+                            title={tCommon("edit")}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -566,7 +580,7 @@ export default function ExpensesPage() {
                           <button
                             onClick={() => setDeleteId(expense.id)}
                             className="text-red-500 hover:text-red-700 p-1"
-                            title="Delete"
+                            title={tCommon("delete")}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -609,9 +623,9 @@ export default function ExpensesPage() {
                           {new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${typeColors[expense.type]}`}>
-                          {expense.type === "SURVIVAL_FIXED" ? "Fixed" :
-                           expense.type === "SURVIVAL_VARIABLE" ? "Var" :
-                           expense.type === "LIFESTYLE" ? "Life" : "Proj"}
+                          {expense.type === "SURVIVAL_FIXED" ? t("typesShort.fixed") :
+                           expense.type === "SURVIVAL_VARIABLE" ? t("typesShort.variable") :
+                           expense.type === "LIFESTYLE" ? t("typesShort.lifestyle") : t("typesShort.project")}
                         </span>
                       </div>
                     </div>
@@ -656,14 +670,14 @@ export default function ExpensesPage() {
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
               </svg>
-              <span className="text-sm">Loading more...</span>
+              <span className="text-sm">{t("loadingMore")}</span>
             </div>
           ) : (
             <button
               onClick={loadMore}
               className="text-sm text-[#0070f3] hover:underline"
             >
-              Load {pageSize as number} more (showing {displayedExpenses.length} of {sortedExpenses.length})
+              {t("loadMore", { count: pageSize as number, current: displayedExpenses.length, total: sortedExpenses.length })}
             </button>
           )}
         </div>
@@ -672,7 +686,7 @@ export default function ExpensesPage() {
       {/* Show count when all loaded */}
       {!hasMoreToLoad && sortedExpenses.length > 0 && (
         <div className="text-center text-sm text-slate-500 py-2">
-          Showing all {sortedExpenses.length} expenses
+          {t("showingAll", { count: sortedExpenses.length })}
         </div>
       )}
 
@@ -681,20 +695,20 @@ export default function ExpensesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Expense?</h3>
-            <p className="text-slate-600 text-sm mb-4">This action cannot be undone.</p>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("deleteExpenseQuestion")}</h3>
+            <p className="text-slate-600 text-sm mb-4">{t("deleteWarning")}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteId)}
                 className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
-                Delete
+                {tCommon("delete")}
               </button>
             </div>
           </div>

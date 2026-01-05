@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import QuickCreateCategory from "@/components/quick-create-category";
 
 type Category = {
@@ -30,19 +31,32 @@ type Template = {
   _count: { expenses: number };
 };
 
-const EXPENSE_TYPES = [
-  { value: "SURVIVAL_FIXED", label: "Living Costs (Fixed)", color: "bg-blue-100 text-blue-800" },
-  { value: "SURVIVAL_VARIABLE", label: "Living Costs (Variable)", color: "bg-cyan-100 text-cyan-800" },
-  { value: "LIFESTYLE", label: "Lifestyle", color: "bg-purple-100 text-purple-800" },
-  { value: "PROJECT", label: "Project", color: "bg-amber-100 text-amber-800" },
-];
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
+const EXPENSE_TYPE_COLORS: Record<string, string> = {
+  SURVIVAL_FIXED: "bg-blue-100 text-blue-800",
+  SURVIVAL_VARIABLE: "bg-cyan-100 text-cyan-800",
+  LIFESTYLE: "bg-purple-100 text-purple-800",
+  PROJECT: "bg-amber-100 text-amber-800",
+};
 
 export default function RecurringTemplatesPage() {
+  const t = useTranslations("recurring");
+  const tCommon = useTranslations("common");
+  const tTime = useTranslations("time");
+
+  const EXPENSE_TYPES = [
+    { value: "SURVIVAL_FIXED", label: t("expenseTypes.survivalFixed") },
+    { value: "SURVIVAL_VARIABLE", label: t("expenseTypes.survivalVariable") },
+    { value: "LIFESTYLE", label: t("expenseTypes.lifestyle") },
+    { value: "PROJECT", label: t("expenseTypes.project") },
+  ];
+
+  const MONTHS = [
+    tTime("months.january"), tTime("months.february"), tTime("months.march"),
+    tTime("months.april"), tTime("months.may"), tTime("months.june"),
+    tTime("months.july"), tTime("months.august"), tTime("months.september"),
+    tTime("months.october"), tTime("months.november"), tTime("months.december")
+  ];
+
   const [templates, setTemplates] = useState<Template[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
@@ -71,10 +85,10 @@ export default function RecurringTemplatesPage() {
     type: "SURVIVAL_FIXED",
     amount: "",
     currency: "EUR",
-    dayOfMonth: "", // Empty = no specific date (just monthly)
+    dayOfMonth: "",
     categoryId: "",
     bankAccountId: "",
-    autoGenerate: false, // Auto-create expense at month start
+    autoGenerate: false,
   });
 
   useEffect(() => {
@@ -250,7 +264,6 @@ export default function RecurringTemplatesPage() {
     setGenerateResult(null);
 
     try {
-      // Build template overrides for selected templates
       const selectedTemplates = Object.entries(templateOverrides)
         .filter(([, override]) => override.selected)
         .map(([id, override]) => ({
@@ -310,7 +323,7 @@ export default function RecurringTemplatesPage() {
   };
 
   const getTypeStyle = (type: string) => {
-    return EXPENSE_TYPES.find((t) => t.value === type)?.color || "bg-gray-100 text-gray-800";
+    return EXPENSE_TYPE_COLORS[type] || "bg-gray-100 text-gray-800";
   };
 
   const getTypeLabel = (type: string) => {
@@ -318,7 +331,7 @@ export default function RecurringTemplatesPage() {
   };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return "Never";
+    if (!dateString) return t("never");
     return new Date(dateString).toLocaleDateString();
   };
 
@@ -344,9 +357,9 @@ export default function RecurringTemplatesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Recurring Templates</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Set up monthly recurring expenses that can be auto-generated
+            {t("description")}
           </p>
         </div>
         <div className="flex gap-3">
@@ -356,13 +369,13 @@ export default function RecurringTemplatesPage() {
                 onClick={selectAll}
                 className="px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
               >
-                Select All
+                {tCommon("selectAll")}
               </button>
               <button
                 onClick={deselectAll}
                 className="px-3 py-2 text-sm text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg"
               >
-                Deselect All
+                {tCommon("deselectAll")}
               </button>
               <button
                 onClick={() => setConfirmBulkDelete(true)}
@@ -372,7 +385,7 @@ export default function RecurringTemplatesPage() {
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                 </svg>
-                Delete ({selectedIds.size})
+                {tCommon("delete")} ({selectedIds.size})
               </button>
               <button
                 onClick={() => {
@@ -381,7 +394,7 @@ export default function RecurringTemplatesPage() {
                 }}
                 className="px-4 py-2 text-slate-600 hover:text-slate-900"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
             </>
           ) : (
@@ -394,12 +407,11 @@ export default function RecurringTemplatesPage() {
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
-                  Select
+                  {t("select")}
                 </button>
               )}
               <button
                 onClick={() => {
-                  // Initialize overrides with active templates
                   const overrides: Record<string, { selected: boolean; day: string }> = {};
                   templates.filter(t => t.isActive).forEach(t => {
                     overrides[t.id] = { selected: true, day: t.dayOfMonth?.toString() || "" };
@@ -412,7 +424,7 @@ export default function RecurringTemplatesPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                 </svg>
-                Generate for Month
+                {t("generateForMonth")}
               </button>
               <button
                 onClick={startCreating}
@@ -421,7 +433,7 @@ export default function RecurringTemplatesPage() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
-                New Template
+                {t("addTemplate")}
               </button>
             </>
           )}
@@ -431,15 +443,15 @@ export default function RecurringTemplatesPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="bg-white p-5 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500 mb-1">Active Templates</p>
+          <p className="text-sm text-slate-500 mb-1">{t("activeTemplates")}</p>
           <p className="text-2xl font-bold text-slate-900">{activeTemplates.length}</p>
         </div>
         <div className="bg-white p-5 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500 mb-1">Monthly Total (Fixed)</p>
+          <p className="text-sm text-slate-500 mb-1">{t("monthlyTotalFixed")}</p>
           <p className="text-2xl font-bold text-slate-900">€{monthlyTotal.toFixed(2)}</p>
         </div>
         <div className="bg-white p-5 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500 mb-1">Total Templates</p>
+          <p className="text-sm text-slate-500 mb-1">{t("totalTemplates")}</p>
           <p className="text-2xl font-bold text-slate-900">{templates.length}</p>
         </div>
       </div>
@@ -447,20 +459,20 @@ export default function RecurringTemplatesPage() {
       {/* Create Form */}
       {isCreating && (
         <div className="bg-white rounded-xl border border-slate-200 p-6">
-          <h2 className="text-lg font-semibold text-slate-900 mb-4">New Template</h2>
+          <h2 className="text-lg font-semibold text-slate-900 mb-4">{t("addTemplate")}</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
             <div className="lg:col-span-2">
-              <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t("name")}</label>
               <input
                 type="text"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Netflix, Rent, Spotify"
+                placeholder={t("namePlaceholder")}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t("type")}</label>
               <select
                 value={formData.type}
                 onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -472,7 +484,7 @@ export default function RecurringTemplatesPage() {
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Amount (€)</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t("amount")} (€)</label>
               <input
                 type="number"
                 step="0.01"
@@ -484,7 +496,7 @@ export default function RecurringTemplatesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Day of Month <span className="text-slate-400 font-normal">(optional)</span>
+                {t("dayOfMonthOptional")}
               </label>
               <input
                 type="number"
@@ -492,20 +504,20 @@ export default function RecurringTemplatesPage() {
                 max="31"
                 value={formData.dayOfMonth}
                 onChange={(e) => setFormData({ ...formData, dayOfMonth: e.target.value })}
-                placeholder="Any"
+                placeholder={t("anyDay")}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
               />
-              <p className="text-xs text-slate-400 mt-1">Leave empty for monthly expenses without a specific day</p>
+              <p className="text-xs text-slate-400 mt-1">{t("dayOfMonthHint")}</p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t("category")}</label>
               <div className="flex gap-1">
                 <select
                   value={formData.categoryId}
                   onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                   className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Uncategorized</option>
+                  <option value="">{t("uncategorized")}</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>{cat.name}</option>
                   ))}
@@ -519,19 +531,19 @@ export default function RecurringTemplatesPage() {
               </div>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Bank Account</label>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t("bankAccount")}</label>
               <select
                 value={formData.bankAccountId}
                 onChange={(e) => setFormData({ ...formData, bankAccountId: e.target.value })}
                 className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">No bank account</option>
+                <option value="">{t("noBankAccount")}</option>
                 {bankAccounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>{acc.name}</option>
                 ))}
               </select>
               <p className="text-xs text-slate-400 mt-1">
-                <a href="/dashboard/accounts" className="text-blue-500 hover:underline">Manage accounts</a>
+                <a href="/dashboard/accounts" className="text-blue-500 hover:underline">{t("manageAccounts")}</a>
               </p>
             </div>
           </div>
@@ -546,11 +558,11 @@ export default function RecurringTemplatesPage() {
                 className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
               />
               <div>
-                <span className="font-medium text-slate-900">Auto-generate at month start</span>
+                <span className="font-medium text-slate-900">{t("autoGenerateAtMonthStart")}</span>
                 <p className="text-xs text-slate-500 mt-0.5">
                   {formData.type === "SURVIVAL_FIXED" || formData.amount
-                    ? "Expense will be created automatically with the fixed amount"
-                    : "Expense will be created with \u20ac0.00 - update when bill arrives"}
+                    ? t("autoGenerateFixed")
+                    : t("autoGenerateVariable")}
                 </p>
               </div>
             </label>
@@ -562,13 +574,13 @@ export default function RecurringTemplatesPage() {
               disabled={!formData.name.trim()}
               className="px-4 py-2 bg-[#0070f3] text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Create Template
+              {t("createTemplate")}
             </button>
             <button
               onClick={() => setIsCreating(false)}
               className="px-4 py-2 text-slate-600 hover:text-slate-900"
             >
-              Cancel
+              {tCommon("cancel")}
             </button>
           </div>
         </div>
@@ -577,7 +589,7 @@ export default function RecurringTemplatesPage() {
       {/* Templates List */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="font-semibold text-slate-900">Templates ({templates.length})</h2>
+          <h2 className="font-semibold text-slate-900">{t("templates")} ({templates.length})</h2>
         </div>
 
         {templates.length === 0 ? (
@@ -585,8 +597,8 @@ export default function RecurringTemplatesPage() {
             <svg className="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
             </svg>
-            <p>No recurring templates yet</p>
-            <p className="text-sm mt-1">Create templates for expenses that happen every month</p>
+            <p>{t("noTemplatesYet")}</p>
+            <p className="text-sm mt-1">{t("createTemplatesHint")}</p>
           </div>
         ) : (
           <div className="divide-y divide-slate-100">
@@ -597,7 +609,7 @@ export default function RecurringTemplatesPage() {
                   <div className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                       <div className="lg:col-span-2">
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Name</label>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{t("name")}</label>
                         <input
                           type="text"
                           value={formData.name}
@@ -606,7 +618,7 @@ export default function RecurringTemplatesPage() {
                         />
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Type</label>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{t("type")}</label>
                         <select
                           value={formData.type}
                           onChange={(e) => setFormData({ ...formData, type: e.target.value })}
@@ -618,7 +630,7 @@ export default function RecurringTemplatesPage() {
                         </select>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Amount</label>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{t("amount")}</label>
                         <div className="flex items-center">
                           <span className="text-slate-400 mr-1">€</span>
                           <input
@@ -632,28 +644,28 @@ export default function RecurringTemplatesPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Day of Month</label>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{t("dayOfMonth")}</label>
                         <input
                           type="number"
                           min="1"
                           max="31"
                           value={formData.dayOfMonth}
                           onChange={(e) => setFormData({ ...formData, dayOfMonth: e.target.value })}
-                          placeholder="Any day"
+                          placeholder={t("anyDay")}
                           className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{t("category")}</label>
                         <div className="flex gap-1">
                           <select
                             value={formData.categoryId}
                             onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
                             className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                           >
-                            <option value="">Uncategorized</option>
+                            <option value="">{t("uncategorized")}</option>
                             {categories.map((cat) => (
                               <option key={cat.id} value={cat.id}>{cat.name}</option>
                             ))}
@@ -667,19 +679,19 @@ export default function RecurringTemplatesPage() {
                         </div>
                       </div>
                       <div>
-                        <label className="block text-xs font-medium text-slate-500 mb-1">Bank Account</label>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{t("bankAccount")}</label>
                         <select
                           value={formData.bankAccountId}
                           onChange={(e) => setFormData({ ...formData, bankAccountId: e.target.value })}
                           className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
                         >
-                          <option value="">No bank account</option>
+                          <option value="">{t("noBankAccount")}</option>
                           {bankAccounts.map((acc) => (
                             <option key={acc.id} value={acc.id}>{acc.name}</option>
                           ))}
                         </select>
                         <p className="text-xs text-slate-400 mt-1">
-                          <a href="/dashboard/accounts" className="text-blue-500 hover:underline">Manage accounts</a>
+                          <a href="/dashboard/accounts" className="text-blue-500 hover:underline">{t("manageAccounts")}</a>
                         </p>
                       </div>
                       {/* Auto-generate toggle in edit */}
@@ -692,9 +704,9 @@ export default function RecurringTemplatesPage() {
                             className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                           />
                           <div>
-                            <span className="text-sm font-medium text-slate-900">Auto-generate</span>
+                            <span className="text-sm font-medium text-slate-900">{t("autoGenerate")}</span>
                             <p className="text-xs text-slate-500">
-                              {formData.amount ? "Creates with fixed amount" : "Creates at \u20ac0.00"}
+                              {formData.amount ? t("createsWithFixed") : t("createsAtZero")}
                             </p>
                           </div>
                         </label>
@@ -705,13 +717,13 @@ export default function RecurringTemplatesPage() {
                         onClick={() => handleUpdate(template.id)}
                         className="px-4 py-2 bg-[#0070f3] text-white text-sm rounded-lg hover:bg-blue-600"
                       >
-                        Save Changes
+                        {t("saveChanges")}
                       </button>
                       <button
                         onClick={() => setEditingId(null)}
                         className="px-4 py-2 text-slate-600 text-sm hover:text-slate-900"
                       >
-                        Cancel
+                        {tCommon("cancel")}
                       </button>
                     </div>
                   </div>
@@ -759,11 +771,11 @@ export default function RecurringTemplatesPage() {
                           )}
                         </div>
                         <div className="text-sm text-slate-500 mt-0.5 flex items-center gap-1 flex-wrap">
-                          <span>{template.dayOfMonth ? `Day ${template.dayOfMonth}` : 'Monthly'}</span>
+                          <span>{template.dayOfMonth ? `${t("day")} ${template.dayOfMonth}` : t("intervals.monthly")}</span>
                           <span>•</span>
-                          <span>{template.amount ? `\u20ac${Number(template.amount).toFixed(2)}` : 'Variable'}</span>
+                          <span>{template.amount ? `€${Number(template.amount).toFixed(2)}` : t("variable")}</span>
                           <span>•</span>
-                          <span>{template._count.expenses} generated</span>
+                          <span>{template._count.expenses} {t("generated")}</span>
                           {template.autoGenerate && (
                             <>
                               <span>•</span>
@@ -780,7 +792,7 @@ export default function RecurringTemplatesPage() {
                     </div>
                     <div className="flex items-center gap-4">
                       <div className="text-right text-sm text-slate-500">
-                        <div>Last: {formatDate(template.lastGenerated)}</div>
+                        <div>{t("last")}: {formatDate(template.lastGenerated)}</div>
                       </div>
                       <div className="flex items-center gap-2">
                         <button
@@ -797,13 +809,13 @@ export default function RecurringTemplatesPage() {
                               onClick={() => handleDelete(template.id)}
                               className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
                             >
-                              Confirm
+                              {tCommon("confirm")}
                             </button>
                             <button
                               onClick={() => setConfirmDeleteId(null)}
                               className="px-2 py-1 text-xs text-slate-600 hover:text-slate-900"
                             >
-                              Cancel
+                              {tCommon("cancel")}
                             </button>
                           </div>
                         ) : (
@@ -830,10 +842,9 @@ export default function RecurringTemplatesPage() {
       {confirmBulkDelete && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
-            <h2 className="text-xl font-bold text-slate-900 mb-2">Delete Templates</h2>
+            <h2 className="text-xl font-bold text-slate-900 mb-2">{t("deleteTemplates")}</h2>
             <p className="text-sm text-slate-500 mb-4">
-              Are you sure you want to delete {selectedIds.size} template{selectedIds.size > 1 ? 's' : ''}?
-              This action cannot be undone.
+              {t("deleteTemplatesConfirm", { count: selectedIds.size })}
             </p>
             <div className="flex gap-3">
               <button
@@ -847,17 +858,17 @@ export default function RecurringTemplatesPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Deleting...
+                    {t("deleting")}
                   </>
                 ) : (
-                  `Delete ${selectedIds.size} Template${selectedIds.size > 1 ? 's' : ''}`
+                  t("deleteCount", { count: selectedIds.size })
                 )}
               </button>
               <button
                 onClick={() => setConfirmBulkDelete(false)}
                 className="px-4 py-2 text-slate-600 hover:text-slate-900"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
             </div>
           </div>
@@ -868,14 +879,14 @@ export default function RecurringTemplatesPage() {
       {showGenerateModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-hidden flex flex-col">
-            <h2 className="text-xl font-bold text-slate-900 mb-4">Generate Expenses</h2>
+            <h2 className="text-xl font-bold text-slate-900 mb-4">{t("generateExpenses")}</h2>
             <p className="text-sm text-slate-500 mb-4">
-              Create expense entries from active templates for a specific month. You can customize the day for each expense.
+              {t("generateDescription")}
             </p>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Month</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{tTime("thisMonth").split(" ")[0]}</label>
                 <select
                   value={generateMonth}
                   onChange={(e) => setGenerateMonth(parseInt(e.target.value))}
@@ -887,7 +898,7 @@ export default function RecurringTemplatesPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Year</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{tTime("thisYear").split(" ")[0]}</label>
                 <input
                   type="number"
                   value={generateYear}
@@ -901,7 +912,7 @@ export default function RecurringTemplatesPage() {
             <div className="flex-1 overflow-y-auto border border-slate-200 rounded-lg mb-4">
               <div className="px-4 py-2 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
                 <span className="text-sm font-medium text-slate-700">
-                  Templates ({Object.values(templateOverrides).filter(o => o.selected).length} selected)
+                  {t("templates")} ({Object.values(templateOverrides).filter(o => o.selected).length} {t("selected")})
                 </span>
                 <div className="flex gap-2">
                   <button
@@ -913,7 +924,7 @@ export default function RecurringTemplatesPage() {
                     }}
                     className="text-xs text-blue-600 hover:text-blue-800"
                   >
-                    Select all
+                    {tCommon("selectAll")}
                   </button>
                   <button
                     onClick={() => {
@@ -924,7 +935,7 @@ export default function RecurringTemplatesPage() {
                     }}
                     className="text-xs text-slate-500 hover:text-slate-700"
                   >
-                    Deselect all
+                    {tCommon("deselectAll")}
                   </button>
                 </div>
               </div>
@@ -950,12 +961,12 @@ export default function RecurringTemplatesPage() {
                           </span>
                         </div>
                         <div className="text-xs text-slate-500">
-                          {template.amount ? `€${Number(template.amount).toFixed(2)}` : 'Variable'}
-                          {template.dayOfMonth && ` • Default: Day ${template.dayOfMonth}`}
+                          {template.amount ? `€${Number(template.amount).toFixed(2)}` : t("variable")}
+                          {template.dayOfMonth && ` • ${t("default")}: ${t("day")} ${template.dayOfMonth}`}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
-                        <span className="text-xs text-slate-500">Day:</span>
+                        <span className="text-xs text-slate-500">{t("day")}:</span>
                         <input
                           type="number"
                           min="1"
@@ -965,7 +976,7 @@ export default function RecurringTemplatesPage() {
                             ...templateOverrides,
                             [template.id]: { ...override, day: e.target.value }
                           })}
-                          placeholder="1st"
+                          placeholder={t("first")}
                           disabled={!override.selected}
                           className="w-16 px-2 py-1 text-sm border border-slate-200 rounded focus:ring-2 focus:ring-blue-500 disabled:bg-slate-100"
                         />
@@ -976,7 +987,7 @@ export default function RecurringTemplatesPage() {
               </div>
               {templates.filter(t => t.isActive).length === 0 && (
                 <div className="p-8 text-center text-slate-500 text-sm">
-                  No active templates. Enable some templates first.
+                  {t("noActiveTemplates")}
                 </div>
               )}
             </div>
@@ -1001,10 +1012,10 @@ export default function RecurringTemplatesPage() {
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                     </svg>
-                    Generating...
+                    {t("generating")}
                   </>
                 ) : (
-                  `Generate ${Object.values(templateOverrides).filter(o => o.selected).length} Expense(s)`
+                  t("generateCount", { count: Object.values(templateOverrides).filter(o => o.selected).length })
                 )}
               </button>
               <button
@@ -1014,7 +1025,7 @@ export default function RecurringTemplatesPage() {
                 }}
                 className="px-4 py-2 text-slate-600 hover:text-slate-900"
               >
-                Close
+                {tCommon("close")}
               </button>
             </div>
           </div>

@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type SheetPreview = {
   name: string;
@@ -65,6 +66,9 @@ type DuplicateHandling = "skip" | "replace";
 
 export default function ImportPage() {
   const router = useRouter();
+  const t = useTranslations("import");
+  const tExpenses = useTranslations("expenses");
+  const tCommon = useTranslations("common");
   const [step, setStep] = useState<Step>("upload");
   const [isDragging, setIsDragging] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -107,14 +111,14 @@ export default function ImportPage() {
         const data: ImportResponse = await response.json();
 
         if (!response.ok) {
-          setError(data.errors?.[0] || "Failed to import PDF");
+          setError(data.errors?.[0] || t("failedToImportPdf"));
           setStep("upload");
         } else {
           setResult(data);
           setStep("result");
         }
       } catch {
-        setError("Failed to import PDF file");
+        setError(t("failedToImportPdf"));
         setStep("upload");
       } finally {
         setIsLoading(false);
@@ -135,7 +139,7 @@ export default function ImportPage() {
       const data: PreviewResponse = await response.json();
 
       if (!response.ok || !data.success) {
-        setError(data.error || "Failed to preview file");
+        setError(data.error || t("failedToPreview"));
         setStep("upload");
       } else {
         setPreview(data);
@@ -153,12 +157,12 @@ export default function ImportPage() {
         setStep("mapping");
       }
     } catch {
-      setError("Failed to preview file");
+      setError(t("failedToPreview"));
       setStep("upload");
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [t]);
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -204,19 +208,19 @@ export default function ImportPage() {
       const data: ImportResponse = await response.json();
 
       if (!response.ok) {
-        setError(data.errors?.[0] || "Failed to import file");
+        setError(data.errors?.[0] || t("failedToImportFile"));
         setStep("mapping");
       } else {
         setResult(data);
         setStep("result");
       }
     } catch {
-      setError("Failed to import file");
+      setError(t("failedToImportFile"));
       setStep("mapping");
     } finally {
       setIsLoading(false);
     }
-  }, [file, mapping, duplicateHandling]);
+  }, [file, mapping, duplicateHandling, t]);
 
   const resetImport = () => {
     setStep("upload");
@@ -300,24 +304,24 @@ export default function ImportPage() {
                 onClick={() => router.push("/dashboard")}
                 className="text-slate-600 hover:text-slate-900"
               >
-                ← Back
+                ← {tCommon("back")}
               </button>
               <h1 className="text-xl font-bold text-slate-900">
-                Import Expenses
+                {t("importExpenses")}
               </h1>
             </div>
             {/* Step indicator */}
             <div className="flex items-center gap-2 text-sm">
               <span className={step === "upload" ? "text-[#0070f3] font-medium" : "text-slate-400"}>
-                1. Upload
+                {t("stepUpload")}
               </span>
               <span className="text-slate-300">→</span>
               <span className={step === "mapping" ? "text-[#0070f3] font-medium" : "text-slate-400"}>
-                2. Map Columns
+                {t("stepMapColumns")}
               </span>
               <span className="text-slate-300">→</span>
               <span className={step === "result" || step === "importing" ? "text-[#0070f3] font-medium" : "text-slate-400"}>
-                3. Import
+                {t("stepImport")}
               </span>
             </div>
           </div>
@@ -337,11 +341,10 @@ export default function ImportPage() {
           <>
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                Upload Your File
+                {t("uploadYourFile")}
               </h2>
               <p className="text-slate-600">
-                Upload an Excel (.xlsx, .xls) or CSV file. We&apos;ll detect the structure
-                and help you map the columns.
+                {t("uploadDescription")}
               </p>
             </div>
 
@@ -374,13 +377,13 @@ export default function ImportPage() {
                 </div>
 
                 {isLoading ? (
-                  <p className="text-slate-600">Analyzing file...</p>
+                  <p className="text-slate-600">{t("analyzingFile")}</p>
                 ) : (
                   <>
                     <p className="text-slate-900 font-medium">
-                      Drop your file here, or click to browse
+                      {t("dropOrBrowse")}
                     </p>
-                    <p className="text-sm text-slate-500">Supports .csv, .xlsx, .xls, .pdf</p>
+                    <p className="text-sm text-slate-500">{t("supportsFormats")}</p>
                   </>
                 )}
               </div>
@@ -393,11 +396,10 @@ export default function ImportPage() {
           <>
             <div className="mb-8">
               <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                Map Your Columns
+                {t("mapYourColumns")}
               </h2>
               <p className="text-slate-600">
-                File: <strong>{file?.name}</strong> — {preview.sheets.length} sheet(s) found.
-                Tell us which columns contain your expense data.
+                {t("fileInfo", { fileName: file?.name || "", sheetCount: preview.sheets.length })}
               </p>
             </div>
 
@@ -406,7 +408,7 @@ export default function ImportPage() {
               {/* Header Row */}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Header Row
+                  {t("headerRow")}
                 </label>
                 <select
                   value={mapping.headerRow}
@@ -414,27 +416,27 @@ export default function ImportPage() {
                   className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900"
                 >
                   {[1, 2, 3, 4, 5].map((row) => (
-                    <option key={row} value={row}>Row {row}</option>
+                    <option key={row} value={row}>{t("row")} {row}</option>
                   ))}
                 </select>
-                <p className="text-xs text-slate-500 mt-1">Which row contains the column headers?</p>
+                <p className="text-xs text-slate-500 mt-1">{t("headerRowHint")}</p>
               </div>
 
               {/* Column Selectors */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Date Column <span className="text-slate-400">(optional)</span>
+                    {t("dateColumnOptional")}
                   </label>
                   <select
                     value={mapping.dateColumn || ""}
                     onChange={(e) => setMapping({ ...mapping, dateColumn: e.target.value ? parseInt(e.target.value) : null })}
                     className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900"
                   >
-                    <option value="">No date column</option>
+                    <option value="">{t("noDateColumn")}</option>
                     {availableColumns.map((col) => (
                       <option key={col.column} value={col.column}>
-                        Col {col.column}: {col.value}
+                        {t("col")} {col.column}: {col.value}
                       </option>
                     ))}
                   </select>
@@ -442,7 +444,7 @@ export default function ImportPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Name/Description Column <span className="text-red-500">*</span>
+                    {t("nameDescriptionColumn")} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={mapping.nameColumn}
@@ -451,7 +453,7 @@ export default function ImportPage() {
                   >
                     {availableColumns.map((col) => (
                       <option key={col.column} value={col.column}>
-                        Col {col.column}: {col.value}
+                        {t("col")} {col.column}: {col.value}
                       </option>
                     ))}
                   </select>
@@ -459,7 +461,7 @@ export default function ImportPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Amount Column <span className="text-red-500">*</span>
+                    {t("amountColumn")} <span className="text-red-500">*</span>
                   </label>
                   <select
                     value={mapping.amountColumn}
@@ -468,7 +470,7 @@ export default function ImportPage() {
                   >
                     {availableColumns.map((col) => (
                       <option key={col.column} value={col.column}>
-                        Col {col.column}: {col.value}
+                        {t("col")} {col.column}: {col.value}
                       </option>
                     ))}
                   </select>
@@ -486,17 +488,17 @@ export default function ImportPage() {
                   />
                   <div className="flex-1">
                     <span className="font-medium text-slate-900">
-                      This file contains both expenses and incomes
+                      {t("splitExpensesIncomes")}
                     </span>
                     <p className="text-sm text-slate-500 mt-0.5">
-                      Negative amounts will be imported as expenses, positive amounts as incomes.
+                      {t("splitDescription")}
                     </p>
                     {preview.hasMixedValues && (
                       <p className="text-sm text-[#0070f3] mt-1 flex items-center gap-1">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
-                        We detected both positive and negative values in your file
+                        {t("mixedValuesDetected")}
                       </p>
                     )}
                   </div>
@@ -511,10 +513,10 @@ export default function ImportPage() {
                   </svg>
                   <div className="flex-1">
                     <span className="font-medium text-slate-900">
-                      How to handle duplicate entries?
+                      {t("duplicateHandlingTitle")}
                     </span>
                     <p className="text-sm text-slate-500 mt-0.5 mb-3">
-                      If we find entries with the same date, name, and amount already in your account:
+                      {t("duplicateHandlingHint")}
                     </p>
                     <div className="flex gap-3">
                       <label className="flex items-center gap-2 cursor-pointer">
@@ -526,7 +528,7 @@ export default function ImportPage() {
                           onChange={() => setDuplicateHandling("skip")}
                           className="w-4 h-4 border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
                         />
-                        <span className="text-sm text-slate-700">Skip duplicates</span>
+                        <span className="text-sm text-slate-700">{t("skipDuplicates")}</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -537,7 +539,7 @@ export default function ImportPage() {
                           onChange={() => setDuplicateHandling("replace")}
                           className="w-4 h-4 border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
                         />
-                        <span className="text-sm text-slate-700">Replace duplicates</span>
+                        <span className="text-sm text-slate-700">{t("replaceDuplicates")}</span>
                       </label>
                     </div>
                   </div>
@@ -549,7 +551,7 @@ export default function ImportPage() {
                 <div>
                   <div className="flex items-center justify-between mb-2">
                     <label className="block text-sm font-medium text-slate-700">
-                      Sheets to Import
+                      {t("sheetsToImport")}
                     </label>
                     <div className="flex gap-2 text-xs">
                       <button
@@ -557,7 +559,7 @@ export default function ImportPage() {
                         onClick={selectAllSheets}
                         className="text-[#0070f3] hover:underline"
                       >
-                        Select all
+                        {t("selectAll")}
                       </button>
                       <span className="text-slate-300">|</span>
                       <button
@@ -565,7 +567,7 @@ export default function ImportPage() {
                         onClick={deselectAllSheets}
                         className="text-slate-500 hover:underline"
                       >
-                        Deselect all
+                        {t("deselectAll")}
                       </button>
                     </div>
                   </div>
@@ -585,15 +587,15 @@ export default function ImportPage() {
                             }
                           `}
                         >
-                          {sheet.name} ({sheet.rowCount} rows)
+                          {sheet.name} ({sheet.rowCount} {t("rowsImported").split(" ")[0]})
                         </button>
                       );
                     })}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">
                     {mapping.sheetsToImport.length === 0
-                      ? "No sheets selected"
-                      : `${mapping.sheetsToImport.length} of ${preview.sheets.length} sheet(s) selected`}
+                      ? t("noSheetsSelected")
+                      : t("sheetsSelected", { selected: mapping.sheetsToImport.length, total: preview.sheets.length })}
                   </p>
                 </div>
               )}
@@ -602,10 +604,10 @@ export default function ImportPage() {
               {preview.sheets.length > 1 && mapping.sheetsToImport.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Project Sheets <span className="text-slate-400">(optional)</span>
+                    {t("projectSheetsOptional")}
                   </label>
                   <p className="text-xs text-slate-500 mb-2">
-                    Mark sheets as project expenses. These will be tagged with the sheet name as the project.
+                    {t("projectSheetsHint")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {preview.sheets
@@ -632,7 +634,7 @@ export default function ImportPage() {
                   </div>
                   {mapping.projectSheets.length > 0 && (
                     <p className="text-xs text-amber-600 mt-2">
-                      {mapping.projectSheets.length} sheet(s) will be imported as project expenses
+                      {t("sheetsAsProjects", { count: mapping.projectSheets.length })}
                     </p>
                   )}
                 </div>
@@ -642,7 +644,7 @@ export default function ImportPage() {
             {/* Preview Table */}
             <div className="mb-8">
               <h3 className="text-sm font-medium text-slate-700 mb-3">
-                Data Preview (first sheet)
+                {t("dataPreview")}
               </h3>
               <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <table className="w-full text-sm">
@@ -662,11 +664,11 @@ export default function ImportPage() {
                           }`}
                         >
                           <div className="flex flex-col">
-                            <span className="text-xs opacity-60">Col {col.column}</span>
+                            <span className="text-xs opacity-60">{t("col")} {col.column}</span>
                             <span>{col.value}</span>
-                            {col.column === mapping.dateColumn && <span className="text-xs font-normal">→ Date</span>}
-                            {col.column === mapping.nameColumn && <span className="text-xs font-normal">→ Name</span>}
-                            {col.column === mapping.amountColumn && <span className="text-xs font-normal">→ Amount</span>}
+                            {col.column === mapping.dateColumn && <span className="text-xs font-normal">→ {t("date")}</span>}
+                            {col.column === mapping.nameColumn && <span className="text-xs font-normal">→ {t("name")}</span>}
+                            {col.column === mapping.amountColumn && <span className="text-xs font-normal">→ {t("amount")}</span>}
                           </div>
                         </th>
                       ))}
@@ -704,7 +706,7 @@ export default function ImportPage() {
                 onClick={resetImport}
                 className="px-6 py-3 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
               >
-                Back
+                {tCommon("back")}
               </button>
               <button
                 onClick={handleImport}
@@ -712,8 +714,8 @@ export default function ImportPage() {
                 className="flex-1 rounded-lg bg-[#0070f3] px-6 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {mapping.sheetsToImport.length === 0
-                  ? "Select at least one sheet"
-                  : `Import from ${mapping.sheetsToImport.length} sheet(s)`}
+                  ? t("selectAtLeastOneSheet")
+                  : t("importFromSheets", { count: mapping.sheetsToImport.length })}
               </button>
             </div>
           </>
@@ -729,10 +731,10 @@ export default function ImportPage() {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-slate-900 mb-2">
-              Importing your expenses...
+              {t("importingExpenses")}
             </h3>
             <p className="text-slate-600">
-              This may take a moment for large files.
+              {t("importMayTakeMoment")}
             </p>
           </div>
         )}
@@ -742,11 +744,11 @@ export default function ImportPage() {
           <div className="space-y-6">
             <div className={`p-4 rounded-lg ${result.success ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
               {result.success
-                ? `Successfully imported ${result.imported} expenses!`
-                : `Import completed with issues. ${result.imported} expenses imported.`}
+                ? t("successfullyImported", { count: result.imported })
+                : t("importWithIssues", { count: result.imported })}
               {result.duplicatesFound && result.duplicatesFound > 0 && (
                 <span className="ml-2">
-                  ({result.duplicatesFound} duplicate{result.duplicatesFound !== 1 ? 's' : ''} found: {result.skipped || 0} skipped, {result.replaced || 0} replaced)
+                  ({result.duplicatesFound} {t("duplicatesFound")}: {result.skipped || 0} {t("skipped")}, {result.replaced || 0} {t("replaced")})
                 </span>
               )}
             </div>
@@ -754,24 +756,24 @@ export default function ImportPage() {
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               <div className="p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500">Living (Fixed)</p>
+                <p className="text-sm text-slate-500">{tExpenses("types.fixed")}</p>
                 <p className="text-2xl font-bold text-slate-900">{result.stats.survivalFixed}</p>
               </div>
               <div className="p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500">Living (Variable)</p>
+                <p className="text-sm text-slate-500">{tExpenses("types.variable")}</p>
                 <p className="text-2xl font-bold text-slate-900">{result.stats.survivalVariable}</p>
               </div>
               <div className="p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500">Lifestyle</p>
+                <p className="text-sm text-slate-500">{tExpenses("types.lifestyle")}</p>
                 <p className="text-2xl font-bold text-slate-900">{result.stats.lifestyle}</p>
               </div>
               <div className="p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500">Project</p>
+                <p className="text-sm text-slate-500">{tExpenses("types.project")}</p>
                 <p className="text-2xl font-bold text-slate-900">{result.stats.project}</p>
               </div>
               {result.stats.incomes > 0 && (
                 <div className="p-4 rounded-lg border border-green-200 bg-green-50">
-                  <p className="text-sm text-green-600">Incomes</p>
+                  <p className="text-sm text-green-600">{tExpenses("title")}</p>
                   <p className="text-2xl font-bold text-green-700">{result.stats.incomes}</p>
                 </div>
               )}
@@ -785,17 +787,17 @@ export default function ImportPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                   </svg>
                   <p className="font-medium text-amber-700">
-                    Duplicate entries detected
+                    {t("duplicatesDetected")}
                   </p>
                 </div>
                 <p className="text-sm text-amber-600">
-                  Found {result.duplicatesFound} duplicate{result.duplicatesFound !== 1 ? 's' : ''} (same date, name, and amount).{' '}
+                  {t("duplicatesSummary", { count: result.duplicatesFound })}{' '}
                   {(result.skipped ?? 0) > 0 && (
-                    <span className="font-medium">{result.skipped} skipped</span>
+                    <span className="font-medium">{result.skipped} {t("skipped")}</span>
                   )}
                   {(result.skipped ?? 0) > 0 && (result.replaced ?? 0) > 0 && ', '}
                   {(result.replaced ?? 0) > 0 && (
-                    <span className="font-medium">{result.replaced} replaced</span>
+                    <span className="font-medium">{result.replaced} {t("replaced")}</span>
                   )}
                   .
                 </p>
@@ -810,11 +812,11 @@ export default function ImportPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   <p className="font-medium text-purple-700">
-                    {result.recurringTemplatesCreated} recurring template{result.recurringTemplatesCreated !== 1 ? 's' : ''} created!
+                    {t("recurringTemplatesCreated", { count: result.recurringTemplatesCreated })}
                   </p>
                 </div>
                 <p className="text-sm text-purple-600 mb-3">
-                  We detected expenses without dates at the top of your sheets (subscriptions, bills). These have been added as recurring templates.
+                  {t("recurringTemplatesDesc")}
                 </p>
                 {result.recurringCandidates && result.recurringCandidates.length > 0 && (
                   <div className="flex flex-wrap gap-2">
@@ -832,7 +834,7 @@ export default function ImportPage() {
                   onClick={() => router.push("/dashboard/recurring")}
                   className="mt-3 text-sm text-purple-600 hover:text-purple-800 font-medium underline"
                 >
-                  View & manage recurring templates →
+                  {t("viewRecurringTemplates")}
                 </button>
               </div>
             )}
@@ -841,7 +843,7 @@ export default function ImportPage() {
             {result.sheets && result.sheets.length > 0 && (
               <div className="p-4 rounded-lg bg-slate-50">
                 <p className="text-sm font-medium text-slate-700 mb-2">
-                  Sheets processed:
+                  {t("sheetsProcessed")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {result.sheets.map((sheet) => (
@@ -857,7 +859,7 @@ export default function ImportPage() {
             {result.errors.length > 0 && (
               <div className="p-4 rounded-lg bg-yellow-50">
                 <p className="font-medium text-yellow-700 mb-2">
-                  {result.errors.length} rows had issues:
+                  {t("rowsHadIssues", { count: result.errors.length })}
                 </p>
                 <ul className="text-sm text-yellow-600 space-y-1">
                   {result.errors.map((err, i) => (
@@ -873,13 +875,13 @@ export default function ImportPage() {
                 onClick={() => router.push("/dashboard")}
                 className="rounded-lg bg-[#0070f3] px-6 py-3 text-white font-medium hover:bg-[#0060df] transition-colors"
               >
-                Go to Dashboard
+                {t("goToDashboard")}
               </button>
               <button
                 onClick={resetImport}
                 className="rounded-lg border border-slate-300 px-6 py-3 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
               >
-                Import Another File
+                {t("importAnotherFile")}
               </button>
             </div>
           </div>
@@ -889,22 +891,22 @@ export default function ImportPage() {
         {step === "upload" && (
           <div className="mt-12 p-6 rounded-xl bg-slate-50">
             <h3 className="font-semibold text-slate-900 mb-3">
-              How it works
+              {t("howItWorks")}
             </h3>
             <ul className="space-y-2 text-sm text-slate-600">
               <li>
-                <strong>1. Upload</strong> — We accept any Excel or CSV file
+                <strong>{t("step1Upload")}</strong> — {t("step1Desc")}
               </li>
               <li>
-                <strong>2. Map columns</strong> — Tell us which columns contain date, description, and amount
+                <strong>{t("step2Map")}</strong> — {t("step2Desc")}
               </li>
               <li>
-                <strong>3. Classification</strong> — We automatically categorize expenses:
+                <strong>{t("step3Classification")}</strong> — {t("step3Desc")}
                 <ul className="ml-4 mt-1 space-y-1">
-                  <li>• <strong>Living (Fixed):</strong> Subscriptions, rent, insurance (no date = recurring)</li>
-                  <li>• <strong>Living (Variable):</strong> Utilities like electricity, water, gas</li>
-                  <li>• <strong>Lifestyle:</strong> Daily spending (items with dates)</li>
-                  <li>• <strong>Project:</strong> Specific goals like home renovation</li>
+                  <li>• <strong>{tExpenses("types.fixed")}:</strong> {t("classLivingFixed")}</li>
+                  <li>• <strong>{tExpenses("types.variable")}:</strong> {t("classLivingVariable")}</li>
+                  <li>• <strong>{tExpenses("types.lifestyle")}:</strong> {t("classLifestyle")}</li>
+                  <li>• <strong>{tExpenses("types.project")}:</strong> {t("classProject")}</li>
                 </ul>
               </li>
             </ul>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 type BankAccount = {
   id: string;
@@ -19,20 +20,15 @@ type Income = {
   bankAccount: BankAccount | null;
 };
 
-const INCOME_TYPES = [
-  { value: "SALARY", label: "Salary", color: "bg-green-100 text-green-800" },
-  { value: "FREELANCE", label: "Freelance", color: "bg-blue-100 text-blue-800" },
-  { value: "INVESTMENT", label: "Investment", color: "bg-purple-100 text-purple-800" },
-  { value: "SALE", label: "Sale", color: "bg-amber-100 text-amber-800" },
-  { value: "GIFT", label: "Gift", color: "bg-pink-100 text-pink-800" },
-  { value: "REFUND", label: "Refund", color: "bg-cyan-100 text-cyan-800" },
-  { value: "OTHER", label: "Other", color: "bg-slate-100 text-slate-800" },
-];
-
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December",
-];
+const INCOME_TYPE_COLORS: Record<string, string> = {
+  SALARY: "bg-green-100 text-green-800",
+  FREELANCE: "bg-blue-100 text-blue-800",
+  INVESTMENT: "bg-purple-100 text-purple-800",
+  SALE: "bg-amber-100 text-amber-800",
+  GIFT: "bg-pink-100 text-pink-800",
+  REFUND: "bg-cyan-100 text-cyan-800",
+  OTHER: "bg-slate-100 text-slate-800",
+};
 
 const CURRENCIES = [
   { value: "EUR", label: "EUR", symbol: "€" },
@@ -43,6 +39,28 @@ const CURRENCIES = [
 ];
 
 export default function IncomesPage() {
+  const t = useTranslations("incomes");
+  const tTime = useTranslations("time");
+  const tCommon = useTranslations("common");
+  const tExpenses = useTranslations("expenses");
+
+  const MONTHS = [
+    tTime("months.january"), tTime("months.february"), tTime("months.march"),
+    tTime("months.april"), tTime("months.may"), tTime("months.june"),
+    tTime("months.july"), tTime("months.august"), tTime("months.september"),
+    tTime("months.october"), tTime("months.november"), tTime("months.december")
+  ];
+
+  const INCOME_TYPES = [
+    { value: "SALARY", label: t("types.salary") },
+    { value: "FREELANCE", label: t("types.freelance") },
+    { value: "INVESTMENT", label: t("types.investment") },
+    { value: "SALE", label: t("types.sale") },
+    { value: "GIFT", label: t("types.gift") },
+    { value: "REFUND", label: t("types.refund") },
+    { value: "OTHER", label: t("types.other") },
+  ];
+
   const [incomes, setIncomes] = useState<Income[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -147,7 +165,7 @@ export default function IncomesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Delete this income?")) return;
+    if (!confirm(t("deleteIncomeConfirm"))) return;
 
     try {
       const response = await fetch(`/api/incomes/${id}`, { method: "DELETE" });
@@ -205,11 +223,11 @@ export default function IncomesPage() {
   };
 
   const getTypeStyle = (type: string) => {
-    return INCOME_TYPES.find((t) => t.value === type)?.color || "bg-slate-100 text-slate-800";
+    return INCOME_TYPE_COLORS[type] || "bg-slate-100 text-slate-800";
   };
 
   const getTypeLabel = (type: string) => {
-    return INCOME_TYPES.find((t) => t.value === type)?.label || type;
+    return INCOME_TYPES.find((it) => it.value === type)?.label || type;
   };
 
   const getCurrencySymbol = (currency: string) => {
@@ -228,9 +246,9 @@ export default function IncomesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Incomes</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Track all your income sources
+            {t("trackIncomeSources")}
           </p>
         </div>
         <button
@@ -240,7 +258,7 @@ export default function IncomesPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Income
+          {t("addIncome")}
         </button>
       </div>
 
@@ -269,32 +287,32 @@ export default function IncomesPage() {
           onChange={(e) => setFilterType(e.target.value)}
           className="rounded-lg border border-slate-200 px-3 py-2 text-sm focus:ring-2 focus:ring-green-500"
         >
-          <option value="all">All Types</option>
+          <option value="all">{t("allTypes")}</option>
           {INCOME_TYPES.map((type) => (
             <option key={type.value} value={type.value}>{type.label}</option>
           ))}
         </select>
 
         <div className="ml-auto text-lg font-bold text-green-600">
-          Total: €{total.toFixed(2)}
+          {t("total")}: €{total.toFixed(2)}
         </div>
       </div>
 
       {/* Incomes List */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Loading...</div>
+          <div className="p-8 text-center text-slate-500">{tCommon("loading")}</div>
         ) : incomes.length === 0 ? (
           <div className="p-12 text-center text-slate-500">
             <svg className="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <p>No incomes for this period</p>
+            <p>{t("noIncomesForPeriod")}</p>
             <button
               onClick={openCreateModal}
               className="mt-4 text-green-600 hover:text-green-700 font-medium"
             >
-              Add your first income
+              {t("addFirstIncome")}
             </button>
           </div>
         ) : (
@@ -315,7 +333,7 @@ export default function IncomesPage() {
                     </span>
                     {income.isRecurring && (
                       <span className="px-2 py-0.5 text-xs rounded-full bg-blue-100 text-blue-700">
-                        Recurring
+                        {tExpenses("recurring")}
                       </span>
                     )}
                   </div>
@@ -366,7 +384,7 @@ export default function IncomesPage() {
           <div className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-200 bg-green-50">
               <h2 className="text-lg font-semibold text-green-700">
-                {editingId ? "Edit Income" : "Add Income"}
+                {editingId ? t("editIncome") : t("addIncome")}
               </h2>
             </div>
 
@@ -374,20 +392,20 @@ export default function IncomesPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Description
+                    {t("description")}
                   </label>
                   <input
                     type="text"
                     value={formData.name}
                     onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="e.g., OLX iPhone Sale, Birthday Gift"
+                    placeholder={t("descriptionPlaceholder")}
                     className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Type
+                    {t("type")}
                   </label>
                   <select
                     value={formData.type}
@@ -402,7 +420,7 @@ export default function IncomesPage() {
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Amount
+                    {t("amount")}
                   </label>
                   <div className="flex gap-2">
                     <select
@@ -428,7 +446,7 @@ export default function IncomesPage() {
                 <div>
                   <div className="flex items-center justify-between mb-1">
                     <label className="block text-sm font-medium text-slate-700">
-                      Date
+                      {t("date")}
                     </label>
                     <label className="flex items-center gap-2 text-sm text-slate-500 cursor-pointer">
                       <input
@@ -437,7 +455,7 @@ export default function IncomesPage() {
                         onChange={(e) => setFormData({ ...formData, hasDate: e.target.checked })}
                         className="rounded border-slate-300 text-green-600 focus:ring-green-500"
                       />
-                      Has specific date
+                      {t("hasSpecificDate")}
                     </label>
                   </div>
                   {formData.hasDate ? (
@@ -449,21 +467,21 @@ export default function IncomesPage() {
                     />
                   ) : (
                     <div className="w-full rounded-lg border border-slate-200 bg-slate-50 px-4 py-2 text-slate-400">
-                      No date (recurring/general)
+                      {t("noDateRecurring")}
                     </div>
                   )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Bank Account <span className="text-slate-400">(optional)</span>
+                    {t("bankAccount")} <span className="text-slate-400">({tCommon("optional")})</span>
                   </label>
                   <select
                     value={formData.bankAccountId}
                     onChange={(e) => setFormData({ ...formData, bankAccountId: e.target.value })}
                     className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                   >
-                    <option value="">None</option>
+                    <option value="">{tCommon("none")}</option>
                     {bankAccounts.map((account) => (
                       <option key={account.id} value={account.id}>{account.name}</option>
                     ))}
@@ -472,13 +490,13 @@ export default function IncomesPage() {
 
                 <div className="col-span-2">
                   <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Notes <span className="text-slate-400">(optional)</span>
+                    {t("notes")} <span className="text-slate-400">({tCommon("optional")})</span>
                   </label>
                   <input
                     type="text"
                     value={formData.description}
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                    placeholder="Additional details..."
+                    placeholder={t("notesPlaceholder")}
                     className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -489,14 +507,14 @@ export default function IncomesPage() {
                   onClick={closeModal}
                   className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   onClick={handleSubmit}
                   disabled={isSaving || !formData.name || !formData.amount}
                   className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 text-white font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
                 >
-                  {isSaving ? "Saving..." : editingId ? "Update" : "Add Income"}
+                  {isSaving ? t("saving") : editingId ? t("update") : t("addIncome")}
                 </button>
               </div>
             </div>

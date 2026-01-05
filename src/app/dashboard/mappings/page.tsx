@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 type Category = {
   id: string;
@@ -16,6 +17,9 @@ type KeywordMapping = {
 };
 
 export default function KeywordMappingsPage() {
+  const t = useTranslations("mappings");
+  const tCommon = useTranslations("common");
+
   const [mappings, setMappings] = useState<KeywordMapping[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -29,6 +33,13 @@ export default function KeywordMappingsPage() {
   const [expenseType, setExpenseType] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
+
+  const EXPENSE_TYPES = [
+    { value: "SURVIVAL_FIXED", label: t("types.fixed") },
+    { value: "SURVIVAL_VARIABLE", label: t("types.variable") },
+    { value: "LIFESTYLE", label: t("types.lifestyle") },
+    { value: "PROJECT", label: t("types.project") },
+  ];
 
   useEffect(() => {
     fetchData();
@@ -83,7 +94,7 @@ export default function KeywordMappingsPage() {
     setError("");
 
     if (!categoryId && !expenseType) {
-      setError("Please select a category or expense type");
+      setError(t("selectCategoryOrType"));
       setIsSubmitting(false);
       return;
     }
@@ -131,11 +142,8 @@ export default function KeywordMappingsPage() {
     setDeleteId(null);
   };
 
-  const typeLabels: Record<string, string> = {
-    SURVIVAL_FIXED: "Living (Fixed)",
-    SURVIVAL_VARIABLE: "Living (Variable)",
-    LIFESTYLE: "Lifestyle",
-    PROJECT: "Project",
+  const getTypeLabel = (type: string) => {
+    return EXPENSE_TYPES.find((t) => t.value === type)?.label || type;
   };
 
   return (
@@ -143,9 +151,9 @@ export default function KeywordMappingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Keyword Mappings</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-slate-500 text-sm mt-1">
-            Auto-categorize expenses based on keywords (e.g., "gas" → Utilities)
+            {t("subtitle")}
           </p>
         </div>
         <button
@@ -155,7 +163,7 @@ export default function KeywordMappingsPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Mapping
+          {t("addMapping")}
         </button>
       </div>
 
@@ -166,12 +174,12 @@ export default function KeywordMappingsPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">How keyword mappings work:</p>
+            <p className="font-medium mb-1">{t("howItWorks")}</p>
             <ul className="list-disc list-inside space-y-1 text-blue-700">
-              <li>When you add an expense with quick-add, the system checks if the name contains any keywords</li>
-              <li>If a match is found, it automatically assigns the category and/or expense type</li>
-              <li>Example: Create a mapping for "gás" → Category: "Utilities", Type: "Survival (Fixed)"</li>
-              <li>Then "Gás Natural" or "gas bill" will auto-categorize</li>
+              <li>{t("howItWorksItem1")}</li>
+              <li>{t("howItWorksItem2")}</li>
+              <li>{t("howItWorksItem3")}</li>
+              <li>{t("howItWorksItem4")}</li>
             </ul>
           </div>
         </div>
@@ -180,7 +188,7 @@ export default function KeywordMappingsPage() {
       {/* Mappings Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Loading...</div>
+          <div className="p-8 text-center text-slate-500">{tCommon("loading")}</div>
         ) : mappings.length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-slate-400 mb-4">
@@ -188,23 +196,23 @@ export default function KeywordMappingsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">No keyword mappings yet</h3>
-            <p className="text-slate-500 text-sm mb-4">Create mappings to auto-categorize your expenses</p>
+            <h3 className="text-lg font-medium text-slate-900 mb-1">{t("noMappingsYet")}</h3>
+            <p className="text-slate-500 text-sm mb-4">{t("createMappingsHint")}</p>
             <button
               onClick={() => openModal()}
               className="text-[#0070f3] hover:underline text-sm font-medium"
             >
-              Create your first mapping
+              {t("createFirstMapping")}
             </button>
           </div>
         ) : (
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">Keyword</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">Category</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">Expense Type</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">Actions</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("keyword")}</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("category")}</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("expenseType")}</th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">{t("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -219,7 +227,7 @@ export default function KeywordMappingsPage() {
                     {mapping.category?.name || "-"}
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-600">
-                    {mapping.expenseType ? typeLabels[mapping.expenseType] : "-"}
+                    {mapping.expenseType ? getTypeLabel(mapping.expenseType) : "-"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
@@ -254,7 +262,7 @@ export default function KeywordMappingsPage() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              {editingMapping ? "Edit Mapping" : "New Keyword Mapping"}
+              {editingMapping ? t("editMapping") : t("newMapping")}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
@@ -263,27 +271,27 @@ export default function KeywordMappingsPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Keyword</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("keyword")}</label>
                 <input
                   type="text"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   required
-                  placeholder="e.g., gás, uber, netflix"
+                  placeholder={t("keywordPlaceholder")}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                 />
                 <p className="mt-1 text-xs text-slate-500">
-                  Will match case-insensitively (e.g., "gás" matches "Gás", "GAS", "gas")
+                  {t("keywordHint")}
                 </p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Category</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("category")}</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                 >
-                  <option value="">No category mapping</option>
+                  <option value="">{t("noCategoryMapping")}</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -292,17 +300,18 @@ export default function KeywordMappingsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Expense Type</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("expenseType")}</label>
                 <select
                   value={expenseType}
                   onChange={(e) => setExpenseType(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                 >
-                  <option value="">No type mapping</option>
-                  <option value="SURVIVAL_FIXED">Living (Fixed)</option>
-                  <option value="SURVIVAL_VARIABLE">Living (Variable)</option>
-                  <option value="LIFESTYLE">Lifestyle</option>
-                  <option value="PROJECT">Project</option>
+                  <option value="">{t("noTypeMapping")}</option>
+                  {EXPENSE_TYPES.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.label}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="flex gap-3 pt-2">
@@ -311,14 +320,14 @@ export default function KeywordMappingsPage() {
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !keyword}
                   className="flex-1 px-4 py-2 rounded-lg bg-[#0070f3] text-white hover:bg-[#0060df] disabled:opacity-50"
                 >
-                  {isSubmitting ? "Saving..." : "Save"}
+                  {isSubmitting ? t("saving") : tCommon("save")}
                 </button>
               </div>
             </form>
@@ -331,22 +340,22 @@ export default function KeywordMappingsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Mapping?</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("deleteMappingQuestion")}</h3>
             <p className="text-slate-600 text-sm mb-4">
-              This will not affect existing expenses.
+              {t("deleteMappingHint")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteId)}
                 className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
-                Delete
+                {tCommon("delete")}
               </button>
             </div>
           </div>

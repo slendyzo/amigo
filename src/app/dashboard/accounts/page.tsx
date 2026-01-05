@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 type BankAccount = {
   id: string;
@@ -12,6 +13,18 @@ type BankAccount = {
 };
 
 export default function BankAccountsPage() {
+  const t = useTranslations("accounts");
+  const tCommon = useTranslations("common");
+  const tExpenses = useTranslations("expenses");
+
+  const ACCOUNT_TYPES = [
+    { value: "CHECKING", label: t("types.checking") },
+    { value: "SAVINGS", label: t("types.savings") },
+    { value: "CREDIT", label: t("types.credit") },
+    { value: "CASH", label: t("types.cash") },
+    { value: "INVESTMENT", label: t("types.investment") },
+  ];
+
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -119,12 +132,8 @@ export default function BankAccountsPage() {
     setDeleteId(null);
   };
 
-  const typeLabels: Record<string, string> = {
-    CHECKING: "Checking",
-    SAVINGS: "Savings",
-    CREDIT: "Credit Card",
-    CASH: "Cash",
-    INVESTMENT: "Investment",
+  const getTypeLabel = (type: string) => {
+    return ACCOUNT_TYPES.find((t) => t.value === type)?.label || type;
   };
 
   return (
@@ -132,9 +141,9 @@ export default function BankAccountsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Bank Accounts</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-slate-500 text-sm mt-1">
-            Track which account each expense comes from
+            {t("trackExpenseSource")}
           </p>
         </div>
         <button
@@ -144,14 +153,14 @@ export default function BankAccountsPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Account
+          {t("addAccount")}
         </button>
       </div>
 
       {/* Accounts Grid */}
       {isLoading ? (
         <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
-          Loading...
+          {tCommon("loading")}
         </div>
       ) : accounts.length === 0 ? (
         <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-slate-200">
@@ -160,13 +169,13 @@ export default function BankAccountsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-1">No bank accounts yet</h3>
-          <p className="text-slate-500 text-sm mb-4">Add your bank accounts to track where expenses come from</p>
+          <h3 className="text-lg font-medium text-slate-900 mb-1">{t("noAccountsYet")}</h3>
+          <p className="text-slate-500 text-sm mb-4">{t("addToTrack")}</p>
           <button
             onClick={() => openModal()}
             className="text-[#0070f3] hover:underline text-sm font-medium"
           >
-            Add an account
+            {t("addAnAccount")}
           </button>
         </div>
       ) : (
@@ -184,17 +193,17 @@ export default function BankAccountsPage() {
                   )}
                 </div>
                 <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                  {typeLabels[account.accountType] || account.accountType}
+                  {getTypeLabel(account.accountType)}
                 </span>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Currency</span>
+                  <span className="text-slate-500">{t("currency")}</span>
                   <span className="font-medium text-slate-900">{account.currency}</span>
                 </div>
                 {account._count?.expenses !== undefined && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Expenses</span>
+                    <span className="text-slate-500">{tExpenses("title")}</span>
                     <span className="font-medium text-slate-900">{account._count.expenses}</span>
                   </div>
                 )}
@@ -204,13 +213,13 @@ export default function BankAccountsPage() {
                   onClick={() => openModal(account)}
                   className="flex-1 text-sm text-slate-600 hover:text-slate-900 py-1"
                 >
-                  Edit
+                  {tCommon("edit")}
                 </button>
                 <button
                   onClick={() => setDeleteId(account.id)}
                   className="flex-1 text-sm text-red-500 hover:text-red-700 py-1"
                 >
-                  Delete
+                  {tCommon("delete")}
                 </button>
               </div>
             </div>
@@ -224,7 +233,7 @@ export default function BankAccountsPage() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              {editingAccount ? "Edit Account" : "New Account"}
+              {editingAccount ? t("editAccount") : t("newAccount")}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
@@ -233,43 +242,41 @@ export default function BankAccountsPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Account Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("accountName")}</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  placeholder="e.g., Main Account, Savings"
+                  placeholder={t("accountNamePlaceholder")}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Bank Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("bankName")}</label>
                 <input
                   type="text"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
-                  placeholder="e.g., Millennium, CGD (optional)"
+                  placeholder={t("bankNamePlaceholder")}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Type</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("type")}</label>
                   <select
                     value={accountType}
                     onChange={(e) => setAccountType(e.target.value)}
                     className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                   >
-                    <option value="CHECKING">Checking</option>
-                    <option value="SAVINGS">Savings</option>
-                    <option value="CREDIT">Credit Card</option>
-                    <option value="CASH">Cash</option>
-                    <option value="INVESTMENT">Investment</option>
+                    {ACCOUNT_TYPES.map((type) => (
+                      <option key={type.value} value={type.value}>{type.label}</option>
+                    ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Currency</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("currency")}</label>
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
@@ -287,14 +294,14 @@ export default function BankAccountsPage() {
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !name}
                   className="flex-1 px-4 py-2 rounded-lg bg-[#0070f3] text-white hover:bg-[#0060df] disabled:opacity-50"
                 >
-                  {isSubmitting ? "Saving..." : "Save"}
+                  {isSubmitting ? t("saving") : tCommon("save")}
                 </button>
               </div>
             </form>
@@ -307,22 +314,22 @@ export default function BankAccountsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Account?</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("deleteAccountQuestion")}</h3>
             <p className="text-slate-600 text-sm mb-4">
-              Expenses linked to this account will be unlinked.
+              {t("expensesWillUnlink")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteId)}
                 className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
-                Delete
+                {tCommon("delete")}
               </button>
             </div>
           </div>

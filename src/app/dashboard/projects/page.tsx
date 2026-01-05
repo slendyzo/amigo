@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 type Project = {
   id: string;
@@ -15,7 +16,24 @@ type Project = {
   totalSpent?: number;
 };
 
+const STATUS_COLORS: Record<string, string> = {
+  ACTIVE: "bg-green-100 text-green-700",
+  COMPLETED: "bg-blue-100 text-blue-700",
+  ON_HOLD: "bg-yellow-100 text-yellow-700",
+  CANCELLED: "bg-red-100 text-red-700",
+};
+
 export default function ProjectsPage() {
+  const t = useTranslations("projects");
+  const tCommon = useTranslations("common");
+
+  const STATUS_LABELS: Record<string, string> = {
+    ACTIVE: t("statuses.active"),
+    COMPLETED: t("statuses.completed"),
+    ON_HOLD: t("statuses.on_hold"),
+    CANCELLED: t("statuses.cancelled"),
+  };
+
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,21 +137,14 @@ export default function ProjectsPage() {
     setDeleteId(null);
   };
 
-  const statusColors: Record<string, string> = {
-    ACTIVE: "bg-green-100 text-green-700",
-    COMPLETED: "bg-blue-100 text-blue-700",
-    ON_HOLD: "bg-yellow-100 text-yellow-700",
-    CANCELLED: "bg-red-100 text-red-700",
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Projects</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-slate-500 text-sm mt-1">
-            Track expenses for specific projects
+            {t("trackProjectExpenses")}
           </p>
         </div>
         <button
@@ -143,14 +154,14 @@ export default function ProjectsPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          New Project
+          {t("newProject")}
         </button>
       </div>
 
       {/* Projects Grid */}
       {isLoading ? (
         <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
-          Loading...
+          {tCommon("loading")}
         </div>
       ) : projects.length === 0 ? (
         <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-slate-200">
@@ -159,13 +170,13 @@ export default function ProjectsPage() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-1">No projects yet</h3>
-          <p className="text-slate-500 text-sm mb-4">Create your first project to track related expenses</p>
+          <h3 className="text-lg font-medium text-slate-900 mb-1">{t("noProjectsYet")}</h3>
+          <p className="text-slate-500 text-sm mb-4">{t("createFirstProject")}</p>
           <button
             onClick={() => openModal()}
             className="text-[#0070f3] hover:underline text-sm font-medium"
           >
-            Create a project
+            {t("createProject")}
           </button>
         </div>
       ) : (
@@ -178,8 +189,8 @@ export default function ProjectsPage() {
             >
               <div className="flex items-start justify-between mb-3">
                 <h3 className="font-semibold text-slate-900">{project.name}</h3>
-                <span className={`text-xs px-2 py-1 rounded-full ${statusColors[project.status] || "bg-slate-100 text-slate-600"}`}>
-                  {project.status}
+                <span className={`text-xs px-2 py-1 rounded-full ${STATUS_COLORS[project.status] || "bg-slate-100 text-slate-600"}`}>
+                  {STATUS_LABELS[project.status] || project.status}
                 </span>
               </div>
               {project.description && (
@@ -188,19 +199,19 @@ export default function ProjectsPage() {
               <div className="space-y-2 text-sm">
                 {project.budget && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Budget</span>
+                    <span className="text-slate-500">{t("budget")}</span>
                     <span className="font-medium text-slate-900">€{Number(project.budget).toFixed(2)}</span>
                   </div>
                 )}
                 {project.totalSpent !== undefined && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Spent</span>
+                    <span className="text-slate-500">{t("spent")}</span>
                     <span className="font-medium text-slate-900">€{Number(project.totalSpent).toFixed(2)}</span>
                   </div>
                 )}
                 {project._count?.expenses !== undefined && (
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Expenses</span>
+                    <span className="text-slate-500">{t("expenses")}</span>
                     <span className="font-medium text-slate-900">{project._count.expenses}</span>
                   </div>
                 )}
@@ -210,13 +221,13 @@ export default function ProjectsPage() {
                   onClick={(e) => { e.stopPropagation(); openModal(project); }}
                   className="flex-1 text-sm text-slate-600 hover:text-slate-900 py-1"
                 >
-                  Edit
+                  {tCommon("edit")}
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setDeleteId(project.id); }}
                   className="flex-1 text-sm text-red-500 hover:text-red-700 py-1"
                 >
-                  Delete
+                  {tCommon("delete")}
                 </button>
               </div>
             </div>
@@ -230,11 +241,11 @@ export default function ProjectsPage() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              {editingProject ? "Edit Project" : "New Project"}
+              {editingProject ? t("editProject") : t("newProject")}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("name")}</label>
                 <input
                   type="text"
                   value={name}
@@ -244,7 +255,7 @@ export default function ProjectsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("description")}</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
@@ -253,19 +264,19 @@ export default function ProjectsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Budget</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("budget")}</label>
                 <input
                   type="number"
                   step="0.01"
                   value={budget}
                   onChange={(e) => setBudget(e.target.value)}
-                  placeholder="Optional"
+                  placeholder={tCommon("optional")}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                 />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Start Date</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("startDate")}</label>
                   <input
                     type="date"
                     value={startDate}
@@ -274,7 +285,7 @@ export default function ProjectsPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">End Date</label>
+                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("endDate")}</label>
                   <input
                     type="date"
                     value={endDate}
@@ -289,14 +300,14 @@ export default function ProjectsPage() {
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !name}
                   className="flex-1 px-4 py-2 rounded-lg bg-[#0070f3] text-white hover:bg-[#0060df] disabled:opacity-50"
                 >
-                  {isSubmitting ? "Saving..." : "Save"}
+                  {isSubmitting ? t("saving") : tCommon("save")}
                 </button>
               </div>
             </form>
@@ -309,22 +320,22 @@ export default function ProjectsPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Project?</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("deleteProjectQuestion")}</h3>
             <p className="text-slate-600 text-sm mb-4">
-              This will not delete associated expenses, but they will be unlinked from this project.
+              {t("expensesWillUnlink")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteId)}
                 className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
-                Delete
+                {tCommon("delete")}
               </button>
             </div>
           </div>

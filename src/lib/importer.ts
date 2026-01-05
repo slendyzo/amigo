@@ -516,7 +516,10 @@ export async function importExpensesFromExcel(
           lastValidDate = parsedDate; // Update the last valid date
           firstDateSeen = true; // Mark that we've seen a date
         } else if (lastValidDate) {
-          console.log(`    Date inheritance: "${rawName}" inherits ${lastValidDate.toISOString().slice(0, 10)} from previous row`);
+          // Date inheritance - log only first few to avoid spam
+          if (rowsProcessed < 5) {
+            console.log(`    Date inheritance: "${rawName}" inherits ${lastValidDate.toISOString().slice(0, 10)} from previous row`);
+          }
           parsedDate = lastValidDate; // Inherit from previous row
         }
 
@@ -527,8 +530,10 @@ export async function importExpensesFromExcel(
         const hasDateContext = originalHadDate || (lastValidDate !== null && !isProjectSheet);
         const type = determineExpenseType(rawName, hasDateContext, isProjectSheet);
 
-        // Debug logging for expense type determination
-        console.log(`    [${sheetName}] Row ${rowNumber}: "${rawName}" €${amount} - hasDateContext=${hasDateContext}, type=${type}`);
+        // Debug logging for expense type determination (only for first 10 rows per sheet to avoid log spam)
+        if (rowsProcessed < 10) {
+          console.log(`    [${sheetName}] Row ${rowNumber}: "${rawName}" €${amount} - hasDateContext=${hasDateContext}, type=${type}`);
+        }
 
         // Update stats
         if (isIncome) {

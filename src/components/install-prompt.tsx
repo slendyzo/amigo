@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
@@ -8,6 +9,8 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 export default function InstallPrompt() {
+  const t = useTranslations("install");
+
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showPrompt, setShowPrompt] = useState(false);
   const [isIOS, setIsIOS] = useState(false);
@@ -85,23 +88,21 @@ export default function InstallPrompt() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-900">Install Amigo</h3>
+            <h3 className="font-semibold text-slate-900">{t("title")}</h3>
             <p className="text-sm text-slate-500 mt-0.5">
-              {isIOS
-                ? "Add to your home screen for the best experience"
-                : "Install for quick access and offline support"}
+              {isIOS ? t("descriptionIOS") : t("descriptionAndroid")}
             </p>
 
             {isIOS ? (
               <div className="mt-3 p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
                 <p className="flex items-center gap-2">
-                  <span>1. Tap</span>
+                  <span>{t("iosStep1")}</span>
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
-                  <span>Share</span>
+                  <span>{t("iosStep1Share")}</span>
                 </p>
-                <p className="mt-1">2. Scroll and tap &quot;Add to Home Screen&quot;</p>
+                <p className="mt-1">{t("iosStep2")}</p>
               </div>
             ) : (
               <div className="flex gap-2 mt-3">
@@ -109,13 +110,13 @@ export default function InstallPrompt() {
                   onClick={handleInstall}
                   className="flex-1 px-4 py-2 bg-[#0070f3] text-white text-sm font-medium rounded-lg hover:bg-[#0060df] transition-colors"
                 >
-                  Install
+                  {t("install")}
                 </button>
                 <button
                   onClick={handleDismiss}
                   className="px-4 py-2 text-slate-500 text-sm font-medium hover:bg-slate-100 rounded-lg transition-colors"
                 >
-                  Not now
+                  {t("notNow")}
                 </button>
               </div>
             )}

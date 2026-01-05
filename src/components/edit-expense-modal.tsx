@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import QuickCreateCategory from "./quick-create-category";
 
 type Category = {
@@ -48,6 +49,9 @@ export default function EditExpenseModal({
   projects = [],
   onSave,
 }: EditExpenseModalProps) {
+  const t = useTranslations("modals");
+  const tCommon = useTranslations("common");
+
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [categoryId, setCategoryId] = useState("");
@@ -63,6 +67,12 @@ export default function EditExpenseModal({
   const [showNewTagInput, setShowNewTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [localProjects, setLocalProjects] = useState<Project[]>(projects);
+
+  const EXPENSE_TYPES = [
+    { value: "LIFESTYLE", label: t("types.lifestyle"), color: "purple" },
+    { value: "SURVIVAL_FIXED", label: t("types.fixed"), color: "blue" },
+    { value: "SURVIVAL_VARIABLE", label: t("types.variable"), color: "cyan" },
+  ];
 
   // Update local categories when props change (compare by content to avoid infinite loops)
   useEffect(() => {
@@ -176,7 +186,7 @@ export default function EditExpenseModal({
         {/* Header */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <h2 className="text-lg font-semibold text-slate-900">
-            Edit Expense
+            {t("editExpense")}
           </h2>
           <button
             onClick={onClose}
@@ -199,7 +209,7 @@ export default function EditExpenseModal({
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
-              Description
+              {t("description")}
             </label>
             <input
               type="text"
@@ -214,7 +224,7 @@ export default function EditExpenseModal({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Amount
+                {t("amount")}
               </label>
               <div className="relative">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">€</span>
@@ -231,7 +241,7 @@ export default function EditExpenseModal({
 
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">
-                Date
+                {t("date")}
               </label>
               <input
                 type="date"
@@ -245,7 +255,7 @@ export default function EditExpenseModal({
           {/* Project Tags */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-2">
-              Tags
+              {t("tags")}
             </label>
             <div className="flex flex-wrap gap-2">
               {/* Clear all tags option */}
@@ -258,7 +268,7 @@ export default function EditExpenseModal({
                     : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                 }`}
               >
-                No tags
+                {t("noTags")}
               </button>
 
               {/* Existing project tags (multi-select) */}
@@ -296,7 +306,7 @@ export default function EditExpenseModal({
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
-                  New
+                  {t("new")}
                 </button>
               )}
             </div>
@@ -308,7 +318,7 @@ export default function EditExpenseModal({
                   type="text"
                   value={newTagName}
                   onChange={(e) => setNewTagName(e.target.value)}
-                  placeholder="Tag name (e.g., Casa, Wedding)"
+                  placeholder={t("tagPlaceholder")}
                   className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -323,7 +333,7 @@ export default function EditExpenseModal({
                   disabled={!newTagName.trim()}
                   className="px-3 py-2 rounded-lg bg-[#0070f3] text-white text-sm font-medium hover:bg-[#0060df] disabled:opacity-50"
                 >
-                  Add
+                  {tCommon("add")}
                 </button>
                 <button
                   type="button"
@@ -333,14 +343,14 @@ export default function EditExpenseModal({
                   }}
                   className="px-3 py-2 rounded-lg text-slate-500 hover:text-slate-700"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
               </div>
             )}
 
             {selectedProjectIds.length > 0 && (
               <p className="mt-2 text-xs text-amber-600">
-                This expense will be tagged to {selectedProjectIds.length} project{selectedProjectIds.length > 1 ? "s" : ""}
+                {t("taggedTo", { count: selectedProjectIds.length })}
               </p>
             )}
           </div>
@@ -348,20 +358,16 @@ export default function EditExpenseModal({
           {/* Optional: Category & Bank (collapsible) */}
           <details className="group">
             <summary className="text-sm text-slate-500 cursor-pointer hover:text-slate-700">
-              More options
+              {t("moreOptions")}
             </summary>
             <div className="mt-3 space-y-3">
               {/* Expense Type */}
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Expense Type
+                  {t("expenseType")}
                 </label>
                 <div className="flex flex-wrap gap-2">
-                  {[
-                    { value: "LIFESTYLE", label: "Lifestyle", color: "purple" },
-                    { value: "SURVIVAL_FIXED", label: "Living (Fixed)", color: "blue" },
-                    { value: "SURVIVAL_VARIABLE", label: "Living (Variable)", color: "cyan" },
-                  ].map((type) => (
+                  {EXPENSE_TYPES.map((type) => (
                     <button
                       key={type.value}
                       type="button"
@@ -385,7 +391,7 @@ export default function EditExpenseModal({
               <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-slate-600 mb-1">
-                  Category
+                  {t("category")}
                 </label>
                 <div className="flex gap-1">
                   <select
@@ -393,7 +399,7 @@ export default function EditExpenseModal({
                     onChange={(e) => setCategoryId(e.target.value)}
                     className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                   >
-                    <option value="">Uncategorized</option>
+                    <option value="">{t("uncategorized")}</option>
                     {localCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
@@ -412,14 +418,14 @@ export default function EditExpenseModal({
               {bankAccounts.length > 0 && (
                 <div>
                   <label className="block text-xs font-medium text-slate-600 mb-1">
-                    Bank Account
+                    {t("bankAccount")}
                   </label>
                   <select
                     value={bankAccountId}
                     onChange={(e) => setBankAccountId(e.target.value)}
                     className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                   >
-                    <option value="">None</option>
+                    <option value="">{t("none")}</option>
                     {bankAccounts.map((acc) => (
                       <option key={acc.id} value={acc.id}>
                         {acc.name}
@@ -439,14 +445,14 @@ export default function EditExpenseModal({
               onClick={onClose}
               className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
             >
-              Cancel
+              {tCommon("cancel")}
             </button>
             <button
               type="submit"
               disabled={isLoading || !name || !amount}
               className="flex-1 rounded-lg bg-[#0070f3] px-4 py-2.5 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Saving..." : "Save Changes"}
+              {isLoading ? t("saving") : t("saveChanges")}
             </button>
           </div>
         </form>

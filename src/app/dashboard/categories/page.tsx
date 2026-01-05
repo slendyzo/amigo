@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 
 type Category = {
   id: string;
@@ -10,6 +11,10 @@ type Category = {
 };
 
 export default function CategoriesPage() {
+  const t = useTranslations("categories");
+  const tCommon = useTranslations("common");
+  const tExpenses = useTranslations("expenses");
+
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -106,9 +111,9 @@ export default function CategoriesPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Categories</h1>
+          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-slate-500 text-sm mt-1">
-            Organize your expenses into categories
+            {t("organizeExpenses")}
           </p>
         </div>
         <button
@@ -118,19 +123,19 @@ export default function CategoriesPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Category
+          {t("addCategory")}
         </button>
       </div>
 
       {/* Info Note */}
       <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm text-slate-600">
-        <span className="font-medium">Note:</span> Categories marked with a lock icon are system defaults and cannot be deleted. Your expenses will be auto-categorized based on keyword mappings.
+        <span className="font-medium">{t("note")}:</span> {t("systemNote")}
       </div>
 
       {/* Categories List */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500">Loading...</div>
+          <div className="p-8 text-center text-slate-500">{tCommon("loading")}</div>
         ) : categories.length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-slate-400 mb-4">
@@ -138,22 +143,22 @@ export default function CategoriesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">No categories yet</h3>
-            <p className="text-slate-500 text-sm mb-4">Create categories to organize your expenses</p>
+            <h3 className="text-lg font-medium text-slate-900 mb-1">{t("noCategoriesYet")}</h3>
+            <p className="text-slate-500 text-sm mb-4">{t("createToOrganize")}</p>
             <button
               onClick={() => openModal()}
               className="text-[#0070f3] hover:underline text-sm font-medium"
             >
-              Create a category
+              {t("createCategory")}
             </button>
           </div>
         ) : (
           <table className="w-full">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">Name</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">Expenses</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">Actions</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("name")}</th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">{tExpenses("title")}</th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">{tExpenses("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -163,7 +168,7 @@ export default function CategoriesPage() {
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-slate-900">{category.name}</span>
                       {category.isSystem && (
-                        <span title="System category - cannot be deleted">
+                        <span title={t("systemCategory")}>
                           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                           </svg>
@@ -209,7 +214,7 @@ export default function CategoriesPage() {
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
             <h2 className="text-lg font-semibold text-slate-900 mb-4">
-              {editingCategory ? "Edit Category" : "New Category"}
+              {editingCategory ? t("editCategory") : t("newCategory")}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
@@ -218,13 +223,13 @@ export default function CategoriesPage() {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("name")}</label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
-                  placeholder="e.g., Food, Transport, Entertainment"
+                  placeholder={t("namePlaceholder")}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                 />
               </div>
@@ -234,14 +239,14 @@ export default function CategoriesPage() {
                   onClick={() => setIsModalOpen(false)}
                   className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
                 >
-                  Cancel
+                  {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !name}
                   className="flex-1 px-4 py-2 rounded-lg bg-[#0070f3] text-white hover:bg-[#0060df] disabled:opacity-50"
                 >
-                  {isSubmitting ? "Saving..." : "Save"}
+                  {isSubmitting ? t("saving") : tCommon("save")}
                 </button>
               </div>
             </form>
@@ -254,22 +259,22 @@ export default function CategoriesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">Delete Category?</h3>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("deleteCategoryQuestion")}</h3>
             <p className="text-slate-600 text-sm mb-4">
-              Expenses in this category will be moved to "Uncategorized".
+              {t("moveToCategorized")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
                 className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
               >
-                Cancel
+                {tCommon("cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteId)}
                 className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
-                Delete
+                {tCommon("delete")}
               </button>
             </div>
           </div>
