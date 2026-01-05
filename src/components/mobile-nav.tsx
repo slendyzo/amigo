@@ -154,7 +154,7 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
       <button
         onClick={handleAddClick}
         className="md:hidden fixed right-4 w-14 h-14 rounded-full bg-[#0070f3] text-white flex items-center justify-center shadow-lg z-50 active:scale-95 transition-transform tap-none"
-        style={{ bottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
+        style={{ bottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
         aria-label="Add expense"
       >
         {icons.plus}
