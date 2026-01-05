@@ -9,6 +9,9 @@ out/
 build/
 dist/
 
+# User uploaded files
+public/uploads/
+
 # Environment files - NEVER commit these!
 .env
 .env.local

@@ -413,6 +413,7 @@ model Feedback {
   userId      String
   type        FeedbackType
   message     String       @db.Text
+  imageUrl    String?      // Optional screenshot URL
   userAgent   String?      // Browser/device info
   pageUrl     String?      // Where user was when submitting
   isRead      Boolean      @default(false)

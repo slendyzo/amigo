@@ -1,18 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
 type FeedbackType = "BUG" | "FEATURE" | null;
 
 export default function FeedbackButton() {
   const t = useTranslations("feedback");
   const pathname = usePathname();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState<"select" | "form">("select");
   const [feedbackType, setFeedbackType] = useState<FeedbackType>(null);
   const [message, setMessage] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState("");
@@ -22,6 +27,41 @@ export default function FeedbackButton() {
     setStep("form");
   };
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError(t("invalidImageType"));
+      return;
+    }
+
+    // Validate file size (10MB max)
+    if (file.size > 10 * 1024 * 1024) {
+      setError(t("imageTooLarge"));
+      return;
+    }
+
+    setImageFile(file);
+    setError("");
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const removeImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
   const handleSubmit = async () => {
     if (!feedbackType || !message.trim()) return;
 
@@ -29,6 +69,28 @@ export default function FeedbackButton() {
     setError("");
 
     try {
+      let imageUrl: string | null = null;
+
+      // Upload image if selected
+      if (imageFile) {
+        setIsUploading(true);
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!uploadRes.ok) {
+          throw new Error("Failed to upload image");
+        }
+
+        const uploadData = await uploadRes.json();
+        imageUrl = uploadData.imageUrl;
+        setIsUploading(false);
+      }
+
       const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -37,6 +99,7 @@ export default function FeedbackButton() {
           message: message.trim(),
           pageUrl: pathname,
           userAgent: typeof navigator !== "undefined" ? navigator.userAgent : null,
+          imageUrl,
         }),
       });
 
@@ -52,6 +115,7 @@ export default function FeedbackButton() {
       setError(t("submitError"));
     } finally {
       setIsSubmitting(false);
+      setIsUploading(false);
     }
   };
 
@@ -62,6 +126,8 @@ export default function FeedbackButton() {
       setStep("select");
       setFeedbackType(null);
       setMessage("");
+      setImageFile(null);
+      setImagePreview(null);
       setSubmitted(false);
       setError("");
     }, 200);
@@ -204,6 +270,59 @@ export default function FeedbackButton() {
                     />
                   </div>
 
+                  {/* Image Upload (only for bugs) */}
+                  {feedbackType === "BUG" && (
+                    <div>
+                      <label className="block text-sm font-medium text-slate-700 mb-2">
+                        {t("attachScreenshot")}
+                      </label>
+
+                      {/* Hidden file input */}
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                      />
+
+                      {imagePreview ? (
+                        /* Image Preview */
+                        <div className="relative">
+                          <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-200">
+                            <Image
+                              src={imagePreview}
+                              alt="Screenshot preview"
+                              fill
+                              className="object-cover"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={removeImage}
+                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                      ) : (
+                        /* Upload Button */
+                        <button
+                          type="button"
+                          onClick={() => fileInputRef.current?.click()}
+                          className="w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors flex flex-col items-center gap-2 text-slate-500 hover:text-slate-600"
+                        >
+                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                          </svg>
+                          <span className="text-sm">{t("clickToUpload")}</span>
+                        </button>
+                      )}
+                    </div>
+                  )}
+
                   {/* Error */}
                   {error && (
                     <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
@@ -214,10 +333,10 @@ export default function FeedbackButton() {
                   {/* Submit Button */}
                   <button
                     onClick={handleSubmit}
-                    disabled={!message.trim() || isSubmitting}
+                    disabled={!message.trim() || isSubmitting || isUploading}
                     className="w-full rounded-xl bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {isSubmitting ? t("submitting") : t("submit")}
+                    {isUploading ? t("uploading") : isSubmitting ? t("submitting") : t("submit")}
                   </button>
                 </div>
               )}

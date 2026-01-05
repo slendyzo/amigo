@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { type, message, pageUrl, userAgent } = body;
+    const { type, message, pageUrl, userAgent, imageUrl } = body;
 
     if (!type || !message) {
       return NextResponse.json(
@@ -35,6 +35,7 @@ export async function POST(request: Request) {
         message,
         pageUrl,
         userAgent,
+        imageUrl: imageUrl || null,
       },
     });
 
