@@ -146,6 +146,9 @@ html {
   .safe-top {
     padding-top: env(safe-area-inset-top, 0);
   }
+  .pt-safe {
+    padding-top: env(safe-area-inset-top, 0);
+  }
 
   /* Prevent text selection on touch */
   .touch-none {
@@ -180,6 +183,12 @@ body.modal-open {
   overflow: hidden;
   position: fixed;
   width: 100%;
+}
+
+/* Hide floating buttons when modal is open */
+body.modal-open .floating-nav-button,
+body.modal-open .mobile-nav-bar {
+  display: none !important;
 }
 
 /* Mobile bottom nav safe area - Instagram-style spacing */

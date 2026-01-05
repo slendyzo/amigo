@@ -136,6 +136,16 @@ export default function AddExpenseModal({
     }
   }, [isOpen]);
 
+  // Add/remove modal-open class to hide mobile nav when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.classList.add("modal-open");
+    } else {
+      document.body.classList.remove("modal-open");
+    }
+    return () => document.body.classList.remove("modal-open");
+  }, [isOpen]);
+
   // Reset form when modal closes
   useEffect(() => {
     if (!isOpen) {
@@ -219,7 +229,7 @@ export default function AddExpenseModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center">
+    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
       {/* Backdrop */}
       <div
         className="absolute inset-0 bg-black/50 backdrop-blur-sm"
@@ -227,13 +237,14 @@ export default function AddExpenseModal({
       />
 
       {/* Modal - Full width on mobile, slides up from bottom */}
-      <div className="relative w-full md:max-w-md md:mx-4 bg-white rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col safe-bottom">
+      <form onSubmit={handleSubmit} className="relative w-full md:max-w-md md:mx-4 bg-white rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col">
         {/* Header */}
         <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
           <h2 className="text-base md:text-lg font-semibold text-slate-900">
             {t("addExpense")}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 -mr-2 text-slate-400 active:text-slate-600 md:hover:text-slate-600 tap-none"
           >
@@ -244,7 +255,7 @@ export default function AddExpenseModal({
         </div>
 
         {/* Body - Scrollable */}
-        <form onSubmit={handleSubmit} className="p-4 md:p-6 space-y-4 overflow-y-auto scroll-touch flex-1">
+        <div className="p-4 md:p-6 space-y-4 overflow-y-auto scroll-touch flex-1">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
               {error}
@@ -494,26 +505,26 @@ export default function AddExpenseModal({
               </div>
             </div>
           </details>
+        </div>
 
-          {/* Footer */}
-          <div className="pt-2 flex gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex-1 rounded-lg border border-slate-300 px-4 py-3 md:py-2.5 text-slate-700 font-medium active:bg-slate-50 md:hover:bg-slate-50 transition-colors tap-none"
-            >
-              {tCommon("cancel")}
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading || !name || !amount}
-              className="flex-1 rounded-lg bg-[#0070f3] px-4 py-3 md:py-2.5 text-white font-medium active:bg-[#0060df] md:hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed tap-none"
-            >
-              {isLoading ? t("adding") : tCommon("add")}
-            </button>
-          </div>
-        </form>
-      </div>
+        {/* Footer - Fixed at bottom, not scrollable */}
+        <div className="flex-shrink-0 px-4 md:px-6 py-3 md:py-4 border-t border-slate-200 pb-safe flex gap-3 bg-white">
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex-1 rounded-lg border border-slate-300 px-4 py-3 md:py-2.5 text-slate-700 font-medium active:bg-slate-50 md:hover:bg-slate-50 transition-colors tap-none"
+          >
+            {tCommon("cancel")}
+          </button>
+          <button
+            type="submit"
+            disabled={isLoading || !name || !amount}
+            className="flex-1 rounded-lg bg-[#0070f3] px-4 py-3 md:py-2.5 text-white font-medium active:bg-[#0060df] md:hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed tap-none"
+          >
+            {isLoading ? t("adding") : tCommon("add")}
+          </button>
+        </div>
+      </form>
     </div>
   );
 }

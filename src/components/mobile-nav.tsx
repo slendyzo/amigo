@@ -13,19 +13,31 @@ const primaryTabs = [
   { key: "more", href: "#menu", icon: "menu", isAction: true },
 ];
 
-// All navigation items for the drawer menu
-const allNavItems = [
-  { key: "overview", href: "/dashboard", icon: "home" },
-  { key: "expenses", href: "/dashboard/expenses", icon: "list" },
-  { key: "incomes", href: "/dashboard/incomes", icon: "dollar" },
-  { key: "recurring", href: "/dashboard/recurring", icon: "repeat" },
-  { key: "projects", href: "/dashboard/projects", icon: "folder" },
-  { key: "categories", href: "/dashboard/categories", icon: "tag" },
-  { key: "mappings", href: "/dashboard/mappings", icon: "key" },
-  { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
-  { key: "import", href: "/dashboard/import", icon: "upload" },
-  { key: "importHistory", href: "/dashboard/imports", icon: "history" },
-  { key: "settings", href: "/dashboard/settings", icon: "settings" },
+// Navigation groups for the drawer menu (like desktop sidebar)
+const navGroups = [
+  {
+    items: [
+      { key: "overview", href: "/dashboard", icon: "home" },
+      { key: "expenses", href: "/dashboard/expenses", icon: "list" },
+      { key: "incomes", href: "/dashboard/incomes", icon: "dollar" },
+      { key: "recurring", href: "/dashboard/recurring", icon: "repeat" },
+    ],
+  },
+  {
+    items: [
+      { key: "projects", href: "/dashboard/projects", icon: "folder" },
+      { key: "categories", href: "/dashboard/categories", icon: "tag" },
+      { key: "mappings", href: "/dashboard/mappings", icon: "key" },
+      { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
+    ],
+  },
+  {
+    items: [
+      { key: "import", href: "/dashboard/import", icon: "upload" },
+      { key: "importHistory", href: "/dashboard/imports", icon: "history" },
+      { key: "settings", href: "/dashboard/settings", icon: "settings" },
+    ],
+  },
 ];
 
 const icons: Record<string, ReactNode> = {
@@ -106,9 +118,10 @@ interface MobileNavProps {
   onAddClick?: () => void;
   userEmail?: string;
   onSignOut?: () => void;
+  hideFloatingButtons?: boolean;
 }
 
-export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNavProps) {
+export default function MobileNav({ onAddClick, userEmail, onSignOut, hideFloatingButtons }: MobileNavProps) {
   const pathname = usePathname();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const t = useTranslations("nav");
@@ -150,19 +163,18 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
 
   return (
     <>
-      {/* Floating Add Button - Bottom right, above nav bar with safe area */}
+      {/* Floating Add Button - Bottom right, above nav bar */}
       <button
         onClick={handleAddClick}
-        className="md:hidden fixed right-4 w-14 h-14 rounded-full bg-[#0070f3] text-white flex items-center justify-center shadow-lg z-50 active:scale-95 transition-transform tap-none"
-        style={{ bottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
+        className="floating-nav-button md:hidden fixed right-4 w-14 h-14 rounded-full bg-[#0070f3] text-white flex items-center justify-center shadow-lg z-40 active:scale-95 transition-transform tap-none"
+        style={{ bottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
         aria-label="Add expense"
       >
         {icons.plus}
       </button>
 
       {/* Bottom Tab Bar - Only visible on mobile */}
-      {/* Extra padding for iPhone safe area - Instagram-style spacing */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pb-safe-bottom">
+      <nav className="mobile-nav-bar md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-40 pb-safe-bottom">
         <div className="flex items-center justify-around h-16">
           {primaryTabs.map((item) => {
             const active = !item.isAction && isActive(item.href);
@@ -208,62 +220,61 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
 
       {/* Drawer Menu */}
       <div
-        className={`md:hidden fixed top-0 right-0 bottom-0 w-80 max-w-[85vw] bg-white z-50 transform transition-transform duration-300 ease-out ${
+        className={`md:hidden fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] bg-white z-50 transform transition-transform duration-300 ease-out flex flex-col ${
           isMenuOpen ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        {/* Drawer Header */}
-        <div className="flex items-center justify-between p-4 border-b border-slate-200 safe-top">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">{t("menu")}</h2>
+        {/* Drawer Header - fixed at top */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 pt-safe flex-shrink-0">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-base font-semibold text-slate-900">{t("menu")}</h2>
             {userEmail && (
-              <p className="text-sm text-slate-500 truncate max-w-[200px]">{userEmail}</p>
+              <p className="text-xs text-slate-500 truncate">{userEmail}</p>
             )}
           </div>
           <button
             onClick={() => setIsMenuOpen(false)}
-            className="p-2 rounded-lg text-slate-500 hover:bg-slate-100 tap-none"
+            className="p-2 -mr-2 rounded-lg text-slate-500 active:bg-slate-100 tap-none flex-shrink-0"
           >
             {icons.close}
           </button>
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-1 overflow-y-auto scroll-touch p-4 space-y-1">
-          {allNavItems.map((item) => {
-            const active = isActive(item.href);
+        {/* Navigation Items - scrollable */}
+        <div className="flex-1 overflow-y-auto scroll-touch scrollbar-hide">
+          {navGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className={groupIndex > 0 ? "border-t border-slate-100" : ""}>
+              <nav className="p-2 space-y-0.5">
+                {group.items.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      onClick={() => setIsMenuOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors tap-none ${
+                        active
+                          ? "bg-[#0070f3] text-white"
+                          : "text-slate-700 active:bg-slate-100"
+                      }`}
+                    >
+                      {icons[item.icon]}
+                      {t(item.key)}
+                    </Link>
+                  );
+                })}
+              </nav>
+            </div>
+          ))}
+        </div>
 
-            return (
-              <Link
-                key={item.key}
-                href={item.href}
-                onClick={() => setIsMenuOpen(false)}
-                className={`flex items-center gap-3 px-4 py-3 rounded-xl text-base font-medium transition-colors tap-none ${
-                  active
-                    ? "bg-[#0070f3] text-white"
-                    : "text-slate-700 active:bg-slate-100"
-                }`}
-              >
-                {icons[item.icon]}
-                {t(item.key)}
-              </Link>
-            );
-          })}
-        </nav>
-
-        {/* Build Info & Sign Out */}
-        <div className="p-4 border-t border-slate-200 safe-bottom space-y-3">
-          {/* Build Version */}
-          <div className="text-center text-xs text-slate-400">
-            <p>Build: {process.env.NEXT_PUBLIC_BUILD_ID || "dev"}</p>
-            <p>{process.env.NEXT_PUBLIC_BUILD_DATE || ""}</p>
-          </div>
-
+        {/* Footer - fixed at bottom */}
+        <div className="flex-shrink-0 border-t border-slate-200 p-3 pb-safe space-y-2">
           {/* Sign Out Button */}
           {onSignOut && (
             <button
               onClick={onSignOut}
-              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-base font-medium text-red-600 bg-red-50 active:bg-red-100 tap-none transition-colors"
+              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg text-sm font-medium text-red-600 bg-red-50 active:bg-red-100 tap-none transition-colors"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
@@ -271,6 +282,12 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
               {t("signOut")}
             </button>
           )}
+          {/* Build Version */}
+          <div className="text-center text-[10px] text-slate-400">
+            <span>Build: {process.env.NEXT_PUBLIC_BUILD_ID || "dev"}</span>
+            <span className="mx-1">•</span>
+            <span>{process.env.NEXT_PUBLIC_BUILD_DATE || ""}</span>
+          </div>
         </div>
       </div>
     </>
