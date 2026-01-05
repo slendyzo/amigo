@@ -56,7 +56,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, description, budget } = body;
+    const { name, description, budget, startDate, endDate } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -85,6 +85,8 @@ export async function POST(request: Request) {
         name,
         description: description || null,
         budget: budget ? parseFloat(budget) : null,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
       },
     });
 

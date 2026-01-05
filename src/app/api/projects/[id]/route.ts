@@ -65,7 +65,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, description, budget, isActive } = body;
+    const { name, description, budget, startDate, endDate, isActive } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -94,6 +94,8 @@ export async function PUT(
         name,
         description: description || null,
         budget: budget !== undefined ? (budget ? parseFloat(budget) : null) : existing.budget,
+        startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : existing.startDate,
+        endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : existing.endDate,
         isActive: isActive !== undefined ? isActive : existing.isActive,
       },
     });

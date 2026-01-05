@@ -228,6 +228,8 @@ model Project {
   name        String  // e.g., "Casa", "Wedding", "Vacation"
   description String?
   budget      Decimal? @db.Decimal(12, 2) // Optional budget limit
+  startDate   DateTime? // Project start date
+  endDate     DateTime? // Project end date
   isActive    Boolean @default(true)
 
   // Relations

@@ -97,54 +97,60 @@ export default function QuickCreateCategory({ onCreated, buttonClassName }: Quic
         </svg>
       </button>
 
+      {/* Mobile: Full screen modal. Desktop: Floating popup */}
       {isOpen && (
-        <div
-          ref={popupRef}
-          className="absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-lg border border-slate-200 p-4 w-64"
-        >
-          <div className="flex items-center gap-2 mb-3">
-            <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
-            </svg>
-            <span className="font-medium text-slate-900">{t("title")}</span>
+        <>
+          {/* Mobile backdrop */}
+          <div className="fixed inset-0 bg-black/50 z-50 md:hidden" onClick={() => { setIsOpen(false); setName(""); setError(""); }} />
+
+          <div
+            ref={popupRef}
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-lg border border-slate-200 p-4 md:absolute md:inset-auto md:right-0 md:top-full md:mt-1 md:translate-y-0 md:w-64"
+          >
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <span className="font-medium text-slate-900">{t("title")}</span>
+            </div>
+
+            <input
+              ref={inputRef}
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t("placeholder")}
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+
+            {error && (
+              <p className="text-xs text-red-500 mt-1">{error}</p>
+            )}
+
+            <div className="flex gap-2 mt-3">
+              <button
+                type="button"
+                onClick={handleCreate}
+                disabled={isCreating || !name.trim()}
+                className="flex-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              >
+                {isCreating ? t("creating") : tCommon("create")}
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsOpen(false);
+                  setName("");
+                  setError("");
+                }}
+                className="px-3 py-1.5 text-slate-600 text-sm hover:text-slate-900 transition-colors"
+              >
+                {tCommon("cancel")}
+              </button>
+            </div>
           </div>
-
-          <input
-            ref={inputRef}
-            type="text"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t("placeholder")}
-            className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          />
-
-          {error && (
-            <p className="text-xs text-red-500 mt-1">{error}</p>
-          )}
-
-          <div className="flex gap-2 mt-3">
-            <button
-              type="button"
-              onClick={handleCreate}
-              disabled={isCreating || !name.trim()}
-              className="flex-1 px-3 py-1.5 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isCreating ? t("creating") : tCommon("create")}
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsOpen(false);
-                setName("");
-                setError("");
-              }}
-              className="px-3 py-1.5 text-slate-600 text-sm hover:text-slate-900 transition-colors"
-            >
-              {tCommon("cancel")}
-            </button>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
