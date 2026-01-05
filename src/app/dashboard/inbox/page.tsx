@@ -27,6 +27,7 @@ export default function InboxPage() {
   const [filter, setFilter] = useState<"all" | "BUG" | "FEATURE" | "unread">("all");
   const [error, setError] = useState("");
   const [unreadCount, setUnreadCount] = useState(0);
+  const [lightboxImage, setLightboxImage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchFeedback();
@@ -244,18 +245,17 @@ export default function InboxPage() {
                 {/* Screenshot */}
                 {item.imageUrl && (
                   <div className="mt-3">
-                    <a
-                      href={item.imageUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="block"
+                    <button
+                      type="button"
+                      onClick={() => setLightboxImage(item.imageUrl)}
+                      className="block text-left"
                     >
                       <img
                         src={item.imageUrl}
                         alt="Screenshot"
                         className="max-w-full max-h-64 rounded-lg border border-slate-200 hover:border-blue-400 transition-colors cursor-pointer"
                       />
-                    </a>
+                    </button>
                   </div>
                 )}
 
@@ -301,6 +301,29 @@ export default function InboxPage() {
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Lightbox Modal */}
+      {lightboxImage && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightboxImage(null)}
+        >
+          <button
+            onClick={() => setLightboxImage(null)}
+            className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition-colors"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <img
+            src={lightboxImage}
+            alt="Screenshot full size"
+            className="max-w-full max-h-full rounded-lg object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
         </div>
       )}
     </div>
