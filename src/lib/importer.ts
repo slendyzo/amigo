@@ -785,29 +785,81 @@ export async function importExpensesFromExcel(
       totalCreated += regularResult.count;
     }
 
-    // Insert project expenses individually (to support many-to-many relation)
+    // Process project expenses - link to existing expenses if possible
+    // Project sheets often reference expenses that exist in regular monthly sheets
+    // We should link to existing expenses rather than creating duplicates
+    let projectExpensesLinked = 0;
+    let projectExpensesCreated = 0;
+
     for (const row of projectExpenses) {
       const projectId = projectMap[row.sheetName.toLowerCase()];
-      await prisma.expense.create({
-        data: {
+
+      // Look for an existing expense with matching name, amount, and approximate date
+      // We use a date range (same month) because project sheets may not have exact dates
+      const dateStart = new Date(row.date!.getFullYear(), row.date!.getMonth(), 1);
+      const dateEnd = new Date(row.date!.getFullYear(), row.date!.getMonth() + 1, 0);
+
+      const existingExpense = await prisma.expense.findFirst({
+        where: {
           workspaceId,
-          categoryId: defaultCategory!.id,
-          importLogId: importLog.id,
-          name: row.name,
-          rawInput: row.rawInput,
-          type: row.type,
-          status: "PAID",
-          amount: row.amount,
-          currency: "EUR",
           amountEur: row.amount,
-          date: row.date!,
-          projects: {
-            connect: { id: projectId },
+          date: {
+            gte: dateStart,
+            lte: dateEnd,
+          },
+          // Use case-insensitive search
+          name: {
+            equals: row.name,
+            mode: "insensitive",
+          },
+          // Don't match expenses already linked to this project
+          NOT: {
+            projects: {
+              some: { id: projectId },
+            },
           },
         },
       });
-      totalCreated++;
+
+      if (existingExpense) {
+        // Link existing expense to the project
+        await prisma.expense.update({
+          where: { id: existingExpense.id },
+          data: {
+            projects: {
+              connect: { id: projectId },
+            },
+          },
+        });
+        projectExpensesLinked++;
+        console.log(`  → Linked existing expense to project: "${row.name}" €${row.amount}`);
+      } else {
+        // Create new expense for this project item
+        await prisma.expense.create({
+          data: {
+            workspaceId,
+            categoryId: defaultCategory!.id,
+            importLogId: importLog.id,
+            name: row.name,
+            rawInput: row.rawInput,
+            type: row.type,
+            status: "PAID",
+            amount: row.amount,
+            currency: "EUR",
+            amountEur: row.amount,
+            date: row.date!,
+            projects: {
+              connect: { id: projectId },
+            },
+          },
+        });
+        totalCreated++;
+        projectExpensesCreated++;
+        console.log(`  → Created new project expense: "${row.name}" €${row.amount}`);
+      }
     }
+
+    console.log(`Project expenses: ${projectExpensesLinked} linked to existing, ${projectExpensesCreated} created new`);
 
     // Update import log with actual success count
     await prisma.importLog.update({
