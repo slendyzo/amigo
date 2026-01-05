@@ -69,10 +69,10 @@ export default function FeedbackButton() {
 
   return (
     <>
-      {/* Floating Feedback Button - positioned above mobile nav bar */}
+      {/* Floating Feedback Button - positioned above mobile nav bar on mobile, next to + button on desktop */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed left-4 z-40 flex items-center justify-center w-12 h-12 rounded-full bg-slate-700 text-white shadow-lg hover:bg-slate-600 transition-all hover:scale-105 active:scale-95 md:bottom-8 md:left-8"
+        className="floating-nav-button fixed left-4 z-40 flex items-center justify-center w-12 h-12 rounded-full bg-slate-700 text-white shadow-lg hover:bg-slate-600 transition-all hover:scale-105 active:scale-95 md:bottom-24 md:right-24 md:left-auto"
         style={{ bottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
         title={t("title")}
         aria-label={t("title")}
