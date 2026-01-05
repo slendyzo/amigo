@@ -47,7 +47,8 @@
     "signOut": "Sign Out",
     "home": "Home",
     "more": "More",
-    "menu": "Menu"
+    "menu": "Menu",
+    "inbox": "Inbox"
   },
   "auth": {
     "signIn": "Sign In",
@@ -400,5 +401,39 @@
       "nov": "Nov",
       "dec": "Dec"
     }
+  },
+  "feedback": {
+    "title": "Feedback",
+    "selectType": "What would you like to share?",
+    "reportBug": "Report a Bug",
+    "reportBugDesc": "Something not working? Let us know",
+    "requestFeature": "Request a Feature",
+    "requestFeatureDesc": "Have an idea? We'd love to hear it",
+    "describeBug": "Describe the bug",
+    "describeFeature": "Describe your idea",
+    "bugPlaceholder": "What happened? What did you expect?",
+    "featurePlaceholder": "Tell us about your idea...",
+    "back": "Back",
+    "submit": "Submit",
+    "submitting": "Submitting...",
+    "submitError": "Failed to submit. Please try again.",
+    "thankYou": "Thank you!",
+    "thankYouMessage": "Your feedback has been received. We appreciate you taking the time to help us improve."
+  },
+  "admin": {
+    "inbox": "Inbox",
+    "feedbackInbox": "Feedback Inbox",
+    "allFeedback": "All",
+    "bugs": "Bugs",
+    "features": "Features",
+    "unread": "Unread",
+    "noFeedback": "No feedback yet",
+    "markAsRead": "Mark as read",
+    "markAsUnread": "Mark as unread",
+    "markAsResolved": "Mark as resolved",
+    "delete": "Delete",
+    "from": "From",
+    "page": "Page",
+    "device": "Device"
   }
 }

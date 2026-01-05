@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import MobileNav from "./mobile-nav";
 import GlobalAddButton from "./global-add-button";
+import FeedbackButton from "./feedback-button";
 import type { ReactNode } from "react";
 
 // Navigation grouped by section (keys for translation)
@@ -41,6 +42,11 @@ const navigationGroups = [
       { key: "settings", href: "/dashboard/settings", icon: "settings" },
     ],
   },
+];
+
+// Admin-only navigation items
+const adminItems = [
+  { key: "inbox", href: "/dashboard/inbox", icon: "inbox" },
 ];
 
 const icons: Record<string, ReactNode> = {
@@ -98,6 +104,11 @@ const icons: Record<string, ReactNode> = {
   history: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  inbox: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
     </svg>
   ),
 };
@@ -167,6 +178,34 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
               </div>
             </div>
           ))}
+
+          {/* Admin-only section */}
+          {userEmail === "kikoman200@gmail.com" && (
+            <div>
+              <div className="my-3 border-t border-slate-200" />
+              <div className="space-y-1">
+                {adminItems.map((item) => {
+                  const active = isActive(item.href);
+                  return (
+                    <Link
+                      key={item.key}
+                      href={item.href}
+                      className={`
+                        flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                        ${active
+                          ? "bg-amber-500 text-white"
+                          : "text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                        }
+                      `}
+                    >
+                      {icons[item.icon]}
+                      {t(item.key)}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </nav>
 
         {/* Footer */}
@@ -232,6 +271,9 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
 
       {/* Global Add Button (desktop floating button + modal) */}
       <GlobalAddButton />
+
+      {/* Feedback Button */}
+      <FeedbackButton />
     </div>
   );
 }

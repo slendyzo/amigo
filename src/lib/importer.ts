@@ -524,7 +524,11 @@ export async function importExpensesFromExcel(
         // For project sheets: always PROJECT
         // For non-project sheets with explicit dates or inherited dates from dated rows: LIFESTYLE
         // For survival items (no date context): SURVIVAL_FIXED/VARIABLE
-        const type = determineExpenseType(rawName, originalHadDate || (lastValidDate !== null && !isProjectSheet), isProjectSheet);
+        const hasDateContext = originalHadDate || (lastValidDate !== null && !isProjectSheet);
+        const type = determineExpenseType(rawName, hasDateContext, isProjectSheet);
+
+        // Debug logging for expense type determination
+        console.log(`    [${sheetName}] Row ${rowNumber}: "${rawName}" €${amount} - hasDateContext=${hasDateContext}, type=${type}`);
 
         // Update stats
         if (isIncome) {

@@ -47,7 +47,8 @@
     "signOut": "Terminar Sessão",
     "home": "Início",
     "more": "Mais",
-    "menu": "Menu"
+    "menu": "Menu",
+    "inbox": "Caixa de Entrada"
   },
   "auth": {
     "signIn": "Iniciar Sessão",
@@ -400,5 +401,39 @@
       "nov": "Nov",
       "dec": "Dez"
     }
+  },
+  "feedback": {
+    "title": "Feedback",
+    "selectType": "O que gostaria de partilhar?",
+    "reportBug": "Reportar um Bug",
+    "reportBugDesc": "Algo não está a funcionar? Diga-nos",
+    "requestFeature": "Pedir uma Funcionalidade",
+    "requestFeatureDesc": "Tem uma ideia? Adorávamos ouvir",
+    "describeBug": "Descreva o bug",
+    "describeFeature": "Descreva a sua ideia",
+    "bugPlaceholder": "O que aconteceu? O que esperava?",
+    "featurePlaceholder": "Conte-nos sobre a sua ideia...",
+    "back": "Voltar",
+    "submit": "Enviar",
+    "submitting": "A enviar...",
+    "submitError": "Erro ao enviar. Por favor tente novamente.",
+    "thankYou": "Obrigado!",
+    "thankYouMessage": "O seu feedback foi recebido. Agradecemos o tempo que dedicou a ajudar-nos a melhorar."
+  },
+  "admin": {
+    "inbox": "Caixa de Entrada",
+    "feedbackInbox": "Caixa de Feedback",
+    "allFeedback": "Todos",
+    "bugs": "Bugs",
+    "features": "Funcionalidades",
+    "unread": "Não Lidos",
+    "noFeedback": "Ainda sem feedback",
+    "markAsRead": "Marcar como lido",
+    "markAsUnread": "Marcar como não lido",
+    "markAsResolved": "Marcar como resolvido",
+    "delete": "Eliminar",
+    "from": "De",
+    "page": "Página",
+    "device": "Dispositivo"
   }
 }

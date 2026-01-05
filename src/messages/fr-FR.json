@@ -47,7 +47,8 @@
     "signOut": "Déconnexion",
     "home": "Accueil",
     "more": "Plus",
-    "menu": "Menu"
+    "menu": "Menu",
+    "inbox": "Boîte de Réception"
   },
   "auth": {
     "signIn": "Connexion",
@@ -400,5 +401,39 @@
       "nov": "Nov",
       "dec": "Déc"
     }
+  },
+  "feedback": {
+    "title": "Feedback",
+    "selectType": "Que souhaitez-vous partager ?",
+    "reportBug": "Signaler un Bug",
+    "reportBugDesc": "Quelque chose ne fonctionne pas ? Dites-nous",
+    "requestFeature": "Demander une Fonctionnalité",
+    "requestFeatureDesc": "Vous avez une idée ? Nous serions ravis de l'entendre",
+    "describeBug": "Décrivez le bug",
+    "describeFeature": "Décrivez votre idée",
+    "bugPlaceholder": "Que s'est-il passé ? Qu'attendiez-vous ?",
+    "featurePlaceholder": "Parlez-nous de votre idée...",
+    "back": "Retour",
+    "submit": "Envoyer",
+    "submitting": "Envoi en cours...",
+    "submitError": "Échec de l'envoi. Veuillez réessayer.",
+    "thankYou": "Merci !",
+    "thankYouMessage": "Votre feedback a été reçu. Nous vous remercions d'avoir pris le temps de nous aider à nous améliorer."
+  },
+  "admin": {
+    "inbox": "Boîte de Réception",
+    "feedbackInbox": "Boîte de Feedback",
+    "allFeedback": "Tous",
+    "bugs": "Bugs",
+    "features": "Fonctionnalités",
+    "unread": "Non Lus",
+    "noFeedback": "Pas encore de feedback",
+    "markAsRead": "Marquer comme lu",
+    "markAsUnread": "Marquer comme non lu",
+    "markAsResolved": "Marquer comme résolu",
+    "delete": "Supprimer",
+    "from": "De",
+    "page": "Page",
+    "device": "Appareil"
   }
 }

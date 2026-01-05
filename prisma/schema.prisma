@@ -400,6 +400,33 @@ model ImportLog {
 }
 
 // ============================================================================
+// FEEDBACK & BUG REPORTS
+// ============================================================================
+
+enum FeedbackType {
+  BUG
+  FEATURE
+}
+
+model Feedback {
+  id          String       @id @default(cuid())
+  userId      String
+  type        FeedbackType
+  message     String       @db.Text
+  userAgent   String?      // Browser/device info
+  pageUrl     String?      // Where user was when submitting
+  isRead      Boolean      @default(false)
+  isResolved  Boolean      @default(false)
+
+  createdAt   DateTime     @default(now())
+
+  @@index([userId])
+  @@index([type])
+  @@index([isRead])
+  @@map("feedback")
+}
+
+// ============================================================================
 // INCOME TRACKING
 // ============================================================================
 
