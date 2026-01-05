@@ -79,9 +79,14 @@ export default function ExpensesPage() {
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"date" | "amount">("date");
+  const [sortBy, setSortBy] = useState<"date" | "amount" | "name" | "category">("date");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
+
+  // Export state
+  const [isExporting, setIsExporting] = useState(false);
+  const [showExportMenu, setShowExportMenu] = useState(false);
 
   // Month filter - defaults to current month
   const currentDate = new Date();
@@ -272,11 +277,40 @@ export default function ExpensesPage() {
     }
   };
 
+  // Export function
+  const handleExport = async (format: "csv" | "xlsx") => {
+    setIsExporting(true);
+    setShowExportMenu(false);
+    try {
+      const response = await fetch(`/api/export?format=${format}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `vibefinance-export-${new Date().toISOString().split("T")[0]}.${format}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
   // Sort and filter expenses
   const sortedExpenses = useMemo(() => {
     let filtered = expenses.filter((e) =>
       searchQuery ? e.name.toLowerCase().includes(searchQuery.toLowerCase()) : true
     );
+
+    // Apply category filter
+    if (categoryFilter) {
+      filtered = filtered.filter((e) => e.category?.id === categoryFilter);
+    }
 
     // Apply month filter (unless "all" is selected)
     if (selectedMonthFilter !== "all") {
@@ -293,13 +327,22 @@ export default function ExpensesPage() {
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
-      } else {
+      } else if (sortBy === "amount") {
         const amountA = Number(a.amount);
         const amountB = Number(b.amount);
         return sortOrder === "desc" ? amountB - amountA : amountA - amountB;
+      } else if (sortBy === "name") {
+        const nameA = a.name.toLowerCase();
+        const nameB = b.name.toLowerCase();
+        return sortOrder === "desc" ? nameB.localeCompare(nameA) : nameA.localeCompare(nameB);
+      } else if (sortBy === "category") {
+        const catA = (a.category?.name || "").toLowerCase();
+        const catB = (b.category?.name || "").toLowerCase();
+        return sortOrder === "desc" ? catB.localeCompare(catA) : catA.localeCompare(catB);
       }
+      return 0;
     });
-  }, [expenses, searchQuery, sortBy, sortOrder, selectedMonthFilter]);
+  }, [expenses, searchQuery, categoryFilter, sortBy, sortOrder, selectedMonthFilter]);
 
   // Group expenses by month (for grouped view)
   const groupedExpenses = useMemo(() => {
@@ -568,12 +611,27 @@ export default function ExpensesPage() {
               <option value="PROJECT">{t("types.project")}</option>
             </select>
             <select
+              value={categoryFilter}
+              onChange={(e) => {
+                setCategoryFilter(e.target.value);
+                setDisplayCount(pageSize === "all" ? Infinity : pageSize);
+              }}
+              className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+            >
+              <option value="">{t("filterByCategory")}</option>
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>{cat.name}</option>
+              ))}
+            </select>
+            <select
               value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "date" | "amount")}
+              onChange={(e) => setSortBy(e.target.value as "date" | "amount" | "name" | "category")}
               className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
             >
               <option value="date">{t("sortByDate")}</option>
               <option value="amount">{t("sortByAmount")}</option>
+              <option value="name">{t("sortByName")}</option>
+              <option value="category">{t("sortByCategory")}</option>
             </select>
             <button
               onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
@@ -604,6 +662,51 @@ export default function ExpensesPage() {
               <option value="100">100</option>
               <option value="all">{tCommon("all")}</option>
             </select>
+            {/* Export dropdown */}
+            <div className="relative">
+              <button
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                disabled={isExporting}
+                className="flex-shrink-0 p-2 rounded-lg border border-slate-300 active:bg-slate-50 md:hover:bg-slate-50 tap-none disabled:opacity-50"
+                title={t("export")}
+              >
+                {isExporting ? (
+                  <svg className="w-5 h-5 text-slate-600 animate-spin" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                )}
+              </button>
+              {showExportMenu && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setShowExportMenu(false)} />
+                  <div className="absolute right-0 top-full mt-1 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50 min-w-[120px]">
+                    <button
+                      onClick={() => handleExport("csv")}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      CSV
+                    </button>
+                    <button
+                      onClick={() => handleExport("xlsx")}
+                      className="w-full px-4 py-2 text-left text-sm text-slate-700 hover:bg-slate-50 flex items-center gap-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      Excel
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
       </div>
