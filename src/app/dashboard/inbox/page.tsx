@@ -9,6 +9,7 @@ type FeedbackItem = {
   message: string;
   pageUrl: string | null;
   userAgent: string | null;
+  imageUrl: string | null;
   isRead: boolean;
   isResolved: boolean;
   createdAt: string;
@@ -239,6 +240,24 @@ export default function InboxPage() {
               {/* Content */}
               <div className="p-4 space-y-3">
                 <p className="text-slate-800 whitespace-pre-wrap">{item.message}</p>
+
+                {/* Screenshot */}
+                {item.imageUrl && (
+                  <div className="mt-3">
+                    <a
+                      href={item.imageUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      <img
+                        src={item.imageUrl}
+                        alt="Screenshot"
+                        className="max-w-full max-h-64 rounded-lg border border-slate-200 hover:border-blue-400 transition-colors cursor-pointer"
+                      />
+                    </a>
+                  </div>
+                )}
 
                 {/* Meta */}
                 <div className="flex flex-wrap gap-4 text-xs text-slate-500">
