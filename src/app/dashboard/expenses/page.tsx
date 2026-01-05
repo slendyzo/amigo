@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import AddExpenseModal from "@/components/add-expense-modal";
@@ -97,25 +97,12 @@ export default function ExpensesPage() {
   );
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
-  // Pagination / Infinite scroll
+  // Total count
   const [total, setTotal] = useState(0);
-  const [pageSize, setPageSize] = useState<number | "all">(50);
-  const [displayCount, setDisplayCount] = useState(50); // How many to show currently
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const loadMoreRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetchData();
   }, [typeFilter, selectedMonthFilter]);
-
-  // Reset display count when page size changes
-  useEffect(() => {
-    if (pageSize === "all") {
-      setDisplayCount(Infinity);
-    } else {
-      setDisplayCount(pageSize);
-    }
-  }, [pageSize]);
 
   // Listen for quick-add event from bottom nav
   // This page handles its own modal, so stop propagation to prevent GlobalAddButton from also opening
@@ -167,37 +154,6 @@ export default function ExpensesPage() {
     }
   };
 
-  // Load more function for infinite scroll
-  const loadMore = useCallback(() => {
-    if (pageSize === "all" || isLoadingMore) return;
-    setIsLoadingMore(true);
-    // Simulate a small delay to show loading state
-    setTimeout(() => {
-      setDisplayCount((prev) => prev + (pageSize as number));
-      setIsLoadingMore(false);
-    }, 100);
-  }, [pageSize, isLoadingMore]);
-
-  // Intersection observer for infinite scroll
-  useEffect(() => {
-    if (pageSize === "all") return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && !isLoadingMore) {
-          loadMore();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    if (loadMoreRef.current) {
-      observer.observe(loadMoreRef.current);
-    }
-
-    return () => observer.disconnect();
-  }, [loadMore, isLoadingMore, pageSize]);
-
   const handleDelete = async (id: string) => {
     try {
       const response = await fetch(`/api/expenses?id=${id}`, { method: "DELETE" });
@@ -243,7 +199,7 @@ export default function ExpensesPage() {
   };
 
   const selectAll = () => {
-    const allIds = displayedExpenses.map((e) => e.id);
+    const allIds = sortedExpenses.map((e) => e.id);
     setSelectedIds(new Set(allIds));
   };
 
@@ -376,43 +332,6 @@ export default function ExpensesPage() {
     return result;
   }, [sortedExpenses, sortOrder]);
 
-  // Limit displayed expenses based on displayCount
-  const displayedExpenses = useMemo(() => {
-    if (displayCount === Infinity) return sortedExpenses;
-    return sortedExpenses.slice(0, displayCount);
-  }, [sortedExpenses, displayCount]);
-
-  // Group displayed expenses by month
-  const displayedGroupedExpenses = useMemo(() => {
-    const groups: Record<string, Expense[]> = {};
-    displayedExpenses.forEach((expense) => {
-      const date = new Date(expense.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, "0")}`;
-      if (!groups[monthKey]) {
-        groups[monthKey] = [];
-      }
-      groups[monthKey].push(expense);
-    });
-
-    const result: GroupedExpenses[] = Object.entries(groups)
-      .map(([monthKey, monthExpenses]) => {
-        const [year, month] = monthKey.split("-");
-        return {
-          monthKey,
-          monthLabel: `${MONTHS[parseInt(month)]} ${year}`,
-          expenses: monthExpenses,
-          total: monthExpenses.reduce((sum, e) => sum + Number(e.amount), 0),
-        };
-      })
-      .sort((a, b) => sortOrder === "desc"
-        ? b.monthKey.localeCompare(a.monthKey)
-        : a.monthKey.localeCompare(b.monthKey)
-      );
-
-    return result;
-  }, [displayedExpenses, sortOrder]);
-
-  const hasMoreToLoad = displayCount < sortedExpenses.length;
 
   // Compute available years from expenses
   const availableYears = useMemo(() => {
@@ -598,10 +517,7 @@ export default function ExpensesPage() {
           <div className="flex gap-2 overflow-x-auto scrollbar-hide">
             <select
               value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value);
-                setDisplayCount(pageSize === "all" ? Infinity : pageSize);
-              }}
+              onChange={(e) => setTypeFilter(e.target.value)}
               className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
             >
               <option value="">{t("filterByType")}</option>
@@ -612,10 +528,7 @@ export default function ExpensesPage() {
             </select>
             <select
               value={categoryFilter}
-              onChange={(e) => {
-                setCategoryFilter(e.target.value);
-                setDisplayCount(pageSize === "all" ? Infinity : pageSize);
-              }}
+              onChange={(e) => setCategoryFilter(e.target.value)}
               className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
             >
               <option value="">{t("filterByCategory")}</option>
@@ -648,20 +561,6 @@ export default function ExpensesPage() {
                 </svg>
               )}
             </button>
-            {/* Page size selector */}
-            <select
-              value={pageSize === "all" ? "all" : pageSize.toString()}
-              onChange={(e) => {
-                const val = e.target.value;
-                setPageSize(val === "all" ? "all" : parseInt(val));
-              }}
-              className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-              title={tCommon("filter")}
-            >
-              <option value="50">50</option>
-              <option value="100">100</option>
-              <option value="all">{tCommon("all")}</option>
-            </select>
             {/* Export dropdown */}
             <div className="relative">
               <button
@@ -716,13 +615,13 @@ export default function ExpensesPage() {
         <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
           {tCommon("loading")}
         </div>
-      ) : displayedGroupedExpenses.length === 0 ? (
+      ) : groupedExpenses.length === 0 ? (
         <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
           {t("noExpenses")}
         </div>
       ) : (
         <div className="space-y-4 md:space-y-6">
-          {displayedGroupedExpenses.map((group) => (
+          {groupedExpenses.map((group) => (
             <div key={group.monthKey} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               {/* Month Header */}
               <div className="px-3 md:px-4 py-2 md:py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
@@ -940,33 +839,8 @@ export default function ExpensesPage() {
         </div>
       )}
 
-      {/* Infinite Scroll Loader */}
-      {hasMoreToLoad && pageSize !== "all" && (
-        <div
-          ref={loadMoreRef}
-          className="bg-white rounded-xl px-4 py-4 shadow-sm border border-slate-200 flex items-center justify-center"
-        >
-          {isLoadingMore ? (
-            <div className="flex items-center gap-2 text-slate-500">
-              <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
-              <span className="text-sm">{t("loadingMore")}</span>
-            </div>
-          ) : (
-            <button
-              onClick={loadMore}
-              className="text-sm text-[#0070f3] hover:underline"
-            >
-              {t("loadMore", { count: pageSize as number, current: displayedExpenses.length, total: sortedExpenses.length })}
-            </button>
-          )}
-        </div>
-      )}
-
-      {/* Show count when all loaded */}
-      {!hasMoreToLoad && sortedExpenses.length > 0 && (
+      {/* Show total count */}
+      {sortedExpenses.length > 0 && (
         <div className="text-center text-sm text-slate-500 py-2">
           {t("showingAll", { count: sortedExpenses.length })}
         </div>
