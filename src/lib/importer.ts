@@ -509,7 +509,6 @@ export async function importExpensesFromExcel(
         // These are typically subscription/fixed costs listed at the top of the sheet
         // NOTE: We collect per-sheet but only use the LATEST sheet's candidates later
         // IMPORTANT: Include €0/empty expenses here - they're variable costs like utilities
-        // IMPORTANT: These rows should NOT be imported as expenses - they are templates only!
         if (!originalHadDate && !firstDateSeen && !isProjectSheet) {
           // This is a recurring candidate - expense without date at top of sheet
           const normalizedName = rawName.toLowerCase().trim();
@@ -525,10 +524,9 @@ export async function importExpensesFromExcel(
               });
             }
           }
-          // SKIP these rows from being imported as actual expenses
-          // They are template/summary rows at the top of each sheet, not transactions
-          // The recurring templates will handle generating these expenses
-          return;
+          // NOTE: These rows ARE imported as expenses (with sheet date)
+          // They represent actual monthly payments for each month's sheet
+          // We don't skip them - they continue to be processed below
         }
 
         // Skip zero/empty amounts for regular expense creation (but we already captured recurring candidates above)
