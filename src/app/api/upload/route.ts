@@ -1,9 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import sharp from "sharp";
-import { writeFile, mkdir } from "fs/promises";
-import { existsSync } from "fs";
-import path from "path";
 
 // Max file size: 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -42,34 +39,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Create uploads directory if it doesn't exist
-    const uploadsDir = path.join(process.cwd(), "public", "uploads", "feedback");
-    if (!existsSync(uploadsDir)) {
-      await mkdir(uploadsDir, { recursive: true });
-    }
-
-    // Generate unique filename
-    const timestamp = Date.now();
-    const randomId = Math.random().toString(36).substring(2, 8);
-    const filename = `${timestamp}-${randomId}.webp`;
-    const filepath = path.join(uploadsDir, filename);
-
     // Read file buffer
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
     // Compress and convert to WebP using sharp
-    // Max dimensions: 1920x1080, quality: 80%
-    await sharp(buffer)
-      .resize(1920, 1080, {
+    // Max dimensions: 800x600 for feedback screenshots, quality: 70%
+    const compressedBuffer = await sharp(buffer)
+      .resize(800, 600, {
         fit: "inside",
         withoutEnlargement: true,
       })
-      .webp({ quality: 80 })
-      .toFile(filepath);
+      .webp({ quality: 70 })
+      .toBuffer();
 
-    // Return the public URL
-    const imageUrl = `/uploads/feedback/${filename}`;
+    // Convert to base64 data URL
+    const base64 = compressedBuffer.toString("base64");
+    const imageUrl = `data:image/webp;base64,${base64}`;
 
     return NextResponse.json({ imageUrl });
   } catch (error) {
