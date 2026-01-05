@@ -76,7 +76,8 @@ export type ParsedRow = {
 };
 
 /**
- * Extract cell value, handling formulas
+ * Extract cell value, handling formulas, hyperlinks, and rich text
+ * Always returns plain text for text cells
  */
 function getCellValue(cell: ExcelJS.Cell): unknown {
   if (!cell || cell.value === null || cell.value === undefined) {
@@ -85,9 +86,25 @@ function getCellValue(cell: ExcelJS.Cell): unknown {
 
   const value = cell.value;
 
-  // Handle formula cells - extract the result
-  if (typeof value === "object" && value !== null && "result" in value) {
-    return (value as { result: unknown }).result;
+  // Handle object-type values (formulas, hyperlinks, rich text)
+  if (typeof value === "object" && value !== null) {
+    // Handle formula cells - extract the result
+    if ("result" in value) {
+      return (value as { result: unknown }).result;
+    }
+
+    // Handle hyperlink cells - extract the text, not the link
+    // ExcelJS stores hyperlinks as { text: "display text", hyperlink: "url" }
+    if ("text" in value) {
+      return (value as { text: string }).text;
+    }
+
+    // Handle rich text cells - concatenate all text parts
+    // ExcelJS stores rich text as { richText: [{ text: "part1" }, { text: "part2" }] }
+    if ("richText" in value && Array.isArray((value as { richText: unknown[] }).richText)) {
+      const richText = (value as { richText: Array<{ text: string }> }).richText;
+      return richText.map(part => part.text || "").join("");
+    }
   }
 
   return value;
@@ -469,10 +486,11 @@ export async function importExpensesFromExcel(
         sheetYearHints.push(sheetDate.getFullYear());
       }
 
-      console.log(`\nProcessing sheet: "${sheetName}" (isProject: ${isProjectSheet})`);
+      console.log(`\nProcessing sheet: "${sheetName}" (isProject: ${isProjectSheet}, sheetDate: ${sheetDate?.toISOString().slice(0, 10) || "none"})`);
       processedSheets.push(sheetName);
 
       let rowsProcessed = 0;
+      let recurringRowsImported = 0; // Track how many recurring (no-date) rows are imported
       let lastValidDate: Date | null = null; // Track last seen date for inheritance
       let firstDateSeen = false; // Track if we've seen a date yet (rows before first date are recurring)
       const sheetRecurringNames = new Set<string>(); // Track recurring candidates per sheet
@@ -509,7 +527,8 @@ export async function importExpensesFromExcel(
         // These are typically subscription/fixed costs listed at the top of the sheet
         // NOTE: We collect per-sheet but only use the LATEST sheet's candidates later
         // IMPORTANT: Include €0/empty expenses here - they're variable costs like utilities
-        if (!originalHadDate && !firstDateSeen && !isProjectSheet) {
+        const isRecurringRow = !originalHadDate && !firstDateSeen && !isProjectSheet;
+        if (isRecurringRow) {
           // This is a recurring candidate - expense without date at top of sheet
           const normalizedName = rawName.toLowerCase().trim();
           if (!sheetRecurringNames.has(normalizedName)) {
@@ -531,7 +550,16 @@ export async function importExpensesFromExcel(
 
         // Skip zero/empty amounts for regular expense creation (but we already captured recurring candidates above)
         if (!rawAmount || amount === 0) {
+          if (isRecurringRow) {
+            console.log(`    [${sheetName}] Skipping recurring row (€0): "${rawName}"`);
+          }
           return;
+        }
+
+        // Log recurring rows that WILL be imported
+        if (isRecurringRow) {
+          recurringRowsImported++;
+          console.log(`    [${sheetName}] Importing recurring row: "${rawName}" €${amount} → date: ${sheetDate?.toISOString().slice(0, 10) || "today"}`);
         }
 
         // DATE INHERITANCE: If no date in this row, use the last valid date
@@ -586,10 +614,15 @@ export async function importExpensesFromExcel(
           isIncome,
         });
 
+        // Extra logging for recurring rows to track the issue
+        if (isRecurringRow) {
+          console.log(`    [${sheetName}] ADDED recurring: "${rawName}" €${amount} type=${type} date=${expenseDate.toISOString().slice(0, 10)}`);
+        }
+
         rowsProcessed++;
       });
 
-      console.log(`  → Processed ${rowsProcessed} rows from "${sheetName}"`);
+      console.log(`  → Processed ${rowsProcessed} rows from "${sheetName}" (${recurringRowsImported} recurring)`);
 
       // Store recurring candidates temporarily - we'll decide which to use after processing all sheets
       if (sheetRecurringCandidates.length > 0) {
@@ -800,6 +833,7 @@ export async function importExpensesFromExcel(
 
         if (existingId) {
           duplicatesFound++;
+          console.log(`  [Duplicate] "${row.name}" €${row.amount} on ${row.date?.toISOString().slice(0, 10)} - ${duplicateHandling === "replace" ? "replacing" : "skipping"}`);
           if (duplicateHandling === "replace") {
             duplicateExpenseIds.push(existingId);
             newRegularExpenses.push(row);
