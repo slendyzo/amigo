@@ -148,15 +148,23 @@ function parseExcelDate(value: unknown): Date | null {
 /**
  * Collect all years from parsed dates and find the dominant year
  * A year is considered dominant if it appears significantly more than others
+ * Also considers sheet names as hints (e.g., "Janeiro 2026" suggests year 2026)
  */
-function findDominantYear(dates: (Date | null)[]): number | null {
+function findDominantYear(dates: (Date | null)[], sheetYearHints: number[] = []): number | null {
   const yearCounts = new Map<number, number>();
 
+  // Count years from actual dates
   for (const date of dates) {
     if (date) {
       const year = date.getFullYear();
       yearCounts.set(year, (yearCounts.get(year) || 0) + 1);
     }
+  }
+
+  // Add sheet name hints with high weight (each hint counts as 10 dates)
+  // This helps when there are few dated rows but clear sheet names like "Janeiro 2026"
+  for (const hintYear of sheetYearHints) {
+    yearCounts.set(hintYear, (yearCounts.get(hintYear) || 0) + 10);
   }
 
   if (yearCounts.size === 0) return null;
@@ -172,8 +180,8 @@ function findDominantYear(dates: (Date | null)[]): number | null {
     }
   }
 
-  // Return dominant year if it appears in at least 60% of dates
-  // or if it appears more than 3 times more than any other year
+  // Return dominant year if it appears significantly
+  // With sheet hints, we're more confident in the dominant year
   const totalDates = dates.filter(d => d !== null).length;
   const threshold = Math.max(3, totalDates * 0.6);
 
@@ -185,6 +193,15 @@ function findDominantYear(dates: (Date | null)[]): number | null {
   const currentYear = new Date().getFullYear();
   if (dominantYear >= currentYear - 1 && dominantYear <= currentYear + 1) {
     return dominantYear;
+  }
+
+  // If we have sheet hints, trust them even if date counts are low
+  if (sheetYearHints.length > 0) {
+    // Use the most recent hint year
+    const mostRecentHint = Math.max(...sheetYearHints);
+    if (mostRecentHint >= currentYear - 1 && mostRecentHint <= currentYear + 1) {
+      return mostRecentHint;
+    }
   }
 
   return null;
@@ -377,6 +394,7 @@ export async function importExpensesFromExcel(
   };
   const processedSheets: string[] = [];
   const recurringCandidates: RecurringCandidate[] = [];
+  const sheetYearHints: number[] = []; // Collect years from sheet names for year correction
   let latestSheetDate: Date | null = null;
   let latestSheetName: string | null = null;
 
@@ -447,6 +465,8 @@ export async function importExpensesFromExcel(
           latestSheetDate = sheetDate;
           latestSheetName = sheetName;
         }
+        // Collect year hint from sheet name for year correction
+        sheetYearHints.push(sheetDate.getFullYear());
       }
 
       console.log(`\nProcessing sheet: "${sheetName}" (isProject: ${isProjectSheet})`);
@@ -489,6 +509,7 @@ export async function importExpensesFromExcel(
         // These are typically subscription/fixed costs listed at the top of the sheet
         // NOTE: We collect per-sheet but only use the LATEST sheet's candidates later
         // IMPORTANT: Include €0/empty expenses here - they're variable costs like utilities
+        // IMPORTANT: These rows should NOT be imported as expenses - they are templates only!
         if (!originalHadDate && !firstDateSeen && !isProjectSheet) {
           // This is a recurring candidate - expense without date at top of sheet
           const normalizedName = rawName.toLowerCase().trim();
@@ -504,6 +525,10 @@ export async function importExpensesFromExcel(
               });
             }
           }
+          // SKIP these rows from being imported as actual expenses
+          // They are template/summary rows at the top of each sheet, not transactions
+          // The recurring templates will handle generating these expenses
+          return;
         }
 
         // Skip zero/empty amounts for regular expense creation (but we already captured recurring candidates above)
@@ -608,10 +633,12 @@ export async function importExpensesFromExcel(
     }
 
     // YEAR CORRECTION PHASE: Fix year typos based on dominant year
+    // Use sheet name years as hints (e.g., "Janeiro 2026" tells us the year should be 2026)
     const allDates = allParsedRows.map(row => row.date);
-    const dominantYear = findDominantYear(allDates);
+    console.log(`\nYear hints from sheet names: ${[...new Set(sheetYearHints)].join(", ")}`);
+    const dominantYear = findDominantYear(allDates, sheetYearHints);
     if (dominantYear) {
-      console.log(`\nDominant year detected: ${dominantYear}`);
+      console.log(`Dominant year detected: ${dominantYear}`);
       let correctionsMade = 0;
       for (const row of allParsedRows) {
         if (row.date) {
