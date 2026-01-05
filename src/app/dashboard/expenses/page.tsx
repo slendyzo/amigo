@@ -106,8 +106,12 @@ export default function ExpensesPage() {
   }, [pageSize]);
 
   // Listen for quick-add event from bottom nav
+  // This page handles its own modal, so stop propagation to prevent GlobalAddButton from also opening
   useEffect(() => {
-    const handleQuickAdd = () => setIsModalOpen(true);
+    const handleQuickAdd = (e: Event) => {
+      e.stopImmediatePropagation();
+      setIsModalOpen(true);
+    };
     window.addEventListener("openQuickAdd", handleQuickAdd);
     return () => window.removeEventListener("openQuickAdd", handleQuickAdd);
   }, []);

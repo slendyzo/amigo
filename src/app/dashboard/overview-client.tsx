@@ -107,8 +107,12 @@ export default function DashboardOverview({
   const [hasFilterChanged, setHasFilterChanged] = useState(false);
 
   // Listen for quick-add event from bottom nav
+  // This page handles its own modal, so stop propagation to prevent GlobalAddButton from also opening
   useEffect(() => {
-    const handleQuickAdd = () => setIsModalOpen(true);
+    const handleQuickAdd = (e: Event) => {
+      e.stopImmediatePropagation();
+      setIsModalOpen(true);
+    };
     window.addEventListener("openQuickAdd", handleQuickAdd);
     return () => window.removeEventListener("openQuickAdd", handleQuickAdd);
   }, []);
@@ -221,17 +225,20 @@ export default function DashboardOverview({
           name: string;
           date: string;
           type: string;
-          amountEur: number;
+          amountEur?: number;
+          amount?: number;
           category?: { name: string } | null;
           projects?: { id: string; name: string }[];
+          excludeFromBudget?: boolean;
         }) => ({
           id: e.id,
           name: e.name,
           date: e.date,
           type: e.type,
-          amountEur: Number(e.amountEur),
+          amountEur: Number(e.amountEur ?? e.amount ?? 0),
           categoryName: e.category?.name || "Uncategorized",
           projects: e.projects || [],
+          excludeFromBudget: e.excludeFromBudget ?? false,
         })));
       }
     } catch (error) {
@@ -290,17 +297,20 @@ export default function DashboardOverview({
         name: string;
         date: string;
         type: string;
-        amountEur: number;
+        amountEur?: number;
+        amount?: number;
         category?: { name: string } | null;
         projects?: { id: string; name: string }[];
+        excludeFromBudget?: boolean;
       }) => ({
         id: e.id,
         name: e.name,
         date: e.date,
         type: e.type,
-        amountEur: Number(e.amountEur),
+        amountEur: Number(e.amountEur ?? e.amount ?? 0),
         categoryName: e.category?.name || "Uncategorized",
         projects: e.projects || [],
+        excludeFromBudget: e.excludeFromBudget ?? false,
       });
 
       if (currentData.expenses) {
