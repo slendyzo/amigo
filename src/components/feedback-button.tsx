@@ -269,9 +269,8 @@ export default function FeedbackButton() {
                     />
                   </div>
 
-                  {/* Image Upload (only for bugs) */}
-                  {feedbackType === "BUG" && (
-                    <div>
+                  {/* Image Upload */}
+                  <div>
                       <label className="block text-sm font-medium text-slate-700 mb-2">
                         {t("attachScreenshot")}
                       </label>
@@ -319,8 +318,7 @@ export default function FeedbackButton() {
                           <span className="text-sm">{t("clickToUpload")}</span>
                         </button>
                       )}
-                    </div>
-                  )}
+                  </div>
 
                   {/* Error */}
                   {error && (
