@@ -150,18 +150,20 @@ export default function MobileNav({ onAddClick, userEmail, onSignOut }: MobileNa
 
   return (
     <>
-      {/* Floating Add Button - Bottom right */}
+      {/* Floating Add Button - Bottom right, above nav bar with safe area */}
       <button
         onClick={handleAddClick}
-        className="md:hidden fixed right-4 bottom-24 w-14 h-14 rounded-full bg-[#0070f3] text-white flex items-center justify-center shadow-lg z-50 active:scale-95 transition-transform tap-none"
+        className="md:hidden fixed right-4 w-14 h-14 rounded-full bg-[#0070f3] text-white flex items-center justify-center shadow-lg z-50 active:scale-95 transition-transform tap-none"
+        style={{ bottom: "calc(80px + env(safe-area-inset-bottom, 0px))" }}
         aria-label="Add expense"
       >
         {icons.plus}
       </button>
 
       {/* Bottom Tab Bar - Only visible on mobile */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 safe-bottom">
-        <div className="flex items-center justify-around h-16 pb-1">
+      {/* Extra padding for iPhone safe area - Instagram-style spacing */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 z-50 pb-safe-bottom">
+        <div className="flex items-center justify-around h-16">
           {primaryTabs.map((item) => {
             const active = !item.isAction && isActive(item.href);
 

@@ -172,9 +172,14 @@ body.modal-open {
   width: 100%;
 }
 
-/* Mobile bottom nav safe area */
+/* Mobile bottom nav safe area - Instagram-style spacing */
 .pb-safe {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 1rem);
+}
+
+/* Bottom navigation padding - ensures content above home indicator on iPhone */
+.pb-safe-bottom {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
 }
 
 /* Install prompt animation */

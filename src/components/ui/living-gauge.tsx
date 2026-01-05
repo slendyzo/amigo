@@ -10,12 +10,17 @@ type LivingGaugeProps = {
 
 export function LivingGauge({ current, budget, label = "Living Budget" }: LivingGaugeProps) {
   const percentage = useMemo(() => {
-    if (budget <= 0) return 0;
+    // Handle NaN, undefined, or invalid values
+    if (!budget || budget <= 0 || !Number.isFinite(budget)) return 0;
+    if (!Number.isFinite(current)) return 0;
     return Math.min((current / budget) * 100, 100);
   }, [current, budget]);
 
-  const isOverBudget = current > budget;
-  const remaining = budget - current;
+  // Safely handle NaN values for display
+  const safeCurrent = Number.isFinite(current) ? current : 0;
+  const safeBudget = Number.isFinite(budget) ? budget : 0;
+  const isOverBudget = safeCurrent > safeBudget;
+  const remaining = safeBudget - safeCurrent;
 
   // SVG circle calculations
   const size = 180;
@@ -76,7 +81,7 @@ export function LivingGauge({ current, budget, label = "Living Budget" }: Living
       <div className="mt-4 text-center">
         <p className="text-sm font-medium text-slate-700">{label}</p>
         <p className="text-lg font-semibold" style={{ color: getColor() }}>
-          €{current.toFixed(2)} <span className="text-slate-400 font-normal">/ €{budget.toFixed(2)}</span>
+          €{safeCurrent.toFixed(2)} <span className="text-slate-400 font-normal">/ €{safeBudget.toFixed(2)}</span>
         </p>
         <p className={`text-sm mt-1 ${isOverBudget ? "text-red-500" : "text-slate-500"}`}>
           {isOverBudget
