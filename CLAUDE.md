@@ -1,99 +1,231 @@
-# Claude Code Project Guide
+# VibeFinance (Amigo) - Claude Code Project Context
 
-This file contains project-specific instructions for Claude Code when working on VibeFinance.
+This file provides all context needed to start a new Claude Code session and continue development.
 
-## Project Overview
+## Quick Reference
 
-VibeFinance is a personal finance management app built with:
-- **Next.js 15** (App Router + Turbopack)
-- **Prisma 7** with PostgreSQL (Neon)
-- **NextAuth v5** (credentials + OAuth ready)
-- **Tailwind CSS 4**
-- **TypeScript 5.7, React 19**
+| Item | Value |
+|------|-------|
+| **Project** | VibeFinance (internal name: Amigo) |
+| **Type** | Personal finance management app |
+| **Live URL** | https://amigo.slendyzo.pt |
+| **Repo** | https://github.com/slendyzo/amigo |
+| **Neon Project ID** | `super-fog-13274723` |
+| **Database** | Neon PostgreSQL (EU West 2 - London) |
+
+## Tech Stack
+
+- **Framework:** Next.js 15 (App Router + Turbopack)
+- **Database:** Prisma 7 + PostgreSQL (Neon)
+- **Auth:** NextAuth v5 (credentials + OAuth)
+- **Styling:** Tailwind CSS 4
+- **UI Components:** Shadcn UI (Electric Blue theme)
+- **Charts:** Recharts (React 19 compatible)
+- **Language:** TypeScript 5.7, React 19
+- **i18n:** next-intl (en, pt-PT, fr-FR)
+
+## Core Concepts
+
+### Expense Types (The "Survival vs Lifestyle" Model)
+
+```
+SURVIVAL_FIXED    - Fixed recurring (Spotify, Rent, Car Lease)
+SURVIVAL_VARIABLE - Variable recurring (Utilities: Luz, Agua, Gas)
+LIFESTYLE         - Daily variable spending (meals, shopping)
+PROJECT           - Tagged to a specific project (e.g., House renovation)
+```
+
+### Key Business Logic
+
+- **Projects** = Tags for grouping expenses (many-to-many relation)
+- **Survival expenses** are excluded when filtering by project
+- **Project expenses** are excluded from survival/lifestyle totals
+- **Quick-add parsing:** "mcd 12" → Name: McDonald's, Amount: 12.00, Type: LIFESTYLE
+
+## Directory Structure
+
+```
+src/
+├── app/
+│   ├── api/                    # API routes
+│   │   ├── auth/               # NextAuth routes
+│   │   ├── expenses/           # CRUD + bulk delete
+│   │   ├── categories/         # CRUD
+│   │   ├── projects/           # CRUD
+│   │   ├── bank-accounts/      # CRUD
+│   │   ├── keyword-mappings/   # Auto-categorization rules
+│   │   ├── recurring-templates/# + generate endpoint
+│   │   ├── incomes/            # CRUD
+│   │   ├── import/             # + preview endpoint
+│   │   ├── feedback/           # Bug/feature reports
+│   │   └── upload/             # Image upload (base64)
+│   ├── auth/                   # Auth pages
+│   ├── dashboard/              # Main app pages
+│   │   ├── page.tsx            # Server component wrapper
+│   │   ├── dashboard-client.tsx# Client with filters/charts
+│   │   ├── expenses/           # Full expense list
+│   │   ├── projects/           # Project management
+│   │   ├── categories/         # Category management
+│   │   ├── accounts/           # Bank account management
+│   │   ├── mappings/           # Keyword mappings
+│   │   ├── recurring/          # Recurring templates
+│   │   ├── incomes/            # Income tracking
+│   │   ├── import/             # 3-step import wizard
+│   │   ├── imports/            # Import history
+│   │   ├── inbox/              # Admin feedback inbox
+│   │   └── settings/           # User settings
+│   └── globals.css
+├── components/
+│   ├── ui/                     # Shadcn components
+│   │   ├── living-gauge.tsx    # Survival budget gauge
+│   │   └── burn-chart.tsx      # Monthly comparison
+│   ├── add-expense-modal.tsx   # Quick-add with tags
+│   ├── edit-expense-modal.tsx  # Edit with tag selector
+│   ├── feedback-button.tsx     # Floating feedback button
+│   ├── quick-create-*.tsx      # Inline create popups
+│   └── sidebar.tsx             # Navigation
+├── lib/
+│   ├── auth.ts                 # NextAuth config
+│   ├── db.ts                   # Prisma client
+│   ├── parser.ts               # Smart keyword parsing
+│   ├── importer.ts             # Excel/CSV import logic
+│   └── utils.ts                # Shadcn cn() helper
+└── middleware.ts               # Route protection
+
+prisma/
+└── schema.prisma               # Database models
+
+messages/
+├── en.json                     # English translations
+├── pt-PT.json                  # Portuguese translations
+└── fr-FR.json                  # French translations
+```
+
+## Database Models (Prisma)
+
+### Main Models
+
+- **User** - Auth, subscription status
+- **Workspace** - Multi-tenancy, budget settings, language
+- **BankAccount** - User's bank accounts
+- **Category** - Expense categories
+- **Project** - Tags for grouping expenses
+- **Expense** - Core expense with type, amount, date
+- **Income** - Income tracking
+- **RecurringTemplate** - Auto-generate monthly expenses
+- **KeywordMapping** - Auto-categorization rules
+- **ImportLog** - Track import batches
+- **Feedback** - Bug reports and feature requests
+
+### Key Relations
+
+- Expense → Projects (many-to-many)
+- Expense → Category (optional)
+- Expense → BankAccount (optional)
+- Expense → ImportLog (for batch operations)
+
+## Common Development Tasks
+
+### Adding a Field to a Model
+
+1. Update `prisma/schema.prisma`
+2. Run `npx prisma db push`
+3. Run `npx prisma generate`
+4. Update API routes (GET to include, POST/PUT to save)
+5. Update frontend types and forms
+6. Run `npm run build` to verify
+
+### Adding a New Page
+
+1. Create `src/app/dashboard/[page]/page.tsx`
+2. Add "use client" if needed
+3. Add translations to `messages/*.json`
+4. Add sidebar link in `src/components/sidebar.tsx`
+
+### Mobile Responsiveness
+
+- Default (no prefix): Mobile styles
+- `md:` Desktop styles (768px+)
+- For modals: Fixed centered on mobile, absolute floating on desktop
 
 ## Bug-Fixing Workflow
 
-When the user asks to "fetch bugs" or "check for unresolved feedback", use this workflow:
+When asked to "fetch bugs" or "check unresolved feedback":
 
-### 1. Query Unresolved Feedback from Database
-
-Use the Neon MCP tool to fetch unresolved bugs:
+### 1. Query Database
 
 ```sql
-SELECT f.id, f.type, f.message, f."pageUrl", f."isRead", f."isResolved", f."createdAt", f."imageUrl", u.email, u.name
+SELECT f.id, f.type, f.message, f."pageUrl", f."isResolved", f."createdAt",
+       f."imageUrl", u.email, u.name
 FROM feedback f
 LEFT JOIN users u ON f."userId" = u.id
 WHERE f."isResolved" = false
 ORDER BY f."createdAt" DESC
 ```
 
-Project ID: `super-fog-13274723`
+Use Neon MCP tool with project ID: `super-fog-13274723`
 
-### 2. Investigate Each Bug
+### 2. Investigate & Fix
 
-For each bug found:
-- Analyze the error message and page URL
-- Search the codebase for relevant files
-- Identify the root cause
-- Formulate a fix
+- Analyze error message and page URL
+- Search codebase for relevant files
+- Present findings before fixing
+- Run `npm run build` to verify
 
-### 3. Present Findings to User
-
-Before fixing, present:
-- Bug description (from feedback)
-- Root cause analysis
-- Proposed fix
-- Files that will be modified
-
-### 4. Implement Fixes
-
-After user approval:
-- Make the necessary code changes
-- Run `npm run build` to verify no TypeScript errors
-- Test the fix if possible
-
-### 5. Mark as Resolved
-
-After confirming the fix works, update the database:
+### 3. Mark Resolved
 
 ```sql
 UPDATE feedback SET "isResolved" = true WHERE id = '<feedback-id>'
 ```
 
-## Key Directories
+## Environment Variables
 
-- `src/app/` - Next.js App Router pages and API routes
-- `src/components/` - React components
-- `src/lib/` - Utility functions, auth, database
-- `prisma/schema.prisma` - Database schema
-- `messages/` - i18n translation files (en.json, pt-PT.json, fr-FR.json)
+```env
+DATABASE_URL="postgresql://..."      # Neon connection string
+AUTH_SECRET="..."                    # npx auth secret
+AUTH_URL="http://localhost:3000"
+GOOGLE_CLIENT_ID=""                  # Optional OAuth
+GOOGLE_CLIENT_SECRET=""              # Optional OAuth
+```
 
-## Common Tasks
+## Commands
 
-### Adding a New Field to a Model
+```bash
+npm run dev           # Start dev server (Turbopack)
+npm run build         # Production build
+npx prisma db push    # Sync schema to database
+npx prisma generate   # Regenerate Prisma client
+npx prisma studio     # Open database GUI
+```
 
-1. Update `prisma/schema.prisma`
-2. Run `npx prisma db push` to sync with database
-3. Run `npx prisma generate` to regenerate client
-4. Update relevant API routes
-5. Update frontend components
-6. Run `npm run build` to verify
+## Deployment
 
-### Mobile Responsiveness
+- **Hosting:** Vercel (auto-deploy from main branch)
+- **Database:** Neon PostgreSQL
+- **Domain:** amigo.slendyzo.pt (via Cloudflare)
 
-Use Tailwind responsive prefixes:
-- Default (no prefix): Mobile styles
-- `md:` Desktop styles (768px+)
+## Known Quirks
 
-For modals/popups, prefer:
-- Mobile: Fixed position, centered with backdrop
-- Desktop: Absolute position, floating near trigger
+- Prisma 7 requires adapter pattern (`@prisma/adapter-pg`)
+- React 19: Use `ReactNode` instead of `JSX.Element`
+- Node 22 + ExcelJS: Buffer type mismatch (use `@ts-expect-error`)
+- Image uploads use base64 data URLs (Vercel serverless constraint)
+- Middleware uses cookie check (not importing auth for Edge runtime)
+
+## Recent Changes
+
+Check git log for latest updates:
+
+```bash
+git log --oneline -10
+```
 
 ## Testing Checklist
 
-Before marking a bug as fixed:
-- [ ] Code compiles (`npm run build` passes)
+Before marking work complete:
+
+- [ ] `npm run build` passes
 - [ ] No TypeScript errors
-- [ ] UI renders correctly on mobile and desktop
+- [ ] UI works on mobile and desktop
 - [ ] API endpoints return expected data
-- [ ] Database schema matches API expectations
+- [ ] Translations added for all languages
