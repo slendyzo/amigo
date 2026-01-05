@@ -141,7 +141,12 @@
       "variable": "Var",
       "lifestyle": "Est",
       "project": "Proj"
-    }
+    },
+    "selected": "selecionados",
+    "selectAll": "Selecionar Tudo",
+    "deleteSelectedQuestion": "Eliminar {count} despesas?",
+    "deleteSelected": "Eliminar {count}",
+    "deleting": "A eliminar..."
   },
   "incomes": {
     "title": "Receitas",

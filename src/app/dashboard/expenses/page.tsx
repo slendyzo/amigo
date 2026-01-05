@@ -70,6 +70,13 @@ export default function ExpensesPage() {
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
@@ -199,6 +206,72 @@ export default function ExpensesPage() {
     setDeleteId(null);
   };
 
+  // Selection handlers
+  const toggleSelection = (id: string) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      // Exit selection mode if nothing selected
+      if (newSet.size === 0) {
+        setIsSelectionMode(false);
+      }
+      return newSet;
+    });
+  };
+
+  const handleLongPressStart = (id: string) => {
+    longPressTimerRef.current = setTimeout(() => {
+      setIsSelectionMode(true);
+      setSelectedIds(new Set([id]));
+    }, 500);
+  };
+
+  const handleLongPressEnd = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const selectAll = () => {
+    const allIds = displayedExpenses.map((e) => e.id);
+    setSelectedIds(new Set(allIds));
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setIsSelectionMode(false);
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    setIsDeleting(true);
+    try {
+      const response = await fetch("/api/expenses/bulk", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: Array.from(selectedIds) }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setExpenses(expenses.filter((e) => !selectedIds.has(e.id)));
+        setTotal((prev) => prev - data.deleted);
+        clearSelection();
+      }
+    } catch (error) {
+      console.error("Failed to delete expenses:", error);
+    } finally {
+      setIsDeleting(false);
+      setShowBulkDeleteConfirm(false);
+    }
+  };
+
   // Sort and filter expenses
   const sortedExpenses = useMemo(() => {
     let filtered = expenses.filter((e) =>
@@ -326,35 +399,73 @@ export default function ExpensesPage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("title")}</h1>
-          <p className="text-slate-500 text-xs md:text-sm mt-0.5 md:mt-1">
-            {selectedMonthFilter !== "all" ? (
-              <>
-                {sortedExpenses.length} {t("title").toLowerCase()} {
-                  selectedMonthFilter === `${currentYear}-${String(currentMonth).padStart(2, "0")}`
-                    ? tTime("thisMonth").toLowerCase()
-                    : MONTHS[parseInt(selectedMonthFilter.split("-")[1])] + " " + selectedMonthFilter.split("-")[0]
-                }
-              </>
-            ) : (
-              <>{total} {t("total").toLowerCase()} {t("title").toLowerCase()}</>
-            )}
-          </p>
+      {/* Selection Bar */}
+      {isSelectionMode && (
+        <div className="bg-[#0070f3] text-white rounded-xl p-3 md:p-4 shadow-sm flex items-center justify-between sticky top-0 z-40">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={clearSelection}
+              className="p-1.5 hover:bg-white/20 rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <span className="font-medium">
+              {selectedIds.size} {t("selected")}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={selectAll}
+              className="px-3 py-1.5 text-sm bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
+            >
+              {t("selectAll")}
+            </button>
+            <button
+              onClick={() => setShowBulkDeleteConfirm(true)}
+              className="px-3 py-1.5 text-sm bg-red-500 hover:bg-red-600 rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+              {tCommon("delete")}
+            </button>
+          </div>
         </div>
-        {/* Desktop add button */}
-        <button
-          onClick={() => setIsModalOpen(true)}
-          className="hidden md:flex items-center gap-2 bg-[#0070f3] text-white px-4 py-2 rounded-lg hover:bg-[#0060df] transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {t("addExpense")}
-        </button>
-      </div>
+      )}
+
+      {/* Header */}
+      {!isSelectionMode && (
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("title")}</h1>
+            <p className="text-slate-500 text-xs md:text-sm mt-0.5 md:mt-1">
+              {selectedMonthFilter !== "all" ? (
+                <>
+                  {sortedExpenses.length} {t("title").toLowerCase()} {
+                    selectedMonthFilter === `${currentYear}-${String(currentMonth).padStart(2, "0")}`
+                      ? tTime("thisMonth").toLowerCase()
+                      : MONTHS[parseInt(selectedMonthFilter.split("-")[1])] + " " + selectedMonthFilter.split("-")[0]
+                  }
+                </>
+              ) : (
+                <>{total} {t("total").toLowerCase()} {t("title").toLowerCase()}</>
+              )}
+            </p>
+          </div>
+          {/* Desktop add button */}
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="hidden md:flex items-center gap-2 bg-[#0070f3] text-white px-4 py-2 rounded-lg hover:bg-[#0060df] transition-colors"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            {t("addExpense")}
+          </button>
+        </div>
+      )}
 
       {/* Year & Month Filter Bar */}
       <div className="bg-white rounded-xl p-2 md:p-4 shadow-sm border border-slate-200">
@@ -523,6 +634,30 @@ export default function ExpensesPage() {
               <table className="hidden md:table w-full">
                 <thead className="bg-slate-50/50 border-b border-slate-100">
                   <tr>
+                    <th className="w-10 px-4 py-2">
+                      <input
+                        type="checkbox"
+                        checked={group.expenses.every((e) => selectedIds.has(e.id))}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setIsSelectionMode(true);
+                            setSelectedIds((prev) => {
+                              const newSet = new Set(prev);
+                              group.expenses.forEach((exp) => newSet.add(exp.id));
+                              return newSet;
+                            });
+                          } else {
+                            setSelectedIds((prev) => {
+                              const newSet = new Set(prev);
+                              group.expenses.forEach((exp) => newSet.delete(exp.id));
+                              if (newSet.size === 0) setIsSelectionMode(false);
+                              return newSet;
+                            });
+                          }
+                        }}
+                        className="w-4 h-4 rounded border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
+                      />
+                    </th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("date")}</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("description")}</th>
                     <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("type")}</th>
@@ -533,7 +668,21 @@ export default function ExpensesPage() {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {group.expenses.map((expense) => (
-                    <tr key={expense.id} className={expense.isRecurring ? "bg-blue-50/60 hover:bg-blue-100/60" : "hover:bg-slate-50"}>
+                    <tr
+                      key={expense.id}
+                      className={`${expense.isRecurring ? "bg-blue-50/60 hover:bg-blue-100/60" : "hover:bg-slate-50"} ${selectedIds.has(expense.id) ? "bg-blue-50" : ""}`}
+                    >
+                      <td className="px-4 py-3">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(expense.id)}
+                          onChange={() => {
+                            if (!isSelectionMode) setIsSelectionMode(true);
+                            toggleSelection(expense.id);
+                          }}
+                          className="w-4 h-4 rounded border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
+                        />
+                      </td>
                       <td className="px-4 py-3 text-sm text-slate-600">
                         <div className="flex items-center gap-1.5">
                           {expense.isRecurring && (
@@ -605,9 +754,31 @@ export default function ExpensesPage() {
                     className={`px-3 py-3 flex items-start justify-between tap-none ${
                       expense.isRecurring
                         ? "bg-blue-50/60 active:bg-blue-100/60"
+                        : selectedIds.has(expense.id)
+                        ? "bg-blue-50"
                         : "active:bg-slate-50"
                     }`}
+                    onTouchStart={() => handleLongPressStart(expense.id)}
+                    onTouchEnd={handleLongPressEnd}
+                    onTouchMove={handleLongPressEnd}
+                    onClick={() => {
+                      if (isSelectionMode) {
+                        toggleSelection(expense.id);
+                      }
+                    }}
                   >
+                    {/* Checkbox in selection mode */}
+                    {isSelectionMode && (
+                      <div className="flex items-center mr-3 pt-0.5">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(expense.id)}
+                          onChange={() => toggleSelection(expense.id)}
+                          onClick={(e) => e.stopPropagation()}
+                          className="w-5 h-5 rounded border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
+                        />
+                      </div>
+                    )}
                     <div className="flex-1 min-w-0 mr-2">
                       <div className="flex items-center gap-1.5 flex-wrap">
                         {expense.isRecurring && (
@@ -637,22 +808,26 @@ export default function ExpensesPage() {
                       <p className="font-semibold text-slate-900 text-sm tabular-nums">
                         €{Number(expense.amount).toFixed(2)}
                       </p>
-                      <button
-                        onClick={() => setEditingExpense(expense)}
-                        className="p-1.5 text-slate-400 active:text-slate-700 active:bg-slate-100 rounded tap-none"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(expense.id)}
-                        className="p-1.5 text-slate-400 active:text-red-600 active:bg-red-50 rounded tap-none"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
+                      {!isSelectionMode && (
+                        <>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setEditingExpense(expense); }}
+                            className="p-1.5 text-slate-400 active:text-slate-700 active:bg-slate-100 rounded tap-none"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeleteId(expense.id); }}
+                            className="p-1.5 text-slate-400 active:text-red-600 active:bg-red-50 rounded tap-none"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -713,6 +888,45 @@ export default function ExpensesPage() {
                 className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
                 {tCommon("delete")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Delete Confirmation */}
+      {showBulkDeleteConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setShowBulkDeleteConfirm(false)} />
+          <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+              {t("deleteSelectedQuestion", { count: selectedIds.size })}
+            </h3>
+            <p className="text-slate-600 text-sm mb-4">{t("deleteWarning")}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowBulkDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+              >
+                {tCommon("cancel")}
+              </button>
+              <button
+                onClick={handleBulkDelete}
+                disabled={isDeleting}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {isDeleting ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    {t("deleting")}
+                  </>
+                ) : (
+                  t("deleteSelected", { count: selectedIds.size })
+                )}
               </button>
             </div>
           </div>

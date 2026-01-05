@@ -141,7 +141,12 @@
       "variable": "Var",
       "lifestyle": "Style",
       "project": "Proj"
-    }
+    },
+    "selected": "sélectionnés",
+    "selectAll": "Tout Sélectionner",
+    "deleteSelectedQuestion": "Supprimer {count} dépenses ?",
+    "deleteSelected": "Supprimer {count}",
+    "deleting": "Suppression..."
   },
   "incomes": {
     "title": "Revenus",

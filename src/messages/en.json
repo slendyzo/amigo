@@ -141,7 +141,12 @@
       "variable": "Var",
       "lifestyle": "Life",
       "project": "Proj"
-    }
+    },
+    "selected": "selected",
+    "selectAll": "Select All",
+    "deleteSelectedQuestion": "Delete {count} expenses?",
+    "deleteSelected": "Delete {count}",
+    "deleting": "Deleting..."
   },
   "incomes": {
     "title": "Incomes",
