@@ -94,8 +94,14 @@ export default function ImportPage() {
     setIsLoading(true);
     setError(null);
 
-    // PDF files skip preview and go directly to import
-    if (selectedFile.name.toLowerCase().endsWith(".pdf")) {
+    const fileName = selectedFile.name.toLowerCase();
+    // Files that skip preview and go directly to import: PDF, OFX, QFX, QIF
+    const isDirectImport = fileName.endsWith(".pdf") ||
+                           fileName.endsWith(".ofx") ||
+                           fileName.endsWith(".qfx") ||
+                           fileName.endsWith(".qif");
+
+    if (isDirectImport) {
       setStep("importing");
 
       const formData = new FormData();
@@ -111,14 +117,14 @@ export default function ImportPage() {
         const data: ImportResponse = await response.json();
 
         if (!response.ok) {
-          setError(data.errors?.[0] || t("failedToImportPdf"));
+          setError(data.errors?.[0] || t("failedToImport"));
           setStep("upload");
         } else {
           setResult(data);
           setStep("result");
         }
       } catch {
-        setError(t("failedToImportPdf"));
+        setError(t("failedToImport"));
         setStep("upload");
       } finally {
         setIsLoading(false);
@@ -363,7 +369,7 @@ export default function ImportPage() {
             >
               <input
                 type="file"
-                accept=".csv,.xlsx,.xls,.pdf"
+                accept=".csv,.xlsx,.xls,.pdf,.ofx,.qfx,.qif"
                 onChange={handleFileInput}
                 className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 disabled={isLoading}

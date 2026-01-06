@@ -370,8 +370,8 @@
     "dragDrop": "Glissez et déposez votre fichier ici",
     "dropOrBrowse": "Déposez votre fichier ici, ou cliquez pour parcourir",
     "orClickToUpload": "ou cliquez pour télécharger",
-    "supportedFormats": "Formats supportés : CSV, Excel (.xlsx, .xls), PDF",
-    "supportsFormats": "Supporte .csv, .xlsx, .xls, .pdf",
+    "supportedFormats": "Formats supportés : CSV, Excel (.xlsx, .xls), PDF, OFX, QIF",
+    "supportsFormats": "Supporte .csv, .xlsx, .xls, .pdf, .ofx, .qfx, .qif",
     "analyzingFile": "Analyse du fichier...",
     "mapping": "Mapping des Colonnes",
     "mapYourColumns": "Mappez Vos Colonnes",
@@ -449,6 +449,7 @@
     "recurringTemplatesDesc": "Nous avons détecté des dépenses sans dates en haut de vos feuilles (abonnements, factures). Elles ont été ajoutées comme modèles récurrents.",
     "viewRecurringTemplates": "Voir et gérer les modèles récurrents →",
     "failedToImportPdf": "Échec de l'import du PDF",
+    "failedToImport": "Échec de l'import du fichier",
     "failedToImportFile": "Échec de l'import du fichier",
     "failedToPreview": "Échec de la prévisualisation du fichier"
   },

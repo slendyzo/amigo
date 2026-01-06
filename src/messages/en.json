@@ -370,8 +370,8 @@
     "dragDrop": "Drag and drop your file here",
     "dropOrBrowse": "Drop your file here, or click to browse",
     "orClickToUpload": "or click to upload",
-    "supportedFormats": "Supported formats: CSV, Excel (.xlsx, .xls), PDF",
-    "supportsFormats": "Supports .csv, .xlsx, .xls, .pdf",
+    "supportedFormats": "Supported formats: CSV, Excel (.xlsx, .xls), PDF, OFX, QIF",
+    "supportsFormats": "Supports .csv, .xlsx, .xls, .pdf, .ofx, .qfx, .qif",
     "analyzingFile": "Analyzing file...",
     "mapping": "Column Mapping",
     "mapYourColumns": "Map Your Columns",
@@ -449,6 +449,7 @@
     "recurringTemplatesDesc": "We detected expenses without dates at the top of your sheets (subscriptions, bills). These have been added as recurring templates.",
     "viewRecurringTemplates": "View & manage recurring templates →",
     "failedToImportPdf": "Failed to import PDF",
+    "failedToImport": "Failed to import file",
     "failedToImportFile": "Failed to import file",
     "failedToPreview": "Failed to preview file"
   },

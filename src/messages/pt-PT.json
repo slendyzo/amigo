@@ -370,8 +370,8 @@
     "dragDrop": "Arrasta e solta o teu ficheiro aqui",
     "dropOrBrowse": "Solta o teu ficheiro aqui, ou clica para procurar",
     "orClickToUpload": "ou clica para carregar",
-    "supportedFormats": "Formatos suportados: CSV, Excel (.xlsx, .xls), PDF",
-    "supportsFormats": "Suporta .csv, .xlsx, .xls, .pdf",
+    "supportedFormats": "Formatos suportados: CSV, Excel (.xlsx, .xls), PDF, OFX, QIF",
+    "supportsFormats": "Suporta .csv, .xlsx, .xls, .pdf, .ofx, .qfx, .qif",
     "analyzingFile": "A analisar ficheiro...",
     "mapping": "Mapeamento de Colunas",
     "mapYourColumns": "Mapeia as Tuas Colunas",
@@ -449,6 +449,7 @@
     "recurringTemplatesDesc": "Detetámos despesas sem datas no topo das tuas folhas (subscrições, contas). Foram adicionadas como modelos recorrentes.",
     "viewRecurringTemplates": "Ver e gerir modelos recorrentes →",
     "failedToImportPdf": "Erro ao importar PDF",
+    "failedToImport": "Erro ao importar ficheiro",
     "failedToImportFile": "Erro ao importar ficheiro",
     "failedToPreview": "Erro ao pré-visualizar ficheiro"
   },
