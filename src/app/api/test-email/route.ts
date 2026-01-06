@@ -15,7 +15,7 @@ export async function GET(request: NextRequest) {
     apiKeyPresent: !!apiKey,
     apiKeyPrefix: apiKey?.substring(0, 10) || "NOT SET",
     authUrl: authUrl || "NOT SET",
-    fromEmail: process.env.EMAIL_FROM || "Amigo <noreply@send.amigo.slendyzo.pt>",
+    fromEmail: process.env.EMAIL_FROM || "Amigo <noreply@amigo.slendyzo.pt>",
     testEmail: testEmail || "not provided",
     timestamp: new Date().toISOString(),
   };
@@ -40,7 +40,7 @@ export async function GET(request: NextRequest) {
 
   try {
     const resend = new Resend(apiKey);
-    const fromEmail = process.env.EMAIL_FROM || "Amigo <noreply@send.amigo.slendyzo.pt>";
+    const fromEmail = process.env.EMAIL_FROM || "Amigo <noreply@amigo.slendyzo.pt>";
 
     console.log("[Test Email] Sending test email to:", testEmail);
 

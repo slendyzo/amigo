@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 
-const FROM_EMAIL = process.env.EMAIL_FROM || "Amigo <noreply@send.amigo.slendyzo.pt>";
+const FROM_EMAIL = process.env.EMAIL_FROM || "Amigo <noreply@amigo.slendyzo.pt>";
 
 // Lazy initialization to avoid build-time errors when API key is not set
 let resendClient: Resend | null = null;
