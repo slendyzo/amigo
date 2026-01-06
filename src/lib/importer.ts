@@ -260,11 +260,11 @@ function correctYearIfNeeded(date: Date, dominantYear: number | null): Date {
 
 /**
  * Parse amount from various formats
- * Returns absolute value by default, use parseAmountRaw for signed value
+ * Preserves sign - negative values are valid for refunds/credits
  */
 function parseAmount(value: unknown): number {
   if (typeof value === "number") {
-    return Math.abs(value);
+    return value; // Preserve sign for negatives (refunds/credits)
   }
 
   if (typeof value === "string") {
@@ -274,7 +274,7 @@ function parseAmount(value: unknown): number {
       .replace(",", ".");
 
     const num = parseFloat(cleaned);
-    return isNaN(num) ? 0 : Math.abs(num);
+    return isNaN(num) ? 0 : num; // Preserve sign for negatives
   }
 
   return 0;
@@ -518,8 +518,9 @@ export async function importExpensesFromExcel(
         }
 
         // Parse amount - handles empty/null as 0
+        // IMPORTANT: Preserve negative values for refunds/credits
         const rawAmountValue = rawAmount ? parseAmountRaw(rawAmount) : 0;
-        const amount = Math.abs(rawAmountValue);
+        const amount = rawAmountValue; // Keep sign - negative values are valid (refunds, credits)
         // Determine if this should be an income (positive value when splitExpensesIncomes is enabled)
         const isIncome = columnMapping.splitExpensesIncomes && rawAmountValue > 0;
 
@@ -1127,14 +1128,15 @@ export async function importExpensesFromPDF(
       let amount = 0;
       let name = afterDate;
 
-      // Try euro amount pattern first (e.g., "123,45 €" or "1.234,56")
+      // Try euro amount pattern first (e.g., "123,45 €" or "1.234,56" or "-123,45")
       const euroMatch = afterDate.match(euroAmountPattern);
       if (euroMatch) {
         // Convert European format (1.234,56) to number
+        // Preserve negative sign for refunds/credits
         const amountStr = euroMatch[1]
           .replace(/\./g, "")  // Remove thousand separators
           .replace(",", ".");  // Convert decimal separator
-        amount = Math.abs(parseFloat(amountStr));
+        amount = parseFloat(amountStr); // Keep sign - negatives are valid
         name = afterDate.replace(euroMatch[0], "").trim();
       } else {
         // Try standard amount pattern
@@ -1143,13 +1145,14 @@ export async function importExpensesFromPDF(
           const amountStr = amountMatch[1]
             .replace(/\./g, "")
             .replace(",", ".");
-          amount = Math.abs(parseFloat(amountStr));
+          amount = parseFloat(amountStr); // Keep sign - negatives are valid
           name = afterDate.replace(amountMatch[0], "").trim();
         }
       }
 
       // Skip if no valid amount or name
-      if (amount <= 0 || !name || name.length < 2) continue;
+      // Note: amount can be negative (refunds/credits) - only skip if exactly 0
+      if (amount === 0 || !name || name.length < 2) continue;
 
       // Skip common non-expense items
       const skipPatterns = [

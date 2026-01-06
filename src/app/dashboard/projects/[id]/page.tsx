@@ -323,12 +323,16 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className="font-medium text-slate-900">
-                            €{Number(expense.amountEur).toFixed(2)}
+                          <p className={`font-medium ${Number(expense.amountEur) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
+                            {Number(expense.amountEur) < 0
+                              ? `(€${Math.abs(Number(expense.amountEur)).toFixed(2)})`
+                              : `€${Number(expense.amountEur).toFixed(2)}`}
                           </p>
                           {expense.currency !== "EUR" && (
                             <p className="text-xs text-slate-400">
-                              {expense.currency} {Number(expense.amount).toFixed(2)}
+                              {expense.currency} {Number(expense.amount) < 0
+                                ? `(${Math.abs(Number(expense.amount)).toFixed(2)})`
+                                : Number(expense.amount).toFixed(2)}
                             </p>
                           )}
                         </div>

@@ -718,8 +718,10 @@ export default function ExpensesPage() {
                       <td className="px-4 py-3 text-sm text-slate-600">
                         {expense.category?.name || "-"}
                       </td>
-                      <td className="px-4 py-3 text-sm font-medium text-slate-900 text-right">
-                        €{Number(expense.amount).toFixed(2)}
+                      <td className={`px-4 py-3 text-sm font-medium text-right ${Number(expense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
+                        {Number(expense.amount) < 0
+                          ? `(€${Math.abs(Number(expense.amount)).toFixed(2)})`
+                          : `€${Number(expense.amount).toFixed(2)}`}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
@@ -807,8 +809,10 @@ export default function ExpensesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <p className="font-semibold text-slate-900 text-sm tabular-nums">
-                        €{Number(expense.amount).toFixed(2)}
+                      <p className={`font-semibold text-sm tabular-nums ${Number(expense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
+                        {Number(expense.amount) < 0
+                          ? `(€${Math.abs(Number(expense.amount)).toFixed(2)})`
+                          : `€${Number(expense.amount).toFixed(2)}`}
                       </p>
                       {!isSelectionMode && (
                         <>

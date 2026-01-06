@@ -800,8 +800,13 @@ export default function DashboardOverview({
                   </div>
                 </div>
                 <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
-                  <p className={`font-semibold tabular-nums text-sm md:text-base ${expense.excludeFromBudget ? "text-slate-400 line-through" : "text-slate-900"}`}>
-                    €{expense.amountEur.toFixed(2)}
+                  <p className={`font-semibold tabular-nums text-sm md:text-base ${
+                    expense.excludeFromBudget ? "text-slate-400 line-through" :
+                    expense.amountEur < 0 ? "text-green-600" : "text-slate-900"
+                  }`}>
+                    {expense.amountEur < 0
+                      ? `(€${Math.abs(expense.amountEur).toFixed(2)})`
+                      : `€${expense.amountEur.toFixed(2)}`}
                   </p>
                   {confirmDeleteId === expense.id ? (
                     <div className="flex items-center gap-1 md:gap-2">
