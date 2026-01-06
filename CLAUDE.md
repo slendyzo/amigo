@@ -21,6 +21,7 @@ This file provides all context needed to start a new Claude Code session and con
 - **Styling:** Tailwind CSS 4
 - **UI Components:** Shadcn UI (Electric Blue theme)
 - **Charts:** Recharts (React 19 compatible)
+- **Email:** Resend (for password reset emails)
 - **Language:** TypeScript 5.7, React 19
 - **i18n:** next-intl (en, pt-PT, fr-FR)
 
@@ -41,6 +42,7 @@ PROJECT           - Tagged to a specific project (e.g., House renovation)
 - **Survival expenses** are excluded when filtering by project
 - **Project expenses** are excluded from survival/lifestyle totals
 - **Quick-add parsing:** "mcd 12" → Name: McDonald's, Amount: 12.00, Type: LIFESTYLE
+- **Negative amounts** = Refunds/credits (displayed in green with parentheses)
 
 ## Directory Structure
 
@@ -48,7 +50,12 @@ PROJECT           - Tagged to a specific project (e.g., House renovation)
 src/
 ├── app/
 │   ├── api/                    # API routes
-│   │   ├── auth/               # NextAuth routes
+│   │   ├── auth/               # NextAuth + password reset
+│   │   │   ├── [...nextauth]/  # NextAuth handler
+│   │   │   ├── register/       # User registration
+│   │   │   ├── forgot-password/# Request password reset
+│   │   │   ├── reset-password/ # Complete password reset
+│   │   │   └── setup-username/ # OAuth username setup
 │   │   ├── expenses/           # CRUD + bulk delete
 │   │   ├── categories/         # CRUD
 │   │   ├── projects/           # CRUD
@@ -57,13 +64,20 @@ src/
 │   │   ├── recurring-templates/# + generate endpoint
 │   │   ├── incomes/            # CRUD
 │   │   ├── import/             # + preview endpoint
+│   │   ├── export/             # CSV/Excel export
 │   │   ├── feedback/           # Bug/feature reports
 │   │   └── upload/             # Image upload (base64)
 │   ├── auth/                   # Auth pages
+│   │   ├── signin/             # Login page
+│   │   ├── signup/             # Registration page
+│   │   ├── forgot-password/    # Request reset page
+│   │   ├── reset-password/     # Set new password page
+│   │   ├── setup-username/     # OAuth username setup
+│   │   └── error/              # Auth error page
 │   ├── dashboard/              # Main app pages
 │   │   ├── page.tsx            # Server component wrapper
-│   │   ├── dashboard-client.tsx# Client with filters/charts
-│   │   ├── expenses/           # Full expense list
+│   │   ├── overview-client.tsx # Client with filters/charts
+│   │   ├── expenses/           # Full expense list (sortable, exportable)
 │   │   ├── projects/           # Project management
 │   │   ├── categories/         # Category management
 │   │   ├── accounts/           # Bank account management
@@ -87,6 +101,7 @@ src/
 ├── lib/
 │   ├── auth.ts                 # NextAuth config
 │   ├── db.ts                   # Prisma client
+│   ├── email.ts                # Resend email utility
 │   ├── parser.ts               # Smart keyword parsing
 │   ├── importer.ts             # Excel/CSV import logic
 │   └── utils.ts                # Shadcn cn() helper
@@ -105,7 +120,7 @@ messages/
 
 ### Main Models
 
-- **User** - Auth, subscription status
+- **User** - Auth, subscription status, password (hashed)
 - **Workspace** - Multi-tenancy, budget settings, language
 - **BankAccount** - User's bank accounts
 - **Category** - Expense categories
@@ -116,6 +131,7 @@ messages/
 - **KeywordMapping** - Auto-categorization rules
 - **ImportLog** - Track import batches
 - **Feedback** - Bug reports and feature requests
+- **VerificationToken** - Password reset tokens
 
 ### Key Relations
 
@@ -123,6 +139,25 @@ messages/
 - Expense → Category (optional)
 - Expense → BankAccount (optional)
 - Expense → ImportLog (for batch operations)
+
+## Authentication Flow
+
+### Password-based Login
+1. User enters email/username + password on `/auth/signin`
+2. Credentials validated against bcrypt hash in database
+3. JWT session token created and stored in cookie
+
+### Password Reset
+1. User clicks "Forgot password?" on signin page
+2. Enters email on `/auth/forgot-password`
+3. System sends reset link via Resend (1 hour expiry)
+4. User clicks link, sets new password on `/auth/reset-password`
+5. Token validated, password updated, user redirected to signin
+
+### OAuth (Google - Coming Soon)
+1. User clicks Google button
+2. Redirected to Google OAuth
+3. On return, prompted to set username (`/auth/setup-username`)
 
 ## Common Development Tasks
 
@@ -147,6 +182,25 @@ messages/
 - Default (no prefix): Mobile styles
 - `md:` Desktop styles (768px+)
 - For modals: Fixed centered on mobile, absolute floating on desktop
+
+## Excel Import System
+
+The importer (`src/lib/importer.ts`) handles Excel/CSV files with these features:
+
+### Sheet Detection
+- Monthly sheets (e.g., "Janeiro 2025") → Regular expenses
+- Project sheets (e.g., "Casa") → Tag existing expenses, don't duplicate
+
+### Ghost Sheet Strategy
+Project sheets use a 3-tier matching approach:
+1. Match against expenses created in same import batch
+2. Exact name match (case-insensitive, ±€2 tolerance)
+3. Fuzzy match (word similarity, ±€5 tolerance)
+
+### Amount Handling
+- Negative values preserved for refunds/credits
+- SUBTOTAL rows automatically skipped
+- Amount tolerance for fuzzy matching
 
 ## Bug-Fixing Workflow
 
@@ -181,11 +235,18 @@ UPDATE feedback SET "isResolved" = true WHERE id = '<feedback-id>'
 ## Environment Variables
 
 ```env
+# Database
 DATABASE_URL="postgresql://..."      # Neon connection string
+
+# Auth
 AUTH_SECRET="..."                    # npx auth secret
-AUTH_URL="http://localhost:3000"
+AUTH_URL="http://localhost:3000"     # Base URL for auth callbacks
 GOOGLE_CLIENT_ID=""                  # Optional OAuth
 GOOGLE_CLIENT_SECRET=""              # Optional OAuth
+
+# Email (Password Reset)
+RESEND_API_KEY="re_..."              # Resend API key
+EMAIL_FROM="VibeFinance <noreply@amigo.slendyzo.pt>"  # Optional, has default
 ```
 
 ## Commands
@@ -202,6 +263,7 @@ npx prisma studio     # Open database GUI
 
 - **Hosting:** Vercel (auto-deploy from main branch)
 - **Database:** Neon PostgreSQL
+- **Email:** Resend
 - **Domain:** amigo.slendyzo.pt (via Cloudflare)
 
 ## Known Quirks
@@ -211,14 +273,15 @@ npx prisma studio     # Open database GUI
 - Node 22 + ExcelJS: Buffer type mismatch (use `@ts-expect-error`)
 - Image uploads use base64 data URLs (Vercel serverless constraint)
 - Middleware uses cookie check (not importing auth for Edge runtime)
+- Resend client uses lazy init (avoids build-time API key errors)
 
-## Recent Changes
+## Recent Features
 
-Check git log for latest updates:
-
-```bash
-git log --oneline -10
-```
+- **Password Reset** - Full forgot/reset password flow with email
+- **Bulk Selection** - Select multiple expenses for bulk delete
+- **Sorting & Export** - Sort expenses by date/amount/name/category, export to CSV/Excel
+- **Negative Values** - Refunds displayed in green with parentheses
+- **Improved Import** - Better project sheet matching, SUBTOTAL skipping
 
 ## Testing Checklist
 
