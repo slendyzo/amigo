@@ -781,25 +781,32 @@ export async function importExpensesFromExcel(
 
     // Insert all regular expenses in batch - NO duplicate detection
     // Users buy the same things every month/week, that's normal spending!
-    if (regularExpenses.length > 0) {
-      const regularExpenseData = regularExpenses.map((row) => ({
-        workspaceId,
-        categoryId: defaultCategory!.id,
-        importLogId: importLog.id,
-        name: row.name,
-        rawInput: row.rawInput,
-        type: row.type,
-        status: "PAID" as const,
-        amount: row.amount,
-        currency: "EUR",
-        amountEur: row.amount,
-        date: row.date!,
-      }));
+    // Store created expenses for project sheet matching
+    const createdExpenseIds: string[] = [];
 
-      const regularResult = await prisma.expense.createMany({
-        data: regularExpenseData,
-      });
-      totalCreated += regularResult.count;
+    if (regularExpenses.length > 0) {
+      // Use individual creates instead of createMany to get IDs back
+      // This is needed for proper project sheet matching
+      for (const row of regularExpenses) {
+        const created = await prisma.expense.create({
+          data: {
+            workspaceId,
+            categoryId: defaultCategory!.id,
+            importLogId: importLog.id,
+            name: row.name,
+            rawInput: row.rawInput,
+            type: row.type,
+            status: "PAID",
+            amount: row.amount,
+            currency: "EUR",
+            amountEur: row.amount,
+            date: row.date!,
+          },
+        });
+        createdExpenseIds.push(created.id);
+        totalCreated++;
+      }
+      console.log(`  → Created ${regularExpenses.length} regular expenses`);
     }
 
     // Process project expenses - GHOST SHEET STRATEGY
@@ -822,46 +829,101 @@ export async function importExpensesFromExcel(
         .toLowerCase()
         .trim()
         .replace(/[^\w\s]/g, "") // Remove special chars
-        .replace(/\s+/g, " "); // Normalize whitespace
+        .replace(/\s+/g, ""); // Remove ALL whitespace for comparison (matches "Multi Riscos" with "Multiriscos")
+    };
+
+    // More aggressive name comparison - checks multiple similarity criteria
+    const namesAreSimilar = (name1: string, name2: string): boolean => {
+      const n1 = normalizeName(name1);
+      const n2 = normalizeName(name2);
+
+      // Exact match after normalization
+      if (n1 === n2) return true;
+
+      // One contains the other
+      if (n1.includes(n2) || n2.includes(n1)) return true;
+
+      // Check if they share most words (for multi-word names)
+      const words1 = name1.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+      const words2 = name2.toLowerCase().split(/\s+/).filter(w => w.length > 2);
+      const commonWords = words1.filter(w => words2.some(w2 => w2.includes(w) || w.includes(w2)));
+
+      // If most words are common, consider it a match
+      if (words1.length > 0 && commonWords.length >= Math.min(words1.length, words2.length) * 0.6) {
+        return true;
+      }
+
+      return false;
     };
 
     for (const row of projectExpenses) {
       const projectId = projectMap[row.sheetName.toLowerCase()];
-      const normalizedRowName = normalizeName(row.name);
 
       // Search for matching expense in the workspace
-      // First try: exact name match with amount tolerance (±€1)
-      // Search across all dates since Casa items may not have exact date info
-      let existingExpense = await prisma.expense.findFirst({
-        where: {
-          workspaceId,
-          name: {
-            equals: row.name,
-            mode: "insensitive",
-          },
-          // Amount tolerance: within €1 of the project sheet amount
-          amountEur: {
-            gte: row.amount - 1,
-            lte: row.amount + 1,
-          },
-          // Don't match expenses already linked to this project
-          NOT: {
-            projects: {
-              some: { id: projectId },
+      // Priority 1: Look for expenses created in THIS import batch first (most reliable)
+      // Priority 2: Look in existing workspace expenses
+
+      let existingExpense = null;
+
+      // First try: Search recently created expenses from this import (by ID)
+      // This ensures we match expenses that were just created in the same import
+      if (createdExpenseIds.length > 0) {
+        const recentExpenses = await prisma.expense.findMany({
+          where: {
+            id: { in: createdExpenseIds },
+            // Don't match expenses already linked to this project
+            NOT: {
+              projects: {
+                some: { id: projectId },
+              },
             },
           },
-        },
-      });
+        });
 
-      // Second try: if no exact name match, try fuzzy match by fetching candidates
+        // Find match using fuzzy name comparison and amount tolerance
+        for (const candidate of recentExpenses) {
+          const amountDiff = Math.abs(Number(candidate.amountEur) - row.amount);
+          if (amountDiff <= 5 && namesAreSimilar(candidate.name, row.name)) {
+            existingExpense = candidate;
+            console.log(`  → Matched to same-batch expense: "${row.name}" ≈ "${candidate.name}"`);
+            break;
+          }
+        }
+      }
+
+      // Second try: Search all workspace expenses with exact name match
       if (!existingExpense) {
-        // Get all expenses with similar amounts (within €2 to cast a wider net)
+        existingExpense = await prisma.expense.findFirst({
+          where: {
+            workspaceId,
+            name: {
+              equals: row.name,
+              mode: "insensitive",
+            },
+            // Amount tolerance: within €2 of the project sheet amount
+            amountEur: {
+              gte: row.amount - 2,
+              lte: row.amount + 2,
+            },
+            // Don't match expenses already linked to this project
+            NOT: {
+              projects: {
+                some: { id: projectId },
+              },
+            },
+          },
+        });
+      }
+
+      // Third try: if no exact name match, try fuzzy match by fetching candidates
+      if (!existingExpense) {
+        // Get all expenses with similar amounts (within €5 to cast a wider net)
         const candidates = await prisma.expense.findMany({
           where: {
             workspaceId,
             amountEur: {
-              gte: row.amount - 2,
-              lte: row.amount + 2,
+              gte: row.amount - 5,
+              lte: row.amount + 5,
             },
             NOT: {
               projects: {
@@ -869,17 +931,14 @@ export async function importExpensesFromExcel(
               },
             },
           },
-          take: 50, // Limit to avoid performance issues
+          take: 100, // Increased limit for better matching
         });
 
-        // Find best match by normalized name similarity
+        // Find best match using more aggressive name similarity
         for (const candidate of candidates) {
-          const normalizedCandidateName = normalizeName(candidate.name);
-          // Check if names are similar (one contains the other or high overlap)
-          if (normalizedCandidateName.includes(normalizedRowName) ||
-              normalizedRowName.includes(normalizedCandidateName) ||
-              normalizedCandidateName === normalizedRowName) {
+          if (namesAreSimilar(candidate.name, row.name)) {
             existingExpense = candidate;
+            console.log(`  → Fuzzy match found: "${row.name}" ≈ "${candidate.name}"`);
             break;
           }
         }
