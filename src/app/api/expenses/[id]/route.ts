@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { convertToEur } from "@/lib/currency";
 
 // GET - Get single expense
 export async function GET(
@@ -85,6 +86,7 @@ export async function PUT(
       name?: string;
       amount?: number;
       amountEur?: number;
+      exchangeRate?: number;
       type?: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
       categoryId?: string | null;
       bankAccountId?: string | null;
@@ -97,10 +99,6 @@ export async function PUT(
     const updateData: UpdateData = {};
 
     if (name !== undefined) updateData.name = name;
-    if (amount !== undefined) {
-      updateData.amount = parseFloat(amount);
-      updateData.amountEur = parseFloat(amount); // TODO: Currency conversion
-    }
     if (type !== undefined) updateData.type = type;
     if (categoryId !== undefined) updateData.categoryId = categoryId || null;
     if (bankAccountId !== undefined) updateData.bankAccountId = bankAccountId || null;
@@ -108,8 +106,20 @@ export async function PUT(
       updateData.projects = { set: projectIdsToSet.map(pid => ({ id: pid })) };
     }
     if (date !== undefined) updateData.date = new Date(date);
-    if (currency !== undefined) updateData.currency = currency;
     if (excludeFromBudget !== undefined) updateData.excludeFromBudget = excludeFromBudget;
+
+    // Handle amount and currency changes together
+    const newAmount = amount !== undefined ? parseFloat(amount) : existing.amount.toNumber();
+    const newCurrency = currency !== undefined ? currency : existing.currency;
+
+    // Recalculate EUR amount if amount or currency changed
+    if (amount !== undefined || currency !== undefined) {
+      const { amountEur, exchangeRate } = await convertToEur(newAmount, newCurrency);
+      updateData.amount = newAmount;
+      updateData.currency = newCurrency;
+      updateData.amountEur = amountEur;
+      updateData.exchangeRate = exchangeRate;
+    }
 
     const expense = await prisma.expense.update({
       where: { id },

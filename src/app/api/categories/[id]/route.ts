@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { stripHtmlTags } from "@/lib/utils";
 
 // PUT - Update category
 export async function PUT(
@@ -15,11 +16,15 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name } = body;
+    // Note: isSystem is intentionally NOT extracted to prevent mass assignment
+    const { name, icon, color } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
+
+    // Sanitize inputs
+    const sanitizedName = stripHtmlTags(name, 100);
 
     const workspace = await prisma.workspace.findFirst({
       where: { members: { some: { userId: session.user.id } } },
@@ -46,7 +51,7 @@ export async function PUT(
     const duplicate = await prisma.category.findFirst({
       where: {
         workspaceId: workspace.id,
-        name: { equals: name, mode: "insensitive" },
+        name: { equals: sanitizedName, mode: "insensitive" },
         id: { not: id },
       },
     });
@@ -55,9 +60,20 @@ export async function PUT(
       return NextResponse.json({ error: "Category with this name already exists" }, { status: 400 });
     }
 
+    // Build update data - only include provided fields, never isSystem
+    const updateData: { name: string; icon?: string | null; color?: string | null } = {
+      name: sanitizedName,
+    };
+    if (icon !== undefined) {
+      updateData.icon = icon ? stripHtmlTags(icon, 50) : null;
+    }
+    if (color !== undefined) {
+      updateData.color = color ? stripHtmlTags(color, 7) : null;
+    }
+
     const category = await prisma.category.update({
       where: { id },
-      data: { name },
+      data: updateData,
     });
 
     return NextResponse.json({ category });

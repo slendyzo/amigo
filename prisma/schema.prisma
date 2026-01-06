@@ -128,14 +128,14 @@ model VerificationToken {
 
 model Workspace {
   id       String        @id @default(cuid())
-  name     String
+  name     String        @db.VarChar(100)
   type     WorkspaceType @default(PERSONAL)
   ownerId  String
 
   // Budget settings
   monthlyBudget    Decimal? @db.Decimal(12, 2) // Target monthly spending limit
-  defaultCurrency  String   @default("EUR")
-  language         String   @default("en") // User's preferred language (en, pt-PT, fr-FR)
+  defaultCurrency  String   @default("EUR") @db.VarChar(3)
+  language         String   @default("en") @db.VarChar(10) // User's preferred language (en, pt-PT, fr-FR)
 
   // Relations
   owner        User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
@@ -175,10 +175,10 @@ model WorkspaceMember {
 model BankAccount {
   id          String  @id @default(cuid())
   workspaceId String
-  name        String  // e.g., "Millennium Pessoal"
+  name        String  @db.VarChar(100) // e.g., "Millennium Pessoal"
   balance     Decimal @default(0) @db.Decimal(12, 2)
-  currency    String  @default("EUR")
-  icon        String? // Optional icon identifier
+  currency    String  @default("EUR") @db.VarChar(3)
+  icon        String? @db.VarChar(50) // Optional icon identifier
   isActive    Boolean @default(true)
 
   // Relations
@@ -200,9 +200,9 @@ model BankAccount {
 model Category {
   id          String  @id @default(cuid())
   workspaceId String
-  name        String  // e.g., "Dining", "Transport", "Utilities"
-  icon        String? // Optional icon identifier
-  color       String? // Hex color for UI
+  name        String  @db.VarChar(100) // e.g., "Dining", "Transport", "Utilities"
+  icon        String? @db.VarChar(50) // Optional icon identifier
+  color       String? @db.VarChar(7) // Hex color for UI (e.g., #FF5733)
   isSystem    Boolean @default(false) // System-defined categories can't be deleted
 
   // Relations
@@ -225,8 +225,8 @@ model Category {
 model Project {
   id          String  @id @default(cuid())
   workspaceId String
-  name        String  // e.g., "Casa", "Wedding", "Vacation"
-  description String?
+  name        String  @db.VarChar(100) // e.g., "Casa", "Wedding", "Vacation"
+  description String? @db.VarChar(500)
   budget      Decimal? @db.Decimal(12, 2) // Optional budget limit
   startDate   DateTime? // Project start date
   endDate     DateTime? // Project end date
@@ -254,15 +254,15 @@ model Expense {
   categoryId    String?
 
   // Core fields
-  name          String        // Cleaned name (e.g., "McDonalds")
-  rawInput      String?       // Original sloppy input for reference
-  description   String?
+  name          String        @db.VarChar(255) // Cleaned name (e.g., "McDonalds")
+  rawInput      String?       @db.VarChar(500) // Original sloppy input for reference
+  description   String?       @db.VarChar(1000)
   type          ExpenseType   @default(LIFESTYLE)
   status        ExpenseStatus @default(PAID)
 
   // Amount handling with currency conversion
   amount        Decimal       @db.Decimal(12, 2) // Original value
-  currency      String        @default("EUR")    // Original currency
+  currency      String        @default("EUR") @db.VarChar(3) // Original currency
   amountEur     Decimal       @db.Decimal(12, 2) // Converted to EUR at entry time
   exchangeRate  Decimal?      @db.Decimal(12, 6) // Rate used for conversion
 
@@ -272,7 +272,7 @@ model Expense {
   paidAt        DateTime?     // When actually paid
 
   // Metadata
-  merchant      String?       // Normalized merchant name
+  merchant      String?       @db.VarChar(255) // Normalized merchant name
   isRecurring   Boolean       @default(false)
   recurringTemplateId String? // Link to template if auto-generated
   importLogId   String?       // Link to import batch for bulk delete
@@ -306,10 +306,10 @@ model RecurringTemplate {
   categoryId    String?
   bankAccountId String?
 
-  name          String             // e.g., "Spotify", "Rent"
+  name          String             @db.VarChar(255) // e.g., "Spotify", "Rent"
   type          ExpenseType        // SURVIVAL_FIXED or SURVIVAL_VARIABLE
   amount        Decimal?           @db.Decimal(12, 2) // Fixed amount (null for variable)
-  currency      String             @default("EUR")
+  currency      String             @default("EUR") @db.VarChar(3)
 
   // Recurrence settings
   interval      RecurrenceInterval @default(MONTHLY)
@@ -343,8 +343,8 @@ model KeywordMapping {
   workspaceId String?  // null = global/system mapping
   categoryId  String?
 
-  keyword     String  // e.g., "mcd", "uber", "spotify"
-  expenseType String? // e.g., "SURVIVAL_FIXED", "LIFESTYLE"
+  keyword     String  @db.VarChar(100) // e.g., "mcd", "uber", "spotify"
+  expenseType String? @db.VarChar(20) // e.g., "SURVIVAL_FIXED", "LIFESTYLE"
   isSystem    Boolean @default(false)
 
   // Relations
@@ -439,14 +439,15 @@ model Income {
   bankAccountId String?
 
   // Core fields
-  name          String     // e.g., "Salary", "OLX Sale - iPhone"
-  description   String?
+  name          String     @db.VarChar(255) // e.g., "Salary", "OLX Sale - iPhone"
+  description   String?    @db.VarChar(1000)
   type          IncomeType @default(SALARY)
 
   // Amount handling
   amount        Decimal    @db.Decimal(12, 2)
-  currency      String     @default("EUR")
+  currency      String     @default("EUR") @db.VarChar(3)
   amountEur     Decimal    @db.Decimal(12, 2)
+  exchangeRate  Decimal?   @db.Decimal(12, 6) // Rate used for conversion
 
   // Date
   date          DateTime   // When received

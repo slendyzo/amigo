@@ -43,11 +43,21 @@ export default function AddExpenseModal({
   // Form state
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("EUR");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [expenseType, setExpenseType] = useState("LIFESTYLE");
   const [categoryId, setCategoryId] = useState("");
   const [bankAccountId, setBankAccountId] = useState("");
+
+  const CURRENCIES = ["EUR", "USD", "GBP", "BRL", "PLN"];
+  const CURRENCY_SYMBOLS: Record<string, string> = {
+    EUR: "€",
+    USD: "$",
+    GBP: "£",
+    BRL: "R$",
+    PLN: "zł",
+  };
 
   // Project/Tag state - supports multiple tags
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
@@ -56,6 +66,7 @@ export default function AddExpenseModal({
   const [localProjects, setLocalProjects] = useState<Project[]>(propProjects || []);
   const [localCategories, setLocalCategories] = useState<Category[]>(propCategories || []);
   const [localBankAccounts, setLocalBankAccounts] = useState<BankAccount[]>(propBankAccounts || []);
+  const [defaultCurrency, setDefaultCurrency] = useState("EUR");
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -73,19 +84,25 @@ export default function AddExpenseModal({
       const fetchData = async () => {
         setIsDataLoading(true);
         try {
-          const [catRes, projRes, bankRes] = await Promise.all([
+          const [catRes, projRes, bankRes, workspaceRes] = await Promise.all([
             fetch("/api/categories"),
             fetch("/api/projects"),
             fetch("/api/bank-accounts"),
+            fetch("/api/workspace"),
           ]);
-          const [catData, projData, bankData] = await Promise.all([
+          const [catData, projData, bankData, workspaceData] = await Promise.all([
             catRes.json(),
             projRes.json(),
             bankRes.json(),
+            workspaceRes.json(),
           ]);
           if (catData.categories) setLocalCategories(catData.categories);
           if (projData.projects) setLocalProjects(projData.projects);
           if (bankData.bankAccounts) setLocalBankAccounts(bankData.bankAccounts);
+          if (workspaceData.workspace?.defaultCurrency) {
+            setDefaultCurrency(workspaceData.workspace.defaultCurrency);
+            setCurrency(workspaceData.workspace.defaultCurrency);
+          }
         } catch (err) {
           console.error("Failed to fetch modal data:", err);
         } finally {
@@ -151,6 +168,7 @@ export default function AddExpenseModal({
     if (!isOpen) {
       setName("");
       setAmount("");
+      setCurrency(defaultCurrency);
       setDate(new Date().toISOString().split("T")[0]);
       setShowDatePicker(false);
       setExpenseType("LIFESTYLE");
@@ -161,7 +179,7 @@ export default function AddExpenseModal({
       setNewTagName("");
       setError("");
     }
-  }, [isOpen]);
+  }, [isOpen, defaultCurrency]);
 
   const handleCreateTag = async () => {
     if (!newTagName.trim()) return;
@@ -202,6 +220,7 @@ export default function AddExpenseModal({
         body: JSON.stringify({
           name,
           amount: parseFloat(amount),
+          currency,
           type: expenseType,
           categoryId: categoryId || undefined,
           bankAccountId: bankAccountId || undefined,
@@ -278,22 +297,37 @@ export default function AddExpenseModal({
             />
           </div>
 
-          {/* Amount */}
+          {/* Amount + Currency */}
           <div>
             <label className="block text-sm font-medium text-slate-700 mb-1">
               {t("howMuch")}
             </label>
-            <div className="relative">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">€</span>
-              <input
-                type="number"
-                step="0.01"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                required
-                className="w-full rounded-lg border border-slate-300 bg-white pl-8 pr-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              />
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                  {CURRENCY_SYMBOLS[currency]}
+                </span>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  required
+                  className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                />
+              </div>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-24 rounded-lg border border-slate-300 bg-white px-3 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              >
+                {CURRENCIES.map((curr) => (
+                  <option key={curr} value={curr}>
+                    {curr}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 

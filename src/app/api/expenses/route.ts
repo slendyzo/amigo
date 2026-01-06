@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { parseQuickAdd } from "@/lib/parser";
+import { convertToEur } from "@/lib/currency";
+import { stripHtmlTags } from "@/lib/utils";
 
 // GET - List expenses
 export async function GET(request: Request) {
@@ -67,7 +69,9 @@ export async function GET(request: Request) {
           id: true,
           name: true,
           amount: true,
+          currency: true,
           amountEur: true,
+          exchangeRate: true,
           type: true,
           date: true,
           isRecurring: true,
@@ -172,7 +176,7 @@ export async function POST(request: Request) {
       }
 
       expenseData = {
-        name: parsed.name,
+        name: stripHtmlTags(parsed.name, 255),
         amount: parsed.amount,
         type: mappedType,
         categoryId: category?.id || null,
@@ -185,7 +189,7 @@ export async function POST(request: Request) {
       }
 
       expenseData = {
-        name,
+        name: stripHtmlTags(name, 255),
         amount: parseFloat(amount),
         type: type || "LIFESTYLE",
         categoryId: categoryId || null,
@@ -208,16 +212,21 @@ export async function POST(request: Request) {
       expenseData.categoryId = defaultCategory.id;
     }
 
+    // Convert to EUR for consistent totals
+    const expenseCurrency = currency || workspace.defaultCurrency || "EUR";
+    const { amountEur, exchangeRate } = await convertToEur(expenseData.amount, expenseCurrency);
+
     const expense = await prisma.expense.create({
       data: {
         workspaceId: workspace.id,
         name: expenseData.name,
-        rawInput: quickAdd || null,
+        rawInput: quickAdd ? stripHtmlTags(quickAdd, 500) : null,
         type: expenseData.type,
         status: "PAID",
         amount: expenseData.amount,
-        currency: currency || "EUR",
-        amountEur: expenseData.amount, // TODO: Currency conversion
+        currency: expenseCurrency,
+        amountEur,
+        exchangeRate,
         date: date ? new Date(date) : new Date(),
         categoryId: expenseData.categoryId,
         bankAccountId: expenseData.bankAccountId,

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { stripHtmlTags } from "@/lib/utils";
 
 // GET - List categories
 export async function GET() {
@@ -42,11 +43,17 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name } = body;
+    // Note: isSystem is intentionally NOT extracted from body to prevent mass assignment
+    const { name, icon, color } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
+
+    // Sanitize inputs
+    const sanitizedName = stripHtmlTags(name, 100);
+    const sanitizedIcon = icon ? stripHtmlTags(icon, 50) : null;
+    const sanitizedColor = color ? stripHtmlTags(color, 7) : null;
 
     const workspace = await prisma.workspace.findFirst({
       where: { members: { some: { userId: session.user.id } } },
@@ -58,7 +65,7 @@ export async function POST(request: Request) {
 
     // Check for duplicate name
     const existing = await prisma.category.findFirst({
-      where: { workspaceId: workspace.id, name: { equals: name, mode: "insensitive" } },
+      where: { workspaceId: workspace.id, name: { equals: sanitizedName, mode: "insensitive" } },
     });
 
     if (existing) {
@@ -68,8 +75,10 @@ export async function POST(request: Request) {
     const category = await prisma.category.create({
       data: {
         workspaceId: workspace.id,
-        name,
-        isSystem: false,
+        name: sanitizedName,
+        icon: sanitizedIcon,
+        color: sanitizedColor,
+        isSystem: false, // Always false for user-created categories (cannot be overridden)
       },
     });
 

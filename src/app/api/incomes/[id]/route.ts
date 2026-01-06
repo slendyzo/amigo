@@ -94,12 +94,13 @@ export async function PUT(
     const income = await prisma.income.update({
       where: { id },
       data: {
-        name: name !== undefined ? name : existing.name,
-        description: description !== undefined ? description : existing.description,
+        name: name !== undefined ? String(name).slice(0, 255) : existing.name,
+        description: description !== undefined ? (description ? String(description).slice(0, 1000) : null) : existing.description,
         type: type ? (type as IncomeType) : existing.type,
         amount: parsedAmount,
         currency: incomeCurrency,
         amountEur: amountEur,
+        exchangeRate: exchangeRate, // Store exchange rate in database
         date: date ? new Date(date) : existing.date,
         bankAccountId: bankAccountId !== undefined ? (bankAccountId || null) : existing.bankAccountId,
         isRecurring: isRecurring !== undefined ? isRecurring : existing.isRecurring,
@@ -111,12 +112,7 @@ export async function PUT(
       },
     });
 
-    return NextResponse.json({
-      income: {
-        ...income,
-        exchangeRate: incomeCurrency !== "EUR" ? exchangeRate : undefined,
-      }
-    });
+    return NextResponse.json({ income });
   } catch (error) {
     console.error("Update income error:", error);
     return NextResponse.json({ error: "Failed to update income" }, { status: 500 });

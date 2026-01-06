@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { stripHtmlTags } from "@/lib/utils";
 
 // GET - List projects
 export async function GET() {
@@ -62,6 +63,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
+    // Sanitize inputs
+    const sanitizedName = stripHtmlTags(name, 100);
+    const sanitizedDescription = description ? stripHtmlTags(description, 500) : null;
+
     const workspace = await prisma.workspace.findFirst({
       where: { members: { some: { userId: session.user.id } } },
     });
@@ -72,7 +77,7 @@ export async function POST(request: Request) {
 
     // Check if project with same name already exists
     const existing = await prisma.project.findFirst({
-      where: { workspaceId: workspace.id, name },
+      where: { workspaceId: workspace.id, name: sanitizedName },
     });
 
     if (existing) {
@@ -82,8 +87,8 @@ export async function POST(request: Request) {
     const project = await prisma.project.create({
       data: {
         workspaceId: workspace.id,
-        name,
-        description: description || null,
+        name: sanitizedName,
+        description: sanitizedDescription,
         budget: budget ? parseFloat(budget) : null,
         startDate: startDate ? new Date(startDate) : null,
         endDate: endDate ? new Date(endDate) : null,

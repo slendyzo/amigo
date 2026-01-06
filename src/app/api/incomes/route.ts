@@ -132,12 +132,13 @@ export async function POST(request: NextRequest) {
     const income = await prisma.income.create({
       data: {
         workspaceId: membership.workspaceId,
-        name,
-        description: description || null,
+        name: name.slice(0, 255), // Enforce max length
+        description: description ? description.slice(0, 1000) : null,
         type: (type as IncomeType) || IncomeType.OTHER,
         amount: parsedAmount,
         currency: incomeCurrency,
         amountEur: amountEur,
+        exchangeRate: exchangeRate, // Store exchange rate in database
         date: incomeDate,
         bankAccountId: bankAccountId || null,
         isRecurring: isRecurring || false,
@@ -149,13 +150,7 @@ export async function POST(request: NextRequest) {
       },
     });
 
-    // Return with exchange rate info
-    return NextResponse.json({
-      income: {
-        ...income,
-        exchangeRate: incomeCurrency !== "EUR" ? exchangeRate : undefined,
-      }
-    }, { status: 201 });
+    return NextResponse.json({ income }, { status: 201 });
   } catch (error) {
     console.error("Failed to create income:", error);
     return NextResponse.json(

@@ -23,6 +23,7 @@ type Expense = {
   id: string;
   name: string;
   amount: number;
+  currency?: string;
   type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
   date: string;
   category: { id: string; name: string } | null;
@@ -54,6 +55,7 @@ export default function EditExpenseModal({
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
+  const [currency, setCurrency] = useState("EUR");
   const [categoryId, setCategoryId] = useState("");
   const [bankAccountId, setBankAccountId] = useState("");
   const [date, setDate] = useState("");
@@ -61,6 +63,15 @@ export default function EditExpenseModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+
+  const CURRENCIES = ["EUR", "USD", "GBP", "BRL", "PLN"];
+  const CURRENCY_SYMBOLS: Record<string, string> = {
+    EUR: "€",
+    USD: "$",
+    GBP: "£",
+    BRL: "R$",
+    PLN: "zł",
+  };
 
   // Tag/Project state - now supports multiple tags
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
@@ -97,6 +108,7 @@ export default function EditExpenseModal({
     if (expense) {
       setName(expense.name);
       setAmount(Number(expense.amount).toString());
+      setCurrency(expense.currency || "EUR");
       setCategoryId(expense.category?.id || "");
       setBankAccountId(expense.bankAccount?.id || "");
       setSelectedProjectIds(expense.projects?.map(p => p.id) || []);
@@ -149,6 +161,7 @@ export default function EditExpenseModal({
         body: JSON.stringify({
           name,
           amount: parseFloat(amount),
+          currency,
           type: expenseType,
           categoryId: categoryId || null,
           bankAccountId: bankAccountId || null,
@@ -220,36 +233,50 @@ export default function EditExpenseModal({
             />
           </div>
 
-          {/* Amount & Date */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t("amount")}
-              </label>
-              <div className="relative">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">€</span>
+          {/* Amount + Currency */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {t("amount")}
+            </label>
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+                  {CURRENCY_SYMBOLS[currency]}
+                </span>
                 <input
                   type="number"
                   step="0.01"
                   value={amount}
                   onChange={(e) => setAmount(e.target.value)}
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white pl-8 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                  className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
                 />
               </div>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="w-24 rounded-lg border border-slate-300 bg-white px-3 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              >
+                {CURRENCIES.map((curr) => (
+                  <option key={curr} value={curr}>
+                    {curr}
+                  </option>
+                ))}
+              </select>
             </div>
+          </div>
 
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t("date")}
-              </label>
-              <input
-                type="date"
-                value={date}
-                onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              />
-            </div>
+          {/* Date */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {t("date")}
+            </label>
+            <input
+              type="date"
+              value={date}
+              onChange={(e) => setDate(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+            />
           </div>
 
           {/* Project Tags */}
@@ -449,7 +476,7 @@ export default function EditExpenseModal({
             </button>
             <button
               type="submit"
-              disabled={isLoading || !name || !amount}
+              disabled={isLoading || !name || amount === ""}
               className="flex-1 rounded-lg bg-[#0070f3] px-4 py-2.5 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? t("saving") : t("saveChanges")}

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { convertToEur } from "@/lib/currency";
 
 // GET - Auto-generate expenses for templates with autoGenerate=true for current month
 export async function GET() {
@@ -86,6 +87,11 @@ export async function GET() {
       const expenseDay = Math.min(dayOfMonth, lastDayOfMonth);
       const expenseDate = new Date(targetYear, targetMonth, expenseDay);
 
+      // Convert template amount to EUR
+      const templateAmount = Number(template.amount) || 0;
+      const templateCurrency = template.currency || "EUR";
+      const { amountEur, exchangeRate } = await convertToEur(templateAmount, templateCurrency);
+
       expensesToCreate.push({
         workspaceId: workspace.id,
         categoryId: template.categoryId || defaultCategory.id,
@@ -93,9 +99,10 @@ export async function GET() {
         rawInput: `[Auto] ${template.name}`,
         type: template.type,
         status: "PENDING" as const,
-        amount: template.amount || 0, // Variable expenses start at 0
-        currency: template.currency,
-        amountEur: template.amount || 0,
+        amount: templateAmount,
+        currency: templateCurrency,
+        amountEur,
+        exchangeRate,
         date: expenseDate,
         isRecurring: true,
         recurringTemplateId: template.id,
@@ -255,6 +262,11 @@ export async function POST(request: Request) {
       const expenseDay = Math.min(dayOfMonth, lastDayOfMonth);
       const expenseDate = new Date(targetYear, targetMonth, expenseDay);
 
+      // Convert template amount to EUR
+      const templateAmount = Number(template.amount) || 0;
+      const templateCurrency = template.currency || "EUR";
+      const { amountEur, exchangeRate } = await convertToEur(templateAmount, templateCurrency);
+
       expensesToCreate.push({
         workspaceId: workspace.id,
         categoryId: template.categoryId || defaultCategory.id,
@@ -262,9 +274,10 @@ export async function POST(request: Request) {
         rawInput: `[Recurring] ${template.name}`,
         type: template.type,
         status: "PENDING" as const,
-        amount: template.amount || 0,
-        currency: template.currency,
-        amountEur: template.amount || 0, // Assuming EUR for now
+        amount: templateAmount,
+        currency: templateCurrency,
+        amountEur,
+        exchangeRate,
         date: expenseDate,
         isRecurring: true,
         recurringTemplateId: template.id,

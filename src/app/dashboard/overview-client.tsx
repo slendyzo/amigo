@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import AddExpenseModal from "@/components/add-expense-modal";
+import EditExpenseModal from "@/components/edit-expense-modal";
 import { LivingGauge } from "@/components/ui/living-gauge";
 import { useSwipe } from "@/hooks/use-swipe";
 
@@ -96,6 +97,20 @@ export default function DashboardOverview({
   // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  // Edit state
+  const [editingExpense, setEditingExpense] = useState<{
+    id: string;
+    name: string;
+    amount: number;
+    currency?: string;
+    type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
+    date: string;
+    category: { id: string; name: string } | null;
+    bankAccount: { id: string; name: string } | null;
+    projects: { id: string; name: string }[];
+  } | null>(null);
+  const [isLoadingExpense, setIsLoadingExpense] = useState(false);
 
   // Previous month data for burn chart (pre-loaded from server!)
   const [previousMonthExpenses, setPreviousMonthExpenses] = useState<Expense[]>(initialPreviousMonthExpenses);
@@ -411,6 +426,33 @@ export default function DashboardOverview({
       setExpenses(expenses.map((e) =>
         e.id === expense.id ? { ...e, excludeFromBudget: !newValue } : e
       ));
+    }
+  };
+
+  // Fetch full expense data for editing
+  const handleEditExpense = async (expenseId: string) => {
+    setIsLoadingExpense(true);
+    try {
+      const response = await fetch(`/api/expenses/${expenseId}`);
+      if (response.ok) {
+        const data = await response.json();
+        const exp = data.expense;
+        setEditingExpense({
+          id: exp.id,
+          name: exp.name,
+          amount: Number(exp.amount),
+          currency: exp.currency || "EUR",
+          type: exp.type,
+          date: exp.date,
+          category: exp.category,
+          bankAccount: exp.bankAccount,
+          projects: exp.projects || [],
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch expense:", error);
+    } finally {
+      setIsLoadingExpense(false);
     }
   };
 
@@ -845,6 +887,17 @@ export default function DashboardOverview({
                           )}
                         </svg>
                       </button>
+                      {/* Edit button */}
+                      <button
+                        onClick={() => handleEditExpense(expense.id)}
+                        disabled={isLoadingExpense}
+                        className="md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-400 active:text-blue-500 active:bg-blue-50 md:hover:text-blue-500 md:hover:bg-blue-50 rounded-lg transition-all tap-none disabled:opacity-50"
+                        aria-label="Edit expense"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                        </svg>
+                      </button>
                       {/* Delete button */}
                       <button
                         onClick={() => setConfirmDeleteId(expense.id)}
@@ -877,6 +930,20 @@ export default function DashboardOverview({
         }}
         categories={categories}
         bankAccounts={bankAccounts}
+      />
+
+      {/* Edit Expense Modal */}
+      <EditExpenseModal
+        isOpen={!!editingExpense}
+        onClose={() => setEditingExpense(null)}
+        expense={editingExpense}
+        categories={categories}
+        bankAccounts={bankAccounts}
+        projects={projects}
+        onSave={() => {
+          setEditingExpense(null);
+          fetchExpenses();
+        }}
       />
     </div>
   );

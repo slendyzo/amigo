@@ -1,10 +1,14 @@
 // Flexible Importer for Amigo
 // Handles various Excel/CSV formats with custom column mapping
+// Also supports OFX, QIF, and email parsing
 
 import ExcelJS from "exceljs";
 import * as XLSX from "xlsx";
+import * as ofxParser from "ofx-js";
 import { prisma } from "./db";
 import { ExpenseType } from "@prisma/client";
+import { convertToEur } from "./currency";
+import { stripHtmlTags } from "./utils";
 
 // Keywords to identify SURVIVAL_FIXED vs SURVIVAL_VARIABLE
 const FIXED_KEYWORDS = [
@@ -389,7 +393,8 @@ export async function importExpensesFromExcel(
   _userId: string,
   fileName: string,
   mapping?: ColumnMapping,
-  _duplicateHandling: DuplicateHandling = "skip"
+  _duplicateHandling: DuplicateHandling = "skip",
+  currency: string = "EUR"
 ): Promise<ImporterResult> {
   const errors: string[] = [];
   const allParsedRows: ParsedRow[] = [];
@@ -762,15 +767,21 @@ export async function importExpensesFromExcel(
 
     // Process incomes - import all directly (no duplicate detection needed)
     if (incomeRows.length > 0) {
-      const incomeData = incomeRows.map((row) => ({
-        workspaceId,
-        name: row.name,
-        amount: row.amount,
-        currency: "EUR",
-        amountEur: row.amount,
-        date: row.date!,
-        isRecurring: false,
-      }));
+      // Convert currency for each income
+      const incomeDataPromises = incomeRows.map(async (row) => {
+        const { amountEur, exchangeRate } = await convertToEur(row.amount, currency);
+        return {
+          workspaceId,
+          name: row.name,
+          amount: row.amount,
+          currency,
+          amountEur,
+          exchangeRate,
+          date: row.date!,
+          isRecurring: false,
+        };
+      });
+      const incomeData = await Promise.all(incomeDataPromises);
 
       const incomeResult = await prisma.income.createMany({
         data: incomeData,
@@ -788,6 +799,7 @@ export async function importExpensesFromExcel(
       // Use individual creates instead of createMany to get IDs back
       // This is needed for proper project sheet matching
       for (const row of regularExpenses) {
+        const { amountEur, exchangeRate } = await convertToEur(row.amount, currency);
         const created = await prisma.expense.create({
           data: {
             workspaceId,
@@ -798,8 +810,9 @@ export async function importExpensesFromExcel(
             type: row.type,
             status: "PAID",
             amount: row.amount,
-            currency: "EUR",
-            amountEur: row.amount,
+            currency,
+            amountEur,
+            exchangeRate,
             date: row.date!,
           },
         });
@@ -967,6 +980,7 @@ export async function importExpensesFromExcel(
       } else {
         // No matching expense found - create new one
         // This happens for project-only expenses that don't exist in monthly sheets
+        const { amountEur, exchangeRate } = await convertToEur(row.amount, currency);
         await prisma.expense.create({
           data: {
             workspaceId,
@@ -977,8 +991,9 @@ export async function importExpensesFromExcel(
             type: row.type,
             status: "PAID",
             amount: row.amount,
-            currency: "EUR",
-            amountEur: row.amount,
+            currency,
+            amountEur,
+            exchangeRate,
             date: row.date!,
             projects: {
               connect: { id: projectId },
@@ -1032,7 +1047,7 @@ export async function importExpensesFromExcel(
             name: candidate.name,
             type: candidate.type,
             amount: templateAmount,
-            currency: "EUR",
+            currency,
             interval: "MONTHLY",
             isActive: true,
             autoGenerate: shouldAutoGenerate,
@@ -1085,7 +1100,8 @@ export async function importExpensesFromCSV(
   userId: string,
   fileName: string,
   mapping?: ColumnMapping,
-  duplicateHandling: DuplicateHandling = "skip"
+  duplicateHandling: DuplicateHandling = "skip",
+  currency: string = "EUR"
 ): Promise<ImporterResult> {
   const workbook = new ExcelJS.Workbook();
   const worksheet = workbook.addWorksheet("Sheet1");
@@ -1102,7 +1118,7 @@ export async function importExpensesFromCSV(
   });
 
   const buffer = await workbook.xlsx.writeBuffer();
-  return importExpensesFromExcel(Buffer.from(buffer), workspaceId, userId, fileName, mapping, duplicateHandling);
+  return importExpensesFromExcel(Buffer.from(buffer), workspaceId, userId, fileName, mapping, duplicateHandling, currency);
 }
 
 function parseCsvLine(line: string, delimiter: string): string[] {
@@ -1133,7 +1149,8 @@ export async function importExpensesFromPDF(
   workspaceId: string,
   _userId: string,
   fileName: string,
-  _duplicateHandling: DuplicateHandling = "skip"
+  _duplicateHandling: DuplicateHandling = "skip",
+  currency: string = "EUR"
 ): Promise<ImporterResult> {
   const errors: string[] = [];
   const allParsedRows: ParsedRow[] = [];
@@ -1308,19 +1325,25 @@ export async function importExpensesFromPDF(
     // Insert all expenses - NO duplicate detection
     // Users buy the same things regularly, that's normal spending!
     if (allParsedRows.length > 0) {
-      const expenseData = allParsedRows.map((row) => ({
-        workspaceId,
-        categoryId: defaultCategory!.id,
-        importLogId: importLog.id,
-        name: row.name,
-        rawInput: row.rawInput,
-        type: row.type,
-        status: "PAID" as const,
-        amount: row.amount,
-        currency: "EUR",
-        amountEur: row.amount,
-        date: row.date!,
-      }));
+      // Convert currency for each expense
+      const expenseDataPromises = allParsedRows.map(async (row) => {
+        const { amountEur, exchangeRate } = await convertToEur(row.amount, currency);
+        return {
+          workspaceId,
+          categoryId: defaultCategory!.id,
+          importLogId: importLog.id,
+          name: row.name,
+          rawInput: row.rawInput,
+          type: row.type,
+          status: "PAID" as const,
+          amount: row.amount,
+          currency,
+          amountEur,
+          exchangeRate,
+          date: row.date!,
+        };
+      });
+      const expenseData = await Promise.all(expenseDataPromises);
 
       const result = await prisma.expense.createMany({
         data: expenseData,
@@ -1365,4 +1388,698 @@ export async function importExpensesFromPDF(
       duplicatesFound: 0,
     };
   }
+}
+
+// ============================================================================
+// OFX (Open Financial Exchange) Import
+// Standard format used by most banks for transaction export
+// ============================================================================
+
+/**
+ * Import expenses from OFX file
+ * OFX is a standard banking format - most banks can export this
+ */
+export async function importExpensesFromOFX(
+  content: string,
+  workspaceId: string,
+  userId: string,
+  fileName: string,
+  duplicateHandling: DuplicateHandling = "skip",
+  currency: string = "EUR"
+): Promise<ImporterResult> {
+  const errors: string[] = [];
+  const stats = {
+    survivalFixed: 0,
+    survivalVariable: 0,
+    lifestyle: 0,
+    project: 0,
+    incomes: 0,
+  };
+
+  try {
+    // Parse OFX content
+    const ofx = await ofxParser.parse(content);
+
+    // Navigate to transactions - OFX structure varies between bank and credit card statements
+    // Bank statements use BANKMSGSRSV1 -> STMTTRNRS -> STMTRS
+    // Credit card statements use CREDITCARDMSGSRSV1 -> CCSTMTTRNRS -> CCSTMTRS
+    const bankStmt = ofx.OFX?.BANKMSGSRSV1?.STMTTRNRS?.STMTRS;
+    const ccStmt = ofx.OFX?.CREDITCARDMSGSRSV1?.CCSTMTTRNRS?.CCSTMTRS;
+
+    const stmtrs = bankStmt || ccStmt;
+    if (!stmtrs) {
+      return {
+        success: false,
+        imported: 0,
+        failed: 0,
+        skipped: 0,
+        replaced: 0,
+        errors: ["No bank or credit card statement data found in OFX file"],
+        stats,
+        sheets: [],
+        recurringCandidates: [],
+        recurringTemplatesCreated: 0,
+        duplicatesFound: 0,
+      };
+    }
+
+    // Get currency from OFX if available
+    const ofxCurrency = stmtrs.CURDEF || currency;
+
+    // Get transactions from BANKTRANLIST
+    const transactions = stmtrs.BANKTRANLIST?.STMTTRN || [];
+
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      return {
+        success: false,
+        imported: 0,
+        failed: 0,
+        skipped: 0,
+        replaced: 0,
+        errors: ["No transactions found in OFX file"],
+        stats,
+        sheets: [],
+        recurringCandidates: [],
+        recurringTemplatesCreated: 0,
+        duplicatesFound: 0,
+      };
+    }
+
+    // Parse transactions
+    const parsedRows: ParsedRow[] = [];
+
+    for (let i = 0; i < transactions.length; i++) {
+      const txn = transactions[i];
+
+      try {
+        // Parse date (OFX format: YYYYMMDDHHMMSS or YYYYMMDD)
+        const dateStr = txn.DTPOSTED || "";
+        const year = parseInt(dateStr.substring(0, 4));
+        const month = parseInt(dateStr.substring(4, 6)) - 1;
+        const day = parseInt(dateStr.substring(6, 8));
+        const date = new Date(year, month, day);
+
+        if (isNaN(date.getTime())) {
+          errors.push(`Row ${i + 1}: Invalid date ${dateStr}`);
+          continue;
+        }
+
+        // Parse amount (negative = expense, positive = income)
+        const amount = parseFloat(txn.TRNAMT || "0");
+        if (amount === 0) continue;
+
+        // Get name from NAME or MEMO
+        const name = stripHtmlTags(txn.NAME || txn.MEMO || "Unknown Transaction", 255);
+
+        // Determine if income or expense
+        const isIncome = amount > 0;
+        const absAmount = Math.abs(amount);
+
+        // Determine expense type
+        const type = determineExpenseTypeSimple(name);
+
+        if (isIncome) {
+          stats.incomes++;
+        } else {
+          if (type === ExpenseType.SURVIVAL_FIXED) stats.survivalFixed++;
+          else if (type === ExpenseType.SURVIVAL_VARIABLE) stats.survivalVariable++;
+          else stats.lifestyle++;
+        }
+
+        parsedRows.push({
+          sheetName: "OFX",
+          rowNumber: i + 1,
+          date,
+          name,
+          rawInput: `${txn.NAME || ""} ${txn.MEMO || ""}`.trim(),
+          amount: absAmount,
+          type,
+          isIncome,
+        });
+      } catch (err) {
+        errors.push(`Row ${i + 1}: ${err instanceof Error ? err.message : "Parse error"}`);
+      }
+    }
+
+    // Create expenses and incomes
+    return await createExpensesAndIncomes(
+      parsedRows,
+      workspaceId,
+      fileName,
+      "ofx",
+      ofxCurrency,
+      duplicateHandling,
+      errors,
+      stats
+    );
+  } catch (error) {
+    console.error("OFX import error:", error);
+    return {
+      success: false,
+      imported: 0,
+      failed: 0,
+      skipped: 0,
+      replaced: 0,
+      errors: ["Failed to parse OFX file. The file may be corrupted or in an unsupported format."],
+      stats,
+      sheets: [],
+      recurringCandidates: [],
+      recurringTemplatesCreated: 0,
+      duplicatesFound: 0,
+    };
+  }
+}
+
+// ============================================================================
+// QIF (Quicken Interchange Format) Import
+// Older but still widely supported format
+// ============================================================================
+
+/**
+ * Import expenses from QIF file
+ * QIF is an older format but still supported by many banks
+ */
+export async function importExpensesFromQIF(
+  content: string,
+  workspaceId: string,
+  userId: string,
+  fileName: string,
+  duplicateHandling: DuplicateHandling = "skip",
+  currency: string = "EUR"
+): Promise<ImporterResult> {
+  const errors: string[] = [];
+  const stats = {
+    survivalFixed: 0,
+    survivalVariable: 0,
+    lifestyle: 0,
+    project: 0,
+    incomes: 0,
+  };
+
+  try {
+    const lines = content.split(/\r?\n/);
+    const parsedRows: ParsedRow[] = [];
+
+    let currentTxn: {
+      date?: Date | null;
+      amount?: number;
+      name?: string;
+      memo?: string;
+    } = {};
+    let rowNumber = 0;
+
+    for (const line of lines) {
+      const code = line.charAt(0);
+      const value = line.substring(1).trim();
+
+      switch (code) {
+        case "D": // Date
+          // QIF date formats: MM/DD/YY, MM/DD/YYYY, DD/MM/YY, etc.
+          currentTxn.date = parseQIFDate(value);
+          break;
+
+        case "T": // Amount
+        case "U": // Amount (alternate)
+          // Remove currency symbols and commas
+          const cleanAmount = value.replace(/[^0-9.\-]/g, "");
+          currentTxn.amount = parseFloat(cleanAmount) || 0;
+          break;
+
+        case "P": // Payee
+          currentTxn.name = stripHtmlTags(value, 255);
+          break;
+
+        case "M": // Memo
+          currentTxn.memo = value;
+          break;
+
+        case "^": // End of transaction
+          rowNumber++;
+          if (currentTxn.date && currentTxn.amount !== undefined) {
+            const isIncome = currentTxn.amount > 0;
+            const absAmount = Math.abs(currentTxn.amount);
+            const name = currentTxn.name || currentTxn.memo || "Unknown Transaction";
+            const type = determineExpenseTypeSimple(name);
+
+            if (isIncome) {
+              stats.incomes++;
+            } else {
+              if (type === ExpenseType.SURVIVAL_FIXED) stats.survivalFixed++;
+              else if (type === ExpenseType.SURVIVAL_VARIABLE) stats.survivalVariable++;
+              else stats.lifestyle++;
+            }
+
+            parsedRows.push({
+              sheetName: "QIF",
+              rowNumber,
+              date: currentTxn.date,
+              name,
+              rawInput: `${currentTxn.name || ""} ${currentTxn.memo || ""}`.trim(),
+              amount: absAmount,
+              type,
+              isIncome,
+            });
+          }
+          currentTxn = {};
+          break;
+      }
+    }
+
+    if (parsedRows.length === 0) {
+      return {
+        success: false,
+        imported: 0,
+        failed: 0,
+        skipped: 0,
+        replaced: 0,
+        errors: ["No valid transactions found in QIF file"],
+        stats,
+        sheets: [],
+        recurringCandidates: [],
+        recurringTemplatesCreated: 0,
+        duplicatesFound: 0,
+      };
+    }
+
+    return await createExpensesAndIncomes(
+      parsedRows,
+      workspaceId,
+      fileName,
+      "qif",
+      currency,
+      duplicateHandling,
+      errors,
+      stats
+    );
+  } catch (error) {
+    console.error("QIF import error:", error);
+    return {
+      success: false,
+      imported: 0,
+      failed: 0,
+      skipped: 0,
+      replaced: 0,
+      errors: ["Failed to parse QIF file. The file may be corrupted or in an unsupported format."],
+      stats,
+      sheets: [],
+      recurringCandidates: [],
+      recurringTemplatesCreated: 0,
+      duplicatesFound: 0,
+    };
+  }
+}
+
+/**
+ * Parse QIF date formats
+ */
+function parseQIFDate(value: string): Date | null {
+  if (!value) return null;
+
+  // Try MM/DD/YY or MM/DD/YYYY
+  const usMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})$/);
+  if (usMatch) {
+    const [, month, day, yearStr] = usMatch;
+    let year = parseInt(yearStr);
+    if (yearStr.length === 2) {
+      year = year > 50 ? 1900 + year : 2000 + year;
+    }
+    return new Date(year, parseInt(month) - 1, parseInt(day));
+  }
+
+  // Try DD/MM/YYYY (European)
+  const euMatch = value.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (euMatch) {
+    const [, day, month, year] = euMatch;
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  // Try YYYY-MM-DD (ISO)
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  if (isoMatch) {
+    const [, year, month, day] = isoMatch;
+    return new Date(parseInt(year), parseInt(month) - 1, parseInt(day));
+  }
+
+  return null;
+}
+
+// ============================================================================
+// Email Transaction Parser
+// Parse bank notification emails for automatic import
+// ============================================================================
+
+export interface ParsedEmailTransaction {
+  date: Date;
+  amount: number;
+  name: string;
+  currency: string;
+  bankName?: string;
+  cardLast4?: string;
+  isIncome: boolean;
+}
+
+/**
+ * Parse bank notification email content
+ * Supports common formats from major banks
+ */
+export function parseEmailTransaction(
+  subject: string,
+  body: string,
+  receivedDate: Date
+): ParsedEmailTransaction | null {
+  const fullText = `${subject}\n${body}`.toLowerCase();
+
+  // Detect bank by common patterns
+  const bankPatterns: Array<{
+    name: string;
+    patterns: RegExp[];
+    amountRegex: RegExp;
+    merchantRegex?: RegExp;
+    isExpense?: (text: string) => boolean;
+  }> = [
+    {
+      name: "Millennium BCP",
+      patterns: [/millennium/i, /bcp/i, /activobank/i],
+      amountRegex: /(?:valor|montante|amount)[:\s]*([€$£]?\s*[\d.,]+)/i,
+      merchantRegex: /(?:comerciante|merchant|em|at)[:\s]*([^\n\r]+)/i,
+      isExpense: (text) => /compra|purchase|pagamento|payment|débito|debit/i.test(text),
+    },
+    {
+      name: "Caixa Geral",
+      patterns: [/caixa geral/i, /cgd/i],
+      amountRegex: /(?:valor|montante)[:\s]*([€$£]?\s*[\d.,]+)/i,
+      merchantRegex: /(?:entidade|entity)[:\s]*([^\n\r]+)/i,
+      isExpense: (text) => /débito|debit|compra|purchase/i.test(text),
+    },
+    {
+      name: "Revolut",
+      patterns: [/revolut/i],
+      amountRegex: /([€$£]\s*[\d.,]+)/i,
+      merchantRegex: /(?:at|em|to)\s+([^\n\r€$£]+)/i,
+      isExpense: (text) => !/received|recebido|credited/i.test(text),
+    },
+    {
+      name: "N26",
+      patterns: [/n26/i, /number26/i],
+      amountRegex: /([€$£]\s*[\d.,]+)/i,
+      merchantRegex: /(?:at|to)\s+([^\n\r€$£]+)/i,
+      isExpense: (text) => /outgoing|sent|paid/i.test(text),
+    },
+    {
+      name: "Wise",
+      patterns: [/wise/i, /transferwise/i],
+      amountRegex: /([€$£]\s*[\d.,]+)/i,
+      merchantRegex: /(?:to|para)\s+([^\n\r€$£]+)/i,
+      isExpense: (text) => /sent|paid|converted/i.test(text),
+    },
+    {
+      name: "PayPal",
+      patterns: [/paypal/i],
+      amountRegex: /([€$£]\s*[\d.,]+)/i,
+      merchantRegex: /(?:to|para|payment to)\s+([^\n\r€$£]+)/i,
+      isExpense: (text) => /sent|payment|paid/i.test(text) && !/received/i.test(text),
+    },
+    // Generic pattern for unrecognized banks
+    {
+      name: "Generic",
+      patterns: [/transaction|transação|movement|movimento/i],
+      amountRegex: /([€$£]?\s*[\d]+[.,][\d]{2})/i,
+      merchantRegex: /(?:at|em|merchant|comerciante)[:\s]*([^\n\r]+)/i,
+      isExpense: () => true,
+    },
+  ];
+
+  // Try each bank pattern
+  for (const bank of bankPatterns) {
+    const isThisBank = bank.patterns.some(p => p.test(fullText));
+    if (!isThisBank && bank.name !== "Generic") continue;
+
+    // Extract amount
+    const amountMatch = fullText.match(bank.amountRegex);
+    if (!amountMatch) continue;
+
+    let amountStr = amountMatch[1];
+    // Detect currency
+    let currency = "EUR";
+    if (amountStr.includes("$")) currency = "USD";
+    else if (amountStr.includes("£")) currency = "GBP";
+    else if (amountStr.includes("R$")) currency = "BRL";
+
+    // Clean amount
+    amountStr = amountStr.replace(/[€$£R\s]/g, "");
+    // Handle European format (1.234,56) vs US format (1,234.56)
+    if (amountStr.includes(",") && amountStr.includes(".")) {
+      // If comma comes after dot, it's European
+      if (amountStr.lastIndexOf(",") > amountStr.lastIndexOf(".")) {
+        amountStr = amountStr.replace(/\./g, "").replace(",", ".");
+      } else {
+        amountStr = amountStr.replace(/,/g, "");
+      }
+    } else if (amountStr.includes(",") && !amountStr.includes(".")) {
+      // Single comma - check if it's decimal separator
+      const parts = amountStr.split(",");
+      if (parts[1] && parts[1].length === 2) {
+        amountStr = amountStr.replace(",", ".");
+      } else {
+        amountStr = amountStr.replace(",", "");
+      }
+    }
+
+    const amount = parseFloat(amountStr);
+    if (isNaN(amount) || amount === 0) continue;
+
+    // Extract merchant/name
+    let name = "Unknown Transaction";
+    if (bank.merchantRegex) {
+      const merchantMatch = fullText.match(bank.merchantRegex);
+      if (merchantMatch) {
+        name = stripHtmlTags(merchantMatch[1].trim(), 255);
+        // Clean up common suffixes
+        name = name.replace(/\s*\d{4}\s*$/, ""); // Remove card last 4
+        name = name.replace(/\s*[€$£][\d.,]+\s*$/, ""); // Remove amount at end
+      }
+    }
+
+    // Determine if expense or income
+    const isExpense = bank.isExpense ? bank.isExpense(fullText) : true;
+
+    // Extract card last 4 if present
+    const cardMatch = fullText.match(/\*{4,}(\d{4})|card.*?(\d{4})|cartão.*?(\d{4})/i);
+    const cardLast4 = cardMatch ? (cardMatch[1] || cardMatch[2] || cardMatch[3]) : undefined;
+
+    return {
+      date: receivedDate,
+      amount,
+      name,
+      currency,
+      bankName: bank.name !== "Generic" ? bank.name : undefined,
+      cardLast4,
+      isIncome: !isExpense,
+    };
+  }
+
+  return null;
+}
+
+/**
+ * Import a single parsed email transaction
+ */
+export async function importEmailTransaction(
+  transaction: ParsedEmailTransaction,
+  workspaceId: string,
+  bankAccountId?: string
+): Promise<{ success: boolean; expenseId?: string; incomeId?: string; error?: string }> {
+  try {
+    // Get default category
+    let defaultCategory = await prisma.category.findFirst({
+      where: { workspaceId, name: "Uncategorized" },
+    });
+
+    if (!defaultCategory) {
+      defaultCategory = await prisma.category.create({
+        data: { workspaceId, name: "Uncategorized", isSystem: true },
+      });
+    }
+
+    // Convert currency
+    const { amountEur, exchangeRate } = await convertToEur(transaction.amount, transaction.currency);
+
+    if (transaction.isIncome) {
+      // Create income
+      const income = await prisma.income.create({
+        data: {
+          workspaceId,
+          bankAccountId: bankAccountId || null,
+          name: transaction.name,
+          type: "OTHER",
+          amount: transaction.amount,
+          currency: transaction.currency,
+          amountEur,
+          exchangeRate,
+          date: transaction.date,
+        },
+      });
+      return { success: true, incomeId: income.id };
+    } else {
+      // Determine expense type
+      const type = determineExpenseTypeSimple(transaction.name);
+
+      // Create expense
+      const expense = await prisma.expense.create({
+        data: {
+          workspaceId,
+          bankAccountId: bankAccountId || null,
+          categoryId: defaultCategory.id,
+          name: transaction.name,
+          rawInput: `[Email] ${transaction.bankName || "Bank"}: ${transaction.name}`,
+          type,
+          status: "PAID",
+          amount: transaction.amount,
+          currency: transaction.currency,
+          amountEur,
+          exchangeRate,
+          date: transaction.date,
+        },
+      });
+      return { success: true, expenseId: expense.id };
+    }
+  } catch (error) {
+    console.error("Email import error:", error);
+    return { success: false, error: error instanceof Error ? error.message : "Unknown error" };
+  }
+}
+
+// ============================================================================
+// Helper: Create expenses and incomes from parsed rows
+// ============================================================================
+
+async function createExpensesAndIncomes(
+  parsedRows: ParsedRow[],
+  workspaceId: string,
+  fileName: string,
+  fileType: string,
+  currency: string,
+  duplicateHandling: DuplicateHandling,
+  errors: string[],
+  stats: ImporterResult["stats"]
+): Promise<ImporterResult> {
+  // Get default category
+  let defaultCategory = await prisma.category.findFirst({
+    where: { workspaceId, name: "Uncategorized" },
+  });
+
+  if (!defaultCategory) {
+    defaultCategory = await prisma.category.create({
+      data: { workspaceId, name: "Uncategorized", isSystem: true },
+    });
+  }
+
+  // Create import log
+  const importLog = await prisma.importLog.create({
+    data: {
+      workspaceId,
+      fileName,
+      fileType,
+      rowsTotal: parsedRows.length,
+      rowsSuccess: 0,
+      rowsFailed: errors.length,
+      errors: errors.length > 0 ? JSON.stringify(errors) : null,
+    },
+  });
+
+  // Separate expenses and incomes
+  const expenses = parsedRows.filter(r => !r.isIncome && r.date);
+  const incomes = parsedRows.filter(r => r.isIncome && r.date);
+
+  let expensesCreated = 0;
+  let incomesCreated = 0;
+
+  // Create expenses
+  if (expenses.length > 0) {
+    const expenseDataPromises = expenses.map(async (row) => {
+      const { amountEur, exchangeRate } = await convertToEur(row.amount, currency);
+      return {
+        workspaceId,
+        categoryId: defaultCategory!.id,
+        importLogId: importLog.id,
+        name: row.name,
+        rawInput: row.rawInput,
+        type: row.type,
+        status: "PAID" as const,
+        amount: row.amount,
+        currency,
+        amountEur,
+        exchangeRate,
+        date: row.date!,
+      };
+    });
+    const expenseData = await Promise.all(expenseDataPromises);
+
+    const result = await prisma.expense.createMany({
+      data: expenseData,
+    });
+    expensesCreated = result.count;
+  }
+
+  // Create incomes
+  if (incomes.length > 0) {
+    const incomeDataPromises = incomes.map(async (row) => {
+      const { amountEur, exchangeRate } = await convertToEur(row.amount, currency);
+      return {
+        workspaceId,
+        name: row.name,
+        type: "OTHER" as const,
+        amount: row.amount,
+        currency,
+        amountEur,
+        exchangeRate,
+        date: row.date!,
+      };
+    });
+    const incomeData = await Promise.all(incomeDataPromises);
+
+    const result = await prisma.income.createMany({
+      data: incomeData,
+    });
+    incomesCreated = result.count;
+  }
+
+  // Update import log
+  await prisma.importLog.update({
+    where: { id: importLog.id },
+    data: { rowsSuccess: expensesCreated + incomesCreated },
+  });
+
+  return {
+    success: true,
+    imported: expensesCreated + incomesCreated,
+    failed: errors.length,
+    skipped: 0,
+    replaced: 0,
+    errors: errors.slice(0, 20),
+    stats,
+    sheets: [fileType.toUpperCase()],
+    recurringCandidates: [],
+    recurringTemplatesCreated: 0,
+    duplicatesFound: 0,
+  };
+}
+
+/**
+ * Determine expense type from name using keywords (simple version for imports)
+ */
+function determineExpenseTypeSimple(name: string): ExpenseType {
+  const nameLower = name.toLowerCase();
+
+  // Check for fixed expenses
+  if (FIXED_KEYWORDS.some(k => nameLower.includes(k))) {
+    return ExpenseType.SURVIVAL_FIXED;
+  }
+
+  // Check for variable utilities
+  if (VARIABLE_KEYWORDS.some(k => nameLower.includes(k))) {
+    return ExpenseType.SURVIVAL_VARIABLE;
+  }
+
+  return ExpenseType.LIFESTYLE;
 }

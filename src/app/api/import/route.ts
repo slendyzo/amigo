@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { importExpensesFromExcel, importExpensesFromCSV, importExpensesFromPDF, ColumnMapping, DuplicateHandling } from "@/lib/importer";
+import {
+  importExpensesFromExcel,
+  importExpensesFromCSV,
+  importExpensesFromPDF,
+  importExpensesFromOFX,
+  importExpensesFromQIF,
+  ColumnMapping,
+  DuplicateHandling
+} from "@/lib/importer";
 
 export async function POST(request: Request) {
   try {
@@ -30,10 +38,14 @@ export async function POST(request: Request) {
     const file = formData.get("file") as File | null;
     const mappingJson = formData.get("mapping") as string | null;
     const duplicateHandlingValue = formData.get("duplicateHandling") as string | null;
+    const currencyValue = formData.get("currency") as string | null;
 
     // Default to "skip" if not provided
     const duplicateHandling: DuplicateHandling =
       duplicateHandlingValue === "replace" ? "replace" : "skip";
+
+    // Use provided currency or fall back to workspace default
+    const currency = currencyValue || workspace.defaultCurrency || "EUR";
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
@@ -62,7 +74,8 @@ export async function POST(request: Request) {
         session.user.id,
         fileName,
         mapping,
-        duplicateHandling
+        duplicateHandling,
+        currency
       );
     } else if (fileType === "xlsx" || fileType === "xls") {
       const buffer = await file.arrayBuffer();
@@ -72,7 +85,8 @@ export async function POST(request: Request) {
         session.user.id,
         fileName,
         mapping,
-        duplicateHandling
+        duplicateHandling,
+        currency
       );
     } else if (fileType === "pdf") {
       const buffer = await file.arrayBuffer();
@@ -81,11 +95,34 @@ export async function POST(request: Request) {
         workspace.id,
         session.user.id,
         fileName,
-        duplicateHandling
+        duplicateHandling,
+        currency
+      );
+    } else if (fileType === "ofx" || fileType === "qfx") {
+      // OFX/QFX - Open Financial Exchange format
+      const text = await file.text();
+      result = await importExpensesFromOFX(
+        text,
+        workspace.id,
+        session.user.id,
+        fileName,
+        duplicateHandling,
+        currency
+      );
+    } else if (fileType === "qif") {
+      // QIF - Quicken Interchange Format
+      const text = await file.text();
+      result = await importExpensesFromQIF(
+        text,
+        workspace.id,
+        session.user.id,
+        fileName,
+        duplicateHandling,
+        currency
       );
     } else {
       return NextResponse.json(
-        { error: "Unsupported file type. Please upload CSV, Excel, or PDF files." },
+        { error: "Unsupported file type. Please upload CSV, Excel, PDF, OFX, or QIF files." },
         { status: 400 }
       );
     }
