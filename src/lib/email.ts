@@ -1,8 +1,6 @@
 import { Resend } from "resend";
 
-// Use Resend's default domain until custom domain is verified
-// To use custom domain: verify amigo.slendyzo.pt in Resend dashboard, then set EMAIL_FROM env var
-const FROM_EMAIL = process.env.EMAIL_FROM || "VibeFinance <onboarding@resend.dev>";
+const FROM_EMAIL = process.env.EMAIL_FROM || "VibeFinance <noreply@send.amigo.slendyzo.pt>";
 
 // Lazy initialization to avoid build-time errors when API key is not set
 let resendClient: Resend | null = null;
