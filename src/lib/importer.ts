@@ -501,6 +501,22 @@ export async function importExpensesFromExcel(
         // Skip empty rows or total rows
         if (!rawName || rawName.toLowerCase() === "total") return;
 
+        // Skip SUBTOTAL formula rows (these are summary rows in Excel)
+        // Check both the raw cell value and the formula property
+        const amountCellRaw = amountCell.value;
+        if (amountCellRaw && typeof amountCellRaw === "object" && "formula" in amountCellRaw) {
+          const formula = (amountCellRaw as { formula: string }).formula;
+          if (formula && formula.toUpperCase().includes("SUBTOTAL")) {
+            console.log(`    Skipping SUBTOTAL row: "${rawName}"`);
+            return;
+          }
+        }
+        // Also check if rawAmount string contains SUBTOTAL (in case formula wasn't parsed as object)
+        if (typeof rawAmount === "string" && rawAmount.toUpperCase().includes("SUBTOTAL")) {
+          console.log(`    Skipping SUBTOTAL row: "${rawName}"`);
+          return;
+        }
+
         // Parse amount - handles empty/null as 0
         const rawAmountValue = rawAmount ? parseAmountRaw(rawAmount) : 0;
         const amount = Math.abs(rawAmountValue);
@@ -785,32 +801,47 @@ export async function importExpensesFromExcel(
       totalCreated += regularResult.count;
     }
 
-    // Process project expenses - link to existing expenses if possible
-    // Project sheets often reference expenses that exist in regular monthly sheets
-    // We should link to existing expenses rather than creating duplicates
+    // Process project expenses - GHOST SHEET STRATEGY
+    // Project sheets (like "Casa") are meant to TAG existing expenses, not create new ones
+    // They reference expenses that already exist in monthly sheets
+    //
+    // Strategy:
+    // 1. Try to find matching expense by name (fuzzy) + amount (with €1 tolerance)
+    // 2. If found: link it to the project (tag it)
+    // 3. If NOT found: still create it (might be a project-only expense)
+    //
+    // The monthly sheet is the SOURCE OF TRUTH for amounts
     let projectExpensesLinked = 0;
     let projectExpensesCreated = 0;
+    let projectAmountMismatches = 0;
+
+    // Helper function to normalize names for fuzzy matching
+    const normalizeName = (name: string): string => {
+      return name
+        .toLowerCase()
+        .trim()
+        .replace(/[^\w\s]/g, "") // Remove special chars
+        .replace(/\s+/g, " "); // Normalize whitespace
+    };
 
     for (const row of projectExpenses) {
       const projectId = projectMap[row.sheetName.toLowerCase()];
+      const normalizedRowName = normalizeName(row.name);
 
-      // Look for an existing expense with matching name, amount, and approximate date
-      // We use a date range (same month) because project sheets may not have exact dates
-      const dateStart = new Date(row.date!.getFullYear(), row.date!.getMonth(), 1);
-      const dateEnd = new Date(row.date!.getFullYear(), row.date!.getMonth() + 1, 0);
-
-      const existingExpense = await prisma.expense.findFirst({
+      // Search for matching expense in the workspace
+      // First try: exact name match with amount tolerance (±€1)
+      // Search across all dates since Casa items may not have exact date info
+      let existingExpense = await prisma.expense.findFirst({
         where: {
           workspaceId,
-          amountEur: row.amount,
-          date: {
-            gte: dateStart,
-            lte: dateEnd,
-          },
-          // Use case-insensitive search
           name: {
             equals: row.name,
             mode: "insensitive",
+          },
+          // Amount tolerance: within €1 of the project sheet amount
+          amountEur: {
+            gte: row.amount - 1,
+            lte: row.amount + 1,
           },
           // Don't match expenses already linked to this project
           NOT: {
@@ -820,6 +851,38 @@ export async function importExpensesFromExcel(
           },
         },
       });
+
+      // Second try: if no exact name match, try fuzzy match by fetching candidates
+      if (!existingExpense) {
+        // Get all expenses with similar amounts (within €2 to cast a wider net)
+        const candidates = await prisma.expense.findMany({
+          where: {
+            workspaceId,
+            amountEur: {
+              gte: row.amount - 2,
+              lte: row.amount + 2,
+            },
+            NOT: {
+              projects: {
+                some: { id: projectId },
+              },
+            },
+          },
+          take: 50, // Limit to avoid performance issues
+        });
+
+        // Find best match by normalized name similarity
+        for (const candidate of candidates) {
+          const normalizedCandidateName = normalizeName(candidate.name);
+          // Check if names are similar (one contains the other or high overlap)
+          if (normalizedCandidateName.includes(normalizedRowName) ||
+              normalizedRowName.includes(normalizedCandidateName) ||
+              normalizedCandidateName === normalizedRowName) {
+            existingExpense = candidate;
+            break;
+          }
+        }
+      }
 
       if (existingExpense) {
         // Link existing expense to the project
@@ -832,9 +895,18 @@ export async function importExpensesFromExcel(
           },
         });
         projectExpensesLinked++;
-        console.log(`  → Linked existing expense to project: "${row.name}" €${row.amount}`);
+
+        // Log if there was an amount difference (monthly sheet is source of truth)
+        const amountDiff = Math.abs(Number(existingExpense.amountEur) - row.amount);
+        if (amountDiff > 0.01) {
+          projectAmountMismatches++;
+          console.log(`  → Linked "${row.name}" to project (amount mismatch: project €${row.amount} vs monthly €${existingExpense.amountEur}, keeping monthly)`);
+        } else {
+          console.log(`  → Linked existing expense to project: "${row.name}" €${row.amount}`);
+        }
       } else {
-        // Create new expense for this project item
+        // No matching expense found - create new one
+        // This happens for project-only expenses that don't exist in monthly sheets
         await prisma.expense.create({
           data: {
             workspaceId,
@@ -855,11 +927,11 @@ export async function importExpensesFromExcel(
         });
         totalCreated++;
         projectExpensesCreated++;
-        console.log(`  → Created new project expense: "${row.name}" €${row.amount}`);
+        console.log(`  → Created new project expense (no match found): "${row.name}" €${row.amount}`);
       }
     }
 
-    console.log(`Project expenses: ${projectExpensesLinked} linked to existing, ${projectExpensesCreated} created new`);
+    console.log(`Project expenses: ${projectExpensesLinked} linked to existing, ${projectExpensesCreated} created new, ${projectAmountMismatches} had amount mismatches (monthly amount kept)`);
 
     // Update import log with actual success count
     await prisma.importLog.update({
