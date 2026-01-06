@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import MobileNav from "./mobile-nav";
 import GlobalAddButton from "./global-add-button";
 import FeedbackButton from "./feedback-button";
+import IOSInstallPrompt from "./ios-install-prompt";
 import type { ReactNode } from "react";
 
 // Navigation grouped by section (keys for translation)
@@ -274,6 +275,9 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
 
       {/* Feedback Button */}
       <FeedbackButton />
+
+      {/* iOS Install Prompt */}
+      <IOSInstallPrompt />
     </div>
   );
 }
