@@ -1,16 +1,18 @@
 import { Resend } from "resend";
 
-const FROM_EMAIL = process.env.EMAIL_FROM || "VibeFinance <noreply@send.amigo.slendyzo.pt>";
+const FROM_EMAIL = process.env.EMAIL_FROM || "Amigo <noreply@send.amigo.slendyzo.pt>";
 
 // Lazy initialization to avoid build-time errors when API key is not set
 let resendClient: Resend | null = null;
 
 function getResendClient(): Resend {
   if (!resendClient) {
-    if (!process.env.RESEND_API_KEY) {
+    const apiKey = process.env.RESEND_API_KEY;
+    console.log("[Email] Initializing Resend client, API key present:", !!apiKey, "key prefix:", apiKey?.substring(0, 10));
+    if (!apiKey) {
       throw new Error("RESEND_API_KEY environment variable is not set");
     }
-    resendClient = new Resend(process.env.RESEND_API_KEY);
+    resendClient = new Resend(apiKey);
   }
   return resendClient;
 }
@@ -22,12 +24,16 @@ export async function sendPasswordResetEmail(
 ): Promise<{ success: boolean; error?: string }> {
   const resetUrl = `${process.env.AUTH_URL || "http://localhost:3000"}/auth/reset-password?token=${token}`;
 
+  console.log("[Email] Attempting to send password reset email to:", email);
+  console.log("[Email] Reset URL:", resetUrl);
+  console.log("[Email] FROM:", FROM_EMAIL);
+
   try {
     const resend = getResendClient();
-    const { error } = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to: email,
-      subject: "Reset your VibeFinance password",
+      subject: "Reset your Amigo password",
       html: `
         <!DOCTYPE html>
         <html>
@@ -37,7 +43,7 @@ export async function sendPasswordResetEmail(
         </head>
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
           <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
-            <h1 style="color: white; margin: 0; font-size: 24px;">VibeFinance</h1>
+            <h1 style="color: white; margin: 0; font-size: 24px;">Amigo</h1>
           </div>
           <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
             <h2 style="color: #1f2937; margin-top: 0;">Reset your password</h2>
@@ -58,7 +64,7 @@ export async function sendPasswordResetEmail(
         </html>
       `,
       text: `
-Reset your VibeFinance password
+Reset your Amigo password
 
 Hi${userName ? ` ${userName}` : ""},
 
@@ -73,10 +79,11 @@ If you didn't request this password reset, you can safely ignore this email. You
     });
 
     if (error) {
-      console.error("Failed to send password reset email:", error);
+      console.error("[Email] Failed to send password reset email:", error);
       return { success: false, error: error.message };
     }
 
+    console.log("[Email] Successfully sent email, ID:", data?.id);
     return { success: true };
   } catch (err) {
     console.error("Email sending error:", err);
