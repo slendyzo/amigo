@@ -2,6 +2,61 @@ import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 
+// Blocked disposable/temporary email domains
+const BLOCKED_EMAIL_DOMAINS = [
+  "roratu.com",
+  "tempmail.com",
+  "temp-mail.org",
+  "guerrillamail.com",
+  "guerrillamail.org",
+  "mailinator.com",
+  "10minutemail.com",
+  "10minutemail.net",
+  "throwaway.email",
+  "fakeinbox.com",
+  "trashmail.com",
+  "trashmail.net",
+  "getnada.com",
+  "tempail.com",
+  "mohmal.com",
+  "dispostable.com",
+  "mailnesia.com",
+  "maildrop.cc",
+  "mintemail.com",
+  "yopmail.com",
+  "sharklasers.com",
+  "spam4.me",
+  "grr.la",
+  "guerrillamailblock.com",
+  "pokemail.net",
+  "spamgourmet.com",
+  "mytrashmail.com",
+  "mt2009.com",
+  "thankyou2010.com",
+  "trash2009.com",
+  "mt2014.com",
+  "tempinbox.com",
+  "discard.email",
+  "discardmail.com",
+  "spambog.com",
+  "spambog.de",
+  "spambog.ru",
+  "0-mail.com",
+  "disposemail.com",
+  "mailcatch.com",
+  "mail-temporaire.fr",
+  "jetable.org",
+  "emailtemporario.com.br",
+];
+
+function isBlockedEmailDomain(email: string): boolean {
+  const domain = email.split("@")[1]?.toLowerCase();
+  if (!domain) return false;
+  return BLOCKED_EMAIL_DOMAINS.some(
+    (blocked) => domain === blocked || domain.endsWith("." + blocked)
+  );
+}
+
 export async function POST(request: Request) {
   try {
     const { name, username, email, password } = await request.json();
@@ -9,6 +64,14 @@ export async function POST(request: Request) {
     if (!username || !email || !password) {
       return NextResponse.json(
         { error: "Username, email, and password are required" },
+        { status: 400 }
+      );
+    }
+
+    // Check for blocked email domains
+    if (isBlockedEmailDomain(email)) {
+      return NextResponse.json(
+        { error: "Please use a valid email address. Temporary or disposable email addresses are not allowed." },
         { status: 400 }
       );
     }
