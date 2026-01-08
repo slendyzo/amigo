@@ -659,8 +659,11 @@
   "authPages": {
     "tagline": "O teu gestor de despesas amigável",
     "infoTrack": "Controla despesas e orçamentos",
+    "infoTrackDesc": "Categoriza gastos, define orçamentos e vê para onde vai o teu dinheiro",
     "infoPrivate": "Os teus dados ficam privados",
+    "infoPrivateDesc": "Opção de auto-hospedagem disponível. Sem anúncios, sem venda de dados",
     "infoOpenSource": "100% código aberto",
+    "infoOpenSourceDesc": "Código totalmente transparente no GitHub. Audita tu mesmo",
     "signInToAccount": "Inicia sessão na tua conta",
     "createYourAccount": "Cria a tua conta",
     "continueWithGoogle": "Continuar com Google",

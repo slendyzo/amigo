@@ -55,35 +55,66 @@ function SignInForm() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
+    <main className="flex min-h-screen flex-col md:flex-row items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
       {/* Language Switcher */}
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 z-10">
         <LanguageSwitcher />
       </div>
 
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
+      {/* Left side - Info (hidden on mobile, shown on desktop) */}
+      <div className="hidden md:flex md:flex-col md:items-center md:justify-center md:flex-1 md:pr-12 md:max-w-md">
+        <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-3">
           Amigo
         </h1>
-        <p className="text-center text-slate-600 dark:text-slate-400 mb-6">
+        <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 text-center">
           {t("tagline")}
         </p>
 
-        {/* Info cards */}
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          <div className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-            <div className="text-lg mb-1">📊</div>
-            <div className="text-xs text-slate-600 dark:text-slate-400">{t("infoTrack")}</div>
+        {/* Feature list */}
+        <div className="space-y-4 w-full">
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">📊</div>
+            <div>
+              <div className="font-medium text-slate-900 dark:text-white">{t("infoTrack")}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">{t("infoTrackDesc")}</div>
+            </div>
           </div>
-          <div className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-            <div className="text-lg mb-1">🔒</div>
-            <div className="text-xs text-slate-600 dark:text-slate-400">{t("infoPrivate")}</div>
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">🔒</div>
+            <div>
+              <div className="font-medium text-slate-900 dark:text-white">{t("infoPrivate")}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">{t("infoPrivateDesc")}</div>
+            </div>
           </div>
-          <div className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
-            <div className="text-lg mb-1">🌐</div>
-            <div className="text-xs text-slate-600 dark:text-slate-400">{t("infoOpenSource")}</div>
+          <div className="flex items-start gap-3">
+            <div className="text-2xl">🌐</div>
+            <div>
+              <div className="font-medium text-slate-900 dark:text-white">{t("infoOpenSource")}</div>
+              <div className="text-sm text-slate-500 dark:text-slate-400">{t("infoOpenSourceDesc")}</div>
+            </div>
           </div>
         </div>
+      </div>
+
+      {/* Vertical divider (desktop only) */}
+      <div className="hidden md:block w-px h-96 bg-slate-200 dark:bg-slate-800 mx-8" />
+
+      {/* Right side - Login form */}
+      <div className="w-full max-w-md md:flex-1 md:max-w-sm md:pl-4">
+        {/* Mobile header */}
+        <div className="md:hidden text-center mb-6">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+            Amigo
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400">
+            {t("tagline")}
+          </p>
+        </div>
+
+        {/* Desktop header */}
+        <h2 className="hidden md:block text-2xl font-bold text-slate-900 dark:text-white mb-6">
+          {t("signInToAccount")}
+        </h2>
 
         {/* Google Sign In - Disabled with Coming Soon badge */}
         <div className="mb-6">

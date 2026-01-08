@@ -673,8 +673,11 @@
   "authPages": {
     "tagline": "Votre gestionnaire de dépenses convivial",
     "infoTrack": "Suivez dépenses et budgets",
+    "infoTrackDesc": "Catégorisez vos dépenses, définissez des budgets et voyez où va votre argent",
     "infoPrivate": "Vos données restent privées",
+    "infoPrivateDesc": "Option auto-hébergée disponible. Pas de pubs, pas de vente de données",
     "infoOpenSource": "100% open source",
+    "infoOpenSourceDesc": "Code entièrement transparent sur GitHub. Auditez-le vous-même",
     "signInToAccount": "Connectez-vous à votre compte",
     "createYourAccount": "Créez votre compte",
     "continueWithGoogle": "Continuer avec Google",
