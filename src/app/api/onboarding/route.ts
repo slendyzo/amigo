@@ -36,7 +36,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const { currency, budgetCurrency, monthlySalary, monthlyBudget, fixedExpenses } = body;
+    const { currency, budgetCurrency, expensesCurrency, monthlySalary, monthlyBudget, fixedExpenses } = body;
 
     // Update workspace with salary, budget, and currency (only if provided)
     // Use budgetCurrency as the defaultCurrency (displayed in app), fall back to salary currency
@@ -63,8 +63,8 @@ export async function POST(request: Request) {
     });
 
     // Create recurring templates for fixed expenses (if provided)
-    // Use the selected currency
-    const templateCurrency = currency || "EUR";
+    // Use the expenses currency from step 3, fallback to budget currency, then salary currency
+    const templateCurrency = expensesCurrency || budgetCurrency || currency || "EUR";
     if (fixedExpenses && fixedExpenses.length > 0) {
       for (const expense of fixedExpenses) {
         if (expense.name && expense.amount > 0) {

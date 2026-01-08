@@ -38,6 +38,9 @@ export default function OnboardingModal({
   const [budgetCurrency, setBudgetCurrency] = useState(
     existingData?.defaultCurrency || "EUR"
   );
+  const [expensesCurrency, setExpensesCurrency] = useState(
+    existingData?.defaultCurrency || "EUR"
+  );
   const [monthlySalary, setMonthlySalary] = useState(
     existingData?.monthlySalary?.toString() || ""
   );
@@ -86,6 +89,7 @@ export default function OnboardingModal({
         body: JSON.stringify({
           currency,
           budgetCurrency,
+          expensesCurrency,
           monthlySalary: monthlySalary
             ? parseFloat(monthlySalary.replace(",", "."))
             : null,
@@ -304,7 +308,25 @@ export default function OnboardingModal({
                   {t("fixedExpensesDescription")}
                 </p>
 
-                <div className="space-y-3 max-h-[300px] overflow-y-auto">
+                {/* Currency selector - horizontal compact */}
+                <div className="flex items-center gap-1 mb-3 p-1 bg-slate-100 rounded-lg w-fit">
+                  {CURRENCIES.map((c) => (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() => setExpensesCurrency(c.code)}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        expensesCurrency === c.code
+                          ? "bg-white text-blue-700 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      {c.symbol}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="space-y-3 max-h-[250px] overflow-y-auto">
                   {fixedExpenses.map((expense, index) => (
                     <div key={index} className="flex flex-col sm:flex-row gap-2">
                       <div className="flex gap-2 flex-1">
@@ -319,7 +341,7 @@ export default function OnboardingModal({
                         />
                         <div className="relative w-24 sm:w-28 flex-shrink-0">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
-                            {getCurrencySymbol(currency)}
+                            {getCurrencySymbol(expensesCurrency)}
                           </span>
                           <input
                             type="text"
@@ -417,9 +439,11 @@ export default function OnboardingModal({
               <button
                 type="button"
                 onClick={() => {
-                  // When moving from Step 1 to Step 2, default budget currency to salary currency
+                  // Cascade currencies: Step 1 → Step 2 → Step 3
                   if (step === 1) {
                     setBudgetCurrency(currency);
+                  } else if (step === 2) {
+                    setExpensesCurrency(budgetCurrency);
                   }
                   setStep(step + 1);
                 }}
