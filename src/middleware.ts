@@ -66,8 +66,7 @@ export function middleware(request: NextRequest) {
   }
 
   // For protected routes, check for session token
-  const token = request.cookies.get("authjs.session-token")?.value ||
-                request.cookies.get("__Secure-authjs.session-token")?.value;
+  const token = request.cookies.get("authjs.session-token")?.value;
 
   if (!token && pathname.startsWith("/dashboard")) {
     const signInUrl = new URL("/auth/signin", request.url);

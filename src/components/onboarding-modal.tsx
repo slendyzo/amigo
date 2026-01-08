@@ -306,40 +306,42 @@ export default function OnboardingModal({
 
                 <div className="space-y-3 max-h-[300px] overflow-y-auto">
                   {fixedExpenses.map((expense, index) => (
-                    <div key={index} className="flex gap-2">
-                      <input
-                        type="text"
-                        value={expense.name}
-                        onChange={(e) =>
-                          handleFixedExpenseChange(index, "name", e.target.value)
-                        }
-                        placeholder={t("expenseNamePlaceholder")}
-                        className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                      <div className="relative w-28">
-                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
-                          {getCurrencySymbol(currency)}
-                        </span>
+                    <div key={index} className="flex flex-col sm:flex-row gap-2">
+                      <div className="flex gap-2 flex-1">
                         <input
                           type="text"
-                          inputMode="decimal"
-                          value={expense.amount}
-                          onChange={(e) => {
-                            const value = e.target.value.replace(
-                              /[^0-9.,-]/g,
-                              ""
-                            );
-                            handleFixedExpenseChange(index, "amount", value);
-                          }}
-                          placeholder="0.00"
-                          className="w-full rounded-lg border border-slate-300 bg-white pl-7 pr-2 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          value={expense.name}
+                          onChange={(e) =>
+                            handleFixedExpenseChange(index, "name", e.target.value)
+                          }
+                          placeholder={t("expenseNamePlaceholder")}
+                          className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
+                        <div className="relative w-24 sm:w-28 flex-shrink-0">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
+                            {getCurrencySymbol(currency)}
+                          </span>
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={expense.amount}
+                            onChange={(e) => {
+                              const value = e.target.value.replace(
+                                /[^0-9.,-]/g,
+                                ""
+                              );
+                              handleFixedExpenseChange(index, "amount", value);
+                            }}
+                            placeholder="0.00"
+                            className="w-full rounded-lg border border-slate-300 bg-white pl-7 pr-2 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
                       </div>
                       {fixedExpenses.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveFixedExpense(index)}
-                          className="p-2 text-slate-400 hover:text-red-500"
+                          className="self-center p-2 text-slate-400 hover:text-red-500 sm:self-auto"
                         >
                           <svg
                             className="w-5 h-5"

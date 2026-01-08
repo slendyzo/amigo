@@ -14,9 +14,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   },
   cookies: {
     sessionToken: {
-      name: process.env.NODE_ENV === "production"
-        ? `__Secure-authjs.session-token`
-        : `authjs.session-token`,
+      name: `authjs.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
@@ -26,6 +24,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     },
   },
+  trustHost: true,
   pages: {
     signIn: "/auth/signin",
     error: "/auth/error",
