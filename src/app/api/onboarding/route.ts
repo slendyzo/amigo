@@ -36,14 +36,18 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const { currency, monthlySalary, monthlyBudget, fixedExpenses } = body;
+    const { currency, budgetCurrency, monthlySalary, monthlyBudget, fixedExpenses } = body;
 
     // Update workspace with salary, budget, and currency (only if provided)
+    // Use budgetCurrency as the defaultCurrency (displayed in app), fall back to salary currency
     const workspaceUpdate: Record<string, unknown> = {
       onboardingCompleted: true,
     };
 
-    if (currency) {
+    // Budget currency takes precedence for defaultCurrency (what's displayed in app)
+    if (budgetCurrency) {
+      workspaceUpdate.defaultCurrency = budgetCurrency;
+    } else if (currency) {
       workspaceUpdate.defaultCurrency = currency;
     }
     if (monthlySalary !== null && monthlySalary !== undefined) {

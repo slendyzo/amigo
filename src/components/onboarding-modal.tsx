@@ -35,6 +35,9 @@ export default function OnboardingModal({
   const [currency, setCurrency] = useState(
     existingData?.defaultCurrency || "EUR"
   );
+  const [budgetCurrency, setBudgetCurrency] = useState(
+    existingData?.defaultCurrency || "EUR"
+  );
   const [monthlySalary, setMonthlySalary] = useState(
     existingData?.monthlySalary?.toString() || ""
   );
@@ -82,6 +85,7 @@ export default function OnboardingModal({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           currency,
+          budgetCurrency,
           monthlySalary: monthlySalary
             ? parseFloat(monthlySalary.replace(",", "."))
             : null,
@@ -238,9 +242,28 @@ export default function OnboardingModal({
                 <p className="text-sm text-slate-500 mb-4">
                   {t("budgetDescription")}
                 </p>
+
+                {/* Currency selector - horizontal compact */}
+                <div className="flex items-center gap-1 mb-3 p-1 bg-slate-100 rounded-lg w-fit">
+                  {CURRENCIES.map((c) => (
+                    <button
+                      key={c.code}
+                      type="button"
+                      onClick={() => setBudgetCurrency(c.code)}
+                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
+                        budgetCurrency === c.code
+                          ? "bg-white text-blue-700 shadow-sm"
+                          : "text-slate-500 hover:text-slate-700"
+                      }`}
+                    >
+                      {c.symbol}
+                    </button>
+                  ))}
+                </div>
+
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                    {getCurrencySymbol(currency)}
+                    {getCurrencySymbol(budgetCurrency)}
                   </span>
                   <input
                     type="text"
@@ -391,7 +414,13 @@ export default function OnboardingModal({
             {step < 3 ? (
               <button
                 type="button"
-                onClick={() => setStep(step + 1)}
+                onClick={() => {
+                  // When moving from Step 1 to Step 2, default budget currency to salary currency
+                  if (step === 1) {
+                    setBudgetCurrency(currency);
+                  }
+                  setStep(step + 1);
+                }}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
               >
                 {tCommon("next")}
