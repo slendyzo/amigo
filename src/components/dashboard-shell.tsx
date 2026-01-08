@@ -8,6 +8,7 @@ import MobileNav from "./mobile-nav";
 import GlobalAddButton from "./global-add-button";
 import FeedbackButton from "./feedback-button";
 import IOSInstallPrompt from "./ios-install-prompt";
+import WorkspaceSwitcher from "./workspace-switcher";
 import type { ReactNode } from "react";
 
 // Navigation grouped by section (keys for translation)
@@ -117,9 +118,11 @@ const icons: Record<string, ReactNode> = {
 interface DashboardShellProps {
   children: ReactNode;
   userEmail?: string;
+  workspaceName?: string;
+  workspaceType?: "PERSONAL" | "SHARED";
 }
 
-export default function DashboardShell({ children, userEmail }: DashboardShellProps) {
+export default function DashboardShell({ children, userEmail, workspaceName, workspaceType }: DashboardShellProps) {
   const pathname = usePathname();
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
@@ -238,7 +241,14 @@ export default function DashboardShell({ children, userEmail }: DashboardShellPr
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0">
         {/* Desktop Top Bar - Hidden on mobile */}
-        <header className="hidden md:flex h-16 bg-white border-b border-slate-200 items-center justify-end px-6">
+        <header className="hidden md:flex h-16 bg-white border-b border-slate-200 items-center justify-between px-6">
+          {/* Workspace Switcher */}
+          <WorkspaceSwitcher
+            currentWorkspaceName={workspaceName}
+            currentWorkspaceType={workspaceType}
+          />
+
+          {/* User Info */}
           <div className="flex items-center gap-4">
             <span className="text-sm text-slate-600">
               {userEmail}

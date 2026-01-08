@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 import Google from "next-auth/providers/google";
 import bcrypt from "bcryptjs";
 import { prisma } from "./db";
+import type { WorkspaceMembership } from "@/types/next-auth";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(prisma),
@@ -68,19 +69,69 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger, session }) {
+      // Initial sign in - load user data and workspaces
       if (user) {
         token.id = user.id;
+
+        // Fetch user's workspaces
+        const memberships = await prisma.workspaceMember.findMany({
+          where: { userId: user.id },
+          include: {
+            workspace: {
+              select: {
+                name: true,
+                type: true,
+              },
+            },
+          },
+          orderBy: { createdAt: "asc" },
+        });
+
+        token.workspaces = memberships.map((m) => ({
+          workspaceId: m.workspaceId,
+          role: m.role as "OWNER" | "ADMIN" | "MEMBER",
+          workspace: {
+            name: m.workspace.name,
+            type: m.workspace.type as "PERSONAL" | "SHARED",
+          },
+        })) as WorkspaceMembership[];
+
+        // Get user's active workspace preference
+        const dbUser = await prisma.user.findUnique({
+          where: { id: user.id },
+          select: { activeWorkspaceId: true },
+        });
+
+        token.activeWorkspaceId =
+          dbUser?.activeWorkspaceId || memberships[0]?.workspaceId || null;
       }
+
+      // Handle workspace switch via session update
+      if (trigger === "update" && session?.activeWorkspaceId) {
+        // Verify user has access to this workspace
+        const hasAccess = (token.workspaces as WorkspaceMembership[])?.some(
+          (w) => w.workspaceId === session.activeWorkspaceId
+        );
+        if (hasAccess) {
+          token.activeWorkspaceId = session.activeWorkspaceId;
+        }
+      }
+
       // Pass provider info to session for debugging
       if (account) {
         token.provider = account.provider;
       }
+
       return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
         session.user.id = token.id as string;
+        session.user.activeWorkspaceId =
+          (token.activeWorkspaceId as string) || null;
+        session.user.workspaces =
+          (token.workspaces as WorkspaceMembership[]) || [];
       }
       return session;
     },

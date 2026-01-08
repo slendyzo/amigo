@@ -68,12 +68,14 @@ model User {
   subscriptionStatus SubscriptionStatus @default(BASIC)
   aiCredits          Int                @default(0)
   aiProcessingEnabled Boolean           @default(false)
+  activeWorkspaceId  String?            // Currently selected workspace for multi-workspace support
 
   // Relations
   accounts           Account[]
   sessions           Session[]
   ownedWorkspaces    Workspace[]        @relation("WorkspaceOwner")
   workspaceMembers   WorkspaceMember[]
+  invitationsSent    WorkspaceInvitation[] @relation("InvitationsSent")
 
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
@@ -144,6 +146,7 @@ model Workspace {
   // Relations
   owner        User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
   members      WorkspaceMember[]
+  invitations  WorkspaceInvitation[]
   bankAccounts BankAccount[]
   expenses     Expense[]
   projects     Project[]
@@ -170,6 +173,27 @@ model WorkspaceMember {
 
   @@unique([workspaceId, userId])
   @@map("workspace_members")
+}
+
+model WorkspaceInvitation {
+  id           String    @id @default(cuid())
+  workspaceId  String
+  invitedEmail String    // Email of the person being invited
+  invitedById  String    // User who sent the invitation
+  role         String    @default("MEMBER") // ADMIN or MEMBER (can't invite as OWNER)
+  token        String    @unique // Unique token for invite link
+  expiresAt    DateTime  // Typically 7 days from creation
+  acceptedAt   DateTime? // When the invitation was accepted
+
+  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy    User      @relation("InvitationsSent", fields: [invitedById], references: [id], onDelete: Cascade)
+
+  createdAt    DateTime  @default(now())
+
+  @@unique([workspaceId, invitedEmail]) // One pending invite per email per workspace
+  @@index([token])
+  @@index([invitedEmail])
+  @@map("workspace_invitations")
 }
 
 // ============================================================================
