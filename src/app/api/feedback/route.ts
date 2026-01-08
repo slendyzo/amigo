@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { type, message, pageUrl, userAgent, imageUrl } = body;
+    const { type, message, pageUrl, userAgent, imageUrl, imageUrls } = body;
 
     if (!type || !message) {
       return NextResponse.json(
@@ -36,6 +36,8 @@ export async function POST(request: Request) {
         pageUrl,
         userAgent,
         imageUrl: imageUrl || null,
+        // Store multiple images as JSON string
+        imageUrls: imageUrls && imageUrls.length > 0 ? JSON.stringify(imageUrls) : null,
       },
     });
 

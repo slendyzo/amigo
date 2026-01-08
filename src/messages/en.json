@@ -657,7 +657,10 @@
     "bugPlaceholder": "What happened? What did you expect?",
     "featurePlaceholder": "Tell us about your idea...",
     "attachScreenshot": "Attach a screenshot (optional)",
-    "clickToUpload": "Click to upload an image",
+    "attachScreenshots": "Attach screenshots (optional)",
+    "clickToUpload": "Click to upload images",
+    "addMoreImages": "Add more images",
+    "tooManyImages": "Maximum {max} images allowed",
     "uploading": "Uploading...",
     "invalidImageType": "Please select an image file",
     "imageTooLarge": "Image must be less than 10MB",
@@ -733,5 +736,25 @@
     "iosStep1": "1. Tap",
     "iosStep1Share": "Share",
     "iosStep2": "2. Scroll and tap \"Add to Home Screen\""
+  },
+  "onboarding": {
+    "welcome": "Welcome to Amigo!",
+    "welcomeSubtitle": "Let's set up your finances in just a few steps",
+    "step": "Step {current} of {total}",
+    "salaryTitle": "What's your monthly income?",
+    "salaryDescription": "This helps us calculate how much you can save each month.",
+    "salaryHint": "Your net salary after taxes. You can change this later in settings.",
+    "budgetTitle": "Set your monthly budget",
+    "budgetDescription": "How much do you want to spend each month?",
+    "budgetHint": "A good rule is to budget less than you earn. Track spending against this goal.",
+    "useSalaryAsBudget": "Use my salary as budget",
+    "fixedExpensesTitle": "Add your fixed expenses",
+    "fixedExpensesDescription": "Add recurring monthly expenses like rent, subscriptions, or bills.",
+    "fixedExpensesHint": "These will be saved as recurring templates. You can add more or edit them later.",
+    "expenseNamePlaceholder": "e.g., Netflix, Rent",
+    "addAnother": "Add another expense",
+    "skipForNow": "Skip for now",
+    "saving": "Saving...",
+    "getStarted": "Get Started"
   }
 }

@@ -355,14 +355,14 @@ export default function RecurringTemplatesPage() {
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-sm text-slate-500 mt-1">
             {t("description")}
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex flex-wrap gap-2 md:gap-3">
           {selectionMode ? (
             <>
               <button
@@ -728,20 +728,20 @@ export default function RecurringTemplatesPage() {
                     </div>
                   </div>
                 ) : (
-                  // Display Row
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
+                  // Display Row - responsive layout
+                  <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                    <div className="flex items-start gap-3 md:gap-4">
                       {selectionMode ? (
                         <input
                           type="checkbox"
                           checked={selectedIds.has(template.id)}
                           onChange={() => toggleSelection(template.id)}
-                          className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500 mt-0.5"
                         />
                       ) : (
                         <button
                           onClick={() => handleToggleActive(template)}
-                          className={`w-10 h-6 rounded-full transition-colors ${
+                          className={`w-10 h-6 rounded-full transition-colors flex-shrink-0 ${
                             template.isActive ? 'bg-green-500' : 'bg-slate-300'
                           }`}
                         >
@@ -750,37 +750,39 @@ export default function RecurringTemplatesPage() {
                           }`} />
                         </button>
                       )}
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <span className="font-medium text-slate-900">{template.name}</span>
-                          <span className={`px-2 py-0.5 text-xs rounded-full ${getTypeStyle(template.type)}`}>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+                          <span className="font-medium text-slate-900 break-words">{template.name}</span>
+                          <span className={`px-2 py-0.5 text-xs rounded-full whitespace-nowrap ${getTypeStyle(template.type)}`}>
                             {getTypeLabel(template.type)}
                           </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1">
                           {template.category && (
-                            <span className="text-xs text-slate-500">
+                            <span className="text-xs text-slate-500 whitespace-nowrap">
                               {template.category.name}
                             </span>
                           )}
                           {template.bankAccount && (
-                            <span className="text-xs text-slate-400 flex items-center gap-1">
-                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <span className="text-xs text-slate-400 flex items-center gap-1 whitespace-nowrap">
+                              <svg className="w-3 h-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                               </svg>
                               {template.bankAccount.name}
                             </span>
                           )}
                         </div>
-                        <div className="text-sm text-slate-500 mt-0.5 flex items-center gap-1 flex-wrap">
-                          <span>{template.dayOfMonth ? `${t("day")} ${template.dayOfMonth}` : t("intervals.monthly")}</span>
+                        <div className="text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5">
+                          <span className="whitespace-nowrap">{template.dayOfMonth ? `${t("day")} ${template.dayOfMonth}` : t("intervals.monthly")}</span>
                           <span>•</span>
-                          <span>{template.amount ? `€${Number(template.amount).toFixed(2)}` : t("variable")}</span>
-                          <span>•</span>
-                          <span>{template._count.expenses} {t("generated")}</span>
+                          <span className="whitespace-nowrap">{template.amount ? `€${Number(template.amount).toFixed(2)}` : t("variable")}</span>
+                          <span className="hidden md:inline">•</span>
+                          <span className="hidden md:inline whitespace-nowrap">{template._count.expenses} {t("generated")}</span>
                           {template.autoGenerate && (
                             <>
                               <span>•</span>
-                              <span className="text-green-600 flex items-center gap-0.5">
-                                <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                              <span className="text-green-600 flex items-center gap-0.5 whitespace-nowrap">
+                                <svg className="w-3 h-3 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                                 </svg>
                                 Auto
@@ -790,11 +792,11 @@ export default function RecurringTemplatesPage() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-right text-sm text-slate-500">
-                        <div>{t("last")}: {formatDate(template.lastGenerated)}</div>
+                    <div className="flex items-center justify-between md:justify-end gap-3 md:gap-4 ml-[52px] md:ml-0">
+                      <div className="text-left md:text-right text-sm text-slate-500">
+                        <div className="whitespace-nowrap">{t("last")}: {formatDate(template.lastGenerated)}</div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1 md:gap-2">
                         <button
                           onClick={() => startEditing(template)}
                           className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg"

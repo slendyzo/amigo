@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react
 import { useRouter } from "next/navigation";
 import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
+import OnboardingModal from "@/components/onboarding-modal";
 import { LivingGauge } from "@/components/ui/living-gauge";
 import { useSwipe } from "@/hooks/use-swipe";
 
@@ -55,8 +56,10 @@ type Props = {
   initialMonth: number;
   initialYear: number;
   monthlyBudget: number | null;
+  monthlySalary: number | null;
   monthlyIncome: number;
   expectedMonthlyIncome: number;
+  onboardingCompleted: boolean;
 };
 
 const MONTHS = [
@@ -78,8 +81,10 @@ export default function DashboardOverview({
   initialMonth,
   initialYear,
   monthlyBudget,
+  monthlySalary,
   monthlyIncome,
   expectedMonthlyIncome,
+  onboardingCompleted,
 }: Props) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -114,6 +119,9 @@ export default function DashboardOverview({
 
   // Previous month data for burn chart (pre-loaded from server!)
   const [previousMonthExpenses, setPreviousMonthExpenses] = useState<Expense[]>(initialPreviousMonthExpenses);
+
+  // Onboarding modal state - show if not completed
+  const [showOnboarding, setShowOnboarding] = useState(!onboardingCompleted);
 
   // Use monthly budget from settings, or expected income, or default to 2000
   const livingBudget = monthlyBudget || expectedMonthlyIncome || 2000;
@@ -943,6 +951,16 @@ export default function DashboardOverview({
         onSave={() => {
           setEditingExpense(null);
           fetchExpenses();
+        }}
+      />
+
+      {/* Onboarding Modal - shown for new users */}
+      <OnboardingModal
+        isOpen={showOnboarding}
+        onClose={() => setShowOnboarding(false)}
+        existingData={{
+          monthlySalary,
+          monthlyBudget,
         }}
       />
     </div>

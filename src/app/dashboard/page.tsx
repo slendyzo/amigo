@@ -39,6 +39,8 @@ export default async function DashboardPage({
     select: {
       id: true,
       monthlyBudget: true,
+      monthlySalary: true,
+      onboardingCompleted: true,
     },
   });
 
@@ -161,8 +163,10 @@ export default async function DashboardPage({
       initialMonth={now.getMonth()}
       initialYear={now.getFullYear()}
       monthlyBudget={workspace.monthlyBudget ? Number(workspace.monthlyBudget) : null}
+      monthlySalary={workspace.monthlySalary ? Number(workspace.monthlySalary) : null}
       monthlyIncome={monthlyIncome}
       expectedMonthlyIncome={expectedMonthlyIncome}
+      onboardingCompleted={workspace.onboardingCompleted}
     />
   );
 }

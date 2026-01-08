@@ -7,6 +7,8 @@ import Image from "next/image";
 
 type FeedbackType = "BUG" | "FEATURE" | null;
 
+const MAX_IMAGES = 5;
+
 export default function FeedbackButton() {
   const t = useTranslations("feedback");
   const pathname = usePathname();
@@ -15,8 +17,8 @@ export default function FeedbackButton() {
   const [step, setStep] = useState<"select" | "form">("select");
   const [feedbackType, setFeedbackType] = useState<FeedbackType>(null);
   const [message, setMessage] = useState("");
-  const [imageFile, setImageFile] = useState<File | null>(null);
-  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -28,38 +30,55 @@ export default function FeedbackButton() {
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      setError(t("invalidImageType"));
+    // Check if we'd exceed the max images limit
+    if (imageFiles.length + files.length > MAX_IMAGES) {
+      setError(t("tooManyImages", { max: MAX_IMAGES }));
       return;
     }
 
-    // Validate file size (10MB max)
-    if (file.size > 10 * 1024 * 1024) {
-      setError(t("imageTooLarge"));
-      return;
-    }
+    const newFiles: File[] = [];
+    const newPreviews: string[] = [];
 
-    setImageFile(file);
+    Array.from(files).forEach((file) => {
+      // Validate file type
+      if (!file.type.startsWith("image/")) {
+        setError(t("invalidImageType"));
+        return;
+      }
+
+      // Validate file size (10MB max per file)
+      if (file.size > 10 * 1024 * 1024) {
+        setError(t("imageTooLarge"));
+        return;
+      }
+
+      newFiles.push(file);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        newPreviews.push(reader.result as string);
+        if (newPreviews.length === newFiles.length) {
+          setImageFiles((prev) => [...prev, ...newFiles]);
+          setImagePreviews((prev) => [...prev, ...newPreviews]);
+        }
+      };
+      reader.readAsDataURL(file);
+    });
+
     setError("");
-
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setImagePreview(reader.result as string);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const removeImage = () => {
-    setImageFile(null);
-    setImagePreview(null);
+    // Reset file input to allow selecting the same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
+  };
+
+  const removeImage = (index: number) => {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+    setImagePreviews((prev) => prev.filter((_, i) => i !== index));
   };
 
   const handleSubmit = async () => {
@@ -69,25 +88,27 @@ export default function FeedbackButton() {
     setError("");
 
     try {
-      let imageUrl: string | null = null;
+      const imageUrls: string[] = [];
 
-      // Upload image if selected
-      if (imageFile) {
+      // Upload all images
+      if (imageFiles.length > 0) {
         setIsUploading(true);
-        const formData = new FormData();
-        formData.append("file", imageFile);
+        for (const file of imageFiles) {
+          const formData = new FormData();
+          formData.append("file", file);
 
-        const uploadRes = await fetch("/api/upload", {
-          method: "POST",
-          body: formData,
-        });
+          const uploadRes = await fetch("/api/upload", {
+            method: "POST",
+            body: formData,
+          });
 
-        if (!uploadRes.ok) {
-          throw new Error("Failed to upload image");
+          if (!uploadRes.ok) {
+            throw new Error("Failed to upload image");
+          }
+
+          const uploadData = await uploadRes.json();
+          imageUrls.push(uploadData.imageUrl);
         }
-
-        const uploadData = await uploadRes.json();
-        imageUrl = uploadData.imageUrl;
         setIsUploading(false);
       }
 
@@ -99,7 +120,9 @@ export default function FeedbackButton() {
           message: message.trim(),
           pageUrl: pathname,
           userAgent: typeof navigator !== "undefined" ? navigator.userAgent : null,
-          imageUrl,
+          // Send as array for new format, also send first as imageUrl for backward compatibility
+          imageUrl: imageUrls.length > 0 ? imageUrls[0] : null,
+          imageUrls: imageUrls.length > 0 ? imageUrls : null,
         }),
       });
 
@@ -119,25 +142,35 @@ export default function FeedbackButton() {
     }
   };
 
+  const resetForm = () => {
+    setStep("select");
+    setFeedbackType(null);
+    setMessage("");
+    setImageFiles([]);
+    setImagePreviews([]);
+    setSubmitted(false);
+    setError("");
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleOpen = () => {
+    resetForm();
+    setIsOpen(true);
+  };
+
   const handleClose = () => {
     setIsOpen(false);
     // Reset after animation
-    setTimeout(() => {
-      setStep("select");
-      setFeedbackType(null);
-      setMessage("");
-      setImageFile(null);
-      setImagePreview(null);
-      setSubmitted(false);
-      setError("");
-    }, 200);
+    setTimeout(resetForm, 200);
   };
 
   return (
     <>
       {/* Floating Feedback Button - on mobile: left side above nav. On desktop: next to add button (right side) */}
       <button
-        onClick={() => setIsOpen(true)}
+        onClick={handleOpen}
         className="floating-nav-button fixed left-4 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-center w-12 h-12 rounded-full bg-slate-700 text-white shadow-lg hover:bg-slate-600 transition-all hover:scale-105 active:scale-95 md:w-14 md:h-14 md:bottom-24 md:right-[6.5rem] md:left-auto"
         title={t("title")}
         aria-label={t("title")}
@@ -157,9 +190,9 @@ export default function FeedbackButton() {
           />
 
           {/* Modal Content */}
-          <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
+          <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
+            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
               <h2 className="text-lg font-semibold text-slate-900">
                 {t("title")}
               </h2>
@@ -174,7 +207,7 @@ export default function FeedbackButton() {
             </div>
 
             {/* Body */}
-            <div className="p-6">
+            <div className="p-6 overflow-y-auto">
               {submitted ? (
                 /* Success State */
                 <div className="text-center py-8">
@@ -269,55 +302,67 @@ export default function FeedbackButton() {
                     />
                   </div>
 
-                  {/* Image Upload */}
+                  {/* Image Upload - Multiple Images */}
                   <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-2">
-                        {t("attachScreenshot")}
-                      </label>
+                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                      {t("attachScreenshots")}
+                      <span className="text-slate-400 font-normal ml-1">
+                        ({imagePreviews.length}/{MAX_IMAGES})
+                      </span>
+                    </label>
 
-                      {/* Hidden file input */}
-                      <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept="image/*"
-                        onChange={handleImageSelect}
-                        className="hidden"
-                      />
+                    {/* Hidden file input */}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageSelect}
+                      className="hidden"
+                    />
 
-                      {imagePreview ? (
-                        /* Image Preview */
-                        <div className="relative">
-                          <div className="relative w-full h-32 rounded-xl overflow-hidden border border-slate-200">
-                            <Image
-                              src={imagePreview}
-                              alt="Screenshot preview"
-                              fill
-                              className="object-cover"
-                            />
+                    {/* Image Previews Grid */}
+                    {imagePreviews.length > 0 && (
+                      <div className="grid grid-cols-3 gap-2 mb-3">
+                        {imagePreviews.map((preview, index) => (
+                          <div key={index} className="relative aspect-square">
+                            <div className="relative w-full h-full rounded-lg overflow-hidden border border-slate-200">
+                              <Image
+                                src={preview}
+                                alt={`Screenshot ${index + 1}`}
+                                fill
+                                className="object-cover"
+                              />
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => removeImage(index)}
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+                            >
+                              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                              </svg>
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            onClick={removeImage}
-                            className="absolute -top-2 -right-2 w-6 h-6 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
-                          >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                          </button>
-                        </div>
-                      ) : (
-                        /* Upload Button */
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors flex flex-col items-center gap-2 text-slate-500 hover:text-slate-600"
-                        >
-                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                          </svg>
-                          <span className="text-sm">{t("clickToUpload")}</span>
-                        </button>
-                      )}
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Add Image Button (if not at max) */}
+                    {imagePreviews.length < MAX_IMAGES && (
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        className="w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors flex flex-col items-center gap-2 text-slate-500 hover:text-slate-600"
+                      >
+                        <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        <span className="text-sm">
+                          {imagePreviews.length === 0 ? t("clickToUpload") : t("addMoreImages")}
+                        </span>
+                      </button>
+                    )}
                   </div>
 
                   {/* Error */}

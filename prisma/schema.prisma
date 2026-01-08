@@ -132,8 +132,12 @@ model Workspace {
   type     WorkspaceType @default(PERSONAL)
   ownerId  String
 
+  // Onboarding
+  onboardingCompleted Boolean @default(false)
+
   // Budget settings
   monthlyBudget    Decimal? @db.Decimal(12, 2) // Target monthly spending limit
+  monthlySalary    Decimal? @db.Decimal(12, 2) // Monthly income for budgeting
   defaultCurrency  String   @default("EUR") @db.VarChar(3)
   language         String   @default("en") @db.VarChar(10) // User's preferred language (en, pt-PT, fr-FR)
 
@@ -415,7 +419,8 @@ model Feedback {
   userId      String
   type        FeedbackType
   message     String       @db.Text
-  imageUrl    String?      // Optional screenshot URL
+  imageUrl    String?      // Optional screenshot URL (legacy, for single image)
+  imageUrls   String?      @db.Text // JSON array of image URLs for multiple screenshots
   userAgent   String?      // Browser/device info
   pageUrl     String?      // Where user was when submitting
   isRead      Boolean      @default(false)

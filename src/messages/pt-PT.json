@@ -643,7 +643,10 @@
     "bugPlaceholder": "O que aconteceu? O que esperavas?",
     "featurePlaceholder": "Conta-nos sobre a tua ideia...",
     "attachScreenshot": "Anexar captura de ecrã (opcional)",
-    "clickToUpload": "Clica para enviar uma imagem",
+    "attachScreenshots": "Anexar capturas de ecrã (opcional)",
+    "clickToUpload": "Clica para enviar imagens",
+    "addMoreImages": "Adicionar mais imagens",
+    "tooManyImages": "Máximo de {max} imagens permitido",
     "uploading": "A enviar...",
     "invalidImageType": "Por favor seleciona um ficheiro de imagem",
     "imageTooLarge": "A imagem deve ter menos de 10MB",
@@ -719,5 +722,25 @@
     "iosStep1": "1. Toca em",
     "iosStep1Share": "Partilhar",
     "iosStep2": "2. Desliza e toca em \"Adicionar ao ecrã inicial\""
+  },
+  "onboarding": {
+    "welcome": "Bem-vindo ao Amigo!",
+    "welcomeSubtitle": "Vamos configurar as tuas finanças em poucos passos",
+    "step": "Passo {current} de {total}",
+    "salaryTitle": "Qual é o teu rendimento mensal?",
+    "salaryDescription": "Isto ajuda-nos a calcular quanto podes poupar por mês.",
+    "salaryHint": "O teu salário líquido após impostos. Podes alterar isto mais tarde nas definições.",
+    "budgetTitle": "Define o teu orçamento mensal",
+    "budgetDescription": "Quanto queres gastar por mês?",
+    "budgetHint": "Uma boa regra é orçamentar menos do que ganhas. Acompanha os gastos em relação a este objetivo.",
+    "useSalaryAsBudget": "Usar o meu salário como orçamento",
+    "fixedExpensesTitle": "Adiciona as tuas despesas fixas",
+    "fixedExpensesDescription": "Adiciona despesas mensais recorrentes como renda, subscrições ou contas.",
+    "fixedExpensesHint": "Estas serão guardadas como templates recorrentes. Podes adicionar mais ou editá-las mais tarde.",
+    "expenseNamePlaceholder": "ex: Netflix, Renda",
+    "addAnother": "Adicionar outra despesa",
+    "skipForNow": "Saltar por agora",
+    "saving": "A guardar...",
+    "getStarted": "Começar"
   }
 }

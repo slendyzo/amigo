@@ -10,6 +10,7 @@ type FeedbackItem = {
   pageUrl: string | null;
   userAgent: string | null;
   imageUrl: string | null;
+  imageUrls: string | null; // JSON array of image URLs
   isRead: boolean;
   isResolved: boolean;
   createdAt: string;
@@ -19,6 +20,26 @@ type FeedbackItem = {
     name: string | null;
   } | null;
 };
+
+// Helper to get all images from a feedback item (supports both legacy and new format)
+function getImageUrls(item: FeedbackItem): string[] {
+  // Try new format first (JSON array)
+  if (item.imageUrls) {
+    try {
+      const parsed = JSON.parse(item.imageUrls);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        return parsed;
+      }
+    } catch {
+      // Invalid JSON, fall through to legacy
+    }
+  }
+  // Fall back to legacy single image
+  if (item.imageUrl) {
+    return [item.imageUrl];
+  }
+  return [];
+}
 
 export default function InboxPage() {
   const t = useTranslations("admin");
@@ -242,20 +263,30 @@ export default function InboxPage() {
               <div className="p-4 space-y-3">
                 <p className="text-slate-800 whitespace-pre-wrap">{item.message}</p>
 
-                {/* Screenshot */}
-                {item.imageUrl && (
+                {/* Screenshots - supports multiple images */}
+                {getImageUrls(item).length > 0 && (
                   <div className="mt-3">
-                    <button
-                      type="button"
-                      onClick={() => setLightboxImage(item.imageUrl)}
-                      className="block text-left"
-                    >
-                      <img
-                        src={item.imageUrl}
-                        alt="Screenshot"
-                        className="max-w-full max-h-64 rounded-lg border border-slate-200 hover:border-blue-400 transition-colors cursor-pointer"
-                      />
-                    </button>
+                    <div className={`grid gap-2 ${getImageUrls(item).length === 1 ? 'grid-cols-1' : 'grid-cols-2 sm:grid-cols-3'}`}>
+                      {getImageUrls(item).map((imgUrl, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setLightboxImage(imgUrl)}
+                          className="block text-left"
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={`Screenshot ${idx + 1}`}
+                            className="w-full h-32 object-cover rounded-lg border border-slate-200 hover:border-blue-400 transition-colors cursor-pointer"
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    {getImageUrls(item).length > 1 && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        {getImageUrls(item).length} images attached
+                      </p>
+                    )}
                   </div>
                 )}
 

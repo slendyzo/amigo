@@ -214,12 +214,22 @@ export default function AddExpenseModal({
     setError("");
 
     try {
+      // Normalize amount: replace comma with dot for parsing
+      const normalizedAmount = amount.replace(",", ".");
+      const parsedAmount = parseFloat(normalizedAmount);
+
+      if (isNaN(parsedAmount)) {
+        setError("Invalid amount");
+        setIsLoading(false);
+        return;
+      }
+
       const response = await fetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name,
-          amount: parseFloat(amount),
+          amount: parsedAmount,
           currency,
           type: expenseType,
           categoryId: categoryId || undefined,
@@ -308,10 +318,15 @@ export default function AddExpenseModal({
                   {CURRENCY_SYMBOLS[currency]}
                 </span>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  inputMode="decimal"
+                  pattern="[0-9]*[.,]?[0-9]*"
                   value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
+                  onChange={(e) => {
+                    // Allow digits, comma, and dot
+                    const value = e.target.value.replace(/[^0-9.,-]/g, "");
+                    setAmount(value);
+                  }}
                   placeholder="0.00"
                   required
                   className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
