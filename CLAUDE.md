@@ -202,7 +202,7 @@ messages/
 1. Create `src/app/dashboard/[page]/page.tsx`
 2. Add "use client" if needed
 3. Add translations to `messages/*.json`
-4. Add sidebar link in `src/components/sidebar.tsx`
+4. Add sidebar link in `src/components/dashboard-shell.tsx`
 
 ### Mobile Responsiveness
 
@@ -423,6 +423,7 @@ npx prisma studio     # Open database GUI
 - **Seen Tracking** - seenAnnouncements array on User model
 - **Post-Onboarding** - Shows after onboarding completes
 - **Extensible** - Add new announcement IDs to CURRENT_ANNOUNCEMENTS array
+- **What's New Button** - Sidebar button to view latest announcement anytime (viewOnly mode)
 
 ### Authentication
 
@@ -457,6 +458,7 @@ npx prisma studio     # Open database GUI
 - **3 Languages** - English (en), Portuguese (pt-PT), French (fr-FR)
 - **next-intl** - Full i18n integration
 - **Per-Workspace** - Language setting saved to workspace
+- **Dashboard i18n** - Full translation support for dashboard overview (view modes, filters, stats, charts)
 
 ### Keyboard Shortcuts
 
