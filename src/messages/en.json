@@ -531,7 +531,10 @@
     "projects": "Projects",
     "totalCategories": "Total Categories",
     "totalProjects": "Total Projects",
-    "memberSince": "Member since"
+    "memberSince": "Member since",
+    "restartSetup": "Restart Setup",
+    "restartSetupDescription": "Re-run the initial setup wizard to update your salary, budget, and fixed expenses",
+    "restartSetupButton": "Restart Setup Wizard"
   },
   "imports": {
     "title": "Import History",
@@ -741,6 +744,7 @@
     "welcome": "Welcome to Amigo!",
     "welcomeSubtitle": "Let's set up your finances in just a few steps",
     "step": "Step {current} of {total}",
+    "selectCurrency": "Select your currency",
     "salaryTitle": "What's your monthly income?",
     "salaryDescription": "This helps us calculate how much you can save each month.",
     "salaryHint": "Your net salary after taxes. You can change this later in settings.",

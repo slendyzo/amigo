@@ -10,8 +10,17 @@ type OnboardingModalProps = {
   existingData?: {
     monthlySalary?: number | null;
     monthlyBudget?: number | null;
+    defaultCurrency?: string;
   };
 };
+
+const CURRENCIES = [
+  { code: "EUR", symbol: "€", name: "Euro" },
+  { code: "USD", symbol: "$", name: "US Dollar" },
+  { code: "GBP", symbol: "£", name: "British Pound" },
+  { code: "BRL", symbol: "R$", name: "Brazilian Real" },
+  { code: "PLN", symbol: "zł", name: "Polish Zloty" },
+];
 
 export default function OnboardingModal({
   isOpen,
@@ -23,6 +32,9 @@ export default function OnboardingModal({
   const tCommon = useTranslations("common");
 
   const [step, setStep] = useState(1);
+  const [currency, setCurrency] = useState(
+    existingData?.defaultCurrency || "EUR"
+  );
   const [monthlySalary, setMonthlySalary] = useState(
     existingData?.monthlySalary?.toString() || ""
   );
@@ -31,6 +43,10 @@ export default function OnboardingModal({
   );
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const getCurrencySymbol = (code: string) => {
+    return CURRENCIES.find((c) => c.code === code)?.symbol || "€";
+  };
 
   // Fixed expenses step
   const [fixedExpenses, setFixedExpenses] = useState<
@@ -65,6 +81,7 @@ export default function OnboardingModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          currency,
           monthlySalary: monthlySalary
             ? parseFloat(monthlySalary.replace(",", "."))
             : null,
@@ -153,7 +170,7 @@ export default function OnboardingModal({
           )}
 
           {step === 1 && (
-            /* Step 1: Monthly Salary */
+            /* Step 1: Monthly Salary + Currency */
             <div className="space-y-4">
               <div>
                 <h3 className="text-lg font-semibold text-slate-900 mb-2">
@@ -162,9 +179,35 @@ export default function OnboardingModal({
                 <p className="text-sm text-slate-500 mb-4">
                   {t("salaryDescription")}
                 </p>
+
+                {/* Currency selector */}
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                    {t("selectCurrency")}
+                  </label>
+                  <div className="grid grid-cols-5 gap-2">
+                    {CURRENCIES.map((c) => (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => setCurrency(c.code)}
+                        className={`p-3 rounded-lg border-2 text-center transition-all ${
+                          currency === c.code
+                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                            : "border-slate-200 hover:border-slate-300 text-slate-600"
+                        }`}
+                      >
+                        <div className="text-lg font-bold">{c.symbol}</div>
+                        <div className="text-xs">{c.code}</div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Amount input */}
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                    €
+                    {getCurrencySymbol(currency)}
                   </span>
                   <input
                     type="text"
@@ -197,7 +240,7 @@ export default function OnboardingModal({
                 </p>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                    €
+                    {getCurrencySymbol(currency)}
                   </span>
                   <input
                     type="text"
@@ -252,7 +295,7 @@ export default function OnboardingModal({
                       />
                       <div className="relative w-28">
                         <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
-                          €
+                          {getCurrencySymbol(currency)}
                         </span>
                         <input
                           type="text"

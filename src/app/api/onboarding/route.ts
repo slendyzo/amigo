@@ -36,13 +36,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: true });
     }
 
-    const { monthlySalary, monthlyBudget, fixedExpenses } = body;
+    const { currency, monthlySalary, monthlyBudget, fixedExpenses } = body;
 
-    // Update workspace with salary and budget (only if provided)
+    // Update workspace with salary, budget, and currency (only if provided)
     const workspaceUpdate: Record<string, unknown> = {
       onboardingCompleted: true,
     };
 
+    if (currency) {
+      workspaceUpdate.defaultCurrency = currency;
+    }
     if (monthlySalary !== null && monthlySalary !== undefined) {
       workspaceUpdate.monthlySalary = monthlySalary;
     }
@@ -56,6 +59,8 @@ export async function POST(request: Request) {
     });
 
     // Create recurring templates for fixed expenses (if provided)
+    // Use the selected currency
+    const templateCurrency = currency || "EUR";
     if (fixedExpenses && fixedExpenses.length > 0) {
       for (const expense of fixedExpenses) {
         if (expense.name && expense.amount > 0) {
@@ -74,7 +79,7 @@ export async function POST(request: Request) {
                 name: expense.name,
                 type: "SURVIVAL_FIXED",
                 amount: expense.amount,
-                currency: "EUR",
+                currency: templateCurrency,
                 interval: "MONTHLY",
                 autoGenerate: true,
                 isActive: true,

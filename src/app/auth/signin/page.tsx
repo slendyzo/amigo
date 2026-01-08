@@ -16,17 +16,36 @@ export default function SignInPage() {
     setIsLoading(true);
     setError("");
 
-    const result = await signIn("credentials", {
-      identifier,
-      password,
-      redirect: false,
-    });
+    try {
+      // Add timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("timeout")), 30000);
+      });
 
-    if (result?.error) {
-      setError("Invalid username/email or password");
+      const signInPromise = signIn("credentials", {
+        identifier,
+        password,
+        redirect: false,
+      });
+
+      const result = await Promise.race([signInPromise, timeoutPromise]) as Awaited<ReturnType<typeof signIn>>;
+
+      if (result?.error) {
+        setError("Invalid username/email or password");
+        setIsLoading(false);
+      } else if (result?.ok) {
+        router.push("/dashboard");
+      } else {
+        setError("Something went wrong. Please try again.");
+        setIsLoading(false);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.message === "timeout") {
+        setError("Sign in is taking too long. Please check your connection and try again.");
+      } else {
+        setError("An error occurred. Please try again.");
+      }
       setIsLoading(false);
-    } else {
-      router.push("/dashboard");
     }
   };
 

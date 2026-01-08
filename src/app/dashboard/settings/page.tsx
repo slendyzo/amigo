@@ -81,6 +81,9 @@ export default function SettingsPage() {
   const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [deleteAccountError, setDeleteAccountError] = useState("");
 
+  // Restart onboarding state
+  const [isRestartingOnboarding, setIsRestartingOnboarding] = useState(false);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -297,6 +300,23 @@ export default function SettingsPage() {
     return CURRENCIES.find((c) => c.code === code)?.symbol || "€";
   };
 
+  const handleRestartOnboarding = async () => {
+    setIsRestartingOnboarding(true);
+    try {
+      // Reset onboarding flag
+      await fetch("/api/workspace", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resetOnboarding: true }),
+      });
+      // Redirect to dashboard to show onboarding modal
+      window.location.href = "/dashboard";
+    } catch (error) {
+      console.error("Failed to restart onboarding:", error);
+      setIsRestartingOnboarding(false);
+    }
+  };
+
   const handleDeleteAccount = async () => {
     if (deleteAccountConfirmText !== "DELETE MY ACCOUNT") {
       setDeleteAccountError("Please type 'DELETE MY ACCOUNT' exactly to confirm");
@@ -458,6 +478,28 @@ export default function SettingsPage() {
             className="px-4 py-2 bg-[#0070f3] text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
           >
             {isSaving ? tCommon("loading") : t("saveSettings")}
+          </button>
+        </div>
+      </div>
+
+      {/* Restart Setup */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">{t("restartSetup")}</h2>
+            <p className="text-sm text-slate-500">
+              {t("restartSetupDescription")}
+            </p>
+          </div>
+          <button
+            onClick={handleRestartOnboarding}
+            disabled={isRestartingOnboarding}
+            className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {isRestartingOnboarding ? tCommon("loading") : t("restartSetupButton")}
           </button>
         </div>
       </div>

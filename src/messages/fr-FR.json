@@ -531,7 +531,10 @@
     "projects": "Projets",
     "totalCategories": "Total des Catégories",
     "totalProjects": "Total des Projets",
-    "memberSince": "Membre depuis"
+    "memberSince": "Membre depuis",
+    "restartSetup": "Relancer la Configuration",
+    "restartSetupDescription": "Relancez l'assistant de configuration initial pour mettre à jour votre salaire, budget et dépenses fixes",
+    "restartSetupButton": "Relancer l'Assistant de Configuration"
   },
   "imports": {
     "title": "Historique des Importations",
@@ -741,6 +744,7 @@
     "welcome": "Bienvenue sur Amigo !",
     "welcomeSubtitle": "Configurons vos finances en quelques étapes",
     "step": "Étape {current} sur {total}",
+    "selectCurrency": "Sélectionnez votre devise",
     "salaryTitle": "Quel est votre revenu mensuel ?",
     "salaryDescription": "Cela nous aide à calculer combien vous pouvez économiser chaque mois.",
     "salaryHint": "Votre salaire net après impôts. Vous pouvez modifier cela plus tard dans les paramètres.",

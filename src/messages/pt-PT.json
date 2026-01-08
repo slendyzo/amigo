@@ -550,7 +550,10 @@
     "projects": "Projetos",
     "totalCategories": "Total de Categorias",
     "totalProjects": "Total de Projetos",
-    "memberSince": "Membro desde"
+    "memberSince": "Membro desde",
+    "restartSetup": "Reiniciar Configuração",
+    "restartSetupDescription": "Volta a executar o assistente de configuração inicial para atualizar o teu salário, orçamento e despesas fixas",
+    "restartSetupButton": "Reiniciar Assistente de Configuração"
   },
   "imports": {
     "title": "Histórico de Importações",
@@ -727,6 +730,7 @@
     "welcome": "Bem-vindo ao Amigo!",
     "welcomeSubtitle": "Vamos configurar as tuas finanças em poucos passos",
     "step": "Passo {current} de {total}",
+    "selectCurrency": "Seleciona a tua moeda",
     "salaryTitle": "Qual é o teu rendimento mensal?",
     "salaryDescription": "Isto ajuda-nos a calcular quanto podes poupar por mês.",
     "salaryHint": "O teu salário líquido após impostos. Podes alterar isto mais tarde nas definições.",

@@ -50,7 +50,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { monthlyBudget, defaultCurrency, name, language } = body;
+    const { monthlyBudget, defaultCurrency, name, language, resetOnboarding } = body;
 
     const membership = await prisma.workspaceMember.findFirst({
       where: { userId: session.user.id },
@@ -61,16 +61,24 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "No workspace found" }, { status: 404 });
     }
 
+    // Build update object
+    const updateData: Record<string, unknown> = {};
+
+    if (name !== undefined) updateData.name = name;
+    if (monthlyBudget !== undefined) {
+      updateData.monthlyBudget = monthlyBudget === "" || monthlyBudget === null ? null : parseFloat(monthlyBudget);
+    }
+    if (defaultCurrency) updateData.defaultCurrency = defaultCurrency;
+    if (language) updateData.language = language;
+
+    // Reset onboarding flag if requested
+    if (resetOnboarding) {
+      updateData.onboardingCompleted = false;
+    }
+
     const workspace = await prisma.workspace.update({
       where: { id: membership.workspaceId },
-      data: {
-        name: name !== undefined ? name : undefined,
-        monthlyBudget: monthlyBudget !== undefined
-          ? (monthlyBudget === "" || monthlyBudget === null ? null : parseFloat(monthlyBudget))
-          : undefined,
-        defaultCurrency: defaultCurrency || undefined,
-        language: language || undefined,
-      },
+      data: updateData,
     });
 
     return NextResponse.json({
