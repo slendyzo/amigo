@@ -44,6 +44,16 @@ PROJECT           - Tagged to a specific project (e.g., House renovation)
 - **Quick-add parsing:** "mcd 12" → Name: McDonald's, Amount: 12.00, Type: LIFESTYLE
 - **Negative amounts** = Refunds/credits (displayed in green with parentheses)
 
+### Supported Currencies
+
+```
+EUR (€)  - Euro
+USD ($)  - US Dollar
+GBP (£)  - British Pound
+BRL (R$) - Brazilian Real
+PLN (zł) - Polish Zloty
+```
+
 ## Directory Structure
 
 ```
@@ -66,6 +76,8 @@ src/
 │   │   ├── import/             # + preview endpoint
 │   │   ├── export/             # CSV/Excel export
 │   │   ├── feedback/           # Bug/feature reports
+│   │   ├── onboarding/         # Setup wizard data
+│   │   ├── workspace/          # Workspace settings (reset onboarding)
 │   │   └── upload/             # Image upload (base64)
 │   ├── auth/                   # Auth pages
 │   │   ├── signin/             # Login page
@@ -95,9 +107,10 @@ src/
 │   │   └── burn-chart.tsx      # Monthly comparison
 │   ├── add-expense-modal.tsx   # Quick-add with tags
 │   ├── edit-expense-modal.tsx  # Edit with tag selector
+│   ├── onboarding-modal.tsx    # 3-step setup wizard
 │   ├── feedback-button.tsx     # Floating feedback button
 │   ├── quick-create-*.tsx      # Inline create popups
-│   └── sidebar.tsx             # Navigation
+│   └── dashboard-shell.tsx     # Layout with sidebar
 ├── lib/
 │   ├── auth.ts                 # NextAuth config
 │   ├── db.ts                   # Prisma client
@@ -261,8 +274,8 @@ npx prisma studio     # Open database GUI
 
 ## Deployment
 
-- **Hosting:** Vercel (auto-deploy from main branch)
-- **Database:** Neon PostgreSQL
+- **Hosting:** Docker on Proxmox server (self-hosted)
+- **Database:** Neon PostgreSQL (EU West 2 - London)
 - **Email:** Resend
 - **Domain:** amigo.slendyzo.pt (via Cloudflare)
 
@@ -271,17 +284,29 @@ npx prisma studio     # Open database GUI
 - Prisma 7 requires adapter pattern (`@prisma/adapter-pg`)
 - React 19: Use `ReactNode` instead of `JSX.Element`
 - Node 22 + ExcelJS: Buffer type mismatch (use `@ts-expect-error`)
-- Image uploads use base64 data URLs (Vercel serverless constraint)
+- Image uploads use base64 data URLs (serverless constraint)
 - Middleware uses cookie check (not importing auth for Edge runtime)
 - Resend client uses lazy init (avoids build-time API key errors)
+- Auth.js cookie names vary by protocol: `__Secure-authjs.session-token` (HTTPS) vs `authjs.session-token` (HTTP)
+- iOS 18 has known PWA cookie persistence bugs (not fixable from app side)
 
 ## Recent Features
 
+- **Onboarding Wizard** - 3-step setup wizard for new users:
+  - Step 1: Monthly salary + currency selection
+  - Step 2: Monthly budget + currency (defaults to salary currency, can override)
+  - Step 3: Fixed expenses + currency (defaults to budget currency, can override)
+  - Cascading currency selection: each step inherits from previous but allows override
+  - Skip option available, can restart from Settings page
+- **Multi-Currency Support** - Users can set different currencies for salary, budget, and expenses
+- **Restart Setup** - Button in Settings to re-run onboarding wizard
 - **Password Reset** - Full forgot/reset password flow with email
 - **Bulk Selection** - Select multiple expenses for bulk delete
 - **Sorting & Export** - Sort expenses by date/amount/name/category, export to CSV/Excel
 - **Negative Values** - Refunds displayed in green with parentheses
 - **Improved Import** - Better project sheet matching, SUBTOTAL skipping
+- **OFX/QFX/QIF Import** - Support for bank statement formats beyond Excel/CSV
+- **Login Timeout** - 30s timeout on signin to prevent infinite "Signing in..." state
 
 ## Testing Checklist
 
