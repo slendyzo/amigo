@@ -671,6 +671,10 @@
     }
   },
   "authPages": {
+    "tagline": "Votre gestionnaire de dépenses convivial",
+    "infoTrack": "Suivez dépenses et budgets",
+    "infoPrivate": "Vos données restent privées",
+    "infoOpenSource": "100% open source",
     "signInToAccount": "Connectez-vous à votre compte",
     "createYourAccount": "Créez votre compte",
     "continueWithGoogle": "Continuer avec Google",

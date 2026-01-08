@@ -671,6 +671,10 @@
     }
   },
   "authPages": {
+    "tagline": "Your friendly expense tracker",
+    "infoTrack": "Track expenses & budgets",
+    "infoPrivate": "Your data stays private",
+    "infoOpenSource": "100% open source",
     "signInToAccount": "Sign in to your account",
     "createYourAccount": "Create your account",
     "continueWithGoogle": "Continue with Google",

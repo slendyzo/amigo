@@ -65,9 +65,25 @@ function SignInForm() {
         <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
           Amigo
         </h1>
-        <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
-          {t("signInToAccount")}
+        <p className="text-center text-slate-600 dark:text-slate-400 mb-6">
+          {t("tagline")}
         </p>
+
+        {/* Info cards */}
+        <div className="grid grid-cols-3 gap-3 mb-8">
+          <div className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+            <div className="text-lg mb-1">📊</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">{t("infoTrack")}</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+            <div className="text-lg mb-1">🔒</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">{t("infoPrivate")}</div>
+          </div>
+          <div className="text-center p-3 rounded-lg bg-slate-50 dark:bg-slate-900/50 border border-slate-200 dark:border-slate-800">
+            <div className="text-lg mb-1">🌐</div>
+            <div className="text-xs text-slate-600 dark:text-slate-400">{t("infoOpenSource")}</div>
+          </div>
+        </div>
 
         {/* Google Sign In - Disabled with Coming Soon badge */}
         <div className="mb-6">
