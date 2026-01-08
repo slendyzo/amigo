@@ -69,6 +69,7 @@ model User {
   aiCredits          Int                @default(0)
   aiProcessingEnabled Boolean           @default(false)
   activeWorkspaceId  String?            // Currently selected workspace for multi-workspace support
+  seenAnnouncements  String[]           @default([]) // Array of announcement IDs user has dismissed
 
   // Relations
   accounts           Account[]

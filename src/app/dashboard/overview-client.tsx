@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import OnboardingModal from "@/components/onboarding-modal";
+import AnnouncementModal from "@/components/announcement-modal";
 import { LivingGauge } from "@/components/ui/living-gauge";
 import { useSwipe } from "@/hooks/use-swipe";
 
@@ -60,7 +61,11 @@ type Props = {
   monthlyIncome: number;
   expectedMonthlyIncome: number;
   onboardingCompleted: boolean;
+  seenAnnouncements: string[];
 };
+
+// Current announcement IDs - add new ones here when releasing new features
+const CURRENT_ANNOUNCEMENTS = ["workspaces-v1"];
 
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
@@ -85,6 +90,7 @@ export default function DashboardOverview({
   monthlyIncome,
   expectedMonthlyIncome,
   onboardingCompleted,
+  seenAnnouncements,
 }: Props) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -122,6 +128,28 @@ export default function DashboardOverview({
 
   // Onboarding modal state - show if not completed
   const [showOnboarding, setShowOnboarding] = useState(!onboardingCompleted);
+
+  // Announcement modal state - find first unseen announcement
+  // Only show after onboarding is complete (either already done or just completed)
+  const unseenAnnouncement = CURRENT_ANNOUNCEMENTS.find(
+    (id) => !seenAnnouncements.includes(id)
+  );
+  const [showAnnouncement, setShowAnnouncement] = useState(
+    onboardingCompleted && !!unseenAnnouncement
+  );
+  const [currentAnnouncementId, setCurrentAnnouncementId] = useState<string | null>(
+    onboardingCompleted && unseenAnnouncement ? unseenAnnouncement : null
+  );
+
+  // When onboarding closes, check if we should show announcement
+  const handleOnboardingClose = () => {
+    setShowOnboarding(false);
+    // After onboarding completes, show announcement if there's an unseen one
+    if (unseenAnnouncement) {
+      setCurrentAnnouncementId(unseenAnnouncement);
+      setShowAnnouncement(true);
+    }
+  };
 
   // Use monthly budget from settings, or expected income, or default to 2000
   const livingBudget = monthlyBudget || expectedMonthlyIncome || 2000;
@@ -957,12 +985,21 @@ export default function DashboardOverview({
       {/* Onboarding Modal - shown for new users */}
       <OnboardingModal
         isOpen={showOnboarding}
-        onClose={() => setShowOnboarding(false)}
+        onClose={handleOnboardingClose}
         existingData={{
           monthlySalary,
           monthlyBudget,
         }}
       />
+
+      {/* Announcement Modal - shown after onboarding for new features */}
+      {currentAnnouncementId && (
+        <AnnouncementModal
+          isOpen={showAnnouncement}
+          onClose={() => setShowAnnouncement(false)}
+          announcementId={currentAnnouncementId}
+        />
+      )}
     </div>
   );
 }

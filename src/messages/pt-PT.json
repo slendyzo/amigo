@@ -801,5 +801,29 @@
     "skipForNow": "Saltar por agora",
     "saving": "A guardar...",
     "getStarted": "Começar"
+  },
+  "announcement": {
+    "workspaces": {
+      "title": "Apresentamos os Espaços Partilhados!",
+      "subtitle": "Gere as finanças em conjunto com família e amigos",
+      "feature1": {
+        "title": "Espaços Partilhados",
+        "description": "Cria espaços dedicados para acompanhar despesas com a tua família, parceiro ou colegas de casa."
+      },
+      "feature2": {
+        "title": "Convida Qualquer Pessoa",
+        "description": "Envia convites por email para familiares. Terão acesso assim que se registarem."
+      },
+      "feature3": {
+        "title": "Permissões por Função",
+        "description": "Controla quem pode gerir membros (Admin) ou apenas ver e adicionar despesas (Membro)."
+      },
+      "feature4": {
+        "title": "Mudança Fácil",
+        "description": "Alterna entre os teus espaços pessoal e partilhados com um clique na barra lateral."
+      },
+      "dismiss": "Talvez Depois",
+      "explore": "Explorar Espaços"
+    }
   }
 }

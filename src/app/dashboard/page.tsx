@@ -20,7 +20,7 @@ export default async function DashboardPage({
   // Only prompt once - skip if they already dismissed it this session
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { username: true, name: true },
+    select: { username: true, name: true, seenAnnouncements: true },
   });
 
   if (!user?.username && params.skipUsername !== "true") {
@@ -167,6 +167,7 @@ export default async function DashboardPage({
       monthlyIncome={monthlyIncome}
       expectedMonthlyIncome={expectedMonthlyIncome}
       onboardingCompleted={workspace.onboardingCompleted}
+      seenAnnouncements={user?.seenAnnouncements || []}
     />
   );
 }

@@ -78,6 +78,9 @@ src/
 │   │   ├── feedback/           # Bug/feature reports
 │   │   ├── onboarding/         # Setup wizard data
 │   │   ├── workspace/          # Workspace settings (reset onboarding)
+│   │   ├── workspaces/         # Workspaces CRUD + members + invitations
+│   │   ├── invitations/        # Accept/decline invitations
+│   │   ├── user/               # User profile (dismiss-announcement)
 │   │   └── upload/             # Image upload (base64)
 │   ├── auth/                   # Auth pages
 │   │   ├── signin/             # Login page
@@ -99,7 +102,10 @@ src/
 │   │   ├── import/             # 3-step import wizard
 │   │   ├── imports/            # Import history
 │   │   ├── inbox/              # Admin feedback inbox
-│   │   └── settings/           # User settings
+│   │   ├── settings/           # User settings
+│   │   └── workspace/          # Workspace management page
+│   ├── invitations/            # Accept invitation page
+│   │   └── [token]/            # Dynamic route for invitation tokens
 │   └── globals.css
 ├── components/
 │   ├── ui/                     # Shadcn components
@@ -108,8 +114,10 @@ src/
 │   ├── add-expense-modal.tsx   # Quick-add with tags
 │   ├── edit-expense-modal.tsx  # Edit with tag selector
 │   ├── onboarding-modal.tsx    # 3-step setup wizard
+│   ├── announcement-modal.tsx  # Feature announcement popup
 │   ├── feedback-button.tsx     # Floating feedback button
 │   ├── quick-create-*.tsx      # Inline create popups
+│   ├── workspace-switcher.tsx  # Workspace dropdown in sidebar
 │   └── dashboard-shell.tsx     # Layout with sidebar
 ├── lib/
 │   ├── auth.ts                 # NextAuth config
@@ -117,6 +125,8 @@ src/
 │   ├── email.ts                # Resend email utility
 │   ├── parser.ts               # Smart keyword parsing
 │   ├── importer.ts             # Excel/CSV import logic
+│   ├── permissions.ts          # Role-based permission checks
+│   ├── workspace.ts            # Workspace context helper
 │   └── utils.ts                # Shadcn cn() helper
 └── middleware.ts               # Route protection
 
@@ -133,8 +143,10 @@ messages/
 
 ### Main Models
 
-- **User** - Auth, subscription status, password (hashed)
-- **Workspace** - Multi-tenancy, budget settings, language
+- **User** - Auth, subscription status, password (hashed), seenAnnouncements
+- **Workspace** - Multi-tenancy, budget settings, language (PERSONAL or SHARED)
+- **WorkspaceMember** - Links users to workspaces with roles (OWNER/ADMIN/MEMBER)
+- **WorkspaceInvitation** - Email invitations to join workspaces
 - **BankAccount** - User's bank accounts
 - **Category** - Expense categories
 - **Project** - Tags for grouping expenses
@@ -152,6 +164,8 @@ messages/
 - Expense → Category (optional)
 - Expense → BankAccount (optional)
 - Expense → ImportLog (for batch operations)
+- User → WorkspaceMember → Workspace (many-to-many through membership)
+- Workspace → WorkspaceInvitation (one-to-many)
 
 ## Authentication Flow
 
@@ -387,6 +401,28 @@ npx prisma studio     # Open database GUI
 - **Account Stats** - Total expenses, amount, categories, projects
 - **Danger Zone** - Delete all expenses, delete account
 - **Restart Onboarding** - Button to re-run setup wizard
+
+### Shared Workspaces (Family/Group Finance)
+
+- **Workspace Types** - Personal (default) and Shared
+- **Create Shared Workspace** - Create new workspace for family/groups
+- **Invite Members** - Send email invitations to join workspaces
+- **Role-Based Permissions**:
+  - OWNER: Full control, can delete workspace, manage all members
+  - ADMIN: Invite/remove members (except owner), full data CRUD
+  - MEMBER: View all data, CRUD own expenses only
+- **Workspace Switcher** - Dropdown in sidebar to switch between workspaces
+- **Active Workspace** - User's activeWorkspaceId persists across sessions
+- **Member Management** - View, change roles, remove members
+- **Invitation Flow** - Email link → Sign in/up → Auto-join workspace
+- **Leave Workspace** - Members can leave (owners must transfer first)
+
+### Announcement System
+
+- **Feature Announcements** - Modal popups for new features
+- **Seen Tracking** - seenAnnouncements array on User model
+- **Post-Onboarding** - Shows after onboarding completes
+- **Extensible** - Add new announcement IDs to CURRENT_ANNOUNCEMENTS array
 
 ### Authentication
 

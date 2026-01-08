@@ -815,5 +815,29 @@
     "skipForNow": "Skip for now",
     "saving": "Saving...",
     "getStarted": "Get Started"
+  },
+  "announcement": {
+    "workspaces": {
+      "title": "Introducing Shared Workspaces!",
+      "subtitle": "Manage finances together with family and friends",
+      "feature1": {
+        "title": "Shared Workspaces",
+        "description": "Create dedicated spaces to track expenses with your household, partner, or roommates."
+      },
+      "feature2": {
+        "title": "Invite Anyone",
+        "description": "Send email invitations to family members. They'll get access as soon as they sign up."
+      },
+      "feature3": {
+        "title": "Role-Based Permissions",
+        "description": "Control who can manage members (Admin) or just view and add expenses (Member)."
+      },
+      "feature4": {
+        "title": "Easy Switching",
+        "description": "Jump between your personal and shared workspaces with one click from the sidebar."
+      },
+      "dismiss": "Maybe Later",
+      "explore": "Explore Workspaces"
+    }
   }
 }

@@ -815,5 +815,29 @@
     "skipForNow": "Passer pour l'instant",
     "saving": "Enregistrement...",
     "getStarted": "Commencer"
+  },
+  "announcement": {
+    "workspaces": {
+      "title": "Découvrez les Espaces Partagés !",
+      "subtitle": "Gérez vos finances ensemble avec famille et amis",
+      "feature1": {
+        "title": "Espaces Partagés",
+        "description": "Créez des espaces dédiés pour suivre les dépenses avec votre famille, partenaire ou colocataires."
+      },
+      "feature2": {
+        "title": "Invitez N'importe Qui",
+        "description": "Envoyez des invitations par email aux membres de votre famille. Ils auront accès dès leur inscription."
+      },
+      "feature3": {
+        "title": "Permissions par Rôle",
+        "description": "Contrôlez qui peut gérer les membres (Admin) ou seulement voir et ajouter des dépenses (Membre)."
+      },
+      "feature4": {
+        "title": "Changement Facile",
+        "description": "Passez de vos espaces personnel et partagés en un clic depuis la barre latérale."
+      },
+      "dismiss": "Peut-être Plus Tard",
+      "explore": "Explorer les Espaces"
+    }
   }
 }
