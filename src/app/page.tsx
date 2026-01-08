@@ -7,27 +7,35 @@ export default async function Home() {
   const t = await getTranslations("landing");
 
   return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center p-6 text-center overflow-hidden relative">
+    <main className="min-h-screen flex flex-col items-center justify-between p-6 text-center">
       {/* Language Switcher */}
       <div className="absolute top-4 right-4">
         <LanguageSwitcherServer />
       </div>
 
-      <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
-        Amigo
-      </h1>
-      <p className="mt-4 text-lg text-slate-600 dark:text-slate-400 whitespace-nowrap">
-        {t("tagline")}
-      </p>
-      <div className="mt-8">
-        <a
-          href="/auth/signin"
-          className="rounded-lg bg-[#0070f3] px-6 py-3 text-white font-medium hover:bg-[#0060df] transition-colors"
-        >
-          {t("getStarted")}
-        </a>
+      {/* Spacer */}
+      <div />
+
+      {/* Main content */}
+      <div className="flex flex-col items-center">
+        <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
+          Amigo
+        </h1>
+        <p className="mt-4 text-lg text-slate-600 dark:text-slate-400 whitespace-nowrap">
+          {t("tagline")}
+        </p>
+        <div className="mt-8">
+          <a
+            href="/auth/signin"
+            className="rounded-lg bg-[#0070f3] px-6 py-3 text-white font-medium hover:bg-[#0060df] transition-colors"
+          >
+            {t("getStarted")}
+          </a>
+        </div>
       </div>
-      <footer className="absolute bottom-6 left-0 right-0 text-center text-sm text-slate-400 safe-bottom px-4">
+
+      {/* Footer */}
+      <footer className="text-center text-sm text-slate-400 safe-bottom">
         <p>
           {t("openSourceOn")}{" "}
           <a
