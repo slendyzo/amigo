@@ -2,6 +2,8 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import LanguageSwitcher from "@/components/language-switcher";
 
 type Step = "form" | "verify";
 
@@ -16,6 +18,7 @@ export default function SignUpPage() {
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
+  const t = useTranslations("authPages");
 
   const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -49,7 +52,7 @@ export default function SignUpPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Something went wrong");
+        setError(data.error || t("somethingWentWrong"));
         setIsLoading(false);
         return;
       }
@@ -58,7 +61,7 @@ export default function SignUpPage() {
       setResendCooldown(60);
       setIsLoading(false);
     } catch {
-      setError("Something went wrong");
+      setError(t("somethingWentWrong"));
       setIsLoading(false);
     }
   };
@@ -66,7 +69,7 @@ export default function SignUpPage() {
   const handleVerifyCode = async () => {
     const code = verificationCode.join("");
     if (code.length !== 6) {
-      setError("Please enter the complete 6-digit code");
+      setError(t("enterCompleteCode"));
       return;
     }
 
@@ -83,7 +86,7 @@ export default function SignUpPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Invalid verification code");
+        setError(data.error || t("invalidVerificationCode"));
         setIsLoading(false);
         // Clear code on error
         setVerificationCode(["", "", "", "", "", ""]);
@@ -93,7 +96,7 @@ export default function SignUpPage() {
 
       router.push("/auth/signin?verified=true");
     } catch {
-      setError("Something went wrong");
+      setError(t("somethingWentWrong"));
       setIsLoading(false);
     }
   };
@@ -114,7 +117,7 @@ export default function SignUpPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.error || "Failed to resend code");
+        setError(data.error || t("failedToResendCode"));
         setIsLoading(false);
         return;
       }
@@ -124,7 +127,7 @@ export default function SignUpPage() {
       codeInputRefs.current[0]?.focus();
       setIsLoading(false);
     } catch {
-      setError("Something went wrong");
+      setError(t("somethingWentWrong"));
       setIsLoading(false);
     }
   };
@@ -176,13 +179,18 @@ export default function SignUpPage() {
 
   if (step === "verify") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950">
+      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
+        {/* Language Switcher */}
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
+
         <div className="w-full max-w-md">
           <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
-            Verify your email
+            {t("verifyYourEmail")}
           </h1>
           <p className="text-center text-slate-600 dark:text-slate-400 mb-2">
-            We sent a 6-digit code to
+            {t("weSentCode")}
           </p>
           <p className="text-center text-slate-900 dark:text-white font-medium mb-8">
             {email}
@@ -217,15 +225,15 @@ export default function SignUpPage() {
               disabled={isLoading || verificationCode.some(d => d === "")}
               className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Verifying..." : "Verify email"}
+              {isLoading ? t("verifying") : t("verifyEmail")}
             </button>
 
             <div className="text-center space-y-3">
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Didn&apos;t receive the code?{" "}
+                {t("didntReceiveCode")}{" "}
                 {resendCooldown > 0 ? (
                   <span className="text-slate-400 dark:text-slate-500">
-                    Resend in {resendCooldown}s
+                    {t("resendIn", { seconds: resendCooldown })}
                   </span>
                 ) : (
                   <button
@@ -233,7 +241,7 @@ export default function SignUpPage() {
                     disabled={isLoading}
                     className="text-[#0070f3] hover:underline font-medium disabled:opacity-50"
                   >
-                    Resend code
+                    {t("resendCode")}
                   </button>
                 )}
               </p>
@@ -243,7 +251,7 @@ export default function SignUpPage() {
                 disabled={isLoading}
                 className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
               >
-                ← Change email address
+                ← {t("changeEmailAddress")}
               </button>
             </div>
           </div>
@@ -253,13 +261,18 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcher />
+      </div>
+
       <div className="w-full max-w-md">
         <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
           Amigo
         </h1>
         <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
-          Create your account
+          {t("createYourAccount")}
         </p>
 
         <form onSubmit={handleSendVerification} className="space-y-4">
@@ -274,7 +287,7 @@ export default function SignUpPage() {
               htmlFor="name"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
             >
-              Name
+              {t("name")}
             </label>
             <input
               id="name"
@@ -283,7 +296,7 @@ export default function SignUpPage() {
               onChange={(e) => setName(e.target.value)}
               required
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              placeholder="Your name"
+              placeholder={t("namePlaceholder")}
             />
           </div>
 
@@ -292,7 +305,7 @@ export default function SignUpPage() {
               htmlFor="username"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
             >
-              Username
+              {t("username")}
             </label>
             <input
               id="username"
@@ -306,7 +319,7 @@ export default function SignUpPage() {
               placeholder="johndoe"
             />
             <p className="mt-1 text-xs text-slate-500">
-              3-20 characters, lowercase letters, numbers, and underscores only
+              {t("usernameHint")}
             </p>
           </div>
 
@@ -315,7 +328,7 @@ export default function SignUpPage() {
               htmlFor="email"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
             >
-              Email
+              {t("email")}
             </label>
             <input
               id="email"
@@ -324,7 +337,7 @@ export default function SignUpPage() {
               onChange={(e) => setEmail(e.target.value)}
               required
               className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              placeholder="you@example.com"
+              placeholder={t("emailPlaceholder")}
             />
           </div>
 
@@ -333,7 +346,7 @@ export default function SignUpPage() {
               htmlFor="password"
               className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
             >
-              Password
+              {t("password")}
             </label>
             <input
               id="password"
@@ -346,7 +359,7 @@ export default function SignUpPage() {
               placeholder="••••••••"
             />
             <p className="mt-1 text-xs text-slate-500">
-              Must be at least 8 characters
+              {t("passwordHint")}
             </p>
           </div>
 
@@ -355,17 +368,17 @@ export default function SignUpPage() {
             disabled={isLoading}
             className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Sending code..." : "Continue"}
+            {isLoading ? t("sendingCode") : t("continue")}
           </button>
         </form>
 
         <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
-          Already have an account?{" "}
+          {t("alreadyHaveAccount")}{" "}
           <a
             href="/auth/signin"
             className="text-[#0070f3] hover:underline font-medium"
           >
-            Sign in
+            {t("signIn")}
           </a>
         </p>
       </div>

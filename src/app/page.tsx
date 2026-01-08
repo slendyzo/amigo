@@ -1,26 +1,35 @@
 import Link from "next/link";
 import InstallPrompt from "@/components/install-prompt";
+import { getTranslations } from "next-intl/server";
+import LanguageSwitcherServer from "@/components/language-switcher-server";
 
-export default function Home() {
+export default async function Home() {
+  const t = await getTranslations("landing");
+
   return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center p-6 text-center overflow-hidden">
+    <main className="fixed inset-0 flex flex-col items-center justify-center p-6 text-center overflow-hidden relative">
+      {/* Language Switcher */}
+      <div className="absolute top-4 right-4">
+        <LanguageSwitcherServer />
+      </div>
+
       <h1 className="text-4xl font-bold text-slate-900 dark:text-white">
         Amigo
       </h1>
       <p className="mt-4 text-lg text-slate-600 dark:text-slate-400 whitespace-nowrap">
-        Your friendly expense tracker
+        {t("tagline")}
       </p>
       <div className="mt-8">
         <a
           href="/auth/signin"
           className="rounded-lg bg-[#0070f3] px-6 py-3 text-white font-medium hover:bg-[#0060df] transition-colors"
         >
-          Get Started
+          {t("getStarted")}
         </a>
       </div>
       <footer className="absolute bottom-6 left-0 right-0 text-center text-sm text-slate-400 safe-bottom px-4">
         <p>
-          Open source on{" "}
+          {t("openSourceOn")}{" "}
           <a
             href="https://github.com/slendyzo/amigo"
             target="_blank"
@@ -31,7 +40,7 @@ export default function Home() {
           </a>
           {" · "}
           <Link href="/terms" className="text-[#0070f3] hover:underline">
-            Terms
+            {t("terms")}
           </Link>
         </p>
       </footer>
