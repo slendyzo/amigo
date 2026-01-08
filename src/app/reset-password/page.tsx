@@ -120,7 +120,7 @@ function ResetPasswordForm() {
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t("invalidResetLinkTitle")}</h1>
             <p className="text-slate-600 dark:text-slate-400 mb-6">{tokenError}</p>
             <Link
-              href="/auth/forgot-password"
+              href="/forgot-password"
               className="inline-block px-6 py-3 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] transition-colors"
             >
               {t("requestNewLink")}
@@ -150,7 +150,7 @@ function ResetPasswordForm() {
               {t("passwordResetSuccessMessage")}
             </p>
             <Link
-              href="/auth/signin"
+              href="/signin"
               className="inline-block px-6 py-3 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] transition-colors"
             >
               {t("signIn")}
@@ -234,7 +234,7 @@ function ResetPasswordForm() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link href="/auth/signin" className="text-[#0070f3] hover:underline font-medium">
+            <Link href="/signin" className="text-[#0070f3] hover:underline font-medium">
               {t("backToSignIn")}
             </Link>
           </div>

@@ -17,8 +17,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   // Use default cookie settings - Auth.js handles secure flag automatically based on request protocol
   // This fixes issues with Chrome on macOS where custom cookie config can cause session loss
   pages: {
-    signIn: "/auth/signin",
-    error: "/auth/error",
+    signIn: "/signin",
+    error: "/auth-error",
   },
   providers: [
     Google({

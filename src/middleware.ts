@@ -39,7 +39,7 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   // Public paths that don't require authentication
-  const publicPaths = ["/", "/auth/signin", "/auth/signup", "/auth/setup-username", "/auth/forgot-password", "/auth/reset-password", "/api/auth", "/terms"];
+  const publicPaths = ["/", "/signin", "/signup", "/setup-username", "/forgot-password", "/reset-password", "/auth-error", "/api/auth", "/terms"];
 
   const isPublicPath = publicPaths.some(
     (path) => pathname === path || pathname.startsWith("/api/auth")
@@ -74,7 +74,7 @@ export function middleware(request: NextRequest) {
     request.cookies.get("authjs.session-token")?.value;
 
   if (!token && pathname.startsWith("/dashboard")) {
-    const signInUrl = new URL("/auth/signin", request.url);
+    const signInUrl = new URL("/signin", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(signInUrl);
   }

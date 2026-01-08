@@ -62,7 +62,7 @@ export default function ForgotPasswordPage() {
               {t("linkExpiresIn")}
             </p>
             <Link
-              href="/auth/signin"
+              href="/signin"
               className="inline-block text-[#0070f3] hover:underline font-medium"
             >
               {t("backToSignIn")}
@@ -131,7 +131,7 @@ export default function ForgotPasswordPage() {
           </form>
 
           <div className="mt-6 text-center">
-            <Link href="/auth/signin" className="text-[#0070f3] hover:underline font-medium">
+            <Link href="/signin" className="text-[#0070f3] hover:underline font-medium">
               {t("backToSignIn")}
             </Link>
           </div>

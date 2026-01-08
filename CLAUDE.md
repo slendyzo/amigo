@@ -84,13 +84,12 @@ src/
 │   │   ├── invitations/        # Accept/decline invitations
 │   │   ├── user/               # User profile (dismiss-announcement)
 │   │   └── upload/             # Image upload (base64)
-│   ├── auth/                   # Auth pages
-│   │   ├── signin/             # Login page
-│   │   ├── signup/             # Registration page
-│   │   ├── forgot-password/    # Request reset page
-│   │   ├── reset-password/     # Set new password page
-│   │   ├── setup-username/     # OAuth username setup
-│   │   └── error/              # Auth error page
+│   ├── signin/                 # Login page
+│   ├── signup/                 # Registration page
+│   ├── forgot-password/        # Request reset page
+│   ├── reset-password/         # Set new password page
+│   ├── setup-username/         # OAuth username setup
+│   ├── auth-error/             # Auth error page
 │   ├── dashboard/              # Main app pages
 │   │   ├── page.tsx            # Server component wrapper
 │   │   ├── overview-client.tsx # Client with filters/charts

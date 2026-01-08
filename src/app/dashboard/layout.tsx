@@ -11,7 +11,7 @@ export default async function DashboardLayout({
   const session = await auth();
 
   if (!session?.user) {
-    redirect("/auth/signin");
+    redirect("/signin");
   }
 
   // Get user's active workspace info for the shell

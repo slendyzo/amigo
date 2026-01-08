@@ -51,7 +51,7 @@ function AuthErrorContent() {
 
         <div className="space-y-3">
           <a
-            href="/auth/signin"
+            href="/signin"
             className="block w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors"
           >
             Try Again

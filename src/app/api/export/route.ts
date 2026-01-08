@@ -99,7 +99,7 @@ export async function GET(request: NextRequest) {
       };
 
       // Add expense data
-      expenses.forEach((expense) => {
+      for (const expense of expenses) {
         const typeLabels: Record<string, string> = {
           SURVIVAL_FIXED: "Survival (Fixed)",
           SURVIVAL_VARIABLE: "Survival (Variable)",
@@ -114,14 +114,14 @@ export async function GET(request: NextRequest) {
           type: typeLabels[expense.type] || expense.type,
           category: expense.category?.name || "",
           bankAccount: expense.bankAccount?.name || "",
-          projects: expense.projects.map((p) => p.name).join(", "),
+          projects: expense.projects.map((p: { name: string }) => p.name).join(", "),
           status: expense.status,
           notes: expense.description || "",
         });
-      });
+      }
 
       // Add summary row
-      const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amountEur), 0);
+      const totalExpenses = expenses.reduce((sum: number, e: { amountEur: number | string }) => sum + Number(e.amountEur), 0);
       expensesSheet.addRow({});
       expensesSheet.addRow({
         date: "TOTAL",
@@ -150,7 +150,7 @@ export async function GET(request: NextRequest) {
         fgColor: { argb: "FFD1FAE5" },
       };
 
-      incomes.forEach((income) => {
+      for (const income of incomes) {
         incomesSheet.addRow({
           date: new Date(income.date).toLocaleDateString("en-GB"),
           name: income.name,
@@ -158,9 +158,9 @@ export async function GET(request: NextRequest) {
           type: income.type || "",
           description: income.description || "",
         });
-      });
+      }
 
-      const totalIncomes = incomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
+      const totalIncomes = incomes.reduce((sum: number, i: { amountEur: number | string }) => sum + Number(i.amountEur), 0);
       incomesSheet.addRow({});
       incomesSheet.addRow({
         date: "TOTAL",
@@ -189,7 +189,7 @@ export async function GET(request: NextRequest) {
 
       // Group by type
       const byType: Record<string, { total: number; count: number }> = {};
-      expenses.forEach((e) => {
+      for (const e of expenses) {
         const typeLabels: Record<string, string> = {
           SURVIVAL_FIXED: "Survival (Fixed)",
           SURVIVAL_VARIABLE: "Survival (Variable)",
@@ -202,7 +202,7 @@ export async function GET(request: NextRequest) {
         }
         byType[label].total += Number(e.amountEur);
         byType[label].count++;
-      });
+      }
 
       Object.entries(byType).forEach(([category, data]) => {
         summarySheet.addRow({
@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
     csvRows.push("Date,Name,Amount (EUR),Type,Category,Bank Account,Projects,Status,Notes");
 
     // Data rows
-    expenses.forEach((expense) => {
+    for (const expense of expenses) {
       const typeLabels: Record<string, string> = {
         SURVIVAL_FIXED: "Survival (Fixed)",
         SURVIVAL_VARIABLE: "Survival (Variable)",
@@ -264,15 +264,15 @@ export async function GET(request: NextRequest) {
         typeLabels[expense.type] || expense.type,
         `"${(expense.category?.name || "").replace(/"/g, '""')}"`,
         `"${(expense.bankAccount?.name || "").replace(/"/g, '""')}"`,
-        `"${expense.projects.map((p) => p.name).join(", ").replace(/"/g, '""')}"`,
+        `"${expense.projects.map((p: { name: string }) => p.name).join(", ").replace(/"/g, '""')}"`,
         expense.status,
         `"${(expense.description || "").replace(/"/g, '""')}"`,
       ];
       csvRows.push(row.join(","));
-    });
+    }
 
     // Add total
-    const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amountEur), 0);
+    const totalExpenses = expenses.reduce((sum: number, e: { amountEur: number | string }) => sum + Number(e.amountEur), 0);
     csvRows.push("");
     csvRows.push(`TOTAL,,${totalExpenses.toFixed(2)}`);
 

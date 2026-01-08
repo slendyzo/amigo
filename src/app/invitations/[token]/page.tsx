@@ -81,7 +81,7 @@ export default function InvitationPage() {
       if (!res.ok) {
         if (data.code === "UNAUTHORIZED") {
           // Redirect to signin with return URL
-          router.push(`/auth/signin?callbackUrl=/invitations/${token}`);
+          router.push(`/signin?callbackUrl=/invitations/${token}`);
           return;
         }
         setError(data.error || "Failed to accept invitation");
@@ -240,13 +240,13 @@ export default function InvitationPage() {
           <p className="text-slate-500 mb-6">Please sign in or create an account to accept this invitation.</p>
           <div className="space-y-3">
             <Link
-              href={`/auth/signin?callbackUrl=/invitations/${token}`}
+              href={`/signin?callbackUrl=/invitations/${token}`}
               className="block w-full px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
             >
               Sign In
             </Link>
             <Link
-              href={`/auth/signup?callbackUrl=/invitations/${token}`}
+              href={`/signup?callbackUrl=/invitations/${token}`}
               className="block w-full px-6 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium"
             >
               Create Account

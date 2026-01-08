@@ -94,7 +94,7 @@ export default function SignUpPage() {
         return;
       }
 
-      router.push("/auth/signin?verified=true");
+      router.push("/signin?verified=true");
     } catch {
       setError(t("somethingWentWrong"));
       setIsLoading(false);
@@ -375,7 +375,7 @@ export default function SignUpPage() {
         <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
           {t("alreadyHaveAccount")}{" "}
           <a
-            href="/auth/signin"
+            href="/signin"
             className="text-[#0070f3] hover:underline font-medium"
           >
             {t("signIn")}

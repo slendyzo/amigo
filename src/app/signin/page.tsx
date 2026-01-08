@@ -200,7 +200,7 @@ function SignInForm() {
                 {t("password")}
               </label>
               <a
-                href="/auth/forgot-password"
+                href="/forgot-password"
                 className="text-sm text-[#0070f3] hover:underline"
               >
                 {t("forgotPassword")}
@@ -229,7 +229,7 @@ function SignInForm() {
         <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
           {t("noAccount")}{" "}
           <a
-            href="/auth/signup"
+            href="/signup"
             className="text-[#0070f3] hover:underline font-medium"
           >
             {t("signUp")}

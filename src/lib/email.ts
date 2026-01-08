@@ -22,7 +22,7 @@ export async function sendPasswordResetEmail(
   token: string,
   userName?: string
 ): Promise<{ success: boolean; error?: string }> {
-  const resetUrl = `${process.env.AUTH_URL || "http://localhost:3000"}/auth/reset-password?token=${token}`;
+  const resetUrl = `${process.env.AUTH_URL || "http://localhost:3000"}/reset-password?token=${token}`;
 
   console.log("[Email] Attempting to send password reset email to:", email);
   console.log("[Email] Reset URL:", resetUrl);
@@ -185,7 +185,7 @@ export async function sendWorkspaceInvitationEmail(
 ): Promise<{ success: boolean; error?: string }> {
   const baseUrl = process.env.AUTH_URL || "http://localhost:3000";
   const inviteUrl = `${baseUrl}/invitations/${token}`;
-  const signupUrl = `${baseUrl}/auth/signup?invite=${token}`;
+  const signupUrl = `${baseUrl}/signup?invite=${token}`;
 
   console.log("[Email] Sending workspace invitation to:", email);
   console.log("[Email] Workspace:", workspaceName, "Inviter:", inviterName);
