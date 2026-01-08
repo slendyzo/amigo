@@ -92,6 +92,83 @@ If you didn't request this password reset, you can safely ignore this email. You
 }
 
 /**
+ * Send email verification code for registration
+ * @param email - Recipient email address
+ * @param code - 6-digit verification code
+ * @param userName - Optional user name for personalization
+ */
+export async function sendEmailVerificationCode(
+  email: string,
+  code: string,
+  userName?: string
+): Promise<{ success: boolean; error?: string }> {
+  console.log("[Email] Sending verification code to:", email);
+
+  try {
+    const resend = getResendClient();
+    const { data, error } = await resend.emails.send({
+      from: FROM_EMAIL,
+      to: email,
+      subject: `${code} is your Amigo verification code`,
+      html: `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        </head>
+        <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 24px;">Amigo</h1>
+          </div>
+          <div style="background: #ffffff; padding: 30px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 12px 12px;">
+            <h2 style="color: #1f2937; margin-top: 0;">Verify your email</h2>
+            <p>Hi${userName ? ` ${userName}` : ""},</p>
+            <p>Enter this code to complete your registration:</p>
+            <div style="text-align: center; margin: 30px 0;">
+              <div style="display: inline-block; background: #f3f4f6; padding: 20px 40px; border-radius: 12px; letter-spacing: 8px; font-size: 32px; font-weight: 700; color: #1f2937; font-family: monospace;">
+                ${code}
+              </div>
+            </div>
+            <p style="color: #6b7280; font-size: 14px;">This code will expire in 10 minutes.</p>
+            <p style="color: #6b7280; font-size: 14px;">If you didn't create an account on Amigo, you can safely ignore this email.</p>
+            <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 30px 0;">
+            <p style="color: #9ca3af; font-size: 12px; text-align: center;">
+              Having trouble? Contact us at support@amigo.slendyzo.pt
+            </p>
+          </div>
+        </body>
+        </html>
+      `,
+      text: `
+Your Amigo verification code
+
+Hi${userName ? ` ${userName}` : ""},
+
+Enter this code to complete your registration:
+
+${code}
+
+This code will expire in 10 minutes.
+
+If you didn't create an account on Amigo, you can safely ignore this email.
+      `.trim(),
+    });
+
+    if (error) {
+      console.error("[Email] Failed to send verification code:", error);
+      return { success: false, error: error.message };
+    }
+
+    console.log("[Email] Successfully sent verification code, ID:", data?.id);
+    return { success: true };
+  } catch (err) {
+    console.error("[Email] Verification code sending error:", err);
+    return { success: false, error: "Failed to send email" };
+  }
+}
+
+/**
  * Send workspace invitation email
  * @param email - Recipient email address
  * @param inviterName - Name of the person who sent the invitation

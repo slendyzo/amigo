@@ -2,10 +2,13 @@
 
 import { signIn } from "next-auth/react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export default function SignInPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get("verified") === "true";
+  const registered = searchParams.get("registered") === "true";
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -103,6 +106,14 @@ export default function SignInPage() {
 
         {/* Credentials Form */}
         <form onSubmit={handleCredentialsSignIn} className="space-y-4">
+          {(verified || registered) && (
+            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-sm">
+              {verified
+                ? "Email verified successfully! You can now sign in."
+                : "Account created successfully! Please sign in."}
+            </div>
+          )}
+
           {error && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
               {error}

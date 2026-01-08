@@ -125,6 +125,20 @@ model VerificationToken {
   @@map("verification_tokens")
 }
 
+model EmailVerificationToken {
+  id        String   @id @default(cuid())
+  email     String
+  code      String   // 6-digit verification code
+  userData  String   @db.Text // JSON: {name, username, email, hashedPassword}
+  attempts  Int      @default(0) // Track failed verification attempts
+  expires   DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([email, code])
+  @@index([email])
+  @@map("email_verification_tokens")
+}
+
 // ============================================================================
 // WORKSPACE (Multi-tenancy)
 // ============================================================================

@@ -1,24 +1,46 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+
+type Step = "form" | "verify";
 
 export default function SignUpPage() {
   const router = useRouter();
+  const [step, setStep] = useState<Step>("form");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
 
-  const handleSignUp = async (e: React.FormEvent) => {
+  const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  // Resend cooldown timer
+  useEffect(() => {
+    if (resendCooldown > 0) {
+      const timer = setTimeout(() => setResendCooldown(resendCooldown - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [resendCooldown]);
+
+  // Focus first code input when entering verify step
+  useEffect(() => {
+    if (step === "verify" && codeInputRefs.current[0]) {
+      codeInputRefs.current[0].focus();
+    }
+  }, [step]);
+
+  const handleSendVerification = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
 
     try {
-      const response = await fetch("/api/auth/register", {
+      const response = await fetch("/api/auth/send-verification", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, username, email, password }),
@@ -32,12 +54,203 @@ export default function SignUpPage() {
         return;
       }
 
-      router.push("/auth/signin?registered=true");
+      setStep("verify");
+      setResendCooldown(60);
+      setIsLoading(false);
     } catch {
       setError("Something went wrong");
       setIsLoading(false);
     }
   };
+
+  const handleVerifyCode = async () => {
+    const code = verificationCode.join("");
+    if (code.length !== 6) {
+      setError("Please enter the complete 6-digit code");
+      return;
+    }
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/auth/verify-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, code }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Invalid verification code");
+        setIsLoading(false);
+        // Clear code on error
+        setVerificationCode(["", "", "", "", "", ""]);
+        codeInputRefs.current[0]?.focus();
+        return;
+      }
+
+      router.push("/auth/signin?verified=true");
+    } catch {
+      setError("Something went wrong");
+      setIsLoading(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (resendCooldown > 0) return;
+
+    setIsLoading(true);
+    setError("");
+
+    try {
+      const response = await fetch("/api/auth/send-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, username, email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.error || "Failed to resend code");
+        setIsLoading(false);
+        return;
+      }
+
+      setResendCooldown(60);
+      setVerificationCode(["", "", "", "", "", ""]);
+      codeInputRefs.current[0]?.focus();
+      setIsLoading(false);
+    } catch {
+      setError("Something went wrong");
+      setIsLoading(false);
+    }
+  };
+
+  const handleCodeChange = (index: number, value: string) => {
+    // Only allow digits
+    const digit = value.replace(/\D/g, "").slice(-1);
+
+    const newCode = [...verificationCode];
+    newCode[index] = digit;
+    setVerificationCode(newCode);
+
+    // Auto-focus next input
+    if (digit && index < 5) {
+      codeInputRefs.current[index + 1]?.focus();
+    }
+
+    // Auto-submit when all digits entered
+    if (digit && index === 5 && newCode.every(d => d !== "")) {
+      setTimeout(() => handleVerifyCode(), 100);
+    }
+  };
+
+  const handleCodeKeyDown = (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Backspace" && !verificationCode[index] && index > 0) {
+      codeInputRefs.current[index - 1]?.focus();
+    }
+    if (e.key === "Enter" && verificationCode.every(d => d !== "")) {
+      handleVerifyCode();
+    }
+  };
+
+  const handleCodePaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (pastedData.length === 6) {
+      const newCode = pastedData.split("");
+      setVerificationCode(newCode);
+      codeInputRefs.current[5]?.focus();
+      setTimeout(() => handleVerifyCode(), 100);
+    }
+  };
+
+  const handleBackToForm = () => {
+    setStep("form");
+    setVerificationCode(["", "", "", "", "", ""]);
+    setError("");
+  };
+
+  if (step === "verify") {
+    return (
+      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950">
+        <div className="w-full max-w-md">
+          <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
+            Verify your email
+          </h1>
+          <p className="text-center text-slate-600 dark:text-slate-400 mb-2">
+            We sent a 6-digit code to
+          </p>
+          <p className="text-center text-slate-900 dark:text-white font-medium mb-8">
+            {email}
+          </p>
+
+          <div className="space-y-6">
+            {error && (
+              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+
+            <div className="flex justify-center gap-2" onPaste={handleCodePaste}>
+              {verificationCode.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => { codeInputRefs.current[index] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                  disabled={isLoading}
+                  className="w-12 h-14 text-center text-2xl font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent disabled:opacity-50"
+                />
+              ))}
+            </div>
+
+            <button
+              onClick={handleVerifyCode}
+              disabled={isLoading || verificationCode.some(d => d === "")}
+              className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? "Verifying..." : "Verify email"}
+            </button>
+
+            <div className="text-center space-y-3">
+              <p className="text-sm text-slate-600 dark:text-slate-400">
+                Didn&apos;t receive the code?{" "}
+                {resendCooldown > 0 ? (
+                  <span className="text-slate-400 dark:text-slate-500">
+                    Resend in {resendCooldown}s
+                  </span>
+                ) : (
+                  <button
+                    onClick={handleResendCode}
+                    disabled={isLoading}
+                    className="text-[#0070f3] hover:underline font-medium disabled:opacity-50"
+                  >
+                    Resend code
+                  </button>
+                )}
+              </p>
+
+              <button
+                onClick={handleBackToForm}
+                disabled={isLoading}
+                className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+              >
+                ← Change email address
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950">
@@ -49,7 +262,7 @@ export default function SignUpPage() {
           Create your account
         </p>
 
-        <form onSubmit={handleSignUp} className="space-y-4">
+        <form onSubmit={handleSendVerification} className="space-y-4">
           {error && (
             <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
               {error}
@@ -142,7 +355,7 @@ export default function SignUpPage() {
             disabled={isLoading}
             className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {isLoading ? "Creating account..." : "Create account"}
+            {isLoading ? "Sending code..." : "Continue"}
           </button>
         </form>
 
