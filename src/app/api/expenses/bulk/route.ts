@@ -38,7 +38,7 @@ export async function DELETE(request: NextRequest) {
         select: { id: true },
       });
 
-      const validIds = expenses.map((e: { id: string }) => e.id);
+      const validIds = expenses.map((e) => e.id);
 
       if (validIds.length === 0) {
         return NextResponse.json(

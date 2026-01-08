@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Add summary row
-      const totalExpenses = expenses.reduce((sum: number, e: { amountEur: number | string }) => sum + Number(e.amountEur), 0);
+      const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amountEur), 0);
       expensesSheet.addRow({});
       expensesSheet.addRow({
         date: "TOTAL",
@@ -160,7 +160,7 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      const totalIncomes = incomes.reduce((sum: number, i: { amountEur: number | string }) => sum + Number(i.amountEur), 0);
+      const totalIncomes = incomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
       incomesSheet.addRow({});
       incomesSheet.addRow({
         date: "TOTAL",
@@ -272,7 +272,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Add total
-    const totalExpenses = expenses.reduce((sum: number, e: { amountEur: number | string }) => sum + Number(e.amountEur), 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amountEur), 0);
     csvRows.push("");
     csvRows.push(`TOTAL,,${totalExpenses.toFixed(2)}`);
 
