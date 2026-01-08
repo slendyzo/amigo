@@ -21,7 +21,7 @@ This file provides all context needed to start a new Claude Code session and con
 - **Styling:** Tailwind CSS 4
 - **UI Components:** Shadcn UI (Electric Blue theme)
 - **Charts:** Recharts (React 19 compatible)
-- **Email:** Resend (for password reset emails)
+- **Email:** Resend (for verification codes, password reset, invitations)
 - **Language:** TypeScript 5.7, React 19
 - **i18n:** next-intl (en, pt-PT, fr-FR)
 
@@ -62,7 +62,9 @@ src/
 │   ├── api/                    # API routes
 │   │   ├── auth/               # NextAuth + password reset
 │   │   │   ├── [...nextauth]/  # NextAuth handler
-│   │   │   ├── register/       # User registration
+│   │   │   ├── register/       # User registration (legacy, not used)
+│   │   │   ├── send-verification/ # Send 6-digit email OTP
+│   │   │   ├── verify-email/   # Verify OTP and create account
 │   │   │   ├── forgot-password/# Request password reset
 │   │   │   ├── reset-password/ # Complete password reset
 │   │   │   └── setup-username/ # OAuth username setup
@@ -157,6 +159,7 @@ messages/
 - **ImportLog** - Track import batches
 - **Feedback** - Bug reports and feature requests
 - **VerificationToken** - Password reset tokens
+- **EmailVerificationToken** - Registration OTP codes with pending user data
 
 ### Key Relations
 
@@ -168,6 +171,16 @@ messages/
 - Workspace → WorkspaceInvitation (one-to-many)
 
 ## Authentication Flow
+
+### Registration (Email OTP Verification)
+
+1. User fills registration form (name, username, email, password) on `/auth/signup`
+2. Clicks "Continue" → API validates data, hashes password
+3. 6-digit code generated, stored in `EmailVerificationToken` with user data
+4. Code sent via Resend email (10 minute expiry)
+5. User enters code in 6-box input (auto-focus, paste support)
+6. Code validated → User + Workspace created → Redirect to signin
+7. Security: Max 5 attempts/code, 3 codes/email/hour rate limit
 
 ### Password-based Login
 1. User enters email/username + password on `/auth/signin`
@@ -427,8 +440,11 @@ npx prisma studio     # Open database GUI
 
 ### Authentication
 
-- **Email/Password** - Registration and login
+- **Email OTP Registration** - 6-digit code verification before account creation
+- **Email/Password Login** - Username or email + password
 - **Password Reset** - Full forgot/reset flow via email (Resend)
+- **Rate Limiting** - 3 codes/email/hour, 5 attempts/code for registration
+- **Blocked Domains** - 50+ disposable email services blocked
 - **OAuth Ready** - Setup-username endpoint for OAuth providers
 - **Session Management** - JWT sessions with NextAuth v5
 
