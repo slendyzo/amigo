@@ -1,4 +1,4 @@
-# VibeFinance (Amigo) - Claude Code Project Context
+# Amigo - Claude Code Project Context
 
 This file provides all context needed to start a new Claude Code session and continue development.
 
@@ -6,7 +6,7 @@ This file provides all context needed to start a new Claude Code session and con
 
 | Item | Value |
 |------|-------|
-| **Project** | VibeFinance (internal name: Amigo) |
+| **Project** | Amigo |
 | **Type** | Personal finance management app |
 | **Live URL** | https://amigo.slendyzo.pt |
 | **Repo** | https://github.com/slendyzo/amigo |
@@ -286,7 +286,7 @@ GOOGLE_CLIENT_SECRET=""              # Optional OAuth
 
 # Email (Password Reset)
 RESEND_API_KEY="re_..."              # Resend API key
-EMAIL_FROM="VibeFinance <noreply@amigo.slendyzo.pt>"  # Optional, has default
+EMAIL_FROM="Amigo <noreply@amigo.slendyzo.pt>"  # Optional, has default
 ```
 
 ## Commands

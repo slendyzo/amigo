@@ -1,4 +1,4 @@
-// Legacy Import Logic for VibeFinance
+// Legacy Import Logic for Amigo
 // Handles "Expenses.xlsx" format with columns: Data, Tipo de Custo, Custo
 
 import { ExpenseType } from "@prisma/client";

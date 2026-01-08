@@ -1,5 +1,5 @@
 /**
- * Comprehensive Test Suite for Amigo (VibeFinance)
+ * Comprehensive Test Suite for Amigo
  *
  * Tests: Functional, Security, Stress
  * Run: npx tsx scripts/test-suite.ts
@@ -1159,7 +1159,7 @@ function generateReport() {
 
 async function main() {
   console.log("\n" + "=".repeat(60));
-  console.log("🧪 AMIGO (VibeFinance) COMPREHENSIVE TEST SUITE");
+  console.log("🧪 AMIGO COMPREHENSIVE TEST SUITE");
   console.log("=".repeat(60));
   console.log(`\n📅 ${new Date().toISOString()}`);
   console.log(`🌐 Target: ${BASE_URL}`);

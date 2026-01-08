@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
     if (format === "xlsx") {
       // Create Excel workbook
       const workbook = new ExcelJS.Workbook();
-      workbook.creator = "VibeFinance";
+      workbook.creator = "Amigo";
       workbook.created = new Date();
 
       // Expenses sheet
@@ -232,7 +232,7 @@ export async function GET(request: NextRequest) {
       // Generate buffer
       const buffer = await workbook.xlsx.writeBuffer();
 
-      const filename = `vibefinance-export-${new Date().toISOString().split("T")[0]}.xlsx`;
+      const filename = `amigo-export-${new Date().toISOString().split("T")[0]}.xlsx`;
 
       return new NextResponse(buffer, {
         headers: {
@@ -277,7 +277,7 @@ export async function GET(request: NextRequest) {
     csvRows.push(`TOTAL,,${totalExpenses.toFixed(2)}`);
 
     const csvContent = csvRows.join("\n");
-    const filename = `vibefinance-export-${new Date().toISOString().split("T")[0]}.csv`;
+    const filename = `amigo-export-${new Date().toISOString().split("T")[0]}.csv`;
 
     return new NextResponse(csvContent, {
       headers: {

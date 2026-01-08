@@ -1,4 +1,4 @@
-// i18n configuration for VibeFinance
+// i18n configuration for Amigo
 // Supports: English (en), Portuguese (pt-PT), French (fr-FR)
 
 export const locales = ["en", "pt-PT", "fr-FR"] as const;
