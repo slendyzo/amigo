@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import OnboardingModal from "@/components/onboarding-modal";
@@ -67,10 +68,11 @@ type Props = {
 // Current announcement IDs - add new ones here when releasing new features
 const CURRENT_ANNOUNCEMENTS = ["workspaces-v1"];
 
-const MONTHS = [
-  "January", "February", "March", "April", "May", "June",
-  "July", "August", "September", "October", "November", "December"
-];
+// Month keys for i18n
+const MONTH_KEYS = [
+  "january", "february", "march", "april", "may", "june",
+  "july", "august", "september", "october", "november", "december"
+] as const;
 
 type ViewMode = "month" | "quarter" | "year" | "all";
 type TypeFilter = "all" | "living" | "lifestyle" | "project";
@@ -93,6 +95,9 @@ export default function DashboardOverview({
   seenAnnouncements,
 }: Props) {
   const router = useRouter();
+  const t = useTranslations("dashboard");
+  const tTime = useTranslations("time");
+  const tCommon = useTranslations("common");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const [isLoading, setIsLoading] = useState(false);
@@ -495,13 +500,13 @@ export default function DashboardOverview({
   const getDateRangeLabel = () => {
     switch (viewMode) {
       case "month":
-        return `${MONTHS[selectedMonth]} ${selectedYear}`;
+        return `${tTime(`months.${MONTH_KEYS[selectedMonth]}`)} ${selectedYear}`;
       case "quarter":
         return `Q${selectedQuarter} ${selectedYear}`;
       case "year":
         return `${selectedYear}`;
       case "all":
-        return "All Time";
+        return t("allTime");
     }
   };
 
@@ -514,8 +519,8 @@ export default function DashboardOverview({
       {/* Header with Welcome and Add Button */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">Welcome, {userName}!</h1>
-          <p className="text-slate-500 text-xs md:text-sm">Here&apos;s your financial overview</p>
+          <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("welcome", { name: userName })}</h1>
+          <p className="text-slate-500 text-xs md:text-sm">{t("financialOverview")}</p>
         </div>
         {/* Desktop add button - hidden on mobile (use bottom nav instead) */}
         <button
@@ -525,7 +530,7 @@ export default function DashboardOverview({
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Add Expense
+          {t("addExpense")}
         </button>
       </div>
 
@@ -541,8 +546,8 @@ export default function DashboardOverview({
             </svg>
           </button>
           <div className="text-center">
-            <p className="font-semibold text-slate-900">{MONTHS[selectedMonth]} {selectedYear}</p>
-            <p className="text-xs text-slate-400">Swipe to change month</p>
+            <p className="font-semibold text-slate-900">{tTime(`months.${MONTH_KEYS[selectedMonth]}`)} {selectedYear}</p>
+            <p className="text-xs text-slate-400">{t("swipeToChange")}</p>
           </div>
           <button
             onClick={goToNextMonth}
@@ -576,7 +581,7 @@ export default function DashboardOverview({
                   : "bg-slate-100 text-slate-600 active:bg-slate-200"
               }`}
             >
-              {mode.charAt(0).toUpperCase() + mode.slice(1)}
+              {t(`viewModes.${mode}`)}
             </button>
           ))}
         </div>
@@ -586,18 +591,18 @@ export default function DashboardOverview({
             onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
             className="flex-shrink-0 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white min-w-[120px]"
           >
-            <option value="all">All Types</option>
-            <option value="living">Living</option>
-            <option value="lifestyle">Lifestyle</option>
-            <option value="project">Projects</option>
+            <option value="all">{t("filters.allTypes")}</option>
+            <option value="living">{t("filters.living")}</option>
+            <option value="lifestyle">{t("filters.lifestyle")}</option>
+            <option value="project">{t("filters.projects")}</option>
           </select>
           <select
             value={selectedProjectId || ""}
             onChange={(e) => handleFilterChange(setSelectedProjectId, e.target.value || null)}
             className="flex-shrink-0 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white min-w-[120px]"
           >
-            <option value="">All Projects</option>
-            <option value="__none__">No Project</option>
+            <option value="">{t("filters.allProjects")}</option>
+            <option value="__none__">{t("filters.noProject")}</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -620,7 +625,7 @@ export default function DashboardOverview({
                     : "text-slate-600 hover:bg-slate-100"
                 }`}
               >
-                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                {t(`viewModes.${mode}`)}
               </button>
             ))}
           </div>
@@ -633,8 +638,8 @@ export default function DashboardOverview({
                 onChange={(e) => handleFilterChange(setSelectedMonth, parseInt(e.target.value))}
                 className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
               >
-                {MONTHS.map((month, i) => (
-                  <option key={i} value={i}>{month}</option>
+                {MONTH_KEYS.map((monthKey, i) => (
+                  <option key={i} value={i}>{tTime(`months.${monthKey}`)}</option>
                 ))}
               </select>
               <select
@@ -693,8 +698,8 @@ export default function DashboardOverview({
             onChange={(e) => handleFilterChange(setSelectedProjectId, e.target.value || null)}
             className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
           >
-            <option value="">All Projects</option>
-            <option value="__none__">No Project</option>
+            <option value="">{t("filters.allProjects")}</option>
+            <option value="__none__">{t("filters.noProject")}</option>
             {projects.map((p) => (
               <option key={p.id} value={p.id}>{p.name}</option>
             ))}
@@ -706,10 +711,10 @@ export default function DashboardOverview({
             onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
             className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
           >
-            <option value="all">All Types</option>
-            <option value="living">Living Only</option>
-            <option value="lifestyle">Lifestyle Only</option>
-            <option value="project">Projects Only</option>
+            <option value="all">{t("filters.allTypes")}</option>
+            <option value="living">{t("filters.livingOnly")}</option>
+            <option value="lifestyle">{t("filters.lifestyleOnly")}</option>
+            <option value="project">{t("filters.projectsOnly")}</option>
           </select>
 
           {/* Loading indicator */}
@@ -728,14 +733,14 @@ export default function DashboardOverview({
       {viewMode === "month" && (expectedMonthlyIncome > 0 || monthlyIncome > 0) && (
         <div className="grid grid-cols-3 gap-2 md:gap-4">
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 md:p-5 rounded-xl border border-green-200">
-            <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">Expected</p>
+            <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">{t("income.expected")}</p>
             <p className="text-base md:text-2xl font-bold text-green-600">€{expectedMonthlyIncome.toFixed(0)}</p>
-            <p className="hidden md:block text-xs text-green-600/70 mt-1">Recurring salary/income</p>
+            <p className="hidden md:block text-xs text-green-600/70 mt-1">{t("income.recurringSalary")}</p>
           </div>
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 md:p-5 rounded-xl border border-green-200">
-            <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">Received</p>
+            <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">{t("income.received")}</p>
             <p className="text-base md:text-2xl font-bold text-green-600">€{monthlyIncome.toFixed(0)}</p>
-            <p className="hidden md:block text-xs text-green-600/70 mt-1">All income sources</p>
+            <p className="hidden md:block text-xs text-green-600/70 mt-1">{t("income.allSources")}</p>
           </div>
           <div className={`p-3 md:p-5 rounded-xl border ${
             (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
@@ -746,7 +751,7 @@ export default function DashboardOverview({
               (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
                 ? "text-blue-700"
                 : "text-red-700"
-            }`}>Balance</p>
+            }`}>{t("income.balance")}</p>
             <p className={`text-base md:text-2xl font-bold ${
               (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
                 ? "text-blue-600"
@@ -759,7 +764,7 @@ export default function DashboardOverview({
                 ? "text-blue-600/70"
                 : "text-red-600/70"
             }`}>
-              {(monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0 ? "Surplus" : "Deficit"} after all expenses
+              {(monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0 ? t("income.surplus") : t("income.deficit")}
             </p>
           </div>
         </div>
@@ -768,32 +773,32 @@ export default function DashboardOverview({
       {/* Stats Cards - Mobile optimized */}
       <div className="grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-4 lg:grid-cols-5">
         <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
-          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">Total</p>
+          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.total")}</p>
           <p className="text-lg md:text-2xl font-bold text-slate-900">€{stats.total.toFixed(0)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{getDateRangeLabel()}</p>
         </div>
         <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
-          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">Living</p>
+          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.living")}</p>
           <p className="text-lg md:text-2xl font-bold text-[#0070f3]">€{stats.living.toFixed(0)}</p>
           <div className="hidden md:block text-xs text-slate-400 mt-1 space-y-0.5">
-            <p>Fixed: €{stats.livingFixed.toFixed(2)}</p>
-            <p>Variable: €{stats.livingVariable.toFixed(2)}</p>
+            <p>{t("stats.fixed")}: €{stats.livingFixed.toFixed(2)}</p>
+            <p>{t("stats.variable")}: €{stats.livingVariable.toFixed(2)}</p>
           </div>
         </div>
         <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
-          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">Lifestyle</p>
+          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.lifestyle")}</p>
           <p className="text-lg md:text-2xl font-bold text-purple-600">€{stats.lifestyle.toFixed(0)}</p>
-          <p className="hidden md:block text-xs text-slate-400 mt-1">Daily spending</p>
+          <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.dailySpending")}</p>
         </div>
         <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
-          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">Projects</p>
+          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.projects")}</p>
           <p className="text-lg md:text-2xl font-bold text-orange-600">€{stats.projects.toFixed(0)}</p>
-          <p className="hidden md:block text-xs text-slate-400 mt-1">{projects.length} project(s)</p>
+          <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.projectCount", { count: projects.length })}</p>
         </div>
         <div className="col-span-2 md:col-span-1 bg-white p-3 md:p-5 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
-          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">Grand Total</p>
+          <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.grandTotal")}</p>
           <p className="text-lg md:text-2xl font-bold text-slate-900">€{stats.grandTotal.toFixed(0)}</p>
-          <p className="hidden md:block text-xs text-slate-400 mt-1">Including projects</p>
+          <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.includingProjects")}</p>
         </div>
       </div>
 
@@ -805,7 +810,7 @@ export default function DashboardOverview({
             <LivingGauge
               current={stats.budgetTotal}
               budget={livingBudget}
-              label="Monthly Budget"
+              label={t("monthlyBudget")}
             />
           </div>
 
@@ -819,8 +824,8 @@ export default function DashboardOverview({
                 previousMonthExpenses={previousMonthExpenses
                   .filter((e) => !e.projects || e.projects.length === 0)
                   .map((e) => ({ date: e.date, amountEur: e.amountEur }))}
-                currentMonthLabel={`${MONTHS[selectedMonth]} ${selectedYear}`}
-                previousMonthLabel={`${MONTHS[selectedMonth === 0 ? 11 : selectedMonth - 1]} ${selectedMonth === 0 ? selectedYear - 1 : selectedYear}`}
+                currentMonthLabel={`${tTime(`months.${MONTH_KEYS[selectedMonth]}`)} ${selectedYear}`}
+                previousMonthLabel={`${tTime(`months.${MONTH_KEYS[selectedMonth === 0 ? 11 : selectedMonth - 1]}`)} ${selectedMonth === 0 ? selectedYear - 1 : selectedYear}`}
               />
             </Suspense>
           </div>
@@ -831,7 +836,7 @@ export default function DashboardOverview({
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="font-semibold text-slate-900 text-sm md:text-base">
-            Expenses ({filteredExpenses.length})
+            {t("expenses.count", { count: filteredExpenses.length })}
           </h3>
           <span className="text-xs md:text-sm text-slate-500">{getDateRangeLabel()}</span>
         </div>
@@ -853,7 +858,7 @@ export default function DashboardOverview({
                     ))}
                     {expense.excludeFromBudget && (
                       <span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-slate-200 text-slate-600">
-                        Offshore
+                        {t("expenses.offshore")}
                       </span>
                     )}
                   </div>
@@ -869,9 +874,9 @@ export default function DashboardOverview({
                         "text-orange-600"
                       }`}
                     >
-                      {expense.type === "SURVIVAL_FIXED" ? "Fixed" :
-                       expense.type === "SURVIVAL_VARIABLE" ? "Variable" :
-                       expense.type === "LIFESTYLE" ? "Life" : "Proj"}
+                      {expense.type === "SURVIVAL_FIXED" ? t("expenseTypes.fixed") :
+                       expense.type === "SURVIVAL_VARIABLE" ? t("expenseTypes.variable") :
+                       expense.type === "LIFESTYLE" ? t("expenseTypes.lifestyle") : t("expenseTypes.project")}
                     </span>
                     <span className="hidden md:inline text-slate-300">•</span>
                     <span className="hidden md:inline text-sm text-slate-400">{expense.categoryName}</span>
@@ -912,8 +917,8 @@ export default function DashboardOverview({
                             ? "text-slate-500 active:text-slate-700 active:bg-slate-100 md:hover:text-slate-700 md:hover:bg-slate-100"
                             : "text-slate-400 active:text-amber-500 active:bg-amber-50 md:hover:text-amber-500 md:hover:bg-amber-50"
                         }`}
-                        aria-label={expense.excludeFromBudget ? "Include in budget" : "Exclude from budget"}
-                        title={expense.excludeFromBudget ? "Include in budget" : "Exclude from budget (offshore)"}
+                        aria-label={expense.excludeFromBudget ? t("expenses.includeInBudget") : t("expenses.excludeFromBudget")}
+                        title={expense.excludeFromBudget ? t("expenses.includeInBudget") : t("expenses.excludeFromBudget")}
                       >
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           {expense.excludeFromBudget ? (
@@ -952,7 +957,7 @@ export default function DashboardOverview({
           </div>
         ) : (
           <div className="px-4 md:px-6 py-8 md:py-12 text-center">
-            <p className="text-slate-500 text-sm md:text-base">No expenses found for this period.</p>
+            <p className="text-slate-500 text-sm md:text-base">{t("expenses.noExpenses")}</p>
           </div>
         )}
       </div>

@@ -75,7 +75,8 @@
   },
   "dashboard": {
     "title": "Painel",
-    "welcome": "Bem-vindo de volta",
+    "welcome": "Bem-vindo, {name}!",
+    "financialOverview": "Aqui está o teu resumo financeiro",
     "totalExpenses": "Total de Despesas",
     "totalIncome": "Total de Receitas",
     "monthlyBudget": "Orçamento Mensal",
@@ -90,7 +91,70 @@
     "survivalBudget": "Orçamento de Vida",
     "used": "usado",
     "remaining": "restante",
-    "over": "acima"
+    "over": "acima",
+    "overBudget": "€{amount} acima do orçamento",
+    "remainingBudget": "€{amount} restante",
+    "addExpense": "Adicionar Despesa",
+    "swipeToChange": "Desliza para mudar de mês",
+    "viewModes": {
+      "month": "Mês",
+      "quarter": "Trimestre",
+      "year": "Ano",
+      "all": "Todos"
+    },
+    "filters": {
+      "allTypes": "Todos os Tipos",
+      "living": "Vida",
+      "livingOnly": "Só Vida",
+      "lifestyle": "Estilo de Vida",
+      "lifestyleOnly": "Só Estilo de Vida",
+      "projects": "Projetos",
+      "projectsOnly": "Só Projetos",
+      "allProjects": "Todos os Projetos",
+      "noProject": "Sem Projeto"
+    },
+    "income": {
+      "expected": "Previsto",
+      "received": "Recebido",
+      "balance": "Saldo",
+      "recurringSalary": "Salário/receita recorrente",
+      "allSources": "Todas as fontes de receita",
+      "surplus": "Excedente após todas as despesas",
+      "deficit": "Défice após todas as despesas"
+    },
+    "stats": {
+      "total": "Total",
+      "living": "Vida",
+      "fixed": "Fixo",
+      "variable": "Variável",
+      "lifestyle": "Estilo de Vida",
+      "dailySpending": "Gastos diários",
+      "projects": "Projetos",
+      "projectCount": "{count} projeto(s)",
+      "grandTotal": "Total Geral",
+      "includingProjects": "Incluindo projetos"
+    },
+    "expenses": {
+      "title": "Despesas",
+      "count": "Despesas ({count})",
+      "noExpenses": "Nenhuma despesa encontrada para este período.",
+      "offshore": "Offshore",
+      "includeInBudget": "Incluir no orçamento",
+      "excludeFromBudget": "Excluir do orçamento (offshore)"
+    },
+    "expenseTypes": {
+      "fixed": "Fixo",
+      "variable": "Var",
+      "lifestyle": "Est",
+      "project": "Proj"
+    },
+    "chart": {
+      "spendingVelocity": "Velocidade de Gastos",
+      "cumulativeComparison": "Comparação cumulativa de gastos",
+      "vsLastMonth": "{percent}% vs mês passado",
+      "day": "Dia {day}"
+    },
+    "allTime": "Todo o Tempo"
   },
   "expenses": {
     "title": "Despesas",

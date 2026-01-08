@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   LineChart,
   Line,
@@ -30,6 +31,7 @@ export function BurnChart({
   currentMonthLabel,
   previousMonthLabel,
 }: BurnChartProps) {
+  const t = useTranslations("dashboard");
   const chartData = useMemo(() => {
     // Create cumulative data for each day of the month (1-31)
     const data: { day: number; current: number; previous: number }[] = [];
@@ -84,15 +86,15 @@ export function BurnChart({
       {/* Summary */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-semibold text-slate-900">Spending Velocity</h3>
-          <p className="text-sm text-slate-500">Cumulative spending comparison</p>
+          <h3 className="font-semibold text-slate-900">{t("chart.spendingVelocity")}</h3>
+          <p className="text-sm text-slate-500">{t("chart.cumulativeComparison")}</p>
         </div>
         <div className="text-right">
           <p className={`text-lg font-semibold ${difference > 0 ? "text-red-500" : "text-green-500"}`}>
             {difference > 0 ? "+" : ""}€{difference.toFixed(2)}
           </p>
           <p className="text-sm text-slate-500">
-            {percentChange > 0 ? "+" : ""}{percentChange.toFixed(1)}% vs last month
+            {t("chart.vsLastMonth", { percent: `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}` })}
           </p>
         </div>
       </div>
@@ -125,7 +127,7 @@ export function BurnChart({
                 `€${Number(value ?? 0).toFixed(2)}`,
                 name === "current" ? currentMonthLabel : previousMonthLabel,
               ]}
-              labelFormatter={(day) => `Day ${day}`}
+              labelFormatter={(day) => t("chart.day", { day })}
             />
             <Legend
               formatter={(value) =>

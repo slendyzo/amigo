@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useTranslations } from "next-intl";
 
 type LivingGaugeProps = {
   current: number;
@@ -8,7 +9,9 @@ type LivingGaugeProps = {
   label?: string;
 };
 
-export function LivingGauge({ current, budget, label = "Living Budget" }: LivingGaugeProps) {
+export function LivingGauge({ current, budget, label }: LivingGaugeProps) {
+  const t = useTranslations("dashboard");
+  const displayLabel = label || t("survivalBudget");
   const percentage = useMemo(() => {
     // Handle NaN, undefined, or invalid values
     if (!budget || budget <= 0 || !Number.isFinite(budget)) return 0;
@@ -73,20 +76,20 @@ export function LivingGauge({ current, budget, label = "Living Budget" }: Living
           <span className="text-3xl font-bold text-slate-900">
             {percentage.toFixed(0)}%
           </span>
-          <span className="text-sm text-slate-500">used</span>
+          <span className="text-sm text-slate-500">{t("used")}</span>
         </div>
       </div>
 
       {/* Legend */}
       <div className="mt-4 text-center">
-        <p className="text-sm font-medium text-slate-700">{label}</p>
+        <p className="text-sm font-medium text-slate-700">{displayLabel}</p>
         <p className="text-lg font-semibold" style={{ color: getColor() }}>
           €{safeCurrent.toFixed(2)} <span className="text-slate-400 font-normal">/ €{safeBudget.toFixed(2)}</span>
         </p>
         <p className={`text-sm mt-1 ${isOverBudget ? "text-red-500" : "text-slate-500"}`}>
           {isOverBudget
-            ? `€${Math.abs(remaining).toFixed(2)} over budget`
-            : `€${remaining.toFixed(2)} remaining`}
+            ? t("overBudget", { amount: Math.abs(remaining).toFixed(2) })
+            : t("remainingBudget", { amount: remaining.toFixed(2) })}
         </p>
       </div>
     </div>

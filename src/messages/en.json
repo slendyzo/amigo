@@ -75,7 +75,8 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome back",
+    "welcome": "Welcome, {name}!",
+    "financialOverview": "Here's your financial overview",
     "totalExpenses": "Total Expenses",
     "totalIncome": "Total Income",
     "monthlyBudget": "Monthly Budget",
@@ -90,7 +91,70 @@
     "survivalBudget": "Living Budget",
     "used": "used",
     "remaining": "remaining",
-    "over": "over"
+    "over": "over",
+    "overBudget": "€{amount} over budget",
+    "remainingBudget": "€{amount} remaining",
+    "addExpense": "Add Expense",
+    "swipeToChange": "Swipe to change month",
+    "viewModes": {
+      "month": "Month",
+      "quarter": "Quarter",
+      "year": "Year",
+      "all": "All"
+    },
+    "filters": {
+      "allTypes": "All Types",
+      "living": "Living",
+      "livingOnly": "Living Only",
+      "lifestyle": "Lifestyle",
+      "lifestyleOnly": "Lifestyle Only",
+      "projects": "Projects",
+      "projectsOnly": "Projects Only",
+      "allProjects": "All Projects",
+      "noProject": "No Project"
+    },
+    "income": {
+      "expected": "Expected",
+      "received": "Received",
+      "balance": "Balance",
+      "recurringSalary": "Recurring salary/income",
+      "allSources": "All income sources",
+      "surplus": "Surplus after all expenses",
+      "deficit": "Deficit after all expenses"
+    },
+    "stats": {
+      "total": "Total",
+      "living": "Living",
+      "fixed": "Fixed",
+      "variable": "Variable",
+      "lifestyle": "Lifestyle",
+      "dailySpending": "Daily spending",
+      "projects": "Projects",
+      "projectCount": "{count} project(s)",
+      "grandTotal": "Grand Total",
+      "includingProjects": "Including projects"
+    },
+    "expenses": {
+      "title": "Expenses",
+      "count": "Expenses ({count})",
+      "noExpenses": "No expenses found for this period.",
+      "offshore": "Offshore",
+      "includeInBudget": "Include in budget",
+      "excludeFromBudget": "Exclude from budget (offshore)"
+    },
+    "expenseTypes": {
+      "fixed": "Fixed",
+      "variable": "Variable",
+      "lifestyle": "Life",
+      "project": "Proj"
+    },
+    "chart": {
+      "spendingVelocity": "Spending Velocity",
+      "cumulativeComparison": "Cumulative spending comparison",
+      "vsLastMonth": "{percent}% vs last month",
+      "day": "Day {day}"
+    },
+    "allTime": "All Time"
   },
   "expenses": {
     "title": "Expenses",
