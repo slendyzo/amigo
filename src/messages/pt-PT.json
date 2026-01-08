@@ -48,7 +48,8 @@
     "home": "Início",
     "more": "Mais",
     "menu": "Menu",
-    "inbox": "Caixa de Entrada"
+    "inbox": "Caixa de Entrada",
+    "whatsNew": "Novidades"
   },
   "auth": {
     "signIn": "Iniciar Sessão",

@@ -48,7 +48,8 @@
     "home": "Accueil",
     "more": "Plus",
     "menu": "Menu",
-    "inbox": "Boîte de Réception"
+    "inbox": "Boîte de Réception",
+    "whatsNew": "Nouveautés"
   },
   "auth": {
     "signIn": "Connexion",

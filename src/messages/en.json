@@ -48,7 +48,8 @@
     "home": "Home",
     "more": "More",
     "menu": "Menu",
-    "inbox": "Inbox"
+    "inbox": "Inbox",
+    "whatsNew": "What's New"
   },
   "auth": {
     "signIn": "Sign In",

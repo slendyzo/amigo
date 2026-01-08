@@ -8,12 +8,14 @@ type AnnouncementModalProps = {
   isOpen: boolean;
   onClose: () => void;
   announcementId: string;
+  viewOnly?: boolean; // When true, just close without marking as seen
 };
 
 export default function AnnouncementModal({
   isOpen,
   onClose,
   announcementId,
+  viewOnly = false,
 }: AnnouncementModalProps) {
   const router = useRouter();
   const t = useTranslations("announcement");
@@ -22,6 +24,10 @@ export default function AnnouncementModal({
   if (!isOpen) return null;
 
   const handleDismiss = async () => {
+    if (viewOnly) {
+      onClose();
+      return;
+    }
     setIsLoading(true);
     try {
       await fetch("/api/user/dismiss-announcement", {
@@ -40,6 +46,11 @@ export default function AnnouncementModal({
   };
 
   const handleExplore = async () => {
+    if (viewOnly) {
+      onClose();
+      router.push("/dashboard/workspace");
+      return;
+    }
     setIsLoading(true);
     try {
       await fetch("/api/user/dismiss-announcement", {

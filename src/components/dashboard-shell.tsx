@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -9,7 +10,11 @@ import GlobalAddButton from "./global-add-button";
 import FeedbackButton from "./feedback-button";
 import IOSInstallPrompt from "./ios-install-prompt";
 import WorkspaceSwitcher from "./workspace-switcher";
+import AnnouncementModal from "./announcement-modal";
 import type { ReactNode } from "react";
+
+// Current announcement ID - should match the one in overview-client.tsx
+const CURRENT_ANNOUNCEMENT_ID = "workspaces-v1";
 
 // Navigation grouped by section (keys for translation)
 const navigationGroups = [
@@ -113,6 +118,11 @@ const icons: Record<string, ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
     </svg>
   ),
+  sparkles: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    </svg>
+  ),
 };
 
 interface DashboardShellProps {
@@ -126,6 +136,7 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
   const pathname = usePathname();
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
+  const [showAnnouncement, setShowAnnouncement] = useState(false);
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
@@ -210,6 +221,18 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
               </div>
             </div>
           )}
+
+          {/* What's New button */}
+          <div>
+            <div className="my-3 border-t border-slate-200" />
+            <button
+              onClick={() => setShowAnnouncement(true)}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors text-indigo-600 hover:bg-indigo-50 hover:text-indigo-700"
+            >
+              {icons.sparkles}
+              {t("whatsNew")}
+            </button>
+          </div>
         </nav>
 
         {/* Footer */}
@@ -288,6 +311,14 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
 
       {/* iOS Install Prompt */}
       <IOSInstallPrompt />
+
+      {/* What's New Announcement Modal */}
+      <AnnouncementModal
+        isOpen={showAnnouncement}
+        onClose={() => setShowAnnouncement(false)}
+        announcementId={CURRENT_ANNOUNCEMENT_ID}
+        viewOnly
+      />
     </div>
   );
 }
