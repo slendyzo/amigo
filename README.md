@@ -344,10 +344,23 @@ openssl rand -base64 32
 
 ## Roadmap
 
-- [ ] Shadcn UI component library integration
-- [ ] Living Gauge visualization
-- [ ] Burn Chart (spending velocity)
-- [ ] Recurring expense auto-generation
+### Completed
+
+- [x] Shadcn UI component library integration
+- [x] Living Gauge visualization (survival budget)
+- [x] Burn Chart (spending velocity comparison)
+- [x] Recurring expense auto-generation
+- [x] Data export (CSV/Excel with multi-sheet workbook)
+- [x] Onboarding wizard (3-step setup)
+- [x] Income tracking with recurring salary
+- [x] Feedback system with image attachments
+- [x] PWA support (iOS + Android install prompts)
+- [x] OFX/QFX/QIF bank statement import
+- [x] Import history with rollback
+
+### Planned
+
+- [ ] Family/Group workspaces - Share expenses with family members
 - [ ] Multi-currency with live exchange rates
 - [ ] Mobile app (React Native)
 - [ ] AI-powered categorization (Level 2)

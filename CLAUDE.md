@@ -290,23 +290,142 @@ npx prisma studio     # Open database GUI
 - Auth.js cookie names vary by protocol: `__Secure-authjs.session-token` (HTTPS) vs `authjs.session-token` (HTTP)
 - iOS 18 has known PWA cookie persistence bugs (not fixable from app side)
 
-## Recent Features
+## Complete Feature List
 
-- **Onboarding Wizard** - 3-step setup wizard for new users:
-  - Step 1: Monthly salary + currency selection
-  - Step 2: Monthly budget + currency (defaults to salary currency, can override)
-  - Step 3: Fixed expenses + currency (defaults to budget currency, can override)
-  - Cascading currency selection: each step inherits from previous but allows override
-  - Skip option available, can restart from Settings page
-- **Multi-Currency Support** - Users can set different currencies for salary, budget, and expenses
-- **Restart Setup** - Button in Settings to re-run onboarding wizard
-- **Password Reset** - Full forgot/reset password flow with email
-- **Bulk Selection** - Select multiple expenses for bulk delete
-- **Sorting & Export** - Sort expenses by date/amount/name/category, export to CSV/Excel
-- **Negative Values** - Refunds displayed in green with parentheses
-- **Improved Import** - Better project sheet matching, SUBTOTAL skipping
-- **OFX/QFX/QIF Import** - Support for bank statement formats beyond Excel/CSV
-- **Login Timeout** - 30s timeout on signin to prevent infinite "Signing in..." state
+### Expense Management
+
+- **Full CRUD** - Create, read, update, delete expenses
+- **Bulk Operations** - Multi-select with bulk delete
+- **Smart Quick-Add** - Parse "mcd 12" → McDonald's €12.00 (keyboard: N or Ctrl+Shift+A)
+- **Expense Types** - SURVIVAL_FIXED, SURVIVAL_VARIABLE, LIFESTYLE, PROJECT
+- **Negative Amounts** - Refunds/credits displayed in green with parentheses
+- **Multi-Currency** - Store original currency + EUR conversion
+- **Sorting** - By date, amount, name, category (ascending/descending)
+- **Filtering** - By type, category, project, date range
+
+### Data Export
+
+- **CSV Export** - All expenses with headers and totals
+- **Excel Export** - Multi-sheet workbook:
+  - Sheet 1: Expenses (Date, Name, Amount, Type, Category, Bank Account, Projects, Status, Notes)
+  - Sheet 2: Incomes (Date, Name, Amount, Type, Description)
+  - Sheet 3: Summary (totals by expense type + net calculation)
+- **Filter Support** - Export respects type, date range, and category filters
+- **UI** - Export button with dropdown in Expenses page toolbar
+
+### Data Import
+
+- **File Formats** - Excel (.xlsx, .xls), CSV, PDF, OFX/QFX, QIF
+- **3-Step Wizard** - Upload → Column Mapping → Import
+- **Smart Detection** - Auto-detect header row and column types
+- **Sheet Detection** - Monthly sheets vs project sheets
+- **Ghost Sheet Strategy** - 3-tier matching (batch, exact, fuzzy) for project tagging
+- **Mixed Import** - Handle files with both expenses (negative) and incomes (positive)
+- **Email Parsing** - Import bank notification emails
+- **Import History** - View past imports with rollback capability
+- **Duplicate Prevention** - Skip SUBTOTAL rows, detect duplicates
+
+### Income Tracking
+
+- **Full CRUD** - Create, read, update, delete incomes
+- **Recurring Income** - Monthly salary with auto-generation
+- **Salary Management** - Separate salary config in Settings
+- **Currency Support** - Multi-currency with EUR conversion
+
+### Recurring Templates
+
+- **Template Management** - Create templates for recurring expenses
+- **Auto-Generation** - Generate monthly expenses automatically
+- **Manual Generation** - Generate for specific month/year
+- **Day Scheduling** - Set day-of-month for each template
+- **Generation Tracking** - Track lastGenerated date
+
+### Projects (Tags)
+
+- **Full CRUD** - Create, read, update, delete projects
+- **Many-to-Many** - Tag multiple projects per expense
+- **Budget Tracking** - Optional budget per project with progress indicator
+- **Project Details** - Dedicated page with expense breakdown
+- **Smart Filtering** - Project expenses excluded from survival/lifestyle totals
+
+### Categories
+
+- **Full CRUD** - Create, read, update, delete categories
+- **Quick Create** - Inline creation popup
+- **Auto-Categorization** - Via keyword mappings
+
+### Keyword Mappings
+
+- **Auto-Categorization** - Map keywords to categories and expense types
+- **60+ Built-in Keywords** - Dining, Transport, Subscriptions, Utilities, etc.
+- **Custom Mappings** - Create your own keyword rules
+
+### Dashboard & Visualizations
+
+- **Overview Page** - Stats cards, recent expenses, charts
+- **Living Gauge** - Circular survival budget progress indicator
+- **Burn Chart** - Monthly spending comparison (current vs previous)
+- **View Modes** - Month, Quarter, Year, All
+- **Filters** - Project filter, type filter, date selectors
+
+### Onboarding
+
+- **3-Step Wizard** - Guided setup for new users
+  - Step 1: Monthly salary + currency
+  - Step 2: Monthly budget + currency
+  - Step 3: Fixed expenses + currency
+- **Currency Cascade** - Each step inherits from previous
+- **Skip Option** - Skip onboarding if desired
+- **Restart** - Re-run from Settings page
+
+### Settings & Workspace
+
+- **Budget Config** - Monthly budget amount
+- **Currency Selection** - EUR, USD, GBP, BRL, PLN
+- **Language Selection** - English, Portuguese, French
+- **Salary Management** - Create/edit/delete recurring salary
+- **Account Stats** - Total expenses, amount, categories, projects
+- **Danger Zone** - Delete all expenses, delete account
+- **Restart Onboarding** - Button to re-run setup wizard
+
+### Authentication
+
+- **Email/Password** - Registration and login
+- **Password Reset** - Full forgot/reset flow via email (Resend)
+- **OAuth Ready** - Setup-username endpoint for OAuth providers
+- **Session Management** - JWT sessions with NextAuth v5
+
+### Admin Features
+
+- **Feedback Inbox** - View bug reports and feature requests
+- **Image Attachments** - Up to 5 images per feedback
+- **Filtering** - All, bugs, features, unread
+- **Status Management** - Mark as read/resolved, delete
+
+### PWA Support
+
+- **Install Prompt** - iOS + Android detection
+- **iOS Instructions** - Manual install guide for Safari
+- **Install State** - Detect if already installed
+- **Dismiss Cooldown** - 7-day cooldown after dismissing
+
+### Feedback System
+
+- **Floating Button** - Available on all pages
+- **Bug/Feature Types** - Categorize submissions
+- **Image Support** - Up to 5 screenshots with compression
+- **Context Capture** - Page URL and user agent
+
+### Internationalization
+
+- **3 Languages** - English (en), Portuguese (pt-PT), French (fr-FR)
+- **next-intl** - Full i18n integration
+- **Per-Workspace** - Language setting saved to workspace
+
+### Keyboard Shortcuts
+
+- **N** - Open quick-add expense modal
+- **Ctrl+Shift+A** - Alternative quick-add shortcut
 
 ## Testing Checklist
 

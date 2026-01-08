@@ -371,8 +371,19 @@ amigo/
 17. [x] **Docker** - Production Dockerfile with multi-stage build
 18. [x] **Auto-Deploy** - GitHub Actions CI/CD to homelab via Tailscale + SSH
 19. [x] **Mixed Expense/Income Import** - Import bank statements with both expenses and incomes
-20. [ ] **Family/Group Workspaces** - Share expenses with family members
-21. [ ] **Data Export** - Download expenses as CSV/Excel
+20. [x] **Data Export** - CSV/Excel export with multi-sheet workbook (Expenses, Incomes, Summary)
+21. [x] **Onboarding Wizard** - 3-step setup (salary, budget, fixed expenses) with currency selection
+22. [x] **Income Tracking** - Full CRUD for incomes with recurring salary support
+23. [x] **Feedback System** - Bug/feature submission with up to 5 image attachments
+24. [x] **Admin Inbox** - Feedback management for admins (filter, resolve, delete)
+25. [x] **PWA Support** - Install prompts for iOS and Android with detection
+26. [x] **Account Deletion** - Full cascade delete of user data
+27. [x] **Import History** - View past imports with rollback capability
+28. [x] **OFX/QFX/QIF Import** - Bank statement format support
+29. [x] **Keyboard Shortcuts** - N and Ctrl+Shift+A for quick-add
+30. [ ] **Family/Group Workspaces** - Share expenses with family members
+31. [ ] **Multi-Currency Live Rates** - Real-time exchange rate conversion
+32. [ ] **Mobile App** - React Native version
 
 ---
 
@@ -484,4 +495,4 @@ npm run db:generate  # Generate Prisma client
 
 ---
 
-*Last Updated: 2025-12-28*
+*Last Updated: 2026-01-08*
