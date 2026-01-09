@@ -77,30 +77,41 @@ export default function IOSInstallPrompt() {
         </div>
 
         {/* Instructions */}
-        <div className="mt-4 bg-slate-50 rounded-xl p-3">
-          <div className="flex items-center gap-3 text-sm">
-            <div className="flex items-center gap-2 text-slate-600">
-              <span className="font-medium">1.</span>
-              <span>Tap</span>
-              {/* iOS Share icon */}
-              <svg className="w-5 h-5 text-[#0070f3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v12m0-12l4 4m-4-4L8 7" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 14v5a2 2 0 002 2h12a2 2 0 002-2v-5" />
-              </svg>
-              <span>in Safari</span>
+        <div className="mt-4 space-y-2">
+          <div className="bg-slate-50 rounded-xl p-3">
+            <div className="flex items-center gap-3 text-sm">
+              <div className="flex items-center gap-2 text-slate-600">
+                <span className="font-medium">1.</span>
+                <span>Tap</span>
+                {/* iOS Share icon */}
+                <svg className="w-5 h-5 text-[#0070f3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v12m0-12l4 4m-4-4L8 7" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 14v5a2 2 0 002 2h12a2 2 0 002-2v-5" />
+                </svg>
+                <span>in Safari</span>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 text-sm mt-2">
+              <div className="flex items-center gap-2 text-slate-600">
+                <span className="font-medium">2.</span>
+                <span>Select</span>
+                <span className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded border text-xs font-medium">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                  </svg>
+                  Add to Home Screen
+                </span>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-sm mt-2">
-            <div className="flex items-center gap-2 text-slate-600">
-              <span className="font-medium">2.</span>
-              <span>Select</span>
-              <span className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded border text-xs font-medium">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add to Home Screen
-              </span>
-            </div>
+          {/* iOS 18 Warning */}
+          <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+            <p className="flex items-start gap-1.5">
+              <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+              <span>Stay logged in before adding to Home Screen to avoid session issues on iOS 18.</span>
+            </p>
           </div>
         </div>
 

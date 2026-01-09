@@ -884,7 +884,8 @@
     "notNow": "Plus tard",
     "iosStep1": "1. Appuyez sur",
     "iosStep1Share": "Partager",
-    "iosStep2": "2. Faites défiler et appuyez sur \"Ajouter à l'écran d'accueil\""
+    "iosStep2": "2. Faites défiler et appuyez sur \"Ajouter à l'écran d'accueil\"",
+    "ios18Warning": "Important: Restez connecté avant d'ajouter à l'écran d'accueil pour éviter les problèmes de session sur iOS 18."
   },
   "workspace": {
     "title": "Espace de Travail",

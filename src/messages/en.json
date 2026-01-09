@@ -884,7 +884,8 @@
     "notNow": "Not now",
     "iosStep1": "1. Tap",
     "iosStep1Share": "Share",
-    "iosStep2": "2. Scroll and tap \"Add to Home Screen\""
+    "iosStep2": "2. Scroll and tap \"Add to Home Screen\"",
+    "ios18Warning": "Important: Stay logged in before adding to Home Screen to avoid session issues on iOS 18."
   },
   "workspace": {
     "title": "Workspace",

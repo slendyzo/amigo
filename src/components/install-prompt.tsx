@@ -94,15 +94,25 @@ export default function InstallPrompt() {
             </p>
 
             {isIOS ? (
-              <div className="mt-3 p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
-                <p className="flex items-center gap-2">
-                  <span>{t("iosStep1")}</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
-                  </svg>
-                  <span>{t("iosStep1Share")}</span>
-                </p>
-                <p className="mt-1">{t("iosStep2")}</p>
+              <div className="mt-3 space-y-2">
+                <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+                  <p className="flex items-center gap-2">
+                    <span>{t("iosStep1")}</span>
+                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span>{t("iosStep1Share")}</span>
+                  </p>
+                  <p className="mt-1">{t("iosStep2")}</p>
+                </div>
+                <div className="p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+                  <p className="flex items-start gap-1.5">
+                    <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>{t("ios18Warning")}</span>
+                  </p>
+                </div>
               </div>
             ) : (
               <div className="flex gap-2 mt-3">

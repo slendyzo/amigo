@@ -870,7 +870,8 @@
     "notNow": "Agora não",
     "iosStep1": "1. Toca em",
     "iosStep1Share": "Partilhar",
-    "iosStep2": "2. Desliza e toca em \"Adicionar ao ecrã inicial\""
+    "iosStep2": "2. Desliza e toca em \"Adicionar ao ecrã inicial\"",
+    "ios18Warning": "Importante: Mantém a sessão iniciada antes de adicionar ao ecrã inicial para evitar problemas de sessão no iOS 18."
   },
   "workspace": {
     "title": "Espaço de Trabalho",

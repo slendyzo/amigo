@@ -14,8 +14,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     updateAge: 24 * 60 * 60, // Update session every 24 hours
   },
   trustHost: true,
-  // Use default cookie settings - Auth.js handles secure flag automatically based on request protocol
-  // This fixes issues with Chrome on macOS where custom cookie config can cause session loss
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production"
+        ? "__Secure-authjs.session-token"
+        : "authjs.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+        maxAge: 30 * 24 * 60 * 60, // 30 days - match session maxAge
+      },
+    },
+  },
   pages: {
     signIn: "/signin",
     error: "/auth-error",
