@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
-import { Check, ChevronRight, Tag, Loader2 } from "lucide-react";
+import { Check, ChevronRight, Tag, Loader2, Plus } from "lucide-react";
 
 type Expense = {
   id: string;
@@ -41,6 +41,7 @@ export default function CategorizePage() {
   const t = useTranslations("categorize");
   const tCommon = useTranslations("common");
   const tTime = useTranslations("time");
+  const tQuickCategory = useTranslations("modals.quickCategory");
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -49,6 +50,13 @@ export default function CategorizePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+
+  // New category creation state
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState("");
+  const [isCreatingCategorySaving, setIsCreatingCategorySaving] = useState(false);
+  const [createCategoryError, setCreateCategoryError] = useState("");
+  const newCategoryInputRef = useRef<HTMLInputElement>(null);
 
   // Get translated month names
   const MONTHS = [
@@ -137,6 +145,54 @@ export default function CategorizePage() {
     }
   };
 
+  // Focus input when opening create category
+  useEffect(() => {
+    if (isCreatingCategory) {
+      setTimeout(() => newCategoryInputRef.current?.focus(), 0);
+    }
+  }, [isCreatingCategory]);
+
+  const handleCreateCategory = async () => {
+    if (!newCategoryName.trim()) {
+      setCreateCategoryError(tQuickCategory("nameRequired"));
+      return;
+    }
+
+    setIsCreatingCategorySaving(true);
+    setCreateCategoryError("");
+
+    try {
+      const response = await fetch("/api/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: newCategoryName.trim() }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        // Add to categories list and auto-select it for the current expense
+        setCategories((prev) => [...prev, data.category]);
+        setIsCreatingCategory(false);
+        setNewCategoryName("");
+        // Automatically categorize the current expense with the new category
+        handleCategorize(data.category.id);
+      } else {
+        const data = await response.json();
+        setCreateCategoryError(data.error || "Failed to create category");
+      }
+    } catch {
+      setCreateCategoryError("Failed to create category");
+    } finally {
+      setIsCreatingCategorySaving(false);
+    }
+  };
+
+  const handleCancelCreateCategory = () => {
+    setIsCreatingCategory(false);
+    setNewCategoryName("");
+    setCreateCategoryError("");
+  };
+
   const progress = expenses.length > 0
     ? Math.round(((expenses.length - expenses.length) / expenses.length) * 100)
     : 100;
@@ -223,7 +279,7 @@ export default function CategorizePage() {
                 <button
                   key={category.id}
                   onClick={() => handleCategorize(category.id)}
-                  disabled={isSaving}
+                  disabled={isSaving || isCreatingCategory}
                   className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-left transition-all ${
                     selectedCategory === category.id
                       ? "border-[#0070f3] bg-[#0070f3]/5 text-[#0070f3]"
@@ -237,6 +293,61 @@ export default function CategorizePage() {
                   )}
                 </button>
               ))}
+
+              {/* New Category button or inline form */}
+              {!isCreatingCategory ? (
+                <button
+                  onClick={() => setIsCreatingCategory(true)}
+                  disabled={isSaving}
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-[#0070f3]/5 text-slate-500 hover:text-[#0070f3] transition-all disabled:opacity-50"
+                >
+                  <Plus className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate text-sm font-medium">{tQuickCategory("createNew")}</span>
+                </button>
+              ) : (
+                <div className="col-span-2 md:col-span-3 p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Tag className="w-4 h-4 text-[#0070f3]" />
+                    <span className="text-sm font-medium text-[#0070f3]">{tQuickCategory("title")}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      ref={newCategoryInputRef}
+                      type="text"
+                      value={newCategoryName}
+                      onChange={(e) => setNewCategoryName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleCreateCategory();
+                        } else if (e.key === "Escape") {
+                          handleCancelCreateCategory();
+                        }
+                      }}
+                      placeholder={tQuickCategory("placeholder")}
+                      className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                      disabled={isCreatingCategorySaving}
+                    />
+                    <button
+                      onClick={handleCreateCategory}
+                      disabled={isCreatingCategorySaving || !newCategoryName.trim()}
+                      className="px-4 py-2 bg-[#0070f3] text-white text-sm rounded-lg hover:bg-[#0070f3]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                    >
+                      {isCreatingCategorySaving ? tQuickCategory("creating") : tCommon("create")}
+                    </button>
+                    <button
+                      onClick={handleCancelCreateCategory}
+                      disabled={isCreatingCategorySaving}
+                      className="px-3 py-2 text-slate-600 text-sm hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                    >
+                      {tCommon("cancel")}
+                    </button>
+                  </div>
+                  {createCategoryError && (
+                    <p className="text-xs text-red-500 mt-2">{createCategoryError}</p>
+                  )}
+                </div>
+              )}
             </div>
           </div>
 
