@@ -7,6 +7,25 @@ import { X, Sparkles, Bug, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 // Changelog entries - add new entries at the top
 const CHANGELOG_ENTRIES = [
   {
+    version: "0.3.1",
+    date: "2026-01-10",
+    entries: [
+      {
+        type: "feature" as const,
+        title: {
+          en: "Smart Category Learning",
+          "pt-PT": "Aprendizagem de Categorias",
+          "fr-FR": "Apprentissage des Catégories",
+        },
+        description: {
+          en: "Amigo now learns from your categorizations! After categorizing the same expense 3 times, it will auto-categorize future ones. You'll also see suggestions based on your history.",
+          "pt-PT": "O Amigo agora aprende com as tuas categorizações! Após categorizar a mesma despesa 3 vezes, ela será auto-categorizada no futuro. Também verás sugestões baseadas no teu histórico.",
+          "fr-FR": "Amigo apprend maintenant de vos catégorisations ! Après avoir catégorisé la même dépense 3 fois, elle sera auto-catégorisée. Vous verrez aussi des suggestions basées sur votre historique.",
+        },
+      },
+    ],
+  },
+  {
     version: "0.3.0",
     date: "2026-01-10",
     entries: [
@@ -99,7 +118,7 @@ const CHANGELOG_ENTRIES = [
 ];
 
 // Current version to check against
-const CURRENT_VERSION = "0.3.0";
+const CURRENT_VERSION = "0.3.1";
 const STORAGE_KEY = "amigo-last-seen-version";
 
 type ChangelogModalProps = {
