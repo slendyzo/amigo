@@ -38,8 +38,34 @@ function getLocaleFromAcceptLanguage(acceptLanguage: string | null): Locale {
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
+  // For protected routes, check for session token
+  // Auth.js uses different cookie names based on protocol:
+  // - HTTPS (production): __Secure-authjs.session-token
+  // - HTTP (development): authjs.session-token
+  const token =
+    request.cookies.get("__Secure-authjs.session-token")?.value ||
+    request.cookies.get("authjs.session-token")?.value;
+
+  // Auth pages that logged-in users should be redirected away from
+  const authPages = ["/signin", "/signup", "/forgot-password", "/reset-password"];
+  const isAuthPage = authPages.includes(pathname);
+
+  // If user is logged in and tries to access auth pages, redirect to dashboard
+  if (token && isAuthPage) {
+    return NextResponse.redirect(new URL("/dashboard", request.url));
+  }
+
+  // Root path: redirect based on auth status
+  if (pathname === "/") {
+    if (token) {
+      return NextResponse.redirect(new URL("/dashboard", request.url));
+    } else {
+      return NextResponse.redirect(new URL("/signin", request.url));
+    }
+  }
+
   // Public paths that don't require authentication
-  const publicPaths = ["/", "/signin", "/signup", "/setup-username", "/forgot-password", "/reset-password", "/auth-error", "/api/auth", "/terms"];
+  const publicPaths = ["/signin", "/signup", "/setup-username", "/forgot-password", "/reset-password", "/auth-error", "/api/auth", "/terms", "/offline"];
 
   const isPublicPath = publicPaths.some(
     (path) => pathname === path || pathname.startsWith("/api/auth")
@@ -65,14 +91,7 @@ export function middleware(request: NextRequest) {
     return response;
   }
 
-  // For protected routes, check for session token
-  // Auth.js uses different cookie names based on protocol:
-  // - HTTPS (production): __Secure-authjs.session-token
-  // - HTTP (development): authjs.session-token
-  const token =
-    request.cookies.get("__Secure-authjs.session-token")?.value ||
-    request.cookies.get("authjs.session-token")?.value;
-
+  // Protected routes: require authentication
   if (!token && pathname.startsWith("/dashboard")) {
     const signInUrl = new URL("/signin", request.url);
     signInUrl.searchParams.set("callbackUrl", pathname);
