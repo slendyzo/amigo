@@ -7,7 +7,6 @@ import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import OnboardingModal from "@/components/onboarding-modal";
 import AnnouncementModal from "@/components/announcement-modal";
-import { LivingGauge } from "@/components/ui/living-gauge";
 import { CategoryBreakdown } from "@/components/ui/category-breakdown";
 import { useSwipe } from "@/hooks/use-swipe";
 
@@ -805,17 +804,8 @@ export default function DashboardOverview({
 
       {/* Visualizations - Mobile optimized */}
       {viewMode === "month" && (
-        <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-3">
-          {/* Monthly Budget Gauge - shows all expenses except those marked "excludeFromBudget" */}
-          <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-6 flex items-center justify-center">
-            <LivingGauge
-              current={stats.budgetTotal}
-              budget={livingBudget}
-              label={t("monthlyBudget")}
-            />
-          </div>
-
-          {/* Category Breakdown - shown on mobile and desktop */}
+        <div className="grid grid-cols-1 gap-4 md:gap-6 lg:grid-cols-2">
+          {/* Category Breakdown with Budget Gauge - shown on mobile and desktop */}
           <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-6">
             <CategoryBreakdown
               expenses={expenses.map((e) => ({
