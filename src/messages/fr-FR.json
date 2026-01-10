@@ -160,7 +160,10 @@
     "categoryBreakdown": "Dépenses par Catégorie",
     "totalSpent": "Total",
     "moreCategories": "autres catégories",
-    "uncategorized": "Non catégorisé"
+    "uncategorized": "Non catégorisé",
+    "tapForDetails": "Appuyez pour les détails",
+    "overBudgetLabel": "Dépassement",
+    "remainingLabel": "Restant"
   },
   "expenses": {
     "title": "Dépenses",

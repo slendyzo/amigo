@@ -160,7 +160,10 @@
     "categoryBreakdown": "Gastos por Categoria",
     "totalSpent": "Total",
     "moreCategories": "mais categorias",
-    "uncategorized": "Sem Categoria"
+    "uncategorized": "Sem Categoria",
+    "tapForDetails": "Toca para ver detalhes",
+    "overBudgetLabel": "Acima do orçamento",
+    "remainingLabel": "Restante"
   },
   "expenses": {
     "title": "Despesas",

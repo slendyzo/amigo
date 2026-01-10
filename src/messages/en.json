@@ -160,7 +160,10 @@
     "categoryBreakdown": "Spending by Category",
     "totalSpent": "Total",
     "moreCategories": "more categories",
-    "uncategorized": "Uncategorized"
+    "uncategorized": "Uncategorized",
+    "tapForDetails": "Tap for details",
+    "overBudgetLabel": "Over budget",
+    "remainingLabel": "Remaining"
   },
   "expenses": {
     "title": "Expenses",

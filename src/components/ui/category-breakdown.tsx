@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 
 type CategoryBreakdownProps = {
@@ -25,6 +25,7 @@ const CATEGORY_COLORS = [
 
 export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) {
   const t = useTranslations("dashboard");
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categoryData = useMemo(() => {
     // Group expenses by category and sum amounts
@@ -52,41 +53,36 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
     }));
   }, [expenses, t]);
 
-  const totalSpent = categoryData.reduce((sum, cat) => sum + cat.amount, 0);
+  const totalSpent = useMemo(() => {
+    return expenses.reduce((sum, e) => sum + e.amountEur, 0);
+  }, [expenses]);
 
   // Budget calculations
   const safeBudget = Number.isFinite(budget) && budget > 0 ? budget : 0;
-  const budgetPercentage = safeBudget > 0 ? Math.min((totalSpent / safeBudget) * 100, 100) : 0;
+  const percentage = useMemo(() => {
+    if (!safeBudget || safeBudget <= 0) return 0;
+    if (!Number.isFinite(totalSpent)) return 0;
+    return Math.min((totalSpent / safeBudget) * 100, 100);
+  }, [totalSpent, safeBudget]);
+
   const isOverBudget = totalSpent > safeBudget && safeBudget > 0;
   const remaining = safeBudget - totalSpent;
 
   // SVG circle calculations
   const size = 180;
-  const strokeWidth = 14;
+  const strokeWidth = 12;
   const radius = (size - strokeWidth) / 2;
   const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
 
-  // Calculate stroke segments for each category
-  const categorySegments = useMemo(() => {
-    if (categoryData.length === 0 || safeBudget <= 0) return [];
+  // Color based on percentage
+  const getColor = () => {
+    if (isOverBudget) return "#ef4444"; // red
+    if (percentage > 80) return "#f59e0b"; // amber
+    return "#0070f3"; // electric blue
+  };
 
-    let currentOffset = 0;
-    return categoryData.map((cat) => {
-      // Each category's arc length based on its percentage of total spent
-      // But capped at the budget percentage
-      const categoryBudgetPercent = (cat.amount / safeBudget) * 100;
-      const arcLength = (Math.min(categoryBudgetPercent, 100) / 100) * circumference;
-      const segment = {
-        ...cat,
-        offset: circumference - currentOffset,
-        length: arcLength,
-      };
-      currentOffset += arcLength;
-      return segment;
-    });
-  }, [categoryData, safeBudget, circumference]);
-
-  if (categoryData.length === 0) {
+  if (expenses.length === 0) {
     return (
       <div className="text-center text-slate-500 py-8">
         {t("noExpenses")}
@@ -95,13 +91,19 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
   }
 
   return (
-    <div className="flex flex-col md:flex-row items-center gap-6">
-      {/* Circular gauge with category colors */}
-      <div className="flex flex-col items-center flex-shrink-0">
+    <>
+      {/* Main gauge - clickable */}
+      <div
+        className="flex flex-col items-center cursor-pointer group"
+        onClick={() => setIsModalOpen(true)}
+        role="button"
+        tabIndex={0}
+        onKeyDown={(e) => e.key === "Enter" && setIsModalOpen(true)}
+      >
         <div className="relative" style={{ width: size, height: size }}>
           {/* Background circle */}
           <svg
-            className="transform -rotate-90"
+            className="transform -rotate-90 group-hover:scale-105 transition-transform duration-200"
             width={size}
             height={size}
           >
@@ -113,117 +115,140 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
               stroke="#e2e8f0"
               strokeWidth={strokeWidth}
             />
-            {/* Category segments */}
-            {categorySegments.map((segment, index) => (
-              <circle
-                key={segment.name}
-                cx={size / 2}
-                cy={size / 2}
-                r={radius}
-                fill="none"
-                stroke={segment.color}
-                strokeWidth={strokeWidth}
-                strokeDasharray={`${segment.length} ${circumference}`}
-                strokeDashoffset={segment.offset}
-                className="transition-all duration-700 ease-out"
-                style={{
-                  // Small gap between segments
-                  strokeDasharray: index < categorySegments.length - 1
-                    ? `${Math.max(segment.length - 2, 0)} ${circumference}`
-                    : `${segment.length} ${circumference}`
-                }}
-              />
-            ))}
+            {/* Progress circle */}
+            <circle
+              cx={size / 2}
+              cy={size / 2}
+              r={radius}
+              fill="none"
+              stroke={getColor()}
+              strokeWidth={strokeWidth}
+              strokeLinecap="round"
+              strokeDasharray={circumference}
+              strokeDashoffset={strokeDashoffset}
+              className="transition-all duration-700 ease-out"
+            />
           </svg>
 
           {/* Center content */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-3xl font-bold text-slate-900">
-              {budgetPercentage.toFixed(0)}%
+              {percentage.toFixed(0)}%
             </span>
             <span className="text-sm text-slate-500">{t("used")}</span>
           </div>
         </div>
 
-        {/* Budget info below gauge */}
-        <div className="mt-3 text-center">
+        {/* Legend */}
+        <div className="mt-4 text-center">
           <p className="text-sm font-medium text-slate-700">{t("monthlyBudget")}</p>
-          <p className={`text-lg font-semibold ${isOverBudget ? "text-red-500" : "text-[#0070f3]"}`}>
+          <p className="text-lg font-semibold" style={{ color: getColor() }}>
             €{totalSpent.toFixed(2)} <span className="text-slate-400 font-normal">/ €{safeBudget.toFixed(2)}</span>
           </p>
-          <p className={`text-sm ${isOverBudget ? "text-red-500" : "text-slate-500"}`}>
+          <p className={`text-sm mt-1 ${isOverBudget ? "text-red-500" : "text-slate-500"}`}>
             {isOverBudget
               ? t("overBudget", { amount: Math.abs(remaining).toFixed(2) })
               : t("remainingBudget", { amount: remaining.toFixed(2) })}
           </p>
         </div>
+
+        {/* Tap hint */}
+        <p className="text-xs text-slate-400 mt-2 group-hover:text-slate-500 transition-colors">
+          {t("tapForDetails")}
+        </p>
       </div>
 
-      {/* Category list */}
-      <div className="flex-1 w-full md:w-auto">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="font-semibold text-slate-900">{t("categoryBreakdown")}</h3>
-          <span className="text-sm text-slate-500">
-            {t("totalSpent")}: <span className="font-medium text-slate-900">€{totalSpent.toFixed(0)}</span>
-          </span>
-        </div>
-
-        {/* Stacked bar */}
-        <div className="h-3 rounded-full overflow-hidden bg-slate-100 flex mb-4">
-          {categoryData.map((cat, index) => (
-            <div
-              key={cat.name}
-              className="h-full transition-all duration-500"
-              style={{
-                width: `${cat.percentage}%`,
-                backgroundColor: cat.color,
-                marginLeft: index > 0 ? "1px" : 0,
-              }}
-              title={`${cat.name}: €${cat.amount.toFixed(2)} (${cat.percentage.toFixed(1)}%)`}
-            />
-          ))}
-        </div>
-
-        {/* Category items */}
-        <div className="space-y-2 max-h-40 overflow-y-auto">
-          {categoryData.slice(0, 5).map((cat) => (
-            <div key={cat.name} className="flex items-center justify-between">
-              <div className="flex items-center gap-2 min-w-0">
-                <div
-                  className="w-3 h-3 rounded-full flex-shrink-0"
-                  style={{ backgroundColor: cat.color }}
-                />
-                <span className="text-sm text-slate-700 truncate">{cat.name}</span>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-                <span className="text-sm font-medium text-slate-900">
-                  €{cat.amount.toFixed(0)}
-                </span>
-                <span className="text-xs text-slate-400 w-10 text-right">
-                  {cat.percentage.toFixed(0)}%
-                </span>
-              </div>
+      {/* Modal with full category breakdown */}
+      {isModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
+          onClick={() => setIsModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal header */}
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900">{t("categoryBreakdown")}</h2>
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
-          ))}
-          {categoryData.length > 5 && (
-            <div className="text-xs text-slate-400 text-center pt-1">
-              +{categoryData.length - 5} {t("moreCategories")}
-            </div>
-          )}
-        </div>
 
-        {/* Budget comparison */}
-        {safeBudget > 0 && (
-          <div className="pt-3 mt-3 border-t border-slate-100">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-500">{t("budgetUsed")}</span>
-              <span className={`font-medium ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
-                {((totalSpent / safeBudget) * 100).toFixed(0)}%
-              </span>
+            {/* Modal content */}
+            <div className="p-4 space-y-4">
+              {/* Total spent header */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-slate-500">{t("totalSpent")}</span>
+                <span className="text-lg font-bold text-slate-900">€{totalSpent.toFixed(2)}</span>
+              </div>
+
+              {/* Stacked bar */}
+              <div className="h-4 rounded-full overflow-hidden bg-slate-100 flex">
+                {categoryData.map((cat, index) => (
+                  <div
+                    key={cat.name}
+                    className="h-full transition-all duration-500"
+                    style={{
+                      width: `${cat.percentage}%`,
+                      backgroundColor: cat.color,
+                      marginLeft: index > 0 ? "1px" : 0,
+                    }}
+                    title={`${cat.name}: €${cat.amount.toFixed(2)} (${cat.percentage.toFixed(1)}%)`}
+                  />
+                ))}
+              </div>
+
+              {/* Category items - ALL categories shown */}
+              <div className="space-y-3">
+                {categoryData.map((cat) => (
+                  <div key={cat.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div
+                        className="w-4 h-4 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: cat.color }}
+                      />
+                      <span className="text-sm text-slate-700 truncate">{cat.name}</span>
+                    </div>
+                    <div className="flex items-center gap-3 flex-shrink-0 ml-2">
+                      <span className="text-sm font-medium text-slate-900">
+                        €{cat.amount.toFixed(2)}
+                      </span>
+                      <span className="text-xs text-slate-400 w-12 text-right">
+                        {cat.percentage.toFixed(1)}%
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Budget comparison */}
+              {safeBudget > 0 && (
+                <div className="pt-4 mt-4 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-slate-500">{t("budgetUsed")}</span>
+                    <span className={`text-lg font-bold ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
+                      {((totalSpent / safeBudget) * 100).toFixed(0)}%
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-sm text-slate-500">{isOverBudget ? t("overBudgetLabel") : t("remainingLabel")}</span>
+                    <span className={`text-sm font-medium ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
+                      €{Math.abs(remaining).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
-    </div>
+        </div>
+      )}
+    </>
   );
 }
