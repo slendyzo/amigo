@@ -111,7 +111,8 @@ src/
 ├── components/
 │   ├── ui/                     # Shadcn components
 │   │   ├── living-gauge.tsx    # Survival budget gauge
-│   │   └── burn-chart.tsx      # Monthly comparison
+│   │   ├── burn-chart.tsx      # Monthly comparison
+│   │   └── category-breakdown.tsx # Category spending chart
 │   ├── add-expense-modal.tsx   # Quick-add with tags
 │   ├── edit-expense-modal.tsx  # Edit with tag selector
 │   ├── onboarding-modal.tsx    # 3-step setup wizard
@@ -119,6 +120,9 @@ src/
 │   ├── feedback-button.tsx     # Floating feedback button
 │   ├── quick-create-*.tsx      # Inline create popups
 │   ├── workspace-switcher.tsx  # Workspace dropdown in sidebar
+│   ├── offline-indicator.tsx   # Offline status + sync indicator
+│   ├── changelog-modal.tsx     # Release notes popup
+│   ├── service-worker-register.tsx # PWA service worker
 │   └── dashboard-shell.tsx     # Layout with sidebar
 ├── lib/
 │   ├── auth.ts                 # NextAuth config
@@ -128,7 +132,11 @@ src/
 │   ├── importer.ts             # Excel/CSV import logic
 │   ├── permissions.ts          # Role-based permission checks
 │   ├── workspace.ts            # Workspace context helper
+│   ├── offline-storage.ts      # IndexedDB for offline expenses
 │   └── utils.ts                # Shadcn cn() helper
+├── hooks/
+│   ├── use-online-status.ts    # Online/offline detection + sync
+│   └── use-swipe.ts            # Touch swipe gestures
 └── middleware.ts               # Route protection
 
 prisma/
@@ -391,6 +399,7 @@ npx prisma studio     # Open database GUI
 - **Overview Page** - Stats cards, recent expenses, charts
 - **Living Gauge** - Circular survival budget progress indicator
 - **Burn Chart** - Monthly spending comparison (current vs previous)
+- **Category Breakdown** - Stacked bar chart showing spending by category
 - **View Modes** - Month, Quarter, Year, All
 - **Filters** - Project filter, type filter, date selectors
 
@@ -460,6 +469,17 @@ npx prisma studio     # Open database GUI
 - **iOS Instructions** - Manual install guide for Safari
 - **Install State** - Detect if already installed
 - **Dismiss Cooldown** - 7-day cooldown after dismissing
+- **Offline Support** - Add expenses while offline (IndexedDB storage)
+- **Auto-Sync** - Pending expenses sync when back online
+- **Service Worker** - Caches app shell for offline access
+- **Offline Indicator** - Shows pending count and sync status
+
+### Changelog System
+
+- **Version Tracking** - Shows "What's New" after app updates
+- **localStorage** - Tracks last seen version per user
+- **Multi-language** - Changelog entries support all locales
+- **Auto-dismiss** - Appears 2s after load, saves preference on close
 
 ### Feedback System
 

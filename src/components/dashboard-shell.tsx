@@ -11,6 +11,9 @@ import FeedbackButton from "./feedback-button";
 import IOSInstallPrompt from "./ios-install-prompt";
 import WorkspaceSwitcher from "./workspace-switcher";
 import AnnouncementModal from "./announcement-modal";
+import { OfflineIndicator } from "./offline-indicator";
+import { ServiceWorkerRegister } from "./service-worker-register";
+import { ChangelogModal } from "./changelog-modal";
 import type { ReactNode } from "react";
 
 // Current announcement ID - should match the one in overview-client.tsx
@@ -319,6 +322,15 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
         announcementId={CURRENT_ANNOUNCEMENT_ID}
         viewOnly
       />
+
+      {/* Offline Indicator */}
+      <OfflineIndicator />
+
+      {/* Service Worker Registration */}
+      <ServiceWorkerRegister />
+
+      {/* Changelog Modal */}
+      <ChangelogModal />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import QuickCreateCategory from "./quick-create-category";
+import { savePendingExpense, isOfflineStorageAvailable } from "@/lib/offline-storage";
 
 type Category = {
   id: string;
@@ -224,29 +225,64 @@ export default function AddExpenseModal({
         return;
       }
 
-      const response = await fetch("/api/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name,
-          amount: parsedAmount,
-          currency,
-          type: expenseType,
-          categoryId: categoryId || undefined,
-          bankAccountId: bankAccountId || undefined,
-          projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
-          date,
-        }),
-      });
+      const expenseData = {
+        name,
+        amount: parsedAmount,
+        currency,
+        type: expenseType as "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT",
+        categoryId: categoryId || undefined,
+        bankAccountId: bankAccountId || undefined,
+        projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
+        date,
+      };
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || "Failed to add expense");
+      // Try to submit online first
+      if (navigator.onLine) {
+        const response = await fetch("/api/expenses", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(expenseData),
+        });
+
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to add expense");
+        }
+
+        router.refresh();
+        onClose();
+      } else {
+        // Save offline if not connected
+        if (isOfflineStorageAvailable()) {
+          await savePendingExpense(expenseData);
+          // Dispatch event to update pending count
+          window.dispatchEvent(new CustomEvent("offline-expense-added"));
+          onClose();
+        } else {
+          throw new Error("Offline storage not available");
+        }
       }
-
-      router.refresh();
-      onClose();
     } catch (err) {
+      // If online submission fails due to network, try offline storage
+      if (err instanceof TypeError && err.message.includes("fetch")) {
+        if (isOfflineStorageAvailable()) {
+          const normalizedAmount = amount.replace(",", ".");
+          const parsedAmount = parseFloat(normalizedAmount);
+          await savePendingExpense({
+            name,
+            amount: parsedAmount,
+            currency,
+            type: expenseType as "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT",
+            categoryId: categoryId || undefined,
+            bankAccountId: bankAccountId || undefined,
+            projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
+            date,
+          });
+          window.dispatchEvent(new CustomEvent("offline-expense-added"));
+          onClose();
+          return;
+        }
+      }
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
       setIsLoading(false);

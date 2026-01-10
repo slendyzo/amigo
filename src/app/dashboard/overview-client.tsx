@@ -8,6 +8,7 @@ import EditExpenseModal from "@/components/edit-expense-modal";
 import OnboardingModal from "@/components/onboarding-modal";
 import AnnouncementModal from "@/components/announcement-modal";
 import { LivingGauge } from "@/components/ui/living-gauge";
+import { CategoryBreakdown } from "@/components/ui/category-breakdown";
 import { useSwipe } from "@/hooks/use-swipe";
 
 // Lazy load BurnChart to reduce initial bundle size (Recharts is ~45kB!)
@@ -814,8 +815,19 @@ export default function DashboardOverview({
             />
           </div>
 
+          {/* Category Breakdown - shown on mobile and desktop */}
+          <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-6">
+            <CategoryBreakdown
+              expenses={expenses.map((e) => ({
+                amountEur: e.amountEur,
+                categoryName: e.categoryName,
+              }))}
+              budget={livingBudget}
+            />
+          </div>
+
           {/* Burn Chart - Lazy loaded, hidden on mobile for performance */}
-          <div className="hidden md:block lg:col-span-2 bg-white rounded-xl border border-slate-200 p-4 md:p-6">
+          <div className="hidden lg:block bg-white rounded-xl border border-slate-200 p-4 md:p-6">
             <Suspense fallback={<ChartSkeleton />}>
               <BurnChart
                 currentMonthExpenses={expenses
@@ -971,6 +983,7 @@ export default function DashboardOverview({
         }}
         categories={categories}
         bankAccounts={bankAccounts}
+        projects={projects}
       />
 
       {/* Edit Expense Modal */}

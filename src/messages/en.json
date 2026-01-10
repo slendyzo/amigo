@@ -155,7 +155,11 @@
       "vsLastMonth": "{percent}% vs last month",
       "day": "Day {day}"
     },
-    "allTime": "All Time"
+    "allTime": "All Time",
+    "categoryBreakdown": "Spending by Category",
+    "totalSpent": "Total",
+    "moreCategories": "more categories",
+    "uncategorized": "Uncategorized"
   },
   "expenses": {
     "title": "Expenses",
@@ -962,6 +966,22 @@
     "skipForNow": "Skip for now",
     "saving": "Saving...",
     "getStarted": "Get Started"
+  },
+  "offline": {
+    "youreOffline": "You're Offline",
+    "expensesSavedLocally": "Expenses will be saved locally",
+    "syncing": "Syncing expenses...",
+    "pleaseWait": "Please wait while we sync your data",
+    "pendingExpenses": "{count, plural, one {# pending expense} other {# pending expenses}}",
+    "tapToSync": "Tap to sync when ready",
+    "sync": "Sync",
+    "offlineExpenseAdded": "Expense saved offline"
+  },
+  "changelog": {
+    "title": "What's New",
+    "version": "Version {version}",
+    "close": "Got it!",
+    "viewAll": "View all updates"
   },
   "announcement": {
     "workspaces": {

@@ -155,7 +155,11 @@
       "vsLastMonth": "{percent}% vs mês passado",
       "day": "Dia {day}"
     },
-    "allTime": "Todo o Tempo"
+    "allTime": "Todo o Tempo",
+    "categoryBreakdown": "Gastos por Categoria",
+    "totalSpent": "Total",
+    "moreCategories": "mais categorias",
+    "uncategorized": "Sem Categoria"
   },
   "expenses": {
     "title": "Despesas",
@@ -948,6 +952,22 @@
     "skipForNow": "Saltar por agora",
     "saving": "A guardar...",
     "getStarted": "Começar"
+  },
+  "offline": {
+    "youreOffline": "Estás Offline",
+    "expensesSavedLocally": "As despesas serão guardadas localmente",
+    "syncing": "A sincronizar despesas...",
+    "pleaseWait": "Aguarda enquanto sincronizamos os teus dados",
+    "pendingExpenses": "{count, plural, one {# despesa pendente} other {# despesas pendentes}}",
+    "tapToSync": "Toca para sincronizar",
+    "sync": "Sincronizar",
+    "offlineExpenseAdded": "Despesa guardada offline"
+  },
+  "changelog": {
+    "title": "Novidades",
+    "version": "Versão {version}",
+    "close": "Entendi!",
+    "viewAll": "Ver todas as atualizações"
   },
   "announcement": {
     "workspaces": {

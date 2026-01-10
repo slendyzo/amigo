@@ -88,12 +88,12 @@ export default function FeedbackButton() {
     setError("");
 
     try {
-      const imageUrls: string[] = [];
+      let imageUrls: string[] = [];
 
-      // Upload all images
+      // Upload all images in parallel for faster upload
       if (imageFiles.length > 0) {
         setIsUploading(true);
-        for (const file of imageFiles) {
+        const uploadPromises = imageFiles.map(async (file) => {
           const formData = new FormData();
           formData.append("file", file);
 
@@ -107,8 +107,10 @@ export default function FeedbackButton() {
           }
 
           const uploadData = await uploadRes.json();
-          imageUrls.push(uploadData.imageUrl);
-        }
+          return uploadData.imageUrl;
+        });
+
+        imageUrls = await Promise.all(uploadPromises);
         setIsUploading(false);
       }
 
