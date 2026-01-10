@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { seedDefaultCategories, ensureUncategorizedCategory } from "@/lib/default-categories";
 
 const MAX_ATTEMPTS = 5;
 
@@ -99,7 +100,7 @@ export async function POST(request: Request) {
     });
 
     // Create default personal workspace for the user
-    await prisma.workspace.create({
+    const workspace = await prisma.workspace.create({
       data: {
         name: "Personal",
         type: "PERSONAL",
@@ -112,6 +113,10 @@ export async function POST(request: Request) {
         },
       },
     });
+
+    // Seed default categories for new workspace
+    await ensureUncategorizedCategory(workspace.id);
+    await seedDefaultCategories(workspace.id);
 
     // Delete the verification token
     await prisma.emailVerificationToken.delete({ where: { id: token.id } });

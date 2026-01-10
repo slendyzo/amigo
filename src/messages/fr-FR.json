@@ -288,7 +288,13 @@
     "deleteCategoryQuestion": "Supprimer la Catégorie ?",
     "moveToCategorized": "Les dépenses de cette catégorie seront déplacées vers \"Non catégorisé\".",
     "namePlaceholder": "ex: Alimentation, Transport, Divertissement",
-    "saving": "Enregistrement..."
+    "saving": "Enregistrement...",
+    "addDefaultsTitle": "Commencez avec des catégories par défaut",
+    "addDefaultsDescription": "Ajoutez des catégories courantes comme Courses, Restaurants, Transport et plus en un clic.",
+    "addDefaults": "Ajouter les Catégories par Défaut",
+    "addingDefaults": "Ajout en cours...",
+    "defaultsAdded": "{count} catégories ajoutées :",
+    "defaultsAlreadyExist": "Toutes les catégories par défaut existent déjà dans votre espace."
   },
   "accounts": {
     "title": "Comptes Bancaires",

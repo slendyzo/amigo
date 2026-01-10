@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { Sparkles } from "lucide-react";
 
 type Category = {
   id: string;
@@ -20,6 +21,8 @@ export default function CategoriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [isSeeding, setIsSeeding] = useState(false);
+  const [seedResult, setSeedResult] = useState<{ created: number; categories: string[] } | null>(null);
 
   // Form state
   const [name, setName] = useState("");
@@ -106,6 +109,31 @@ export default function CategoriesPage() {
     setDeleteId(null);
   };
 
+  const handleSeedDefaults = async () => {
+    setIsSeeding(true);
+    setSeedResult(null);
+    try {
+      const response = await fetch("/api/categories/seed", { method: "POST" });
+      if (response.ok) {
+        const data = await response.json();
+        if (data.created > 0) {
+          setSeedResult({ created: data.created, categories: data.categories });
+          fetchCategories();
+        } else {
+          setSeedResult({ created: 0, categories: [] });
+        }
+      }
+    } catch (error) {
+      console.error("Failed to seed categories:", error);
+    } finally {
+      setIsSeeding(false);
+    }
+  };
+
+  // Check if we should show the "add defaults" prompt
+  // Show if user has 3 or fewer categories (just Uncategorized + maybe 1-2 custom)
+  const showAddDefaultsPrompt = !isLoading && categories.length <= 3;
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -131,6 +159,44 @@ export default function CategoriesPage() {
       <div className="p-3 rounded-lg bg-slate-50 border border-slate-200 text-sm text-slate-600">
         <span className="font-medium">{t("note")}:</span> {t("systemNote")}
       </div>
+
+      {/* Add Default Categories Prompt */}
+      {showAddDefaultsPrompt && !seedResult && (
+        <div className="p-4 rounded-xl bg-gradient-to-r from-purple-50 to-blue-50 border border-purple-200">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-purple-100">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-slate-900 mb-1">{t("addDefaultsTitle")}</h3>
+              <p className="text-sm text-slate-600 mb-3">{t("addDefaultsDescription")}</p>
+              <button
+                onClick={handleSeedDefaults}
+                disabled={isSeeding}
+                className="px-4 py-2 bg-purple-600 text-white text-sm font-medium rounded-lg hover:bg-purple-700 disabled:opacity-50 transition-colors"
+              >
+                {isSeeding ? t("addingDefaults") : t("addDefaults")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Seed Result Toast */}
+      {seedResult && (
+        <div className={`p-4 rounded-xl border ${seedResult.created > 0 ? "bg-green-50 border-green-200" : "bg-slate-50 border-slate-200"}`}>
+          <p className={`text-sm font-medium ${seedResult.created > 0 ? "text-green-700" : "text-slate-600"}`}>
+            {seedResult.created > 0
+              ? t("defaultsAdded", { count: seedResult.created })
+              : t("defaultsAlreadyExist")}
+          </p>
+          {seedResult.created > 0 && (
+            <p className="text-sm text-green-600 mt-1">
+              {seedResult.categories.join(", ")}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Categories List */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">

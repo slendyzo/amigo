@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { seedDefaultCategories, ensureUncategorizedCategory } from "@/lib/default-categories";
 
 /**
  * GET /api/workspaces
@@ -115,14 +116,9 @@ export async function POST(request: Request) {
       },
     });
 
-    // Create default "Uncategorized" category for new workspace
-    await prisma.category.create({
-      data: {
-        workspaceId: workspace.id,
-        name: "Uncategorized",
-        isSystem: true,
-      },
-    });
+    // Seed default categories for new workspace
+    await ensureUncategorizedCategory(workspace.id);
+    await seedDefaultCategories(workspace.id);
 
     return NextResponse.json({
       id: workspace.id,

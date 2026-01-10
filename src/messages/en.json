@@ -288,7 +288,13 @@
     "deleteCategoryQuestion": "Delete Category?",
     "moveToCategorized": "Expenses in this category will be moved to \"Uncategorized\".",
     "namePlaceholder": "e.g., Food, Transport, Entertainment",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "addDefaultsTitle": "Get started with default categories",
+    "addDefaultsDescription": "Add commonly used categories like Groceries, Dining, Transport, and more with one click.",
+    "addDefaults": "Add Default Categories",
+    "addingDefaults": "Adding...",
+    "defaultsAdded": "Added {count} categories:",
+    "defaultsAlreadyExist": "All default categories already exist in your workspace."
   },
   "accounts": {
     "title": "Bank Accounts",

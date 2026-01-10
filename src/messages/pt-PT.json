@@ -288,7 +288,13 @@
     "deleteCategoryQuestion": "Eliminar Categoria?",
     "moveToCategorized": "Despesas nesta categoria serão movidas para \"Sem Categoria\".",
     "namePlaceholder": "ex: Alimentação, Transporte, Entretenimento",
-    "saving": "A guardar..."
+    "saving": "A guardar...",
+    "addDefaultsTitle": "Começa com categorias pré-definidas",
+    "addDefaultsDescription": "Adiciona categorias comuns como Mercearia, Restaurantes, Transportes e mais com um clique.",
+    "addDefaults": "Adicionar Categorias Padrão",
+    "addingDefaults": "A adicionar...",
+    "defaultsAdded": "Adicionadas {count} categorias:",
+    "defaultsAlreadyExist": "Todas as categorias padrão já existem no teu espaço."
   },
   "accounts": {
     "title": "Contas Bancárias",
