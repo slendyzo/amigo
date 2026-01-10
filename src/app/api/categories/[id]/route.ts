@@ -43,8 +43,10 @@ export async function PUT(
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    if (existing.isSystem) {
-      return NextResponse.json({ error: "Cannot modify system category" }, { status: 400 });
+    // Only block editing the "Uncategorized" category (check all language variants)
+    const uncategorizedNames = ["uncategorized", "sem categoria", "non catégorisé"];
+    if (uncategorizedNames.includes(existing.name.toLowerCase())) {
+      return NextResponse.json({ error: "Cannot modify Uncategorized category" }, { status: 400 });
     }
 
     // Check for duplicate name
@@ -113,8 +115,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Category not found" }, { status: 404 });
     }
 
-    if (existing.isSystem) {
-      return NextResponse.json({ error: "Cannot delete system category" }, { status: 400 });
+    // Only block deleting the "Uncategorized" category (check all language variants)
+    const uncategorizedNames = ["uncategorized", "sem categoria", "non catégorisé"];
+    if (uncategorizedNames.includes(existing.name.toLowerCase())) {
+      return NextResponse.json({ error: "Cannot delete Uncategorized category" }, { status: 400 });
     }
 
     // Get or create Uncategorized category
