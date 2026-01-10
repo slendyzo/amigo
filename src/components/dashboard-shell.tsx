@@ -247,7 +247,7 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
         {/* Footer */}
         <div className="p-4 border-t border-slate-200">
           <div className="text-xs text-slate-400">
-            <div>Amigo v0.1.0</div>
+            <div>Amigo v0.3.0</div>
             <div className="mt-1 opacity-75">
               Build: {process.env.NEXT_PUBLIC_BUILD_ID || "dev"}<br />
               {process.env.NEXT_PUBLIC_BUILD_DATE || new Date().toLocaleDateString("en-GB")}
