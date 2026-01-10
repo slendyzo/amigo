@@ -3,6 +3,57 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
 
+const LEARNING_THRESHOLD = 3;
+
+// Helper to trigger category learning after categorization
+async function triggerCategoryLearning(
+  expenseName: string,
+  categoryId: string,
+  workspaceId: string
+) {
+  const keyword = expenseName.toLowerCase().trim();
+
+  // Skip very short keywords
+  if (keyword.length < 3) return;
+
+  // Check if mapping already exists
+  const existingMapping = await prisma.keywordMapping.findUnique({
+    where: {
+      workspaceId_keyword: {
+        workspaceId,
+        keyword,
+      },
+    },
+  });
+
+  if (existingMapping) return;
+
+  // Count categorizations of this name to this category
+  const count = await prisma.expense.count({
+    where: {
+      workspaceId,
+      categoryId,
+      name: {
+        equals: expenseName,
+        mode: "insensitive",
+      },
+    },
+  });
+
+  // Create mapping if threshold reached
+  if (count >= LEARNING_THRESHOLD) {
+    await prisma.keywordMapping.create({
+      data: {
+        workspaceId,
+        keyword,
+        categoryId,
+        isSystem: false,
+      },
+    });
+    console.log(`[Learning] Created mapping: "${keyword}" → category ${categoryId}`);
+  }
+}
+
 // GET - Get single expense
 export async function GET(
   request: Request,
@@ -130,6 +181,14 @@ export async function PUT(
         projects: true,
       },
     });
+
+    // Trigger learning if category was updated
+    if (categoryId && expense.name) {
+      // Fire and forget - don't wait for learning to complete
+      triggerCategoryLearning(expense.name, categoryId, workspace.id).catch(
+        (err) => console.error("Category learning failed:", err)
+      );
+    }
 
     return NextResponse.json({ expense });
   } catch (error) {

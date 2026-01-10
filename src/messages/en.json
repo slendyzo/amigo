@@ -998,7 +998,10 @@
     "allDone": "All Done!",
     "allDoneDescription": "You have no uncategorized expenses. Great job keeping things organized!",
     "tip": "Pro tip",
-    "tipDescription": "Set up keyword mappings in Settings to auto-categorize future expenses based on their names."
+    "tipDescription": "Set up keyword mappings in Settings to auto-categorize future expenses based on their names.",
+    "suggested": "Suggested",
+    "usedTimes": "used {count}x before",
+    "learnedMapping": "Pattern learned! Will auto-categorize next time."
   },
   "announcement": {
     "workspaces": {

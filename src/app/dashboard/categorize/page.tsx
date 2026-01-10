@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Check, ChevronRight, Tag, Loader2, Plus } from "lucide-react";
+import { Check, ChevronRight, Tag, Loader2, Plus, Sparkles, Brain } from "lucide-react";
 
 type Expense = {
   id: string;
@@ -18,6 +18,14 @@ type Category = {
   id: string;
   name: string;
   isSystem?: boolean;
+};
+
+type Suggestion = {
+  categoryId: string;
+  categoryName: string;
+  confidence: "high" | "medium" | "low";
+  count?: number;
+  source: "mapping" | "history";
 };
 
 const CURRENCY_SYMBOLS: Record<string, string> = {
@@ -58,6 +66,10 @@ export default function CategorizePage() {
   const [createCategoryError, setCreateCategoryError] = useState("");
   const newCategoryInputRef = useRef<HTMLInputElement>(null);
 
+  // Suggestion state
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
+  const [showLearnedToast, setShowLearnedToast] = useState(false);
+
   // Get translated month names
   const MONTHS = [
     tTime("months.january"), tTime("months.february"), tTime("months.march"),
@@ -66,9 +78,34 @@ export default function CategorizePage() {
     tTime("months.october"), tTime("months.november"), tTime("months.december")
   ];
 
+  // Fetch suggestion for current expense
+  const fetchSuggestion = useCallback(async (expenseName: string) => {
+    try {
+      const res = await fetch(`/api/keyword-mappings/learn?name=${encodeURIComponent(expenseName)}`);
+      if (res.ok) {
+        const data = await res.json();
+        setSuggestion(data.suggestion);
+      } else {
+        setSuggestion(null);
+      }
+    } catch {
+      setSuggestion(null);
+    }
+  }, []);
+
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Fetch suggestion when current expense changes
+  useEffect(() => {
+    const expense = expenses[currentIndex];
+    if (expense?.name) {
+      fetchSuggestion(expense.name);
+    } else {
+      setSuggestion(null);
+    }
+  }, [expenses, currentIndex, fetchSuggestion]);
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -117,10 +154,29 @@ export default function CategorizePage() {
       });
 
       if (response.ok) {
+        // Check if a mapping was learned (fire and forget the POST, but check result)
+        fetch("/api/keyword-mappings/learn", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            expenseName: currentExpense.name,
+            categoryId,
+          }),
+        })
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.learned) {
+              setShowLearnedToast(true);
+              setTimeout(() => setShowLearnedToast(false), 3000);
+            }
+          })
+          .catch(() => {});
+
         setShowSuccess(true);
         setTimeout(() => {
           setShowSuccess(false);
           setSelectedCategory(null);
+          setSuggestion(null);
           // Move to next or remove from list
           setExpenses((prev) => prev.filter((e) => e.id !== currentExpense.id));
           // Keep currentIndex the same (or decrease if at end)
@@ -273,9 +329,41 @@ export default function CategorizePage() {
 
           {/* Category buttons */}
           <div className="p-4">
+            {/* Suggested category */}
+            {suggestion && (
+              <div className="mb-4">
+                <div className="flex items-center gap-2 text-sm font-medium text-purple-700 mb-2">
+                  <Sparkles className="w-4 h-4" />
+                  <span>{t("suggested")}</span>
+                  {suggestion.source === "history" && suggestion.count && (
+                    <span className="text-xs text-purple-500">
+                      ({t("usedTimes", { count: suggestion.count })})
+                    </span>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleCategorize(suggestion.categoryId)}
+                  disabled={isSaving || isCreatingCategory}
+                  className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 text-left transition-all ${
+                    selectedCategory === suggestion.categoryId
+                      ? "border-purple-500 bg-purple-100 text-purple-700"
+                      : "border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700"
+                  } disabled:opacity-50`}
+                >
+                  <Sparkles className="w-5 h-5 flex-shrink-0 text-purple-500" />
+                  <span className="text-sm font-semibold">{suggestion.categoryName}</span>
+                  {selectedCategory === suggestion.categoryId && (
+                    <Check className="w-4 h-4 ml-auto flex-shrink-0" />
+                  )}
+                </button>
+              </div>
+            )}
+
             <p className="text-sm font-medium text-slate-700 mb-3">{t("selectCategory")}</p>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              {categories.map((category) => (
+              {categories
+                .filter((c) => !suggestion || c.id !== suggestion.categoryId)
+                .map((category) => (
                 <button
                   key={category.id}
                   onClick={() => handleCategorize(category.id)}
@@ -388,6 +476,14 @@ export default function CategorizePage() {
         <h3 className="text-sm font-medium text-slate-700 mb-2">{t("tip")}</h3>
         <p className="text-sm text-slate-600">{t("tipDescription")}</p>
       </div>
+
+      {/* Learned mapping toast */}
+      {showLearnedToast && (
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-4 z-50">
+          <Brain className="w-5 h-5" />
+          <span className="text-sm font-medium">{t("learnedMapping")}</span>
+        </div>
+      )}
     </div>
   );
 }

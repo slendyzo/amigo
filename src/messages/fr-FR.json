@@ -998,7 +998,10 @@
     "allDone": "Tout est fait !",
     "allDoneDescription": "Vous n'avez pas de dépenses non catégorisées. Bravo pour l'organisation !",
     "tip": "Astuce",
-    "tipDescription": "Configurez des mappings de mots-clés dans les Paramètres pour catégoriser automatiquement les futures dépenses."
+    "tipDescription": "Configurez des mappings de mots-clés dans les Paramètres pour catégoriser automatiquement les futures dépenses.",
+    "suggested": "Suggéré",
+    "usedTimes": "utilisé {count}x avant",
+    "learnedMapping": "Motif appris ! Sera auto-catégorisé la prochaine fois."
   },
   "announcement": {
     "workspaces": {

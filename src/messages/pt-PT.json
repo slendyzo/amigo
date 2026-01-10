@@ -984,7 +984,10 @@
     "allDone": "Tudo Feito!",
     "allDoneDescription": "Não tens despesas sem categoria. Bom trabalho a manter as coisas organizadas!",
     "tip": "Dica",
-    "tipDescription": "Configura mapeamentos de palavras-chave nas Definições para categorizar automaticamente despesas futuras com base nos seus nomes."
+    "tipDescription": "Configura mapeamentos de palavras-chave nas Definições para categorizar automaticamente despesas futuras com base nos seus nomes.",
+    "suggested": "Sugerido",
+    "usedTimes": "usado {count}x antes",
+    "learnedMapping": "Padrão aprendido! Vai categorizar automaticamente da próxima vez."
   },
   "announcement": {
     "workspaces": {
