@@ -39,6 +39,7 @@
     "recurring": "Recorrentes",
     "projects": "Projetos",
     "categories": "Categorias",
+    "categorize": "Categorizar",
     "accounts": "Contas Bancárias",
     "import": "Importar",
     "importHistory": "Histórico de Importações",
@@ -967,7 +968,20 @@
     "title": "Novidades",
     "version": "Versão {version}",
     "close": "Entendi!",
-    "viewAll": "Ver todas as atualizações"
+    "viewAll": "Ver todas as atualizações",
+    "olderUpdates": "Atualizações anteriores",
+    "newerUpdates": "Atualizações mais recentes"
+  },
+  "categorize": {
+    "title": "Categorizar Rápido",
+    "subtitle": "Organiza as tuas despesas sem categoria",
+    "remaining": "restantes",
+    "selectCategory": "Seleciona uma categoria:",
+    "skip": "Saltar por agora",
+    "allDone": "Tudo Feito!",
+    "allDoneDescription": "Não tens despesas sem categoria. Bom trabalho a manter as coisas organizadas!",
+    "tip": "Dica",
+    "tipDescription": "Configura mapeamentos de palavras-chave nas Definições para categorizar automaticamente despesas futuras com base nos seus nomes."
   },
   "announcement": {
     "workspaces": {

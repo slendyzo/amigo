@@ -2,13 +2,45 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { X, Sparkles, Bug, Zap } from "lucide-react";
+import { X, Sparkles, Bug, Zap, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Changelog entries - add new entries at the top
 const CHANGELOG_ENTRIES = [
   {
-    version: "0.2.0",
+    version: "0.3.0",
     date: "2026-01-10",
+    entries: [
+      {
+        type: "feature" as const,
+        title: {
+          en: "Quick Categorize",
+          "pt-PT": "Categorizar Rápido",
+          "fr-FR": "Catégorisation Rapide",
+        },
+        description: {
+          en: "New page to quickly categorize all your uncategorized expenses. Find it under Categories in the sidebar.",
+          "pt-PT": "Nova página para categorizar rapidamente todas as despesas sem categoria. Encontra em Categorias no menu.",
+          "fr-FR": "Nouvelle page pour catégoriser rapidement vos dépenses. Trouvez-la dans Catégories dans le menu.",
+        },
+      },
+      {
+        type: "improvement" as const,
+        title: {
+          en: "Changelog History",
+          "pt-PT": "Histórico de Alterações",
+          "fr-FR": "Historique des Changements",
+        },
+        description: {
+          en: "You can now browse through all past updates using the navigation arrows.",
+          "pt-PT": "Agora podes ver todas as atualizações anteriores usando as setas de navegação.",
+          "fr-FR": "Vous pouvez maintenant parcourir toutes les mises à jour passées avec les flèches.",
+        },
+      },
+    ],
+  },
+  {
+    version: "0.2.0",
+    date: "2026-01-08",
     entries: [
       {
         type: "feature" as const,
@@ -67,7 +99,7 @@ const CHANGELOG_ENTRIES = [
 ];
 
 // Current version to check against
-const CURRENT_VERSION = "0.2.0";
+const CURRENT_VERSION = "0.3.0";
 const STORAGE_KEY = "amigo-last-seen-version";
 
 type ChangelogModalProps = {
@@ -79,6 +111,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
   const t = useTranslations("changelog");
   const [isOpen, setIsOpen] = useState(false);
   const [locale, setLocale] = useState<"en" | "pt-PT" | "fr-FR">("en");
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     // Get locale from document
@@ -104,12 +137,27 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
   const handleClose = () => {
     localStorage.setItem(STORAGE_KEY, CURRENT_VERSION);
     setIsOpen(false);
+    setCurrentIndex(0);
     onClose?.();
+  };
+
+  const handlePrevious = () => {
+    if (currentIndex < CHANGELOG_ENTRIES.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
   };
 
   if (!isOpen) return null;
 
-  const currentChangelog = CHANGELOG_ENTRIES[0];
+  const currentChangelog = CHANGELOG_ENTRIES[currentIndex];
+  const hasPrevious = currentIndex < CHANGELOG_ENTRIES.length - 1;
+  const hasNext = currentIndex > 0;
 
   const getIcon = (type: "feature" | "fix" | "improvement") => {
     switch (type) {
@@ -154,9 +202,34 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
             <Sparkles className="w-6 h-6" />
             <h2 className="text-xl font-bold">{t("title")}</h2>
           </div>
-          <p className="text-white/80 text-sm">
-            {t("version", { version: currentChangelog.version })} · {new Date(currentChangelog.date).toLocaleDateString(locale === "en" ? "en-GB" : locale)}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="text-white/80 text-sm">
+              {t("version", { version: currentChangelog.version })} · {new Date(currentChangelog.date).toLocaleDateString(locale === "en" ? "en-GB" : locale)}
+            </p>
+            {CHANGELOG_ENTRIES.length > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={handlePrevious}
+                  disabled={!hasPrevious}
+                  className="p-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  title={t("olderUpdates")}
+                >
+                  <ChevronLeft className="w-5 h-5" />
+                </button>
+                <span className="text-xs text-white/60 min-w-[3rem] text-center">
+                  {currentIndex + 1} / {CHANGELOG_ENTRIES.length}
+                </span>
+                <button
+                  onClick={handleNext}
+                  disabled={!hasNext}
+                  className="p-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  title={t("newerUpdates")}
+                >
+                  <ChevronRight className="w-5 h-5" />
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Content */}

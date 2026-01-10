@@ -39,6 +39,7 @@
     "recurring": "Recurring",
     "projects": "Projects",
     "categories": "Categories",
+    "categorize": "Quick Categorize",
     "accounts": "Bank Accounts",
     "import": "Import",
     "importHistory": "Import History",
@@ -981,7 +982,20 @@
     "title": "What's New",
     "version": "Version {version}",
     "close": "Got it!",
-    "viewAll": "View all updates"
+    "viewAll": "View all updates",
+    "olderUpdates": "Older updates",
+    "newerUpdates": "Newer updates"
+  },
+  "categorize": {
+    "title": "Quick Categorize",
+    "subtitle": "Tidy up your uncategorized expenses",
+    "remaining": "remaining",
+    "selectCategory": "Select a category:",
+    "skip": "Skip for now",
+    "allDone": "All Done!",
+    "allDoneDescription": "You have no uncategorized expenses. Great job keeping things organized!",
+    "tip": "Pro tip",
+    "tipDescription": "Set up keyword mappings in Settings to auto-categorize future expenses based on their names."
   },
   "announcement": {
     "workspaces": {

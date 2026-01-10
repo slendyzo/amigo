@@ -39,6 +39,7 @@
     "recurring": "Récurrents",
     "projects": "Projets",
     "categories": "Catégories",
+    "categorize": "Catégoriser",
     "accounts": "Comptes Bancaires",
     "import": "Importer",
     "importHistory": "Historique d'Import",
@@ -981,7 +982,20 @@
     "title": "Nouveautés",
     "version": "Version {version}",
     "close": "Compris !",
-    "viewAll": "Voir toutes les mises à jour"
+    "viewAll": "Voir toutes les mises à jour",
+    "olderUpdates": "Mises à jour précédentes",
+    "newerUpdates": "Mises à jour plus récentes"
+  },
+  "categorize": {
+    "title": "Catégorisation Rapide",
+    "subtitle": "Organisez vos dépenses non catégorisées",
+    "remaining": "restantes",
+    "selectCategory": "Sélectionnez une catégorie :",
+    "skip": "Passer pour l'instant",
+    "allDone": "Tout est fait !",
+    "allDoneDescription": "Vous n'avez pas de dépenses non catégorisées. Bravo pour l'organisation !",
+    "tip": "Astuce",
+    "tipDescription": "Configurez des mappings de mots-clés dans les Paramètres pour catégoriser automatiquement les futures dépenses."
   },
   "announcement": {
     "workspaces": {

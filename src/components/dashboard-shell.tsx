@@ -37,6 +37,7 @@ const navigationGroups = [
     items: [
       { key: "projects", href: "/dashboard/projects", icon: "folder" },
       { key: "categories", href: "/dashboard/categories", icon: "tag" },
+      { key: "categorize", href: "/dashboard/categorize", icon: "wand" },
       { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
     ],
   },
@@ -124,6 +125,11 @@ const icons: Record<string, ReactNode> = {
   sparkles: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
+    </svg>
+  ),
+  wand: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
     </svg>
   ),
 };
