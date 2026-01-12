@@ -216,3 +216,27 @@ body.modal-open .mobile-nav-bar {
 .animate-slide-up {
   animation: slide-up 0.3s ease-out forwards;
 }
+
+/* Fix date input styling on iOS/iPadOS */
+input[type="date"] {
+  -webkit-appearance: none;
+  appearance: none;
+  min-height: 42px;
+  background-color: white;
+  position: relative;
+}
+
+/* Ensure consistent height on iOS */
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
+  padding: 0;
+}
+
+/* Fix empty date input display on iOS */
+input[type="date"]:not(:valid)::-webkit-datetime-edit {
+  color: transparent;
+}
+
+input[type="date"]:focus::-webkit-datetime-edit {
+  color: inherit;
+}

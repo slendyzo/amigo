@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { Sparkles } from "lucide-react";
 
 type Category = {
@@ -21,6 +21,7 @@ export default function CategoriesPage() {
   const t = useTranslations("categories");
   const tCommon = useTranslations("common");
   const tExpenses = useTranslations("expenses");
+  const locale = useLocale();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -119,7 +120,11 @@ export default function CategoriesPage() {
     setIsSeeding(true);
     setSeedResult(null);
     try {
-      const response = await fetch("/api/categories/seed", { method: "POST" });
+      const response = await fetch("/api/categories/seed", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ language: locale }),
+      });
       if (response.ok) {
         const data = await response.json();
         if (data.created > 0) {
