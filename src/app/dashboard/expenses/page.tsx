@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
+import ExpenseDetailModal from "@/components/expense-detail-modal";
 
 type Expense = {
   id: string;
@@ -87,6 +88,7 @@ export default function ExpensesPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   // Selection state
@@ -299,6 +301,7 @@ export default function ExpensesPage() {
     // Sort based on current sort settings
     return [...filtered].sort((a, b) => {
       if (sortBy === "date") {
+        // Include full timestamp for proper time-based sorting
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
         return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
@@ -691,7 +694,13 @@ export default function ExpensesPage() {
                   {group.expenses.map((expense) => (
                     <tr
                       key={expense.id}
-                      className={`${expense.isRecurring ? "bg-blue-50/60 hover:bg-blue-100/60" : "hover:bg-slate-50"} ${selectedIds.has(expense.id) ? "bg-blue-50" : ""}`}
+                      className={`${expense.isRecurring ? "bg-blue-50/60 hover:bg-blue-100/60" : "hover:bg-slate-50"} ${selectedIds.has(expense.id) ? "bg-blue-50" : ""} cursor-pointer`}
+                      onClick={(e) => {
+                        // Don't open detail if clicking on checkbox, edit, or delete buttons
+                        const target = e.target as HTMLElement;
+                        if (target.tagName === "INPUT" || target.closest("button")) return;
+                        setViewingExpense(expense);
+                      }}
                     >
                       <td className="px-4 py-3">
                         <input
@@ -711,7 +720,10 @@ export default function ExpensesPage() {
                               <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                             </svg>
                           )}
-                          {new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                          <div className="flex flex-col">
+                            <span>{new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
+                            <span className="text-xs text-slate-400">{new Date(expense.date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
@@ -782,9 +794,14 @@ export default function ExpensesPage() {
                     onTouchStart={() => handleLongPressStart(expense.id)}
                     onTouchEnd={handleLongPressEnd}
                     onTouchMove={handleLongPressEnd}
-                    onClick={() => {
+                    onClick={(e) => {
                       if (isSelectionMode) {
                         toggleSelection(expense.id);
+                      } else {
+                        // Don't open detail if clicking on edit or delete buttons
+                        const target = e.target as HTMLElement;
+                        if (target.closest("button")) return;
+                        setViewingExpense(expense);
                       }
                     }}
                   >
@@ -817,6 +834,10 @@ export default function ExpensesPage() {
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                         <span className="text-xs text-slate-500">
                           {new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                          {" "}
+                          <span className="text-slate-400">
+                            {new Date(expense.date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                          </span>
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${typeColors[expense.type]}`}>
                           {expense.type === "SURVIVAL_FIXED" ? t("typesShort.fixed") :
@@ -950,6 +971,25 @@ export default function ExpensesPage() {
         bankAccounts={bankAccounts}
         projects={projects}
         onSave={fetchData}
+      />
+
+      {/* Expense Detail Modal */}
+      <ExpenseDetailModal
+        isOpen={!!viewingExpense}
+        onClose={() => setViewingExpense(null)}
+        expense={viewingExpense}
+        onEdit={() => {
+          if (viewingExpense) {
+            setEditingExpense(viewingExpense);
+            setViewingExpense(null);
+          }
+        }}
+        onDelete={() => {
+          if (viewingExpense) {
+            setDeleteId(viewingExpense.id);
+            setViewingExpense(null);
+          }
+        }}
       />
     </div>
   );
