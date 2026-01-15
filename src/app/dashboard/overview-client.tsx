@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import AddExpenseModal from "@/components/add-expense-modal";
+import AddTypeSelector from "@/components/add-type-selector";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import OnboardingModal from "@/components/onboarding-modal";
 import AnnouncementModal from "@/components/announcement-modal";
@@ -98,7 +98,7 @@ export default function DashboardOverview({
   const t = useTranslations("dashboard");
   const tTime = useTranslations("time");
   const tCommon = useTranslations("common");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -167,7 +167,7 @@ export default function DashboardOverview({
   useEffect(() => {
     const handleQuickAdd = (e: Event) => {
       e.stopImmediatePropagation();
-      setIsModalOpen(true);
+      setIsSelectorOpen(true);
     };
     window.addEventListener("openQuickAdd", handleQuickAdd);
     return () => window.removeEventListener("openQuickAdd", handleQuickAdd);
@@ -524,7 +524,7 @@ export default function DashboardOverview({
         </div>
         {/* Desktop add button - hidden on mobile (use bottom nav instead) */}
         <button
-          onClick={() => setIsModalOpen(true)}
+          onClick={() => setIsSelectorOpen(true)}
           className="hidden md:flex items-center gap-2 rounded-lg bg-[#0070f3] px-4 py-2.5 text-white font-medium hover:bg-[#0060df] transition-colors"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -964,16 +964,13 @@ export default function DashboardOverview({
         )}
       </div>
 
-      {/* Add Expense Modal */}
-      <AddExpenseModal
-        isOpen={isModalOpen}
+      {/* Add Type Selector - Choose between Expense or Income */}
+      <AddTypeSelector
+        isOpen={isSelectorOpen}
         onClose={() => {
-          setIsModalOpen(false);
+          setIsSelectorOpen(false);
           fetchExpenses();
         }}
-        categories={categories}
-        bankAccounts={bankAccounts}
-        projects={projects}
       />
 
       {/* Edit Expense Modal */}
