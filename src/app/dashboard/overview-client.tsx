@@ -43,6 +43,21 @@ type Expense = {
   excludeFromBudget?: boolean;
 };
 
+type Income = {
+  id: string;
+  name: string;
+  date: string;
+  type: "INCOME";
+  incomeType: string;
+  amountEur: number;
+  categoryName: string;
+  projects: { id: string; name: string }[];
+  excludeFromBudget: boolean;
+  isIncome: true;
+};
+
+type Transaction = Expense | Income;
+
 type Project = { id: string; name: string };
 type Category = { id: string; name: string };
 type BankAccount = { id: string; name: string };
@@ -51,6 +66,7 @@ type Props = {
   workspaceId: string;
   userName: string;
   initialExpenses: Expense[];
+  initialIncomes: Income[];
   initialPreviousMonthExpenses: Expense[];
   projects: Project[];
   categories: Category[];
@@ -75,12 +91,18 @@ const MONTH_KEYS = [
 ] as const;
 
 type ViewMode = "month" | "quarter" | "year" | "all";
-type TypeFilter = "all" | "living" | "lifestyle" | "project";
+type TypeFilter = "all" | "living" | "lifestyle" | "project" | "income";
+
+// Helper to check if a transaction is an income
+const isIncomeTransaction = (t: Transaction): t is Income => {
+  return "isIncome" in t && t.isIncome === true;
+};
 
 export default function DashboardOverview({
   workspaceId,
   userName,
   initialExpenses,
+  initialIncomes,
   initialPreviousMonthExpenses,
   projects,
   categories,
@@ -98,8 +120,10 @@ export default function DashboardOverview({
   const t = useTranslations("dashboard");
   const tTime = useTranslations("time");
   const tCommon = useTranslations("common");
+  const tIncomes = useTranslations("incomes");
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
+  const [incomes, setIncomes] = useState<Income[]>(initialIncomes);
   const [isLoading, setIsLoading] = useState(false);
 
   // Filters
@@ -382,10 +406,29 @@ export default function DashboardOverview({
     }
   };
 
-  // Filter expenses by type
+  // Merge expenses and incomes into unified transactions list, sorted by date
+  const transactions = useMemo(() => {
+    const allTransactions: Transaction[] = [...expenses, ...incomes];
+    return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  }, [expenses, incomes]);
+
+  // Filter transactions by type
+  const filteredTransactions = useMemo(() => {
+    return transactions.filter((t) => {
+      if (typeFilter === "all") return true;
+      if (typeFilter === "income") return isIncomeTransaction(t);
+      if (isIncomeTransaction(t)) return false; // Hide incomes for expense-only filters
+      if (typeFilter === "living") return t.type === "SURVIVAL_FIXED" || t.type === "SURVIVAL_VARIABLE";
+      if (typeFilter === "lifestyle") return t.type === "LIFESTYLE";
+      if (typeFilter === "project") return t.type === "PROJECT";
+      return true;
+    });
+  }, [transactions, typeFilter]);
+
+  // Filter expenses only (for stats calculation - excluding incomes)
   const filteredExpenses = useMemo(() => {
     return expenses.filter((e) => {
-      if (typeFilter === "all") return true;
+      if (typeFilter === "all" || typeFilter === "income") return true;
       if (typeFilter === "living") return e.type === "SURVIVAL_FIXED" || e.type === "SURVIVAL_VARIABLE";
       if (typeFilter === "lifestyle") return e.type === "LIFESTYLE";
       if (typeFilter === "project") return e.type === "PROJECT";
@@ -592,6 +635,7 @@ export default function DashboardOverview({
             className="flex-shrink-0 px-3 py-2 rounded-lg border border-slate-200 text-sm bg-white min-w-[120px]"
           >
             <option value="all">{t("filters.allTypes")}</option>
+            <option value="income">{t("filters.income")}</option>
             <option value="living">{t("filters.living")}</option>
             <option value="lifestyle">{t("filters.lifestyle")}</option>
             <option value="project">{t("filters.projects")}</option>
@@ -712,6 +756,7 @@ export default function DashboardOverview({
             className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
           >
             <option value="all">{t("filters.allTypes")}</option>
+            <option value="income">{t("filters.incomeOnly")}</option>
             <option value="living">{t("filters.livingOnly")}</option>
             <option value="lifestyle">{t("filters.lifestyleOnly")}</option>
             <option value="project">{t("filters.projectsOnly")}</option>
@@ -729,19 +774,44 @@ export default function DashboardOverview({
         </div>
       </div>
 
-      {/* Income & Balance Summary - Mobile optimized */}
-      {viewMode === "month" && (expectedMonthlyIncome > 0 || monthlyIncome > 0) && (
-        <div className="grid grid-cols-3 gap-2 md:gap-4">
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 md:p-5 rounded-xl border border-green-200">
-            <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">{t("income.expected")}</p>
-            <p className="text-base md:text-2xl font-bold text-green-600">€{expectedMonthlyIncome.toFixed(0)}</p>
-            <p className="hidden md:block text-xs text-green-600/70 mt-1">{t("income.recurringSalary")}</p>
-          </div>
+      {/* Income & Budget Summary - Mobile optimized */}
+      {viewMode === "month" && (expectedMonthlyIncome > 0 || monthlyIncome > 0 || monthlyBudget) && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
+          {/* Budget Remaining - Shows how much of your strict budget is left */}
+          {monthlyBudget && (
+            <div className={`p-3 md:p-5 rounded-xl border ${
+              monthlyBudget - stats.budgetTotal >= 0
+                ? "bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200"
+                : "bg-gradient-to-br from-red-50 to-orange-50 border-red-200"
+            }`}>
+              <p className={`text-xs md:text-sm mb-0.5 md:mb-1 ${
+                monthlyBudget - stats.budgetTotal >= 0 ? "text-slate-600" : "text-red-700"
+              }`}>{t("budget.remaining")}</p>
+              <p className={`text-base md:text-2xl font-bold ${
+                monthlyBudget - stats.budgetTotal >= 0 ? "text-slate-900" : "text-red-600"
+              }`}>
+                €{(monthlyBudget - stats.budgetTotal).toFixed(0)}
+              </p>
+              <p className={`hidden md:block text-xs mt-1 ${
+                monthlyBudget - stats.budgetTotal >= 0 ? "text-slate-500" : "text-red-600/70"
+              }`}>
+                {t("budget.ofBudget", { budget: monthlyBudget.toFixed(0) })}
+              </p>
+            </div>
+          )}
+          {/* Income Received */}
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 md:p-5 rounded-xl border border-green-200">
             <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">{t("income.received")}</p>
             <p className="text-base md:text-2xl font-bold text-green-600">€{monthlyIncome.toFixed(0)}</p>
             <p className="hidden md:block text-xs text-green-600/70 mt-1">{t("income.allSources")}</p>
           </div>
+          {/* Total Spent */}
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-3 md:p-5 rounded-xl border border-slate-200">
+            <p className="text-xs md:text-sm text-slate-600 mb-0.5 md:mb-1">{t("budget.spent")}</p>
+            <p className="text-base md:text-2xl font-bold text-slate-900">€{stats.grandTotal.toFixed(0)}</p>
+            <p className="hidden md:block text-xs text-slate-500 mt-1">{t("budget.thisMonth")}</p>
+          </div>
+          {/* Net Balance (Income - Expenses) */}
           <div className={`p-3 md:p-5 rounded-xl border ${
             (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
               ? "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
@@ -834,132 +904,159 @@ export default function DashboardOverview({
         </div>
       )}
 
-      {/* Expenses List - Mobile optimized */}
+      {/* Transactions List (Expenses + Incomes) - Mobile optimized */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-200 flex items-center justify-between">
           <h3 className="font-semibold text-slate-900 text-sm md:text-base">
-            {t("expenses.count", { count: filteredExpenses.length })}
+            {t("transactions.count", { count: filteredTransactions.length })}
           </h3>
           <span className="text-xs md:text-sm text-slate-500">{getDateRangeLabel()}</span>
         </div>
 
-        {filteredExpenses.length > 0 ? (
+        {filteredTransactions.length > 0 ? (
           <div className="divide-y divide-slate-100 max-h-[400px] md:max-h-[500px] overflow-y-auto scroll-touch">
-            {filteredExpenses.map((expense) => (
-              <div
-                key={expense.id}
-                className={`px-4 md:px-6 py-3 md:py-4 flex items-start md:items-center justify-between active:bg-slate-50 md:hover:bg-slate-50 transition-colors group tap-none ${expense.excludeFromBudget ? "bg-slate-50/50" : ""}`}
-              >
-                <div className="flex-1 min-w-0 mr-3">
-                  <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
-                    <p className={`font-medium text-sm md:text-base truncate max-w-[180px] md:max-w-none ${expense.excludeFromBudget ? "text-slate-400" : "text-slate-900"}`}>{expense.name}</p>
-                    {expense.projects && expense.projects.length > 0 && expense.projects.map((project) => (
-                      <span key={project.id} className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-orange-100 text-orange-700">
-                        {project.name}
+            {filteredTransactions.map((transaction) => {
+              const isIncome = isIncomeTransaction(transaction);
+              return (
+                <div
+                  key={transaction.id}
+                  className={`px-4 md:px-6 py-3 md:py-4 flex items-start md:items-center justify-between active:bg-slate-50 md:hover:bg-slate-50 transition-colors group tap-none ${
+                    isIncome ? "bg-green-50/30" : transaction.excludeFromBudget ? "bg-slate-50/50" : ""
+                  }`}
+                >
+                  <div className="flex-1 min-w-0 mr-3">
+                    <div className="flex items-center gap-1.5 md:gap-2 flex-wrap">
+                      {isIncome && (
+                        <span className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                          <svg className="w-3 h-3 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m0-16l-4 4m4-4l4 4" />
+                          </svg>
+                        </span>
+                      )}
+                      <p className={`font-medium text-sm md:text-base truncate max-w-[180px] md:max-w-none ${
+                        isIncome ? "text-green-700" : transaction.excludeFromBudget ? "text-slate-400" : "text-slate-900"
+                      }`}>{transaction.name}</p>
+                      {!isIncome && transaction.projects && transaction.projects.length > 0 && transaction.projects.map((project) => (
+                        <span key={project.id} className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-orange-100 text-orange-700">
+                          {project.name}
+                        </span>
+                      ))}
+                      {!isIncome && transaction.excludeFromBudget && (
+                        <span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-slate-200 text-slate-600">
+                          {t("expenses.offshore")}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1 flex-wrap">
+                      <span className="text-xs md:text-sm text-slate-500">
+                        {new Date(transaction.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}
                       </span>
-                    ))}
-                    {expense.excludeFromBudget && (
-                      <span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-slate-200 text-slate-600">
-                        {t("expenses.offshore")}
-                      </span>
+                      {isIncome ? (
+                        <span className="text-xs md:text-sm font-medium text-green-600">
+                          {tIncomes(`types.${transaction.incomeType.toLowerCase()}`)}
+                        </span>
+                      ) : (
+                        <span
+                          className={`text-xs md:text-sm font-medium ${
+                            transaction.type === "SURVIVAL_FIXED" ? "text-blue-600" :
+                            transaction.type === "SURVIVAL_VARIABLE" ? "text-cyan-600" :
+                            transaction.type === "LIFESTYLE" ? "text-purple-600" :
+                            "text-orange-600"
+                          }`}
+                        >
+                          {transaction.type === "SURVIVAL_FIXED" ? t("expenseTypes.fixed") :
+                           transaction.type === "SURVIVAL_VARIABLE" ? t("expenseTypes.variable") :
+                           transaction.type === "LIFESTYLE" ? t("expenseTypes.lifestyle") : t("expenseTypes.project")}
+                        </span>
+                      )}
+                      <span className="hidden md:inline text-slate-300">•</span>
+                      <span className="hidden md:inline text-sm text-slate-400">{transaction.categoryName}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
+                    <p className={`font-semibold tabular-nums text-sm md:text-base ${
+                      isIncome ? "text-green-600" :
+                      transaction.excludeFromBudget ? "text-slate-400 line-through" :
+                      transaction.amountEur < 0 ? "text-green-600" : "text-slate-900"
+                    }`}>
+                      {isIncome
+                        ? `+€${transaction.amountEur.toFixed(2)}`
+                        : transaction.amountEur < 0
+                          ? `(€${Math.abs(transaction.amountEur).toFixed(2)})`
+                          : `€${transaction.amountEur.toFixed(2)}`}
+                    </p>
+                    {!isIncome && (
+                      <>
+                        {confirmDeleteId === transaction.id ? (
+                          <div className="flex items-center gap-1 md:gap-2">
+                            <button
+                              onClick={() => handleDelete(transaction.id)}
+                              disabled={deletingId === transaction.id}
+                              className="px-2 md:px-3 py-1.5 md:py-1 text-xs md:text-sm bg-red-500 text-white rounded-lg active:bg-red-600 md:hover:bg-red-600 disabled:opacity-50 tap-none"
+                            >
+                              {deletingId === transaction.id ? "..." : "Del"}
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              className="px-2 md:px-3 py-1.5 md:py-1 text-xs md:text-sm border border-slate-300 rounded-lg active:bg-slate-100 md:hover:bg-slate-100 tap-none"
+                            >
+                              No
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center gap-1">
+                            {/* Toggle exclude from budget */}
+                            <button
+                              onClick={() => handleToggleExclude(transaction as Expense)}
+                              className={`md:opacity-0 md:group-hover:opacity-100 p-2 rounded-lg transition-all tap-none ${
+                                transaction.excludeFromBudget
+                                  ? "text-slate-500 active:text-slate-700 active:bg-slate-100 md:hover:text-slate-700 md:hover:bg-slate-100"
+                                  : "text-slate-400 active:text-amber-500 active:bg-amber-50 md:hover:text-amber-500 md:hover:bg-amber-50"
+                              }`}
+                              aria-label={transaction.excludeFromBudget ? t("expenses.includeInBudget") : t("expenses.excludeFromBudget")}
+                              title={transaction.excludeFromBudget ? t("expenses.includeInBudget") : t("expenses.excludeFromBudget")}
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                {transaction.excludeFromBudget ? (
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                ) : (
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                )}
+                              </svg>
+                            </button>
+                            {/* Edit button */}
+                            <button
+                              onClick={() => handleEditExpense(transaction.id)}
+                              disabled={isLoadingExpense}
+                              className="md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-400 active:text-blue-500 active:bg-blue-50 md:hover:text-blue-500 md:hover:bg-blue-50 rounded-lg transition-all tap-none disabled:opacity-50"
+                              aria-label="Edit expense"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                              </svg>
+                            </button>
+                            {/* Delete button */}
+                            <button
+                              onClick={() => setConfirmDeleteId(transaction.id)}
+                              className="md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-400 active:text-red-500 active:bg-red-50 md:hover:text-red-500 md:hover:bg-red-50 rounded-lg transition-all tap-none"
+                              aria-label="Delete expense"
+                            >
+                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </div>
+                        )}
+                      </>
                     )}
                   </div>
-                  <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1 flex-wrap">
-                    <span className="text-xs md:text-sm text-slate-500">
-                      {new Date(expense.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}
-                    </span>
-                    <span
-                      className={`text-xs md:text-sm font-medium ${
-                        expense.type === "SURVIVAL_FIXED" ? "text-blue-600" :
-                        expense.type === "SURVIVAL_VARIABLE" ? "text-cyan-600" :
-                        expense.type === "LIFESTYLE" ? "text-purple-600" :
-                        "text-orange-600"
-                      }`}
-                    >
-                      {expense.type === "SURVIVAL_FIXED" ? t("expenseTypes.fixed") :
-                       expense.type === "SURVIVAL_VARIABLE" ? t("expenseTypes.variable") :
-                       expense.type === "LIFESTYLE" ? t("expenseTypes.lifestyle") : t("expenseTypes.project")}
-                    </span>
-                    <span className="hidden md:inline text-slate-300">•</span>
-                    <span className="hidden md:inline text-sm text-slate-400">{expense.categoryName}</span>
-                  </div>
                 </div>
-                <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
-                  <p className={`font-semibold tabular-nums text-sm md:text-base ${
-                    expense.excludeFromBudget ? "text-slate-400 line-through" :
-                    expense.amountEur < 0 ? "text-green-600" : "text-slate-900"
-                  }`}>
-                    {expense.amountEur < 0
-                      ? `(€${Math.abs(expense.amountEur).toFixed(2)})`
-                      : `€${expense.amountEur.toFixed(2)}`}
-                  </p>
-                  {confirmDeleteId === expense.id ? (
-                    <div className="flex items-center gap-1 md:gap-2">
-                      <button
-                        onClick={() => handleDelete(expense.id)}
-                        disabled={deletingId === expense.id}
-                        className="px-2 md:px-3 py-1.5 md:py-1 text-xs md:text-sm bg-red-500 text-white rounded-lg active:bg-red-600 md:hover:bg-red-600 disabled:opacity-50 tap-none"
-                      >
-                        {deletingId === expense.id ? "..." : "Del"}
-                      </button>
-                      <button
-                        onClick={() => setConfirmDeleteId(null)}
-                        className="px-2 md:px-3 py-1.5 md:py-1 text-xs md:text-sm border border-slate-300 rounded-lg active:bg-slate-100 md:hover:bg-slate-100 tap-none"
-                      >
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex items-center gap-1">
-                      {/* Toggle exclude from budget */}
-                      <button
-                        onClick={() => handleToggleExclude(expense)}
-                        className={`md:opacity-0 md:group-hover:opacity-100 p-2 rounded-lg transition-all tap-none ${
-                          expense.excludeFromBudget
-                            ? "text-slate-500 active:text-slate-700 active:bg-slate-100 md:hover:text-slate-700 md:hover:bg-slate-100"
-                            : "text-slate-400 active:text-amber-500 active:bg-amber-50 md:hover:text-amber-500 md:hover:bg-amber-50"
-                        }`}
-                        aria-label={expense.excludeFromBudget ? t("expenses.includeInBudget") : t("expenses.excludeFromBudget")}
-                        title={expense.excludeFromBudget ? t("expenses.includeInBudget") : t("expenses.excludeFromBudget")}
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          {expense.excludeFromBudget ? (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                          ) : (
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-                          )}
-                        </svg>
-                      </button>
-                      {/* Edit button */}
-                      <button
-                        onClick={() => handleEditExpense(expense.id)}
-                        disabled={isLoadingExpense}
-                        className="md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-400 active:text-blue-500 active:bg-blue-50 md:hover:text-blue-500 md:hover:bg-blue-50 rounded-lg transition-all tap-none disabled:opacity-50"
-                        aria-label="Edit expense"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      {/* Delete button */}
-                      <button
-                        onClick={() => setConfirmDeleteId(expense.id)}
-                        className="md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-400 active:text-red-500 active:bg-red-50 md:hover:text-red-500 md:hover:bg-red-50 rounded-lg transition-all tap-none"
-                        aria-label="Delete expense"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         ) : (
           <div className="px-4 md:px-6 py-8 md:py-12 text-center">
-            <p className="text-slate-500 text-sm md:text-base">{t("expenses.noExpenses")}</p>
+            <p className="text-slate-500 text-sm md:text-base">{t("transactions.noTransactions")}</p>
           </div>
         )}
       </div>

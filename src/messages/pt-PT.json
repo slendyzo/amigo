@@ -111,6 +111,8 @@
     },
     "filters": {
       "allTypes": "Todos os Tipos",
+      "income": "Receita",
+      "incomeOnly": "Só Receitas",
       "living": "Vida",
       "livingOnly": "Só Vida",
       "lifestyle": "Estilo de Vida",
@@ -119,6 +121,16 @@
       "projectsOnly": "Só Projetos",
       "allProjects": "Todos os Projetos",
       "noProject": "Sem Projeto"
+    },
+    "transactions": {
+      "count": "Transações ({count})",
+      "noTransactions": "Nenhuma transação encontrada para este período."
+    },
+    "budget": {
+      "remaining": "Orçamento",
+      "spent": "Gasto",
+      "thisMonth": "Este mês",
+      "ofBudget": "de €{budget} orçamento"
     },
     "income": {
       "expected": "Previsto",

@@ -111,6 +111,8 @@
     },
     "filters": {
       "allTypes": "Tous les Types",
+      "income": "Revenu",
+      "incomeOnly": "Revenus uniquement",
       "living": "Vie",
       "livingOnly": "Vie uniquement",
       "lifestyle": "Mode de vie",
@@ -119,6 +121,16 @@
       "projectsOnly": "Projets uniquement",
       "allProjects": "Tous les Projets",
       "noProject": "Sans Projet"
+    },
+    "transactions": {
+      "count": "Transactions ({count})",
+      "noTransactions": "Aucune transaction trouvée pour cette période."
+    },
+    "budget": {
+      "remaining": "Budget restant",
+      "spent": "Dépensé",
+      "thisMonth": "Ce mois-ci",
+      "ofBudget": "sur €{budget} budget"
     },
     "income": {
       "expected": "Prévu",

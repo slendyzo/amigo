@@ -119,13 +119,19 @@ export default async function DashboardPage({
         projects: true,
       },
     }),
-    // Current month income
+    // Current month income (with full details for transaction list)
     prisma.income.findMany({
       where: {
         workspaceId: workspace.id,
         date: { gte: startOfMonth, lte: endOfMonth },
       },
-      select: { amountEur: true },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        amountEur: true,
+        date: true,
+      },
     }),
     // Recurring income for expected monthly
     prisma.income.findMany({
@@ -152,6 +158,20 @@ export default async function DashboardPage({
     excludeFromBudget: e.excludeFromBudget,
   });
 
+  // Transform incomes for client component (unified transaction format)
+  const transformIncome = (i: typeof monthlyIncomes[0]) => ({
+    id: i.id,
+    name: i.name,
+    date: i.date.toISOString(),
+    type: "INCOME" as const,
+    incomeType: i.type,
+    amountEur: Number(i.amountEur),
+    categoryName: i.type, // Use income type as category for display
+    projects: [] as { id: string; name: string }[],
+    excludeFromBudget: false,
+    isIncome: true as const,
+  });
+
   // Use username (nickname) if set, otherwise fall back to name or "User"
   const displayName = user?.username || user?.name || session.user.name || "User";
 
@@ -160,6 +180,7 @@ export default async function DashboardPage({
       workspaceId={workspace.id}
       userName={displayName}
       initialExpenses={expenses.map(transformExpense)}
+      initialIncomes={monthlyIncomes.map(transformIncome)}
       initialPreviousMonthExpenses={previousMonthExpenses.map(transformExpense)}
       projects={projects}
       categories={categories}
