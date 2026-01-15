@@ -967,10 +967,8 @@ export default function DashboardOverview({
       {/* Add Type Selector - Choose between Expense or Income */}
       <AddTypeSelector
         isOpen={isSelectorOpen}
-        onClose={() => {
-          setIsSelectorOpen(false);
-          fetchExpenses();
-        }}
+        onClose={() => setIsSelectorOpen(false)}
+        onSuccess={() => fetchExpenses()}
       />
 
       {/* Edit Expense Modal */}

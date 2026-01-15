@@ -8,9 +8,10 @@ import AddIncomeModal from "./add-income-modal";
 type AddTypeSelectorProps = {
   isOpen: boolean;
   onClose: () => void;
+  onSuccess?: () => void;
 };
 
-export default function AddTypeSelector({ isOpen, onClose }: AddTypeSelectorProps) {
+export default function AddTypeSelector({ isOpen, onClose, onSuccess }: AddTypeSelectorProps) {
   const t = useTranslations("common");
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showIncomeModal, setShowIncomeModal] = useState(false);
@@ -103,11 +104,17 @@ export default function AddTypeSelector({ isOpen, onClose }: AddTypeSelectorProp
       {/* Modals */}
       <AddExpenseModal
         isOpen={showExpenseModal}
-        onClose={() => setShowExpenseModal(false)}
+        onClose={() => {
+          setShowExpenseModal(false);
+          if (onSuccess) onSuccess();
+        }}
       />
       <AddIncomeModal
         isOpen={showIncomeModal}
-        onClose={() => setShowIncomeModal(false)}
+        onClose={() => {
+          setShowIncomeModal(false);
+          if (onSuccess) onSuccess();
+        }}
       />
     </>
   );
