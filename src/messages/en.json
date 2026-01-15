@@ -1056,6 +1056,27 @@
       },
       "dismiss": "Maybe Later",
       "explore": "Explore Workspaces"
+    },
+    "unified_transactions": {
+      "title": "Unified Transactions View!",
+      "subtitle": "See all your money flow in one place",
+      "feature1": {
+        "title": "All-in-One Timeline",
+        "description": "Expenses and incomes now appear together, sorted by date, giving you a complete picture of your cash flow."
+      },
+      "feature2": {
+        "title": "Income Visibility",
+        "description": "Income entries are highlighted in green with a + sign, making them easy to spot at a glance."
+      },
+      "feature3": {
+        "title": "Strict Budget Tracking",
+        "description": "Track against your set budget regardless of extra income. Stay disciplined even when you earn more."
+      },
+      "feature4": {
+        "title": "Filter by Type",
+        "description": "New Income filter lets you view only your earnings. Filter by expenses, income, or see everything together."
+      },
+      "dismiss": "Got it!"
     }
   }
 }

@@ -1056,6 +1056,27 @@
       },
       "dismiss": "Peut-être Plus Tard",
       "explore": "Explorer les Espaces"
+    },
+    "unified_transactions": {
+      "title": "Vue Unifiée des Transactions !",
+      "subtitle": "Voyez tous vos flux d'argent au même endroit",
+      "feature1": {
+        "title": "Timeline Complète",
+        "description": "Dépenses et revenus apparaissent ensemble, triés par date, vous donnant une vue complète de votre flux de trésorerie."
+      },
+      "feature2": {
+        "title": "Revenus Visibles",
+        "description": "Les entrées de revenus sont mises en évidence en vert avec un signe +, les rendant faciles à repérer."
+      },
+      "feature3": {
+        "title": "Suivi Strict du Budget",
+        "description": "Suivez votre budget défini indépendamment des revenus supplémentaires. Restez discipliné même quand vous gagnez plus."
+      },
+      "feature4": {
+        "title": "Filtrer par Type",
+        "description": "Nouveau filtre Revenus pour voir uniquement vos gains. Filtrez par dépenses, revenus, ou voyez tout ensemble."
+      },
+      "dismiss": "Compris !"
     }
   }
 }

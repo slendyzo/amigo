@@ -82,7 +82,7 @@ type Props = {
 };
 
 // Current announcement IDs - add new ones here when releasing new features
-const CURRENT_ANNOUNCEMENTS = ["workspaces-v1"];
+const CURRENT_ANNOUNCEMENTS = ["unified-transactions-v1", "workspaces-v1"];
 
 // Month keys for i18n
 const MONTH_KEYS = [

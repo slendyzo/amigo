@@ -1042,6 +1042,27 @@
       },
       "dismiss": "Talvez Depois",
       "explore": "Explorar Espaços"
+    },
+    "unified_transactions": {
+      "title": "Vista Unificada de Transações!",
+      "subtitle": "Vê todo o teu fluxo de dinheiro num só lugar",
+      "feature1": {
+        "title": "Timeline Completa",
+        "description": "Despesas e receitas aparecem juntas, ordenadas por data, dando-te uma visão completa do teu fluxo de caixa."
+      },
+      "feature2": {
+        "title": "Receitas Visíveis",
+        "description": "As entradas de receita são destacadas a verde com um sinal +, tornando-as fáceis de identificar."
+      },
+      "feature3": {
+        "title": "Controlo Rigoroso do Orçamento",
+        "description": "Acompanha o teu orçamento definido independentemente de receitas extra. Mantém a disciplina mesmo quando ganhas mais."
+      },
+      "feature4": {
+        "title": "Filtrar por Tipo",
+        "description": "Novo filtro de Receitas permite ver apenas os teus ganhos. Filtra por despesas, receitas, ou vê tudo junto."
+      },
+      "dismiss": "Entendido!"
     }
   }
 }
