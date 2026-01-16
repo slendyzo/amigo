@@ -296,11 +296,19 @@ export default function DashboardOverview({
         params.set("projectId", selectedProjectId);
       }
 
-      const response = await fetch(`/api/expenses?${params}`);
-      const data = await response.json();
+      // Fetch expenses and incomes in parallel
+      const [expensesRes, incomesRes] = await Promise.all([
+        fetch(`/api/expenses?${params}`),
+        fetch(`/api/incomes?month=${startDate.getMonth()}&year=${startDate.getFullYear()}`),
+      ]);
 
-      if (data.expenses) {
-        setExpenses(data.expenses.map((e: {
+      const [expensesData, incomesData] = await Promise.all([
+        expensesRes.json(),
+        incomesRes.json(),
+      ]);
+
+      if (expensesData.expenses) {
+        setExpenses(expensesData.expenses.map((e: {
           id: string;
           name: string;
           date: string;
@@ -320,6 +328,33 @@ export default function DashboardOverview({
           projects: e.projects || [],
           excludeFromBudget: e.excludeFromBudget ?? false,
         })));
+      }
+
+      // Update incomes based on the selected date range
+      if (incomesData.incomes) {
+        setIncomes(incomesData.incomes.map((i: {
+          id: string;
+          name: string;
+          date: string;
+          type: string;
+          amountEur?: number;
+          amount?: number;
+          category?: { name: string } | null;
+        }) => ({
+          id: i.id,
+          name: i.name,
+          date: i.date,
+          type: "INCOME" as const,
+          incomeType: i.type,
+          amountEur: Number(i.amountEur ?? i.amount ?? 0),
+          categoryName: i.category?.name || "Uncategorized",
+          projects: [],
+          excludeFromBudget: false,
+          isIncome: true as const,
+        })));
+      } else {
+        // Clear incomes if none found for this period
+        setIncomes([]);
       }
     } catch (error) {
       console.error("Failed to fetch expenses:", error);
@@ -361,15 +396,17 @@ export default function DashboardOverview({
         currentParams.set("projectId", selectedProjectId);
       }
 
-      // Fetch BOTH in parallel!
-      const [currentRes, prevRes] = await Promise.all([
+      // Fetch expenses (current + prev) and incomes in parallel!
+      const [currentRes, prevRes, incomesRes] = await Promise.all([
         fetch(`/api/expenses?${currentParams}`),
         fetch(`/api/expenses?${prevParams}`),
+        fetch(`/api/incomes?month=${selectedMonth}&year=${selectedYear}`),
       ]);
 
-      const [currentData, prevData] = await Promise.all([
+      const [currentData, prevData, incomesData] = await Promise.all([
         currentRes.json(),
         prevRes.json(),
+        incomesRes.json(),
       ]);
 
       const transformExpense = (e: {
@@ -398,6 +435,33 @@ export default function DashboardOverview({
       }
       if (prevData.expenses) {
         setPreviousMonthExpenses(prevData.expenses.map(transformExpense));
+      }
+
+      // Update incomes for the selected month
+      if (incomesData.incomes) {
+        setIncomes(incomesData.incomes.map((i: {
+          id: string;
+          name: string;
+          date: string;
+          type: string;
+          amountEur?: number;
+          amount?: number;
+          category?: { name: string } | null;
+        }) => ({
+          id: i.id,
+          name: i.name,
+          date: i.date,
+          type: "INCOME" as const,
+          incomeType: i.type,
+          amountEur: Number(i.amountEur ?? i.amount ?? 0),
+          categoryName: i.category?.name || "Uncategorized",
+          projects: [],
+          excludeFromBudget: false,
+          isIncome: true as const,
+        })));
+      } else {
+        // Clear incomes if none found for this period
+        setIncomes([]);
       }
     } catch (error) {
       console.error("Failed to fetch expenses:", error);
@@ -790,25 +854,25 @@ export default function DashboardOverview({
               <p className={`text-base md:text-2xl font-bold ${
                 monthlyBudget - stats.budgetTotal >= 0 ? "text-slate-900" : "text-red-600"
               }`}>
-                €{(monthlyBudget - stats.budgetTotal).toFixed(0)}
+                €{(monthlyBudget - stats.budgetTotal).toFixed(2)}
               </p>
               <p className={`hidden md:block text-xs mt-1 ${
                 monthlyBudget - stats.budgetTotal >= 0 ? "text-slate-500" : "text-red-600/70"
               }`}>
-                {t("budget.ofBudget", { budget: monthlyBudget.toFixed(0) })}
+                {t("budget.ofBudget", { budget: monthlyBudget.toFixed(2) })}
               </p>
             </div>
           )}
           {/* Income Received */}
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 md:p-5 rounded-xl border border-green-200">
             <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">{t("income.received")}</p>
-            <p className="text-base md:text-2xl font-bold text-green-600">€{monthlyIncome.toFixed(0)}</p>
+            <p className="text-base md:text-2xl font-bold text-green-600">€{monthlyIncome.toFixed(2)}</p>
             <p className="hidden md:block text-xs text-green-600/70 mt-1">{t("income.allSources")}</p>
           </div>
           {/* Total Spent */}
           <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-3 md:p-5 rounded-xl border border-slate-200">
             <p className="text-xs md:text-sm text-slate-600 mb-0.5 md:mb-1">{t("budget.spent")}</p>
-            <p className="text-base md:text-2xl font-bold text-slate-900">€{stats.grandTotal.toFixed(0)}</p>
+            <p className="text-base md:text-2xl font-bold text-slate-900">€{stats.grandTotal.toFixed(2)}</p>
             <p className="hidden md:block text-xs text-slate-500 mt-1">{t("budget.thisMonth")}</p>
           </div>
           {/* Net Balance (Income - Expenses) */}
@@ -827,7 +891,7 @@ export default function DashboardOverview({
                 ? "text-blue-600"
                 : "text-red-600"
             }`}>
-              €{((monthlyIncome || expectedMonthlyIncome) - stats.grandTotal).toFixed(0)}
+              €{((monthlyIncome || expectedMonthlyIncome) - stats.grandTotal).toFixed(2)}
             </p>
             <p className={`hidden md:block text-xs mt-1 ${
               (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
@@ -844,12 +908,12 @@ export default function DashboardOverview({
       <div className="grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-4 lg:grid-cols-5">
         <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.total")}</p>
-          <p className="text-lg md:text-2xl font-bold text-slate-900">€{stats.total.toFixed(0)}</p>
+          <p className="text-lg md:text-2xl font-bold text-slate-900">€{stats.total.toFixed(2)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{getDateRangeLabel()}</p>
         </div>
         <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.living")}</p>
-          <p className="text-lg md:text-2xl font-bold text-[#0070f3]">€{stats.living.toFixed(0)}</p>
+          <p className="text-lg md:text-2xl font-bold text-[#0070f3]">€{stats.living.toFixed(2)}</p>
           <div className="hidden md:block text-xs text-slate-400 mt-1 space-y-0.5">
             <p>{t("stats.fixed")}: €{stats.livingFixed.toFixed(2)}</p>
             <p>{t("stats.variable")}: €{stats.livingVariable.toFixed(2)}</p>
@@ -857,17 +921,17 @@ export default function DashboardOverview({
         </div>
         <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.lifestyle")}</p>
-          <p className="text-lg md:text-2xl font-bold text-purple-600">€{stats.lifestyle.toFixed(0)}</p>
+          <p className="text-lg md:text-2xl font-bold text-purple-600">€{stats.lifestyle.toFixed(2)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.dailySpending")}</p>
         </div>
         <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.projects")}</p>
-          <p className="text-lg md:text-2xl font-bold text-orange-600">€{stats.projects.toFixed(0)}</p>
+          <p className="text-lg md:text-2xl font-bold text-orange-600">€{stats.projects.toFixed(2)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.projectCount", { count: projects.length })}</p>
         </div>
         <div className="col-span-2 md:col-span-1 bg-white p-3 md:p-5 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.grandTotal")}</p>
-          <p className="text-lg md:text-2xl font-bold text-slate-900">€{stats.grandTotal.toFixed(0)}</p>
+          <p className="text-lg md:text-2xl font-bold text-slate-900">€{stats.grandTotal.toFixed(2)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.includingProjects")}</p>
         </div>
       </div>
