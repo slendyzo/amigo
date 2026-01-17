@@ -1034,6 +1034,20 @@
     "usedTimes": "used {count}x before",
     "learnedMapping": "Pattern learned! Will auto-categorize next time."
   },
+  "receiptScanner": {
+    "title": "Scan Receipt",
+    "captureTitle": "Take a photo or upload",
+    "captureDescription": "Capture your receipt and we'll extract the details automatically",
+    "processing": "Reading your receipt...",
+    "confidence": "Confidence",
+    "pleaseVerify": "please verify the details",
+    "scanAnother": "Scan different image",
+    "rescan": "Rescan",
+    "extractedItems": "Extracted items",
+    "moreItems": "more items",
+    "invalidFileType": "Please select an image file",
+    "ocrFailed": "Failed to read the receipt. Please try again with a clearer image."
+  },
   "announcement": {
     "workspaces": {
       "title": "Introducing Shared Workspaces!",

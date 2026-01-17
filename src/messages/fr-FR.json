@@ -1034,6 +1034,20 @@
     "usedTimes": "utilisé {count}x avant",
     "learnedMapping": "Motif appris ! Sera auto-catégorisé la prochaine fois."
   },
+  "receiptScanner": {
+    "title": "Scanner un Reçu",
+    "captureTitle": "Prenez une photo ou téléchargez",
+    "captureDescription": "Photographiez votre reçu et nous extrairons les détails automatiquement",
+    "processing": "Lecture de votre reçu...",
+    "confidence": "Confiance",
+    "pleaseVerify": "veuillez vérifier les détails",
+    "scanAnother": "Scanner une autre image",
+    "rescan": "Rescanner",
+    "extractedItems": "Éléments extraits",
+    "moreItems": "autres éléments",
+    "invalidFileType": "Veuillez sélectionner un fichier image",
+    "ocrFailed": "Échec de la lecture du reçu. Veuillez réessayer avec une image plus claire."
+  },
   "announcement": {
     "workspaces": {
       "title": "Découvrez les Espaces Partagés !",

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import AddExpenseModal from "./add-expense-modal";
 import AddIncomeModal from "./add-income-modal";
+import ReceiptScannerModal from "./receipt-scanner-modal";
 
 type AddTypeSelectorProps = {
   isOpen: boolean;
@@ -13,13 +14,15 @@ type AddTypeSelectorProps = {
 
 export default function AddTypeSelector({ isOpen, onClose, onSuccess }: AddTypeSelectorProps) {
   const t = useTranslations("common");
+  const tScanner = useTranslations("receiptScanner");
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showIncomeModal, setShowIncomeModal] = useState(false);
+  const [showReceiptScanner, setShowReceiptScanner] = useState(false);
 
   // Only return null if not open AND no modals are showing
   // This prevents unmounting the modals when the selector closes
-  const showSelector = isOpen && !showExpenseModal && !showIncomeModal;
-  const isActive = isOpen || showExpenseModal || showIncomeModal;
+  const showSelector = isOpen && !showExpenseModal && !showIncomeModal && !showReceiptScanner;
+  const isActive = isOpen || showExpenseModal || showIncomeModal || showReceiptScanner;
 
   if (!isActive) return null;
 
@@ -31,9 +34,14 @@ export default function AddTypeSelector({ isOpen, onClose, onSuccess }: AddTypeS
     setShowIncomeModal(true);
   };
 
+  const handleReceiptClick = () => {
+    setShowReceiptScanner(true);
+  };
+
   const handleModalClose = () => {
     setShowExpenseModal(false);
     setShowIncomeModal(false);
+    setShowReceiptScanner(false);
     onClose();
     if (onSuccess) onSuccess();
   };
@@ -107,6 +115,26 @@ export default function AddTypeSelector({ isOpen, onClose, onSuccess }: AddTypeS
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
+
+                {/* Receipt Scanner Option */}
+                <button
+                  onClick={handleReceiptClick}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-slate-200 hover:border-[#0070f3] hover:bg-blue-50 transition-all tap-none active:scale-[0.98]"
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-[#0070f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-slate-900">{tScanner("title")}</h4>
+                    <p className="text-sm text-slate-500">{tScanner("captureDescription")}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
 
               {/* Safe area padding for mobile */}
@@ -123,6 +151,10 @@ export default function AddTypeSelector({ isOpen, onClose, onSuccess }: AddTypeS
       />
       <AddIncomeModal
         isOpen={showIncomeModal}
+        onClose={handleModalClose}
+      />
+      <ReceiptScannerModal
+        isOpen={showReceiptScanner}
         onClose={handleModalClose}
       />
     </>

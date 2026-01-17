@@ -1020,6 +1020,20 @@
     "usedTimes": "usado {count}x antes",
     "learnedMapping": "Padrão aprendido! Vai categorizar automaticamente da próxima vez."
   },
+  "receiptScanner": {
+    "title": "Digitalizar Recibo",
+    "captureTitle": "Tira uma foto ou carrega",
+    "captureDescription": "Fotografa o teu recibo e extraímos os detalhes automaticamente",
+    "processing": "A ler o teu recibo...",
+    "confidence": "Confiança",
+    "pleaseVerify": "por favor verifica os detalhes",
+    "scanAnother": "Digitalizar outra imagem",
+    "rescan": "Redigitalizar",
+    "extractedItems": "Itens extraídos",
+    "moreItems": "mais itens",
+    "invalidFileType": "Por favor seleciona um ficheiro de imagem",
+    "ocrFailed": "Falha ao ler o recibo. Por favor tenta novamente com uma imagem mais clara."
+  },
   "announcement": {
     "workspaces": {
       "title": "Apresentamos os Espaços Partilhados!",

@@ -10,7 +10,7 @@ export type ParsedExpense = {
 };
 
 // Hardcoded keyword mappings for Level 1 parsing
-const KEYWORD_MAP: Record<string, { merchant: string; category: string }> = {
+export const KEYWORD_MAP: Record<string, { merchant: string; category: string }> = {
   // Dining
   mcd: { merchant: "McDonald's", category: "Dining" },
   mcdonalds: { merchant: "McDonald's", category: "Dining" },

@@ -115,6 +115,8 @@ src/
 │   │   └── category-breakdown.tsx # Category spending chart
 │   ├── add-expense-modal.tsx   # Quick-add with tags
 │   ├── edit-expense-modal.tsx  # Edit with tag selector
+│   ├── receipt-scanner-modal.tsx # OCR receipt scanning
+│   ├── add-type-selector.tsx   # Expense/Income/Receipt chooser
 │   ├── onboarding-modal.tsx    # 3-step setup wizard
 │   ├── announcement-modal.tsx  # Feature announcement popup
 │   ├── feedback-button.tsx     # Floating feedback button
@@ -128,7 +130,8 @@ src/
 │   ├── auth.ts                 # NextAuth config
 │   ├── db.ts                   # Prisma client
 │   ├── email.ts                # Resend email utility
-│   ├── parser.ts               # Smart keyword parsing
+│   ├── parser.ts               # Smart keyword parsing (exports KEYWORD_MAP)
+│   ├── receipt-ocr.ts          # Tesseract.js OCR extraction
 │   ├── importer.ts             # Excel/CSV import logic
 │   ├── permissions.ts          # Role-based permission checks
 │   ├── workspace.ts            # Workspace context helper
@@ -494,6 +497,17 @@ npx prisma studio     # Open database GUI
 - **next-intl** - Full i18n integration
 - **Per-Workspace** - Language setting saved to workspace
 - **Dashboard i18n** - Full translation support for dashboard overview (view modes, filters, stats, charts)
+
+### Receipt Scanner (OCR)
+
+- **Tesseract.js** - Free, local OCR running in browser
+- **Camera Capture** - Take photo on mobile devices
+- **File Upload** - Drag & drop or click to upload
+- **Auto-Extract** - Merchant name, total amount, date, currency
+- **70+ Keywords** - Reuses KEYWORD_MAP from parser.ts for merchant detection
+- **Confidence Score** - Shows OCR accuracy percentage
+- **Review & Edit** - Pre-filled form allows corrections before saving
+- **Multi-language** - Supports English and Portuguese receipt text
 
 ### Keyboard Shortcuts
 
