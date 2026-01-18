@@ -9,6 +9,8 @@ export type SheetPreview = {
   headers: { column: number; value: string }[];
   sampleRows: Record<number, unknown>[];
   rowCount: number;
+  // Raw rows data for first N rows (allows dynamic header selection on frontend)
+  rawRows: Record<number, unknown>[];
 };
 
 export type PreviewResponse = {
@@ -160,6 +162,22 @@ export async function POST(request: Request) {
     for (const worksheet of workbook.worksheets) {
       const headers: { column: number; value: string }[] = [];
       const sampleRows: Record<number, unknown>[] = [];
+      const rawRows: Record<number, unknown>[] = [];
+
+      // First, extract raw data for the first 10 rows (to support header row selection)
+      for (let rowNum = 1; rowNum <= Math.min(10, worksheet.rowCount); rowNum++) {
+        const row = worksheet.getRow(rowNum);
+        const rowData: Record<number, unknown> = {};
+
+        row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+          const val = getCellValue(cell);
+          if (val !== null && val !== undefined) {
+            rowData[colNumber] = formatCellForPreview(val);
+          }
+        });
+
+        rawRows.push(rowData);
+      }
 
       // Scan first 5 rows to find headers (they might not be on row 1)
       let headerRowNum = 1;
@@ -243,6 +261,7 @@ export async function POST(request: Request) {
         headers,
         sampleRows,
         rowCount: worksheet.rowCount,
+        rawRows,
       });
     }
 

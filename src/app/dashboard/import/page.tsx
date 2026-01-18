@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
@@ -9,6 +9,8 @@ type SheetPreview = {
   headers: { column: number; value: string }[];
   sampleRows: Record<number, unknown>[];
   rowCount: number;
+  // Raw rows data for first N rows (allows dynamic header selection on frontend)
+  rawRows: Record<number, unknown>[];
 };
 
 type PreviewResponse = {
@@ -296,8 +298,65 @@ export default function ImportPage() {
     });
   };
 
-  // Get all available columns from first sheet
-  const availableColumns = preview?.sheets[0]?.headers || [];
+  // Get all available columns from selected header row (dynamically computed)
+  const availableColumns = useMemo(() => {
+    if (!preview?.sheets[0]?.rawRows) {
+      // Fallback to original headers if rawRows not available
+      return preview?.sheets[0]?.headers || [];
+    }
+
+    const rawRows = preview.sheets[0].rawRows;
+    const headerRowIndex = mapping.headerRow - 1; // Convert 1-based to 0-based index
+
+    if (headerRowIndex < 0 || headerRowIndex >= rawRows.length) {
+      return preview?.sheets[0]?.headers || [];
+    }
+
+    const headerRowData = rawRows[headerRowIndex];
+    const columns: { column: number; value: string }[] = [];
+
+    // Extract columns from the selected header row
+    Object.entries(headerRowData).forEach(([colNum, value]) => {
+      const column = parseInt(colNum);
+      const strValue = value !== null && value !== undefined ? String(value).trim() : "";
+      if (strValue.length > 0) {
+        columns.push({ column, value: strValue });
+      }
+    });
+
+    // Sort by column number
+    columns.sort((a, b) => a.column - b.column);
+
+    return columns;
+  }, [preview, mapping.headerRow]);
+
+  // Get sample rows to display (rows after the selected header row)
+  const displaySampleRows = useMemo(() => {
+    if (!preview?.sheets[0]?.rawRows) {
+      return preview?.sheets[0]?.sampleRows || [];
+    }
+
+    const rawRows = preview.sheets[0].rawRows;
+    const headerRowIndex = mapping.headerRow - 1;
+
+    // Get rows after the header row (up to 5 rows)
+    const sampleRows: Record<number, unknown>[] = [];
+    for (let i = headerRowIndex + 1; i < rawRows.length && sampleRows.length < 5; i++) {
+      const row = rawRows[i];
+      // Skip empty rows and total rows
+      const values = Object.values(row);
+      if (values.length > 0) {
+        const isTotal = values.some(v =>
+          typeof v === "string" && v.toLowerCase().includes("total")
+        );
+        if (!isTotal) {
+          sampleRows.push(row);
+        }
+      }
+    }
+
+    return sampleRows;
+  }, [preview, mapping.headerRow]);
 
   return (
     <main className="min-h-screen bg-white">
@@ -681,7 +740,7 @@ export default function ImportPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {preview.sheets[0]?.sampleRows.map((row, i) => (
+                    {displaySampleRows.map((row, i) => (
                       <tr key={i} className="bg-white">
                         {availableColumns.map((col) => (
                           <td
