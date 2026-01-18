@@ -151,6 +151,30 @@ export default function ReceiptScannerModal({
     e.preventDefault();
   };
 
+  // Handle clipboard paste (Ctrl+V)
+  useEffect(() => {
+    if (!isOpen || step !== "capture") return;
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            handleFileSelect(file);
+          }
+          return;
+        }
+      }
+    };
+
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [isOpen, step, handleFileSelect]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);

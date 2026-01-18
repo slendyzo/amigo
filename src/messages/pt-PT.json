@@ -1023,7 +1023,7 @@
   "receiptScanner": {
     "title": "Digitalizar Recibo",
     "captureTitle": "Tira uma foto ou carrega",
-    "captureDescription": "Fotografa o teu recibo e extraímos os detalhes automaticamente",
+    "captureDescription": "Fotografa, carrega ou cola (Ctrl+V) o teu recibo",
     "processing": "A ler o teu recibo...",
     "confidence": "Confiança",
     "pleaseVerify": "por favor verifica os detalhes",

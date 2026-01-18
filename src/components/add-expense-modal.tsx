@@ -508,88 +508,81 @@ export default function AddExpenseModal({
             )}
           </div>
 
-          {/* Optional: Category & Bank (collapsible) */}
-          <details className="group">
-            <summary className="text-sm text-slate-500 cursor-pointer hover:text-slate-700">
-              {t("moreOptions")}
-            </summary>
-            <div className="mt-3 space-y-3">
-              {/* Expense Type */}
-              <div>
-                <label className="block text-xs font-medium text-slate-600 mb-1">
-                  {t("expenseType")}
-                </label>
-                <div className="flex flex-wrap gap-2">
-                  {EXPENSE_TYPES.map((type) => (
-                    <button
-                      key={type.value}
-                      type="button"
-                      onClick={() => setExpenseType(type.value)}
-                      className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
-                        expenseType === type.value
-                          ? type.color === "purple"
-                            ? "bg-purple-600 text-white"
-                            : type.color === "blue"
-                            ? "bg-blue-600 text-white"
-                            : "bg-cyan-600 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-600 mb-1">
-                    {t("category")}
-                  </label>
-                  <div className="flex gap-1">
-                    <select
-                      value={categoryId}
-                      onChange={(e) => setCategoryId(e.target.value)}
-                      className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-                    >
-                      <option value="">{t("auto")}</option>
-                      {localCategories.map((cat) => (
-                        <option key={cat.id} value={cat.id}>
-                          {cat.name}
-                        </option>
-                      ))}
-                    </select>
-                    <QuickCreateCategory
-                      onCreated={(newCat) => {
-                        setLocalCategories([...localCategories, newCat]);
-                        setCategoryId(newCat.id);
-                      }}
-                      buttonClassName="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                    />
-                  </div>
-                </div>
-                {localBankAccounts.length > 0 && (
-                  <div>
-                    <label className="block text-xs font-medium text-slate-600 mb-1">
-                      {t("bankAccount")}
-                    </label>
-                    <select
-                      value={bankAccountId}
-                      onChange={(e) => setBankAccountId(e.target.value)}
-                      className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-                    >
-                      <option value="">{t("none")}</option>
-                      {localBankAccounts.map((acc) => (
-                        <option key={acc.id} value={acc.id}>
-                          {acc.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-              </div>
+          {/* Expense Type - Always visible */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-2">
+              {t("expenseType")}
+            </label>
+            <div className="flex flex-wrap gap-2">
+              {EXPENSE_TYPES.map((type) => (
+                <button
+                  key={type.value}
+                  type="button"
+                  onClick={() => setExpenseType(type.value)}
+                  className={`px-4 py-2 text-sm rounded-lg font-medium transition-colors ${
+                    expenseType === type.value
+                      ? type.color === "purple"
+                        ? "bg-purple-600 text-white"
+                        : type.color === "blue"
+                        ? "bg-blue-600 text-white"
+                        : "bg-cyan-600 text-white"
+                      : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                  }`}
+                >
+                  {type.label}
+                </button>
+              ))}
             </div>
-          </details>
+          </div>
+
+          {/* Category - Always visible */}
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              {t("category")}
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={categoryId}
+                onChange={(e) => setCategoryId(e.target.value)}
+                className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              >
+                <option value="">{t("auto")}</option>
+                {localCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              <QuickCreateCategory
+                onCreated={(newCat) => {
+                  setLocalCategories([...localCategories, newCat]);
+                  setCategoryId(newCat.id);
+                }}
+                buttonClassName="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-slate-300"
+              />
+            </div>
+          </div>
+
+          {/* Bank Account - Always visible if available */}
+          {localBankAccounts.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                {t("bankAccount")}
+              </label>
+              <select
+                value={bankAccountId}
+                onChange={(e) => setBankAccountId(e.target.value)}
+                className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              >
+                <option value="">{t("none")}</option>
+                {localBankAccounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {/* Footer - Fixed at bottom, not scrollable */}

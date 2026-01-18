@@ -1037,7 +1037,7 @@
   "receiptScanner": {
     "title": "Scan Receipt",
     "captureTitle": "Take a photo or upload",
-    "captureDescription": "Capture your receipt and we'll extract the details automatically",
+    "captureDescription": "Capture, upload, or paste (Ctrl+V) your receipt",
     "processing": "Reading your receipt...",
     "confidence": "Confidence",
     "pleaseVerify": "please verify the details",

@@ -1037,7 +1037,7 @@
   "receiptScanner": {
     "title": "Scanner un Reçu",
     "captureTitle": "Prenez une photo ou téléchargez",
-    "captureDescription": "Photographiez votre reçu et nous extrairons les détails automatiquement",
+    "captureDescription": "Photographiez, téléchargez ou collez (Ctrl+V) votre reçu",
     "processing": "Lecture de votre reçu...",
     "confidence": "Confiance",
     "pleaseVerify": "veuillez vérifier les détails",

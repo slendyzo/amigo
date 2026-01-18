@@ -942,10 +942,12 @@ export default function DashboardOverview({
           {/* Category Breakdown with Budget Gauge - shown on mobile and desktop */}
           <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-6">
             <CategoryBreakdown
-              expenses={expenses.map((e) => ({
-                amountEur: e.amountEur,
-                categoryName: e.categoryName,
-              }))}
+              expenses={expenses
+                .filter((e) => !e.excludeFromBudget)
+                .map((e) => ({
+                  amountEur: e.amountEur,
+                  categoryName: e.categoryName,
+                }))}
               budget={livingBudget}
             />
           </div>
@@ -955,10 +957,10 @@ export default function DashboardOverview({
             <Suspense fallback={<ChartSkeleton />}>
               <BurnChart
                 currentMonthExpenses={expenses
-                  .filter((e) => !e.projects || e.projects.length === 0)
+                  .filter((e) => !e.excludeFromBudget && (!e.projects || e.projects.length === 0))
                   .map((e) => ({ date: e.date, amountEur: e.amountEur }))}
                 previousMonthExpenses={previousMonthExpenses
-                  .filter((e) => !e.projects || e.projects.length === 0)
+                  .filter((e) => !e.excludeFromBudget && (!e.projects || e.projects.length === 0))
                   .map((e) => ({ date: e.date, amountEur: e.amountEur }))}
                 currentMonthLabel={`${tTime(`months.${MONTH_KEYS[selectedMonth]}`)} ${selectedYear}`}
                 previousMonthLabel={`${tTime(`months.${MONTH_KEYS[selectedMonth === 0 ? 11 : selectedMonth - 1]}`)} ${selectedMonth === 0 ? selectedYear - 1 : selectedYear}`}
