@@ -163,9 +163,9 @@
     },
     "expenseTypes": {
       "fixed": "Fixed",
-      "variable": "Var",
-      "lifestyle": "Spend",
-      "project": "Proj"
+      "variable": "Variable",
+      "lifestyle": "Lifestyle",
+      "project": "Project"
     },
     "chart": {
       "spendingVelocity": "Spending Velocity",
