@@ -95,7 +95,7 @@
     "addFirstExpense": "Ajoutez votre première dépense",
     "thisMonth": "Ce Mois",
     "lastMonth": "Mois Dernier",
-    "survivalBudget": "Budget de Vie",
+    "survivalBudget": "Budget Mensuel",
     "used": "utilisé",
     "remaining": "restant",
     "over": "dépassé",
@@ -113,10 +113,10 @@
       "allTypes": "Tous les Types",
       "income": "Revenu",
       "incomeOnly": "Revenus uniquement",
-      "living": "Vie",
-      "livingOnly": "Vie uniquement",
-      "lifestyle": "Mode de vie",
-      "lifestyleOnly": "Mode de vie uniquement",
+      "living": "Factures",
+      "livingOnly": "Factures uniquement",
+      "lifestyle": "Dépenses",
+      "lifestyleOnly": "Dépenses uniquement",
       "projects": "Projets",
       "projectsOnly": "Projets uniquement",
       "allProjects": "Tous les Projets",
@@ -143,10 +143,10 @@
     },
     "stats": {
       "total": "Total",
-      "living": "Vie",
+      "living": "Factures",
       "fixed": "Fixe",
       "variable": "Variable",
-      "lifestyle": "Mode de vie",
+      "lifestyle": "Dépenses",
       "dailySpending": "Dépenses quotidiennes",
       "projects": "Projets",
       "projectCount": "{count} projet(s)",
@@ -206,9 +206,9 @@
     "type": "Type",
     "description": "Description",
     "types": {
-      "fixed": "Vie (Fixe)",
-      "variable": "Vie (Variable)",
-      "lifestyle": "Style de Vie",
+      "fixed": "Factures (Fixe)",
+      "variable": "Factures (Variable)",
+      "lifestyle": "Dépenses",
       "project": "Projet"
     },
     "expenseAdded": "Dépense ajoutée avec succès",
@@ -459,9 +459,9 @@
     "default": "Par défaut",
     "first": "1er",
     "expenseTypes": {
-      "survivalFixed": "Coûts de Vie (Fixes)",
-      "survivalVariable": "Coûts de Vie (Variables)",
-      "lifestyle": "Style de Vie",
+      "survivalFixed": "Factures (Fixes)",
+      "survivalVariable": "Factures (Variables)",
+      "lifestyle": "Dépenses",
       "project": "Projet"
     }
   },
@@ -543,9 +543,9 @@
     "step2Desc": "Indiquez-nous quelles colonnes contiennent la date, la description et le montant",
     "step3Classification": "3. Classification",
     "step3Desc": "Nous catégorisons automatiquement les dépenses :",
-    "classLivingFixed": "Vie (Fixe) : Abonnements, loyer, assurance (sans date = récurrent)",
-    "classLivingVariable": "Vie (Variable) : Services comme électricité, eau, gaz",
-    "classLifestyle": "Style de Vie : Dépenses quotidiennes (éléments avec dates)",
+    "classLivingFixed": "Factures (Fixe) : Abonnements, loyer, assurance (sans date = récurrent)",
+    "classLivingVariable": "Factures (Variable) : Services comme électricité, eau, gaz",
+    "classLifestyle": "Dépenses : Achats quotidiens (éléments avec dates)",
     "classProject": "Projet : Objectifs spécifiques comme la rénovation de maison",
     "stepUpload": "1. Télécharger",
     "stepMapColumns": "2. Mapper les Colonnes",
@@ -685,9 +685,9 @@
     "selectCategoryOrType": "Veuillez sélectionner une catégorie ou un type de dépense",
     "saving": "Enregistrement...",
     "types": {
-      "fixed": "Coûts de Vie (Fixes)",
-      "variable": "Coûts de Vie (Variables)",
-      "lifestyle": "Style de Vie",
+      "fixed": "Factures (Fixes)",
+      "variable": "Factures (Variables)",
+      "lifestyle": "Dépenses",
       "project": "Projet"
     }
   },
@@ -904,10 +904,12 @@
     "description": "Description",
     "amount": "Montant",
     "types": {
-      "lifestyle": "Style de Vie",
-      "fixed": "Dépenses (Fixes)",
-      "variable": "Dépenses (Variables)"
+      "lifestyle": "Dépenses",
+      "fixed": "Factures (Fixes)",
+      "variable": "Factures (Variables)"
     },
+    "showAdvanced": "Afficher les options de type",
+    "hideAdvanced": "Masquer les options de type",
     "quickCategory": {
       "title": "Nouvelle Catégorie",
       "placeholder": "ex : Courses, Transport",

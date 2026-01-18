@@ -813,7 +813,11 @@ export default function ImportPage() {
                 : t("importWithIssues", { count: result.imported })}
               {result.duplicatesFound && result.duplicatesFound > 0 && (
                 <span className="ml-2">
-                  ({result.duplicatesFound} {t("duplicatesFound")}: {result.skipped || 0} {t("skipped")}, {result.replaced || 0} {t("replaced")})
+                  ({result.duplicatesFound} {t("duplicatesFound")}
+                  {((result.skipped ?? 0) > 0 || (result.replaced ?? 0) > 0) && ': '}
+                  {(result.skipped ?? 0) > 0 && <>{result.skipped} {t("skipped")}</>}
+                  {(result.skipped ?? 0) > 0 && (result.replaced ?? 0) > 0 && ', '}
+                  {(result.replaced ?? 0) > 0 && <>{result.replaced} {t("replaced")}</>})
                 </span>
               )}
             </div>

@@ -2,40 +2,9 @@
 
 import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
-
-type Expense = {
-  id: string;
-  name: string;
-  amount: number;
-  currency?: string;
-  amountEur?: number;
-  type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
-  date: string;
-  isRecurring?: boolean;
-  recurringTemplateId?: string | null;
-  category: { id: string; name: string } | null;
-  bankAccount: { id: string; name: string } | null;
-  projects: { id: string; name: string }[];
-  notes?: string;
-  status?: string;
-};
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  EUR: "€",
-  USD: "$",
-  GBP: "£",
-  BRL: "R$",
-  PLN: "zł",
-};
-
-function formatAmount(amount: number, currency?: string): string {
-  const symbol = CURRENCY_SYMBOLS[currency || "EUR"] || "€";
-  const absAmount = Math.abs(amount);
-  if (amount < 0) {
-    return `(${symbol}${absAmount.toFixed(2)})`;
-  }
-  return `${symbol}${amount.toFixed(2)}`;
-}
+import { formatCurrency } from "@/lib/currencies";
+import { EXPENSE_TYPE_BADGE_CLASSES } from "@/lib/expense-types";
+import type { Expense } from "@/types/models";
 
 type ExpenseDetailModalProps = {
   isOpen: boolean;
@@ -57,13 +26,6 @@ export default function ExpenseDetailModal({
   const { translateCategory } = useCategoryTranslation();
 
   if (!isOpen || !expense) return null;
-
-  const typeColors: Record<string, string> = {
-    SURVIVAL_FIXED: "bg-blue-100 text-blue-700",
-    SURVIVAL_VARIABLE: "bg-cyan-100 text-cyan-700",
-    LIFESTYLE: "bg-purple-100 text-purple-700",
-    PROJECT: "bg-amber-100 text-amber-700",
-  };
 
   const typeLabels: Record<string, string> = {
     SURVIVAL_FIXED: t("types.fixed"),
@@ -116,7 +78,7 @@ export default function ExpenseDetailModal({
           <div>
             <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">{t("amount")}</p>
             <p className={`text-2xl font-bold ${Number(expense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
-              {formatAmount(Number(expense.amount), expense.currency)}
+              {formatCurrency(Number(expense.amount), expense.currency)}
             </p>
             {expense.currency && expense.currency !== "EUR" && expense.amountEur && (
               <p className="text-sm text-slate-500 mt-1">≈ €{expense.amountEur.toFixed(2)} EUR</p>
@@ -139,7 +101,7 @@ export default function ExpenseDetailModal({
           {/* Type */}
           <div>
             <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">{t("type")}</p>
-            <span className={`inline-block text-xs px-2.5 py-1 rounded-full ${typeColors[expense.type]}`}>
+            <span className={`inline-block text-xs px-2.5 py-1 rounded-full ${EXPENSE_TYPE_BADGE_CLASSES[expense.type] || "bg-slate-100 text-slate-700"}`}>
               {typeLabels[expense.type]}
             </span>
           </div>

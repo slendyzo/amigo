@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Check, ChevronRight, Tag, Loader2, Plus, Sparkles, Brain } from "lucide-react";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import { formatCurrency } from "@/lib/currencies";
 
 type Expense = {
   id: string;
@@ -28,23 +29,6 @@ type Suggestion = {
   count?: number;
   source: "mapping" | "history";
 };
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  EUR: "\u20ac",
-  USD: "$",
-  GBP: "\u00a3",
-  BRL: "R$",
-  PLN: "z\u0142",
-};
-
-function formatAmount(amount: number, currency?: string): string {
-  const symbol = CURRENCY_SYMBOLS[currency || "EUR"] || "\u20ac";
-  const absAmount = Math.abs(amount);
-  if (amount < 0) {
-    return `(${symbol}${absAmount.toFixed(2)})`;
-  }
-  return `${symbol}${amount.toFixed(2)}`;
-}
 
 export default function CategorizePage() {
   const t = useTranslations("categorize");
@@ -319,7 +303,7 @@ export default function CategorizePage() {
             <div className="flex items-start justify-between mb-2">
               <h2 className="text-lg font-semibold text-slate-900">{currentExpense.name}</h2>
               <span className={`text-lg font-bold ${Number(currentExpense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
-                {formatAmount(Number(currentExpense.amount), currentExpense.currency)}
+                {formatCurrency(Number(currentExpense.amount), currentExpense.currency)}
               </span>
             </div>
             <div className="flex items-center gap-3 text-sm text-slate-500">

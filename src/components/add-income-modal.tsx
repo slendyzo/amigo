@@ -3,24 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-
-type BankAccount = {
-  id: string;
-  name: string;
-};
+import { CURRENCY_OPTIONS } from "@/lib/currencies";
+import { getTodayDateString } from "@/lib/utils";
+import type { BankAccount } from "@/types/models";
 
 type AddIncomeModalProps = {
   isOpen: boolean;
   onClose: () => void;
 };
-
-const CURRENCIES = [
-  { value: "EUR", label: "EUR", symbol: "€" },
-  { value: "USD", label: "USD", symbol: "$" },
-  { value: "GBP", label: "GBP", symbol: "£" },
-  { value: "BRL", label: "BRL", symbol: "R$" },
-  { value: "PLN", label: "PLN", symbol: "zł" },
-];
 
 export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps) {
   const router = useRouter();
@@ -45,7 +35,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
     type: "OTHER",
     amount: "",
     currency: "EUR",
-    date: new Date().toISOString().split("T")[0],
+    date: getTodayDateString(),
     bankAccountId: "",
   });
 
@@ -107,7 +97,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
       type: "OTHER",
       amount: "",
       currency: "EUR",
-      date: new Date().toISOString().split("T")[0],
+      date: getTodayDateString(),
       bankAccountId: "",
     });
     onClose();
@@ -173,7 +163,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                 onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
                 className="w-full rounded-lg border border-slate-300 px-4 py-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
               >
-                {CURRENCIES.map((curr) => (
+                {CURRENCY_OPTIONS.map((curr) => (
                   <option key={curr.value} value={curr.value}>
                     {curr.label} ({curr.symbol})
                   </option>

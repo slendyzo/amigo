@@ -7,6 +7,7 @@ import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import { formatCurrency } from "@/lib/currencies";
 
 type Expense = {
   id: string;
@@ -22,23 +23,6 @@ type Expense = {
   bankAccount: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
 };
-
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  EUR: "€",
-  USD: "$",
-  GBP: "£",
-  BRL: "R$",
-  PLN: "zł",
-};
-
-function formatAmount(amount: number, currency?: string): string {
-  const symbol = CURRENCY_SYMBOLS[currency || "EUR"] || "€";
-  const absAmount = Math.abs(amount);
-  if (amount < 0) {
-    return `(${symbol}${absAmount.toFixed(2)})`;
-  }
-  return `${symbol}${amount.toFixed(2)}`;
-}
 
 type Category = {
   id: string;
@@ -752,7 +736,7 @@ export default function ExpensesPage() {
                         {expense.category ? translateCategory(expense.category.name) : "-"}
                       </td>
                       <td className={`px-4 py-3 text-sm font-medium text-right ${Number(expense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
-                        {formatAmount(Number(expense.amount), expense.currency)}
+                        {formatCurrency(Number(expense.amount), expense.currency)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
@@ -850,7 +834,7 @@ export default function ExpensesPage() {
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
                       <p className={`font-semibold text-sm tabular-nums ${Number(expense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
-                        {formatAmount(Number(expense.amount), expense.currency)}
+                        {formatCurrency(Number(expense.amount), expense.currency)}
                       </p>
                       {!isSelectionMode && (
                         <>

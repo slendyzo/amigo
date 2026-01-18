@@ -3,35 +3,14 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import QuickCreateCategory from "./quick-create-category";
+import ProjectTagSelector from "./project-tag-selector";
+import { AmountInput } from "./ui/amount-input";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
-
-type Category = {
-  id: string;
-  name: string;
-};
-
-type BankAccount = {
-  id: string;
-  name: string;
-};
-
-type Project = {
-  id: string;
-  name: string;
-};
-
-type Expense = {
-  id: string;
-  name: string;
-  amount: number;
-  currency?: string;
-  type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
-  date: string;
-  category: { id: string; name: string } | null;
-  bankAccount: { id: string; name: string } | null;
-  projects: { id: string; name: string }[];
-  excludeFromBudget?: boolean;
-};
+import { useProjectTags } from "@/hooks/use-project-tags";
+import { CURRENCIES } from "@/lib/currencies";
+import { EXPENSE_TYPE_VALUES, getExpenseTypeButtonClass } from "@/lib/expense-types";
+import { parseAmount } from "@/lib/utils";
+import type { Category, BankAccount, Project, Expense, ExpenseType } from "@/types/models";
 
 type EditExpenseModalProps = {
   isOpen: boolean;
@@ -62,34 +41,36 @@ export default function EditExpenseModal({
   const [categoryId, setCategoryId] = useState("");
   const [bankAccountId, setBankAccountId] = useState("");
   const [date, setDate] = useState("");
-  const [expenseType, setExpenseType] = useState("LIFESTYLE");
+  const [expenseType, setExpenseType] = useState<ExpenseType>("LIFESTYLE");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
-
-  const CURRENCIES = ["EUR", "USD", "GBP", "BRL", "PLN"];
-  const CURRENCY_SYMBOLS: Record<string, string> = {
-    EUR: "€",
-    USD: "$",
-    GBP: "£",
-    BRL: "R$",
-    PLN: "zł",
-  };
-
-  // Tag/Project state - now supports multiple tags
-  const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
-  const [showNewTagInput, setShowNewTagInput] = useState(false);
-  const [newTagName, setNewTagName] = useState("");
-  const [localProjects, setLocalProjects] = useState<Project[]>(projects);
   const [excludeFromBudget, setExcludeFromBudget] = useState(false);
 
-  const EXPENSE_TYPES = [
-    { value: "LIFESTYLE", label: t("types.lifestyle"), color: "purple" },
-    { value: "SURVIVAL_FIXED", label: t("types.fixed"), color: "blue" },
-    { value: "SURVIVAL_VARIABLE", label: t("types.variable"), color: "cyan" },
-  ];
+  const {
+    localProjects,
+    setLocalProjects,
+    selectedProjectIds,
+    setSelectedProjectIds,
+    showNewTagInput,
+    setShowNewTagInput,
+    newTagName,
+    setNewTagName,
+    error: tagError,
+    createTag,
+    toggleProject,
+    clearSelection,
+    resetTagInput,
+  } = useProjectTags({
+    initialProjects: projects,
+  });
 
-  // Update local categories when props change (compare by content to avoid infinite loops)
+  const EXPENSE_TYPES = EXPENSE_TYPE_VALUES.map((value) => ({
+    value,
+    label: t(`types.${value.toLowerCase().replace("survival_", "")}`),
+  }));
+
+  // Update local categories when props change
   useEffect(() => {
     const categoriesJson = JSON.stringify(categories);
     const localCatJson = JSON.stringify(localCategories);
@@ -98,14 +79,14 @@ export default function EditExpenseModal({
     }
   }, [categories, localCategories]);
 
-  // Update local projects when props change (compare by content to avoid infinite loops)
+  // Update local projects when props change
   useEffect(() => {
     const projectsJson = JSON.stringify(projects);
     const localJson = JSON.stringify(localProjects);
     if (projectsJson !== localJson) {
       setLocalProjects(projects);
     }
-  }, [projects, localProjects]);
+  }, [projects, localProjects, setLocalProjects]);
 
   // Reset form when expense changes
   useEffect(() => {
@@ -120,36 +101,12 @@ export default function EditExpenseModal({
       setDate(expense.date.split("T")[0]);
       setExcludeFromBudget(expense.excludeFromBudget || false);
       setError("");
-      setShowNewTagInput(false);
-      setNewTagName("");
+      resetTagInput();
     }
-  }, [expense]);
+  }, [expense, setSelectedProjectIds, resetTagInput]);
 
   const handleCreateTag = async () => {
-    if (!newTagName.trim()) return;
-
-    try {
-      const response = await fetch("/api/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: newTagName.trim() }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        setLocalProjects([...localProjects, data.project]);
-        setSelectedProjectIds([...selectedProjectIds, data.project.id]);
-        setShowNewTagInput(false);
-        setNewTagName("");
-        setError("");
-      } else {
-        const data = await response.json();
-        setError(data.error || "Failed to create tag");
-      }
-    } catch (err) {
-      console.error("Failed to create tag:", err);
-      setError("Failed to create tag");
-    }
+    await createTag();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -160,9 +117,7 @@ export default function EditExpenseModal({
     setError("");
 
     try {
-      // Normalize amount: replace comma with dot for parsing
-      const normalizedAmount = amount.replace(",", ".");
-      const parsedAmount = parseFloat(normalizedAmount);
+      const parsedAmount = parseAmount(amount);
 
       if (isNaN(parsedAmount)) {
         setError("Invalid amount");
@@ -229,9 +184,9 @@ export default function EditExpenseModal({
 
         {/* Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          {error && (
+          {(error || tagError) && (
             <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-              {error}
+              {error || tagError}
             </div>
           )}
 
@@ -255,24 +210,13 @@ export default function EditExpenseModal({
               {t("amount")}
             </label>
             <div className="flex gap-2">
-              <div className="relative flex-1">
-                <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                  {CURRENCY_SYMBOLS[currency]}
-                </span>
-                <input
-                  type="text"
-                  inputMode="decimal"
-                  pattern="[0-9]*[.,]?[0-9]*"
-                  value={amount}
-                  onChange={(e) => {
-                    // Allow digits, comma, and dot
-                    const value = e.target.value.replace(/[^0-9.,-]/g, "");
-                    setAmount(value);
-                  }}
-                  required
-                  className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-                />
-              </div>
+              <AmountInput
+                value={amount}
+                onChange={setAmount}
+                currency={currency}
+                required
+                className="flex-1"
+              />
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
@@ -305,102 +249,18 @@ export default function EditExpenseModal({
             <label className="block text-sm font-medium text-slate-700 mb-2">
               {t("tags")}
             </label>
-            <div className="flex flex-wrap gap-2">
-              {/* Clear all tags option */}
-              <button
-                type="button"
-                onClick={() => setSelectedProjectIds([])}
-                className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                  selectedProjectIds.length === 0
-                    ? "bg-slate-800 text-white"
-                    : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                }`}
-              >
-                {t("noTags")}
-              </button>
-
-              {/* Existing project tags (multi-select) */}
-              {localProjects.map((project) => {
-                const isSelected = selectedProjectIds.includes(project.id);
-                return (
-                  <button
-                    key={project.id}
-                    type="button"
-                    onClick={() => {
-                      if (isSelected) {
-                        setSelectedProjectIds(selectedProjectIds.filter(id => id !== project.id));
-                      } else {
-                        setSelectedProjectIds([...selectedProjectIds, project.id]);
-                      }
-                    }}
-                    className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                      isSelected
-                        ? "bg-amber-500 text-white"
-                        : "bg-amber-100 text-amber-700 hover:bg-amber-200"
-                    }`}
-                  >
-                    {project.name}
-                  </button>
-                );
-              })}
-
-              {/* Add new tag button */}
-              {!showNewTagInput && (
-                <button
-                  type="button"
-                  onClick={() => setShowNewTagInput(true)}
-                  className="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center gap-1"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                  {t("new")}
-                </button>
-              )}
-            </div>
-
-            {/* New tag input */}
-            {showNewTagInput && (
-              <div className="mt-2 flex gap-2">
-                <input
-                  type="text"
-                  value={newTagName}
-                  onChange={(e) => setNewTagName(e.target.value)}
-                  placeholder={t("tagPlaceholder")}
-                  className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleCreateTag();
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={handleCreateTag}
-                  disabled={!newTagName.trim()}
-                  className="px-3 py-2 rounded-lg bg-[#0070f3] text-white text-sm font-medium hover:bg-[#0060df] disabled:opacity-50"
-                >
-                  {tCommon("add")}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowNewTagInput(false);
-                    setNewTagName("");
-                  }}
-                  className="px-3 py-2 rounded-lg text-slate-500 hover:text-slate-700"
-                >
-                  {tCommon("cancel")}
-                </button>
-              </div>
-            )}
-
-            {selectedProjectIds.length > 0 && (
-              <p className="mt-2 text-xs text-amber-600">
-                {t("taggedTo", { count: selectedProjectIds.length })}
-              </p>
-            )}
+            <ProjectTagSelector
+              projects={localProjects}
+              selectedIds={selectedProjectIds}
+              onToggle={toggleProject}
+              onClearAll={clearSelection}
+              showNewTagInput={showNewTagInput}
+              onShowNewTagInput={() => setShowNewTagInput(true)}
+              newTagName={newTagName}
+              onNewTagNameChange={setNewTagName}
+              onCreateTag={handleCreateTag}
+              onCancelNewTag={resetTagInput}
+            />
           </div>
 
           {/* Exclude from budget checkbox - only show when project is selected */}
@@ -442,15 +302,7 @@ export default function EditExpenseModal({
                       key={type.value}
                       type="button"
                       onClick={() => setExpenseType(type.value)}
-                      className={`px-3 py-1.5 text-xs rounded-full transition-colors ${
-                        expenseType === type.value
-                          ? type.color === "purple"
-                            ? "bg-purple-600 text-white"
-                            : type.color === "blue"
-                            ? "bg-blue-600 text-white"
-                            : "bg-cyan-600 text-white"
-                          : "bg-slate-100 text-slate-600 hover:bg-slate-200"
-                      }`}
+                      className={`px-3 py-1.5 text-xs rounded-full transition-colors ${getExpenseTypeButtonClass(type.value, expenseType === type.value)}`}
                     >
                       {type.label}
                     </button>

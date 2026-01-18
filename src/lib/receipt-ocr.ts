@@ -3,6 +3,7 @@
 
 import Tesseract from "tesseract.js";
 import { KEYWORD_MAP } from "./parser";
+import { SYMBOL_TO_CURRENCY, CURRENCIES } from "./currencies";
 
 export type ExtractedReceiptData = {
   merchantName: string | null;
@@ -12,15 +13,6 @@ export type ExtractedReceiptData = {
   items: Array<{ name: string; amount: number }>;
   rawText: string;
   confidence: number;
-};
-
-// Currency symbols and their codes
-const CURRENCY_SYMBOLS: Record<string, string> = {
-  "€": "EUR",
-  "$": "USD",
-  "£": "GBP",
-  "R$": "BRL",
-  "zł": "PLN",
 };
 
 /**
@@ -284,18 +276,19 @@ function parseMonthName(monthStr: string): number {
  * Detect currency from text
  */
 function detectCurrency(text: string): string {
-  for (const [symbol, code] of Object.entries(CURRENCY_SYMBOLS)) {
+  // Check for currency symbols
+  for (const [symbol, code] of Object.entries(SYMBOL_TO_CURRENCY)) {
     if (text.includes(symbol)) {
       return code;
     }
   }
 
   // Check for currency codes
-  if (/\bEUR\b/i.test(text)) return "EUR";
-  if (/\bUSD\b/i.test(text)) return "USD";
-  if (/\bGBP\b/i.test(text)) return "GBP";
-  if (/\bBRL\b/i.test(text)) return "BRL";
-  if (/\bPLN\b/i.test(text)) return "PLN";
+  for (const currency of CURRENCIES) {
+    if (new RegExp(`\\b${currency}\\b`, "i").test(text)) {
+      return currency;
+    }
+  }
 
   // Default to EUR
   return "EUR";

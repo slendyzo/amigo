@@ -4,11 +4,11 @@ import { useState, useRef, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { extractReceiptData, type ExtractedReceiptData } from "@/lib/receipt-ocr";
-
-type Category = {
-  id: string;
-  name: string;
-};
+import { AmountInput } from "./ui/amount-input";
+import { useModalBodyClass } from "@/hooks/use-modal-body-class";
+import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
+import { parseAmount, getTodayDateString } from "@/lib/utils";
+import type { Category } from "@/types/models";
 
 type ReceiptScannerModalProps = {
   isOpen: boolean;
@@ -29,6 +29,9 @@ export default function ReceiptScannerModal({
   const tCommon = useTranslations("common");
   const tModals = useTranslations("modals");
 
+  // Use shared hook
+  useModalBodyClass(isOpen);
+
   // Step state
   const [step, setStep] = useState<ScanStep>("capture");
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -39,22 +42,13 @@ export default function ReceiptScannerModal({
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
   const [currency, setCurrency] = useState("EUR");
-  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
+  const [date, setDate] = useState(getTodayDateString());
   const [categoryId, setCategoryId] = useState("");
 
   // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [localCategories, setLocalCategories] = useState<Category[]>(propCategories || []);
-
-  const CURRENCIES = ["EUR", "USD", "GBP", "BRL", "PLN"];
-  const CURRENCY_SYMBOLS: Record<string, string> = {
-    EUR: "€",
-    USD: "$",
-    GBP: "£",
-    BRL: "R$",
-    PLN: "zł",
-  };
 
   // Fetch categories if not provided
   useEffect(() => {
@@ -78,20 +72,10 @@ export default function ReceiptScannerModal({
       setName("");
       setAmount("");
       setCurrency("EUR");
-      setDate(new Date().toISOString().split("T")[0]);
+      setDate(getTodayDateString());
       setCategoryId("");
       setError("");
     }
-  }, [isOpen]);
-
-  // Add/remove modal-open class
-  useEffect(() => {
-    if (isOpen) {
-      document.body.classList.add("modal-open");
-    } else {
-      document.body.classList.remove("modal-open");
-    }
-    return () => document.body.classList.remove("modal-open");
   }, [isOpen]);
 
   const handleFileSelect = useCallback(async (file: File) => {
@@ -181,8 +165,7 @@ export default function ReceiptScannerModal({
     setError("");
 
     try {
-      const normalizedAmount = amount.replace(",", ".");
-      const parsedAmount = parseFloat(normalizedAmount);
+      const parsedAmount = parseAmount(amount);
 
       if (isNaN(parsedAmount)) {
         setError(tModals("invalidAmount") || "Invalid amount");
@@ -389,24 +372,13 @@ export default function ReceiptScannerModal({
                   {tModals("howMuch")}
                 </label>
                 <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                      {CURRENCY_SYMBOLS[currency]}
-                    </span>
-                    <input
-                      type="text"
-                      inputMode="decimal"
-                      pattern="[0-9]*[.,]?[0-9]*"
-                      value={amount}
-                      onChange={(e) => {
-                        const value = e.target.value.replace(/[^0-9.,-]/g, "");
-                        setAmount(value);
-                      }}
-                      placeholder="0.00"
-                      required
-                      className="w-full rounded-lg border border-slate-300 bg-white pl-10 pr-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-                    />
-                  </div>
+                  <AmountInput
+                    value={amount}
+                    onChange={setAmount}
+                    currency={currency}
+                    required
+                    className="flex-1"
+                  />
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
@@ -464,7 +436,7 @@ export default function ReceiptScannerModal({
                       <div key={i} className="flex justify-between py-1">
                         <span className="text-slate-600 truncate">{item.name}</span>
                         <span className="text-slate-900 font-medium">
-                          {CURRENCY_SYMBOLS[currency]}{item.amount.toFixed(2)}
+                          {getCurrencySymbol(currency)}{item.amount.toFixed(2)}
                         </span>
                       </div>
                     ))}

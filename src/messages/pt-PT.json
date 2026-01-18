@@ -95,7 +95,7 @@
     "addFirstExpense": "Adiciona a tua primeira despesa",
     "thisMonth": "Este Mês",
     "lastMonth": "Mês Passado",
-    "survivalBudget": "Orçamento de Vida",
+    "survivalBudget": "Orçamento Mensal",
     "used": "usado",
     "remaining": "restante",
     "over": "acima",
@@ -113,10 +113,10 @@
       "allTypes": "Todos os Tipos",
       "income": "Receita",
       "incomeOnly": "Só Receitas",
-      "living": "Vida",
-      "livingOnly": "Só Vida",
-      "lifestyle": "Estilo de Vida",
-      "lifestyleOnly": "Só Estilo de Vida",
+      "living": "Contas",
+      "livingOnly": "Só Contas",
+      "lifestyle": "Gastos",
+      "lifestyleOnly": "Só Gastos",
       "projects": "Projetos",
       "projectsOnly": "Só Projetos",
       "allProjects": "Todos os Projetos",
@@ -143,10 +143,10 @@
     },
     "stats": {
       "total": "Total",
-      "living": "Vida",
+      "living": "Contas",
       "fixed": "Fixo",
       "variable": "Variável",
-      "lifestyle": "Estilo de Vida",
+      "lifestyle": "Gastos",
       "dailySpending": "Gastos diários",
       "projects": "Projetos",
       "projectCount": "{count} projeto(s)",
@@ -206,9 +206,9 @@
     "type": "Tipo",
     "description": "Descrição",
     "types": {
-      "fixed": "Vida (Fixo)",
-      "variable": "Vida (Variável)",
-      "lifestyle": "Estilo de Vida",
+      "fixed": "Contas (Fixo)",
+      "variable": "Contas (Variável)",
+      "lifestyle": "Gastos",
       "project": "Projeto"
     },
     "expenseAdded": "Despesa adicionada com sucesso",
@@ -459,9 +459,9 @@
     "default": "Predefinido",
     "first": "1º",
     "expenseTypes": {
-      "survivalFixed": "Custos de Vida (Fixos)",
-      "survivalVariable": "Custos de Vida (Variáveis)",
-      "lifestyle": "Estilo de Vida",
+      "survivalFixed": "Contas (Fixas)",
+      "survivalVariable": "Contas (Variáveis)",
+      "lifestyle": "Gastos",
       "project": "Projeto"
     }
   },
@@ -543,9 +543,9 @@
     "step2Desc": "Indica-nos quais colunas contêm data, descrição e valor",
     "step3Classification": "3. Classificação",
     "step3Desc": "Categorizamos despesas automaticamente:",
-    "classLivingFixed": "Vida (Fixo): Subscrições, renda, seguros (sem data = recorrente)",
-    "classLivingVariable": "Vida (Variável): Utilidades como eletricidade, água, gás",
-    "classLifestyle": "Estilo de Vida: Gastos diários (itens com datas)",
+    "classLivingFixed": "Contas (Fixo): Subscrições, renda, seguros (sem data = recorrente)",
+    "classLivingVariable": "Contas (Variável): Utilidades como eletricidade, água, gás",
+    "classLifestyle": "Gastos: Despesas diárias (itens com datas)",
     "classProject": "Projeto: Objetivos específicos como renovação de casa",
     "stepUpload": "1. Carregar",
     "stepMapColumns": "2. Mapear Colunas",
@@ -585,9 +585,9 @@
     "selectCategoryOrType": "Por favor seleciona uma categoria ou tipo de despesa",
     "saving": "A guardar...",
     "types": {
-      "fixed": "Custos de Vida (Fixos)",
-      "variable": "Custos de Vida (Variáveis)",
-      "lifestyle": "Estilo de Vida",
+      "fixed": "Contas (Fixas)",
+      "variable": "Contas (Variáveis)",
+      "lifestyle": "Gastos",
       "project": "Projeto"
     }
   },
@@ -890,10 +890,12 @@
     "description": "Descrição",
     "amount": "Valor",
     "types": {
-      "lifestyle": "Estilo de Vida",
-      "fixed": "Despesas (Fixas)",
-      "variable": "Despesas (Variáveis)"
+      "lifestyle": "Gastos",
+      "fixed": "Contas (Fixas)",
+      "variable": "Contas (Variáveis)"
     },
+    "showAdvanced": "Mostrar opções de tipo",
+    "hideAdvanced": "Ocultar opções de tipo",
     "quickCategory": {
       "title": "Nova Categoria",
       "placeholder": "ex: Supermercado, Transportes",

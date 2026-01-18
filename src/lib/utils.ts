@@ -6,6 +6,44 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Parses an amount string that may use comma or dot as decimal separator.
+ * @param amountStr - The amount string (e.g., "12,50" or "12.50")
+ * @returns The parsed number or NaN if invalid
+ */
+export function parseAmount(amountStr: string): number {
+  if (!amountStr || typeof amountStr !== "string") return NaN;
+  const normalized = amountStr.trim().replace(",", ".");
+  return parseFloat(normalized);
+}
+
+/**
+ * Validates and parses an amount, returning null if invalid.
+ * @param amountStr - The amount string to parse
+ * @returns The parsed number or null if invalid
+ */
+export function parseAmountSafe(amountStr: string): number | null {
+  const amount = parseAmount(amountStr);
+  return isNaN(amount) ? null : amount;
+}
+
+/**
+ * Returns today's date in YYYY-MM-DD format for date inputs.
+ * @returns Date string in ISO format (YYYY-MM-DD)
+ */
+export function getTodayDateString(): string {
+  return new Date().toISOString().split("T")[0];
+}
+
+/**
+ * Formats a Date object to YYYY-MM-DD string.
+ * @param date - The Date object to format
+ * @returns Date string in ISO format (YYYY-MM-DD)
+ */
+export function formatDateString(date: Date): string {
+  return date.toISOString().split("T")[0];
+}
+
+/**
  * Sanitize text input to prevent XSS attacks
  * - Strips HTML tags
  * - Encodes special HTML characters

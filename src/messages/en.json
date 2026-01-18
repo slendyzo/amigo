@@ -95,7 +95,7 @@
     "addFirstExpense": "Add your first expense",
     "thisMonth": "This Month",
     "lastMonth": "Last Month",
-    "survivalBudget": "Living Budget",
+    "survivalBudget": "Monthly Budget",
     "used": "used",
     "remaining": "remaining",
     "over": "over",
@@ -113,10 +113,10 @@
       "allTypes": "All Types",
       "income": "Income",
       "incomeOnly": "Income Only",
-      "living": "Living",
-      "livingOnly": "Living Only",
-      "lifestyle": "Lifestyle",
-      "lifestyleOnly": "Lifestyle Only",
+      "living": "Bills",
+      "livingOnly": "Bills Only",
+      "lifestyle": "Spending",
+      "lifestyleOnly": "Spending Only",
       "projects": "Projects",
       "projectsOnly": "Projects Only",
       "allProjects": "All Projects",
@@ -143,10 +143,10 @@
     },
     "stats": {
       "total": "Total",
-      "living": "Living",
+      "living": "Bills",
       "fixed": "Fixed",
       "variable": "Variable",
-      "lifestyle": "Lifestyle",
+      "lifestyle": "Spending",
       "dailySpending": "Daily spending",
       "projects": "Projects",
       "projectCount": "{count} project(s)",
@@ -163,8 +163,8 @@
     },
     "expenseTypes": {
       "fixed": "Fixed",
-      "variable": "Variable",
-      "lifestyle": "Life",
+      "variable": "Var",
+      "lifestyle": "Spend",
       "project": "Proj"
     },
     "chart": {
@@ -206,9 +206,9 @@
     "type": "Type",
     "description": "Description",
     "types": {
-      "fixed": "Living (Fixed)",
-      "variable": "Living (Variable)",
-      "lifestyle": "Lifestyle",
+      "fixed": "Bills (Fixed)",
+      "variable": "Bills (Variable)",
+      "lifestyle": "Spending",
       "project": "Project"
     },
     "expenseAdded": "Expense added successfully",
@@ -237,7 +237,7 @@
     "typesShort": {
       "fixed": "Fixed",
       "variable": "Var",
-      "lifestyle": "Life",
+      "lifestyle": "Spend",
       "project": "Proj"
     },
     "selected": "selected",
@@ -459,9 +459,9 @@
     "default": "Default",
     "first": "1st",
     "expenseTypes": {
-      "survivalFixed": "Living Costs (Fixed)",
-      "survivalVariable": "Living Costs (Variable)",
-      "lifestyle": "Lifestyle",
+      "survivalFixed": "Bills (Fixed)",
+      "survivalVariable": "Bills (Variable)",
+      "lifestyle": "Spending",
       "project": "Project"
     }
   },
@@ -543,9 +543,9 @@
     "step2Desc": "Tell us which columns contain date, description, and amount",
     "step3Classification": "3. Classification",
     "step3Desc": "We automatically categorize expenses:",
-    "classLivingFixed": "Living (Fixed): Subscriptions, rent, insurance (no date = recurring)",
-    "classLivingVariable": "Living (Variable): Utilities like electricity, water, gas",
-    "classLifestyle": "Lifestyle: Daily spending (items with dates)",
+    "classLivingFixed": "Bills (Fixed): Subscriptions, rent, insurance (no date = recurring)",
+    "classLivingVariable": "Bills (Variable): Utilities like electricity, water, gas",
+    "classLifestyle": "Spending: Daily expenses (items with dates)",
     "classProject": "Project: Specific goals like home renovation",
     "stepUpload": "1. Upload",
     "stepMapColumns": "2. Map Columns",
@@ -665,7 +665,7 @@
     "howItWorks": "How keyword mappings work:",
     "howItWorksItem1": "When you add an expense with quick-add, the system checks if the name contains any keywords",
     "howItWorksItem2": "If a match is found, it automatically assigns the category and/or expense type",
-    "howItWorksItem3": "Example: Create a mapping for \"gás\" → Category: \"Utilities\", Type: \"Living (Fixed)\"",
+    "howItWorksItem3": "Example: Create a mapping for \"gás\" → Category: \"Utilities\", Type: \"Bills (Fixed)\"",
     "howItWorksItem4": "Then \"Gás Natural\" or \"gas bill\" will auto-categorize",
     "noMappingsYet": "No keyword mappings yet",
     "createMappingsHint": "Create mappings to auto-categorize your expenses",
@@ -685,9 +685,9 @@
     "selectCategoryOrType": "Please select a category or expense type",
     "saving": "Saving...",
     "types": {
-      "fixed": "Living (Fixed)",
-      "variable": "Living (Variable)",
-      "lifestyle": "Lifestyle",
+      "fixed": "Bills (Fixed)",
+      "variable": "Bills (Variable)",
+      "lifestyle": "Spending",
       "project": "Project"
     }
   },
@@ -904,10 +904,12 @@
     "description": "Description",
     "amount": "Amount",
     "types": {
-      "lifestyle": "Lifestyle",
-      "fixed": "Living (Fixed)",
-      "variable": "Living (Variable)"
+      "lifestyle": "Spending",
+      "fixed": "Bills (Fixed)",
+      "variable": "Bills (Variable)"
     },
+    "showAdvanced": "Show type options",
+    "hideAdvanced": "Hide type options",
     "quickCategory": {
       "title": "New Category",
       "placeholder": "e.g., Groceries, Transport",

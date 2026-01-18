@@ -101,11 +101,11 @@ export default function QuickCreateCategory({ onCreated, buttonClassName }: Quic
       {isOpen && (
         <>
           {/* Mobile backdrop */}
-          <div className="fixed inset-0 bg-black/50 z-50 md:hidden" onClick={() => { setIsOpen(false); setName(""); setError(""); }} />
+          <div className="fixed inset-0 bg-black/50 z-[60] md:hidden" onClick={() => { setIsOpen(false); setName(""); setError(""); }} />
 
           <div
             ref={popupRef}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-50 bg-white rounded-xl shadow-lg border border-slate-200 p-4 md:absolute md:inset-auto md:right-0 md:top-full md:mt-1 md:translate-y-0 md:w-64"
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[60] bg-white rounded-xl shadow-lg border border-slate-200 p-4 md:absolute md:inset-auto md:right-0 md:top-full md:mt-1 md:translate-y-0 md:w-64"
           >
             <div className="flex items-center gap-2 mb-3">
               <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

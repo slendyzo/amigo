@@ -1,6 +1,6 @@
 "use client";
 
-import { useTranslations } from "next-intl";
+import { useTranslations, useMessages } from "next-intl";
 import { useCallback } from "react";
 
 /**
@@ -10,21 +10,19 @@ import { useCallback } from "react";
  */
 export function useCategoryTranslation() {
   const t = useTranslations("categoryNames");
+  const messages = useMessages();
+  const categoryNames = (messages.categoryNames || {}) as Record<string, string>;
 
   const translateCategory = useCallback(
     (categoryName: string): string => {
-      try {
-        // Try to find a translation for this category name
-        const translated = t(categoryName);
-        // If the translation key exists and returns something different than the key itself
-        // (next-intl returns the key if not found when using `t()` directly)
-        return translated;
-      } catch {
-        // If the translation doesn't exist, return the original name
-        return categoryName;
+      // Check if the translation key exists in the messages
+      if (categoryName in categoryNames) {
+        return t(categoryName);
       }
+      // If no translation exists, return the original name
+      return categoryName;
     },
-    [t]
+    [t, categoryNames]
   );
 
   return { translateCategory };
