@@ -2,7 +2,9 @@
 
 import { useState, useEffect, use } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import EditExpenseModal from "@/components/edit-expense-modal";
+import AddExpenseModal from "@/components/add-expense-modal";
 
 type Category = {
   id: string;
@@ -50,10 +52,15 @@ const EXPENSE_TYPES: Record<string, { label: string; color: string }> = {
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const t = useTranslations("projects");
+  const tCommon = useTranslations("common");
   const [project, setProject] = useState<Project | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [totalSpent, setTotalSpent] = useState(0);
+
+  // Add modal state
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -219,6 +226,16 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             <p className="text-sm text-slate-500 mt-1">{project.description}</p>
           )}
         </div>
+        {/* Add Expense Button */}
+        <button
+          onClick={() => setIsAddModalOpen(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600 transition-colors font-medium"
+        >
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          <span className="hidden sm:inline">{t("addExpense")}</span>
+        </button>
       </div>
 
       {/* Stats Cards */}
@@ -354,6 +371,20 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           </div>
         )}
       </div>
+
+      {/* Add Expense Modal - Pre-select this project and exclude from budget */}
+      <AddExpenseModal
+        isOpen={isAddModalOpen}
+        onClose={() => {
+          setIsAddModalOpen(false);
+          fetchExpenses();
+        }}
+        categories={categories}
+        bankAccounts={bankAccounts}
+        projects={projects}
+        defaultProjectId={id}
+        defaultExcludeFromBudget={true}
+      />
 
       {/* Edit Expense Modal */}
       <EditExpenseModal

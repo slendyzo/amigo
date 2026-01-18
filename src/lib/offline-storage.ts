@@ -15,6 +15,7 @@ export type OfflineExpense = {
   bankAccountId?: string;
   projectIds?: string[];
   notes?: string;
+  excludeFromBudget?: boolean;
   createdAt: number;
   syncAttempts: number;
 };
@@ -162,6 +163,7 @@ export async function syncPendingExpenses(): Promise<{ synced: number; failed: n
           bankAccountId: expense.bankAccountId || null,
           projectIds: expense.projectIds || [],
           notes: expense.notes || "",
+          excludeFromBudget: expense.excludeFromBudget || false,
         }),
       });
 

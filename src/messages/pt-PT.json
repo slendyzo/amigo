@@ -357,6 +357,7 @@
   "projects": {
     "title": "Projetos",
     "addProject": "Adicionar Projeto",
+    "addExpense": "Adicionar Despesa",
     "editProject": "Editar Projeto",
     "deleteProject": "Eliminar Projeto",
     "noProjects": "Nenhum projeto encontrado",
@@ -899,7 +900,9 @@
       "nameRequired": "Nome é obrigatório",
       "creating": "A criar...",
       "createNew": "Criar nova categoria"
-    }
+    },
+    "excludeFromBudget": "Apenas no projeto (excluir dos totais mensais)",
+    "excludeFromBudgetHint": "Esta despesa só aparecerá no projeto, não no orçamento mensal"
   },
   "install": {
     "title": "Instalar Amigo",

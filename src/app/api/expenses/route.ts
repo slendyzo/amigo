@@ -97,7 +97,7 @@ export async function POST(request: Request) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { quickAdd, name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency } = body;
+    const { quickAdd, name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToConnect: string[] = projectIds || (projectId ? [projectId] : []);
@@ -218,6 +218,7 @@ export async function POST(request: Request) {
         date: date ? new Date(date) : new Date(),
         categoryId: expenseData.categoryId,
         bankAccountId: expenseData.bankAccountId,
+        excludeFromBudget: excludeFromBudget || false,
         projects: projectIdsToConnect.length > 0
           ? { connect: projectIdsToConnect.map(id => ({ id })) }
           : undefined,

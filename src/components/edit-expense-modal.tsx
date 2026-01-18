@@ -29,6 +29,7 @@ type Expense = {
   category: { id: string; name: string } | null;
   bankAccount: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
+  excludeFromBudget?: boolean;
 };
 
 type EditExpenseModalProps = {
@@ -78,6 +79,7 @@ export default function EditExpenseModal({
   const [showNewTagInput, setShowNewTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState("");
   const [localProjects, setLocalProjects] = useState<Project[]>(projects);
+  const [excludeFromBudget, setExcludeFromBudget] = useState(false);
 
   const EXPENSE_TYPES = [
     { value: "LIFESTYLE", label: t("types.lifestyle"), color: "purple" },
@@ -114,6 +116,7 @@ export default function EditExpenseModal({
       setSelectedProjectIds(expense.projects?.map(p => p.id) || []);
       setExpenseType(expense.type === "PROJECT" ? "LIFESTYLE" : expense.type);
       setDate(expense.date.split("T")[0]);
+      setExcludeFromBudget(expense.excludeFromBudget || false);
       setError("");
       setShowNewTagInput(false);
       setNewTagName("");
@@ -177,6 +180,7 @@ export default function EditExpenseModal({
           bankAccountId: bankAccountId || null,
           projectIds: selectedProjectIds,
           date,
+          excludeFromBudget,
         }),
       });
 
@@ -396,6 +400,28 @@ export default function EditExpenseModal({
               </p>
             )}
           </div>
+
+          {/* Exclude from budget checkbox - only show when project is selected */}
+          {selectedProjectIds.length > 0 && (
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={excludeFromBudget}
+                  onChange={(e) => setExcludeFromBudget(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-amber-800">
+                    {t("excludeFromBudget")}
+                  </span>
+                  <p className="text-xs text-amber-600 mt-0.5">
+                    {t("excludeFromBudgetHint")}
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
 
           {/* Optional: Category & Bank (collapsible) */}
           <details className="group">

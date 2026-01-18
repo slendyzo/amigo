@@ -480,7 +480,7 @@ export default function ImportPage() {
                   onChange={(e) => setMapping({ ...mapping, headerRow: parseInt(e.target.value) })}
                   className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900"
                 >
-                  {[1, 2, 3, 4, 5].map((row) => (
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((row) => (
                     <option key={row} value={row}>{t("row")} {row}</option>
                   ))}
                 </select>

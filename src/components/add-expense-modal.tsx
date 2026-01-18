@@ -27,6 +27,8 @@ type AddExpenseModalProps = {
   categories?: Category[];
   bankAccounts?: BankAccount[];
   projects?: Project[];
+  defaultProjectId?: string;
+  defaultExcludeFromBudget?: boolean;
 };
 
 export default function AddExpenseModal({
@@ -35,6 +37,8 @@ export default function AddExpenseModal({
   categories: propCategories,
   bankAccounts: propBankAccounts,
   projects: propProjects,
+  defaultProjectId,
+  defaultExcludeFromBudget = false,
 }: AddExpenseModalProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -64,6 +68,7 @@ export default function AddExpenseModal({
   const [selectedProjectIds, setSelectedProjectIds] = useState<string[]>([]);
   const [showNewTagInput, setShowNewTagInput] = useState(false);
   const [newTagName, setNewTagName] = useState("");
+  const [excludeFromBudget, setExcludeFromBudget] = useState(false);
   const [localProjects, setLocalProjects] = useState<Project[]>(propProjects || []);
   const [localCategories, setLocalCategories] = useState<Category[]>(propCategories || []);
   const [localBankAccounts, setLocalBankAccounts] = useState<BankAccount[]>(propBankAccounts || []);
@@ -164,9 +169,10 @@ export default function AddExpenseModal({
     return () => document.body.classList.remove("modal-open");
   }, [isOpen]);
 
-  // Reset form when modal closes
+  // Reset form when modal opens/closes, apply defaults when opening
   useEffect(() => {
-    if (!isOpen) {
+    if (isOpen) {
+      // Apply defaults when opening
       setName("");
       setAmount("");
       setCurrency(defaultCurrency);
@@ -175,12 +181,13 @@ export default function AddExpenseModal({
       setExpenseType("LIFESTYLE");
       setCategoryId("");
       setBankAccountId("");
-      setSelectedProjectIds([]);
+      setSelectedProjectIds(defaultProjectId ? [defaultProjectId] : []);
       setShowNewTagInput(false);
       setNewTagName("");
+      setExcludeFromBudget(defaultExcludeFromBudget);
       setError("");
     }
-  }, [isOpen, defaultCurrency]);
+  }, [isOpen, defaultCurrency, defaultProjectId, defaultExcludeFromBudget]);
 
   const handleCreateTag = async () => {
     if (!newTagName.trim()) return;
@@ -234,6 +241,7 @@ export default function AddExpenseModal({
         bankAccountId: bankAccountId || undefined,
         projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
         date,
+        excludeFromBudget,
       };
 
       // Try to submit online first
@@ -277,6 +285,7 @@ export default function AddExpenseModal({
             bankAccountId: bankAccountId || undefined,
             projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
             date,
+            excludeFromBudget,
           });
           window.dispatchEvent(new CustomEvent("offline-expense-added"));
           onClose();
@@ -581,6 +590,28 @@ export default function AddExpenseModal({
                   </option>
                 ))}
               </select>
+            </div>
+          )}
+
+          {/* Exclude from budget - Show when project is selected */}
+          {selectedProjectIds.length > 0 && (
+            <div className="p-3 rounded-lg bg-amber-50 border border-amber-200">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={excludeFromBudget}
+                  onChange={(e) => setExcludeFromBudget(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-amber-800">
+                    {t("excludeFromBudget")}
+                  </span>
+                  <p className="text-xs text-amber-600 mt-0.5">
+                    {t("excludeFromBudgetHint")}
+                  </p>
+                </div>
+              </label>
             </div>
           )}
         </div>

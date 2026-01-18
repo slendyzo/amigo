@@ -357,6 +357,7 @@
   "projects": {
     "title": "Projets",
     "addProject": "Ajouter un Projet",
+    "addExpense": "Ajouter une Dépense",
     "editProject": "Modifier le Projet",
     "deleteProject": "Supprimer le Projet",
     "noProjects": "Aucun projet trouvé",
@@ -913,7 +914,9 @@
       "nameRequired": "Le nom est requis",
       "creating": "Création...",
       "createNew": "Créer une catégorie"
-    }
+    },
+    "excludeFromBudget": "Projet uniquement (exclure des totaux mensuels)",
+    "excludeFromBudgetHint": "Cette dépense n'apparaîtra que dans le projet, pas dans votre budget mensuel"
   },
   "install": {
     "title": "Installer Amigo",

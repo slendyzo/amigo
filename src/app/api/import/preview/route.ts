@@ -164,17 +164,22 @@ export async function POST(request: Request) {
       const sampleRows: Record<number, unknown>[] = [];
       const rawRows: Record<number, unknown>[] = [];
 
-      // First, extract raw data for the first 10 rows (to support header row selection)
-      for (let rowNum = 1; rowNum <= Math.min(10, worksheet.rowCount); rowNum++) {
+      // First, extract raw data for the first 15 rows (to support header row selection)
+      // Use includeEmpty: true to capture column positions even for empty cells
+      for (let rowNum = 1; rowNum <= Math.min(15, worksheet.rowCount); rowNum++) {
         const row = worksheet.getRow(rowNum);
         const rowData: Record<number, unknown> = {};
 
-        row.eachCell({ includeEmpty: false }, (cell, colNumber) => {
+        // Get actual column count from the worksheet to ensure we capture all columns
+        const actualColumnCount = worksheet.actualColumnCount || worksheet.columnCount || 26;
+
+        for (let colNum = 1; colNum <= actualColumnCount; colNum++) {
+          const cell = row.getCell(colNum);
           const val = getCellValue(cell);
-          if (val !== null && val !== undefined) {
-            rowData[colNumber] = formatCellForPreview(val);
+          if (val !== null && val !== undefined && val !== "") {
+            rowData[colNum] = formatCellForPreview(val);
           }
-        });
+        }
 
         rawRows.push(rowData);
       }
