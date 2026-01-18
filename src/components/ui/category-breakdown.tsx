@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type CategoryBreakdownProps = {
   expenses: Array<{
@@ -25,6 +26,7 @@ const CATEGORY_COLORS = [
 
 export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) {
   const t = useTranslations("dashboard");
+  const { translateCategory } = useCategoryTranslation();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categoryData = useMemo(() => {
@@ -32,7 +34,7 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
     const categoryMap = new Map<string, number>();
 
     expenses.forEach((expense) => {
-      const category = expense.categoryName || t("uncategorized");
+      const category = expense.categoryName ? translateCategory(expense.categoryName) : t("uncategorized");
       const current = categoryMap.get(category) || 0;
       categoryMap.set(category, current + expense.amountEur);
     });
@@ -51,7 +53,7 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
       percentage: total > 0 ? (cat.amount / total) * 100 : 0,
       color: CATEGORY_COLORS[index % CATEGORY_COLORS.length],
     }));
-  }, [expenses, t]);
+  }, [expenses, t, translateCategory]);
 
   const totalSpent = useMemo(() => {
     return expenses.reduce((sum, e) => sum + e.amountEur, 0);

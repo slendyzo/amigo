@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import QuickCreateCategory from "@/components/quick-create-category";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Category = {
   id: string;
@@ -42,6 +43,7 @@ export default function RecurringTemplatesPage() {
   const t = useTranslations("recurring");
   const tCommon = useTranslations("common");
   const tTime = useTranslations("time");
+  const { translateCategory } = useCategoryTranslation();
 
   const EXPENSE_TYPES = [
     { value: "SURVIVAL_FIXED", label: t("expenseTypes.survivalFixed") },
@@ -519,7 +521,7 @@ export default function RecurringTemplatesPage() {
                 >
                   <option value="">{t("uncategorized")}</option>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{cat.name}</option>
+                    <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
                   ))}
                 </select>
                 <QuickCreateCategory
@@ -667,7 +669,7 @@ export default function RecurringTemplatesPage() {
                           >
                             <option value="">{t("uncategorized")}</option>
                             {categories.map((cat) => (
-                              <option key={cat.id} value={cat.id}>{cat.name}</option>
+                              <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
                             ))}
                           </select>
                           <QuickCreateCategory
@@ -760,7 +762,7 @@ export default function RecurringTemplatesPage() {
                         <div className="flex flex-wrap items-center gap-1.5 mt-1">
                           {template.category && (
                             <span className="text-xs text-slate-500 whitespace-nowrap">
-                              {template.category.name}
+                              {translateCategory(template.category.name)}
                             </span>
                           )}
                           {template.bankAccount && (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Category = {
   id: string;
@@ -19,6 +20,7 @@ type KeywordMapping = {
 export default function KeywordMappingsPage() {
   const t = useTranslations("mappings");
   const tCommon = useTranslations("common");
+  const { translateCategory } = useCategoryTranslation();
 
   const [mappings, setMappings] = useState<KeywordMapping[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -224,7 +226,7 @@ export default function KeywordMappingsPage() {
                     </code>
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-600">
-                    {mapping.category?.name || "-"}
+                    {mapping.category ? translateCategory(mapping.category.name) : "-"}
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-600">
                     {mapping.expenseType ? getTypeLabel(mapping.expenseType) : "-"}
@@ -294,7 +296,7 @@ export default function KeywordMappingsPage() {
                   <option value="">{t("noCategoryMapping")}</option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
-                      {cat.name}
+                      {translateCategory(cat.name)}
                     </option>
                   ))}
                 </select>

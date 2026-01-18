@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Expense = {
   id: string;
@@ -66,6 +67,7 @@ export default function ExpensesPage() {
   const t = useTranslations("expenses");
   const tTime = useTranslations("time");
   const tCommon = useTranslations("common");
+  const { translateCategory } = useCategoryTranslation();
 
   // Get translated month names
   const MONTHS = [
@@ -555,7 +557,7 @@ export default function ExpensesPage() {
             >
               <option value="">{t("filterByCategory")}</option>
               {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
+                <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
               ))}
             </select>
             <select
@@ -747,7 +749,7 @@ export default function ExpensesPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm text-slate-600">
-                        {expense.category?.name || "-"}
+                        {expense.category ? translateCategory(expense.category.name) : "-"}
                       </td>
                       <td className={`px-4 py-3 text-sm font-medium text-right ${Number(expense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
                         {formatAmount(Number(expense.amount), expense.currency)}

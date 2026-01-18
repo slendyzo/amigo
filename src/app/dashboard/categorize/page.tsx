@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { Check, ChevronRight, Tag, Loader2, Plus, Sparkles, Brain } from "lucide-react";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Expense = {
   id: string;
@@ -50,6 +51,7 @@ export default function CategorizePage() {
   const tCommon = useTranslations("common");
   const tTime = useTranslations("time");
   const tQuickCategory = useTranslations("modals.quickCategory");
+  const { translateCategory } = useCategoryTranslation();
 
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -351,7 +353,7 @@ export default function CategorizePage() {
                   } disabled:opacity-50`}
                 >
                   <Sparkles className="w-5 h-5 flex-shrink-0 text-purple-500" />
-                  <span className="text-sm font-semibold">{suggestion.categoryName}</span>
+                  <span className="text-sm font-semibold">{translateCategory(suggestion.categoryName)}</span>
                   {selectedCategory === suggestion.categoryId && (
                     <Check className="w-4 h-4 ml-auto flex-shrink-0" />
                   )}
@@ -375,7 +377,7 @@ export default function CategorizePage() {
                   } disabled:opacity-50`}
                 >
                   <Tag className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate text-sm font-medium">{category.name}</span>
+                  <span className="truncate text-sm font-medium">{translateCategory(category.name)}</span>
                   {selectedCategory === category.id && (
                     <Check className="w-4 h-4 ml-auto flex-shrink-0" />
                   )}

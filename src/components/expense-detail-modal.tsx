@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Expense = {
   id: string;
@@ -53,6 +54,7 @@ export default function ExpenseDetailModal({
 }: ExpenseDetailModalProps) {
   const t = useTranslations("expenses");
   const tCommon = useTranslations("common");
+  const { translateCategory } = useCategoryTranslation();
 
   if (!isOpen || !expense) return null;
 
@@ -146,7 +148,7 @@ export default function ExpenseDetailModal({
           {expense.category && (
             <div>
               <p className="text-xs text-slate-500 uppercase tracking-wide mb-1">{t("category")}</p>
-              <p className="text-sm text-slate-900">{expense.category.name}</p>
+              <p className="text-sm text-slate-900">{translateCategory(expense.category.name)}</p>
             </div>
           )}
 

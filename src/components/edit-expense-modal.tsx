@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import QuickCreateCategory from "./quick-create-category";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Category = {
   id: string;
@@ -53,6 +54,7 @@ export default function EditExpenseModal({
 }: EditExpenseModalProps) {
   const t = useTranslations("modals");
   const tCommon = useTranslations("common");
+  const { translateCategory } = useCategoryTranslation();
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
@@ -470,7 +472,7 @@ export default function EditExpenseModal({
                     <option value="">{t("uncategorized")}</option>
                     {localCategories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
-                        {cat.name}
+                        {translateCategory(cat.name)}
                       </option>
                     ))}
                   </select>

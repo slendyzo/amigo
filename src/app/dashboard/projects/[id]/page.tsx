@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import AddExpenseModal from "@/components/add-expense-modal";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Category = {
   id: string;
@@ -54,6 +55,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const { id } = use(params);
   const t = useTranslations("projects");
   const tCommon = useTranslations("common");
+  const { translateCategory } = useCategoryTranslation();
   const [project, setProject] = useState<Project | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -333,7 +335,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                               {EXPENSE_TYPES[expense.type]?.label || expense.type}
                             </span>
                             {expense.category && (
-                              <span className="text-xs text-slate-500">{expense.category.name}</span>
+                              <span className="text-xs text-slate-500">{translateCategory(expense.category.name)}</span>
                             )}
                           </div>
                         </div>

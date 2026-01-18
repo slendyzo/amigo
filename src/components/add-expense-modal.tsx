@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import QuickCreateCategory from "./quick-create-category";
 import { savePendingExpense, isOfflineStorageAvailable } from "@/lib/offline-storage";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Category = {
   id: string;
@@ -44,6 +45,7 @@ export default function AddExpenseModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("modals");
   const tCommon = useTranslations("common");
+  const { translateCategory } = useCategoryTranslation();
 
   // Form state
   const [name, setName] = useState("");
@@ -558,7 +560,7 @@ export default function AddExpenseModal({
                 <option value="">{t("auto")}</option>
                 {localCategories.map((cat) => (
                   <option key={cat.id} value={cat.id}>
-                    {cat.name}
+                    {translateCategory(cat.name)}
                   </option>
                 ))}
               </select>

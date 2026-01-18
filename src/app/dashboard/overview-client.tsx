@@ -9,6 +9,7 @@ import OnboardingModal from "@/components/onboarding-modal";
 import AnnouncementModal from "@/components/announcement-modal";
 import { CategoryBreakdown } from "@/components/ui/category-breakdown";
 import { useSwipe } from "@/hooks/use-swipe";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 // Lazy load BurnChart to reduce initial bundle size (Recharts is ~45kB!)
 const BurnChart = lazy(() => import("@/components/ui/burn-chart").then(mod => ({ default: mod.BurnChart })));
@@ -121,6 +122,7 @@ export default function DashboardOverview({
   const tTime = useTranslations("time");
   const tCommon = useTranslations("common");
   const tIncomes = useTranslations("incomes");
+  const { translateCategory } = useCategoryTranslation();
   const [isSelectorOpen, setIsSelectorOpen] = useState(false);
   const [expenses, setExpenses] = useState<Expense[]>(initialExpenses);
   const [incomes, setIncomes] = useState<Income[]>(initialIncomes);
@@ -1036,7 +1038,7 @@ export default function DashboardOverview({
                         </span>
                       )}
                       <span className="hidden md:inline text-slate-300">•</span>
-                      <span className="hidden md:inline text-sm text-slate-400">{transaction.categoryName}</span>
+                      <span className="hidden md:inline text-sm text-slate-400">{translateCategory(transaction.categoryName)}</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">

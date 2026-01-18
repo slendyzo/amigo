@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { Sparkles } from "lucide-react";
+import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Category = {
   id: string;
@@ -22,6 +23,7 @@ export default function CategoriesPage() {
   const tCommon = useTranslations("common");
   const tExpenses = useTranslations("expenses");
   const locale = useLocale();
+  const { translateCategory } = useCategoryTranslation();
 
   const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -243,7 +245,7 @@ export default function CategoriesPage() {
                 <tr key={category.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <span className="font-medium text-slate-900">{category.name}</span>
+                      <span className="font-medium text-slate-900">{translateCategory(category.name)}</span>
                       {isUncategorizedCategory(category.name) && (
                         <span title={t("systemCategory")}>
                           <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
