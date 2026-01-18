@@ -846,7 +846,7 @@
     "featurePlaceholder": "Tell us about your idea...",
     "attachScreenshot": "Attach a screenshot (optional)",
     "attachScreenshots": "Attach screenshots (optional)",
-    "clickToUpload": "Click to upload images",
+    "clickToUpload": "Click to upload or paste (Ctrl+V)",
     "addMoreImages": "Add more images",
     "tooManyImages": "Maximum {max} images allowed",
     "uploading": "Uploading...",

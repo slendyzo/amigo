@@ -127,7 +127,7 @@
       "noTransactions": "Nenhuma transação encontrada para este período."
     },
     "budget": {
-      "remaining": "Orçamento",
+      "remaining": "Orçamento Restante",
       "spent": "Gasto",
       "thisMonth": "Este mês",
       "ofBudget": "de €{budget} orçamento"
@@ -832,7 +832,7 @@
     "featurePlaceholder": "Conta-nos sobre a tua ideia...",
     "attachScreenshot": "Anexar captura de ecrã (opcional)",
     "attachScreenshots": "Anexar capturas de ecrã (opcional)",
-    "clickToUpload": "Clica para enviar imagens",
+    "clickToUpload": "Clica para enviar ou cola (Ctrl+V)",
     "addMoreImages": "Adicionar mais imagens",
     "tooManyImages": "Máximo de {max} imagens permitido",
     "uploading": "A enviar...",

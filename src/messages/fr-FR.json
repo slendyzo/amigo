@@ -846,7 +846,7 @@
     "featurePlaceholder": "Parlez-nous de votre idée...",
     "attachScreenshot": "Joindre une capture d'écran (optionnel)",
     "attachScreenshots": "Joindre des captures d'écran (optionnel)",
-    "clickToUpload": "Cliquez pour télécharger des images",
+    "clickToUpload": "Cliquez pour télécharger ou collez (Ctrl+V)",
     "addMoreImages": "Ajouter plus d'images",
     "tooManyImages": "Maximum {max} images autorisées",
     "uploading": "Téléchargement...",

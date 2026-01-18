@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
@@ -29,10 +29,8 @@ export default function FeedbackButton() {
     setStep("form");
   };
 
-  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
+  // Shared function to process image files (from file input or clipboard paste)
+  const processImageFiles = useCallback((files: File[]) => {
     // Check if we'd exceed the max images limit
     if (imageFiles.length + files.length > MAX_IMAGES) {
       setError(t("tooManyImages", { max: MAX_IMAGES }));
@@ -42,7 +40,7 @@ export default function FeedbackButton() {
     const newFiles: File[] = [];
     const newPreviews: string[] = [];
 
-    Array.from(files).forEach((file) => {
+    files.forEach((file) => {
       // Validate file type
       if (!file.type.startsWith("image/")) {
         setError(t("invalidImageType"));
@@ -70,11 +68,47 @@ export default function FeedbackButton() {
     });
 
     setError("");
+  }, [imageFiles.length, t]);
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    processImageFiles(Array.from(files));
+
     // Reset file input to allow selecting the same file again
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
   };
+
+  // Handle clipboard paste (Ctrl+V) for images
+  useEffect(() => {
+    if (!isOpen || step !== "form") return;
+
+    const handlePaste = (e: ClipboardEvent) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+
+      const imageFiles: File[] = [];
+      for (const item of items) {
+        if (item.type.startsWith("image/")) {
+          e.preventDefault();
+          const file = item.getAsFile();
+          if (file) {
+            imageFiles.push(file);
+          }
+        }
+      }
+
+      if (imageFiles.length > 0) {
+        processImageFiles(imageFiles);
+      }
+    };
+
+    document.addEventListener("paste", handlePaste);
+    return () => document.removeEventListener("paste", handlePaste);
+  }, [isOpen, step, processImageFiles]);
 
   const removeImage = (index: number) => {
     setImageFiles((prev) => prev.filter((_, i) => i !== index));
