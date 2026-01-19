@@ -9,6 +9,18 @@ export type ParsedExpense = {
   merchant: string | null;
 };
 
+// Category name variants (English -> alternatives to try)
+// This allows matching workspaces with Portuguese, French, or other language categories
+export const CATEGORY_VARIANTS: Record<string, string[]> = {
+  "Dining": ["Dining", "Comida", "Restauração", "Alimentação", "Restauration", "Repas"],
+  "Transport": ["Transport", "Transporte"],
+  "Subscriptions": ["Subscriptions", "Subscrição", "Assinaturas", "Abonnements"],
+  "Utilities": ["Utilities", "Utilitários", "Serviços", "Services"],
+  "Housing": ["Housing", "Casa", "Habitação", "Logement", "Maison"],
+  "Groceries": ["Groceries", "Mercearia", "Supermercado", "Épicerie", "Courses"],
+  "Health": ["Health", "Saúde", "Santé"],
+};
+
 // Hardcoded keyword mappings for Level 1 parsing
 export const KEYWORD_MAP: Record<string, { merchant: string; category: string }> = {
   // Dining
@@ -59,6 +71,7 @@ export const KEYWORD_MAP: Record<string, { merchant: string; category: string }>
   pingo: { merchant: "Pingo Doce", category: "Groceries" },
   lidl: { merchant: "Lidl", category: "Groceries" },
   aldi: { merchant: "Aldi", category: "Groceries" },
+  mercadona: { merchant: "Mercadona", category: "Groceries" },
   mercado: { merchant: "Mercado", category: "Groceries" },
   supermercado: { merchant: "Supermercado", category: "Groceries" },
 
