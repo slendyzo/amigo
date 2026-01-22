@@ -100,12 +100,12 @@ export default function QuickCreateCategory({ onCreated, buttonClassName }: Quic
       {/* Mobile: Full screen modal. Desktop: Floating popup */}
       {isOpen && (
         <>
-          {/* Mobile backdrop */}
-          <div className="fixed inset-0 bg-black/50 z-[60] md:hidden" onClick={() => { setIsOpen(false); setName(""); setError(""); }} />
+          {/* Backdrop */}
+          <div className="fixed inset-0 bg-black/50 z-[65]" onClick={() => { setIsOpen(false); setName(""); setError(""); }} />
 
           <div
             ref={popupRef}
-            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[60] bg-white rounded-xl shadow-lg border border-slate-200 p-4 md:absolute md:inset-auto md:right-0 md:top-full md:mt-1 md:translate-y-0 md:w-64"
+            className="fixed inset-x-4 top-1/2 -translate-y-1/2 z-[70] bg-white rounded-xl shadow-lg border border-slate-200 p-4 md:inset-x-auto md:left-1/2 md:-translate-x-1/2 md:w-72"
           >
             <div className="flex items-center gap-2 mb-3">
               <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

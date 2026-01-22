@@ -811,7 +811,7 @@ export default function ImportPage() {
               {result.success
                 ? t("successfullyImported", { count: result.imported })
                 : t("importWithIssues", { count: result.imported })}
-              {result.duplicatesFound && result.duplicatesFound > 0 && (
+              {(result.duplicatesFound ?? 0) > 0 && (
                 <span className="ml-2">
                   ({result.duplicatesFound} {t("duplicatesFound")}
                   {((result.skipped ?? 0) > 0 || (result.replaced ?? 0) > 0) && ': '}
@@ -849,7 +849,7 @@ export default function ImportPage() {
             </div>
 
             {/* Duplicate Detection Summary */}
-            {result.duplicatesFound && result.duplicatesFound > 0 && (
+            {(result.duplicatesFound ?? 0) > 0 && (
               <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
                 <div className="flex items-center gap-2 mb-2">
                   <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -860,7 +860,7 @@ export default function ImportPage() {
                   </p>
                 </div>
                 <p className="text-sm text-amber-600">
-                  {t("duplicatesSummary", { count: result.duplicatesFound })}{' '}
+                  {t("duplicatesSummary", { count: result.duplicatesFound ?? 0 })}{' '}
                   {(result.skipped ?? 0) > 0 && (
                     <span className="font-medium">{result.skipped} {t("skipped")}</span>
                   )}
@@ -874,14 +874,14 @@ export default function ImportPage() {
             )}
 
             {/* Recurring Templates Created */}
-            {result.recurringTemplatesCreated && result.recurringTemplatesCreated > 0 && (
+            {(result.recurringTemplatesCreated ?? 0) > 0 && (
               <div className="p-4 rounded-lg bg-purple-50 border border-purple-200">
                 <div className="flex items-center gap-2 mb-2">
                   <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                   </svg>
                   <p className="font-medium text-purple-700">
-                    {t("recurringTemplatesCreated", { count: result.recurringTemplatesCreated })}
+                    {t("recurringTemplatesCreated", { count: result.recurringTemplatesCreated ?? 0 })}
                   </p>
                 </div>
                 <p className="text-sm text-purple-600 mb-3">
