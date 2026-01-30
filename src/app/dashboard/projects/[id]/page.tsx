@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useTranslations } from "next-intl";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import AddExpenseModal from "@/components/add-expense-modal";
+import ExpenseDetailModal from "@/components/expense-detail-modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Category = {
@@ -54,6 +55,7 @@ const EXPENSE_TYPES: Record<string, { label: string; color: string }> = {
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const t = useTranslations("projects");
+  const tExpenses = useTranslations("expenses");
   const tCommon = useTranslations("common");
   const { translateCategory } = useCategoryTranslation();
   const [project, setProject] = useState<Project | null>(null);
@@ -67,6 +69,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   // Edit modal state
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingExpense, setEditingExpense] = useState<Expense | null>(null);
+  const [viewingExpense, setViewingExpense] = useState<Expense | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [projects, setProjects] = useState<ProjectItem[]>([]);
@@ -151,6 +155,25 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const handleEditExpense = (expense: Expense) => {
     setEditingExpense(expense);
     setIsEditModalOpen(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/expenses?id=${id}`, { method: "DELETE" });
+      if (response.ok) {
+        setExpenses(expenses.filter((e) => e.id !== id));
+        // Recalculate total
+        const newExpenses = expenses.filter((e) => e.id !== id);
+        const newTotal = newExpenses.reduce(
+          (sum: number, exp: Expense) => sum + Number(exp.amountEur),
+          0
+        );
+        setTotalSpent(newTotal);
+      }
+    } catch (error) {
+      console.error("Failed to delete expense:", error);
+    }
+    setDeleteId(null);
   };
 
   const formatDate = (dateString: string) => {
@@ -320,7 +343,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                   {monthData.expenses.map((expense) => (
                     <div
                       key={expense.id}
-                      className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 group"
+                      className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 group cursor-pointer"
+                      onClick={(e) => {
+                        // Don't open detail if clicking on edit button
+                        const target = e.target as HTMLElement;
+                        if (target.closest("button")) return;
+                        setViewingExpense(expense);
+                      }}
                     >
                       <div className="flex items-center gap-4">
                         <div className="w-10 text-xs text-slate-400">
@@ -403,6 +432,51 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
           fetchExpenses();
         }}
       />
+
+      {/* Expense Detail Modal */}
+      <ExpenseDetailModal
+        isOpen={!!viewingExpense}
+        onClose={() => setViewingExpense(null)}
+        expense={viewingExpense}
+        onEdit={() => {
+          if (viewingExpense) {
+            setEditingExpense(viewingExpense);
+            setIsEditModalOpen(true);
+            setViewingExpense(null);
+          }
+        }}
+        onDelete={() => {
+          if (viewingExpense) {
+            setDeleteId(viewingExpense.id);
+            setViewingExpense(null);
+          }
+        }}
+      />
+
+      {/* Delete Confirmation */}
+      {deleteId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
+          <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">{tExpenses("deleteExpenseQuestion")}</h3>
+            <p className="text-slate-600 text-sm mb-4">{tExpenses("deleteWarning")}</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setDeleteId(null)}
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+              >
+                {tCommon("cancel")}
+              </button>
+              <button
+                onClick={() => handleDelete(deleteId)}
+                className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+              >
+                {tCommon("delete")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
