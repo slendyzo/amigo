@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: amigo
-    restart: unless-stopped
+    restart: always
     ports:
       - "3000:3000"
     environment:
