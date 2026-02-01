@@ -16,6 +16,8 @@ export type OfflineExpense = {
   projectIds?: string[];
   notes?: string;
   excludeFromBudget?: boolean;
+  status?: "PAID" | "PENDING";
+  dueDate?: string;
   createdAt: number;
   syncAttempts: number;
 };
@@ -164,6 +166,8 @@ export async function syncPendingExpenses(): Promise<{ synced: number; failed: n
           projectIds: expense.projectIds || [],
           notes: expense.notes || "",
           excludeFromBudget: expense.excludeFromBudget || false,
+          status: expense.status || "PAID",
+          dueDate: expense.dueDate,
         }),
       });
 

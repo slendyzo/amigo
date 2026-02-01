@@ -108,7 +108,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget } = body;
+    const { name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToSet: string[] | undefined = projectIds !== undefined
@@ -139,12 +139,14 @@ export async function PUT(
       amountEur?: number;
       exchangeRate?: number;
       type?: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
+      status?: "PAID" | "PENDING";
       categoryId?: string | null;
       bankAccountId?: string | null;
       date?: Date;
       currency?: string;
       projects?: { set: { id: string }[] };
       excludeFromBudget?: boolean;
+      paidAt?: Date | null;
     };
 
     const updateData: UpdateData = {};
@@ -158,6 +160,15 @@ export async function PUT(
     }
     if (date !== undefined) updateData.date = new Date(date);
     if (excludeFromBudget !== undefined) updateData.excludeFromBudget = excludeFromBudget;
+    if (status !== undefined) {
+      updateData.status = status;
+      // Set paidAt when marking as paid
+      if (status === "PAID" && existing.status === "PENDING") {
+        updateData.paidAt = new Date();
+      } else if (status === "PENDING") {
+        updateData.paidAt = null;
+      }
+    }
 
     // Handle amount and currency changes together
     const newAmount = amount !== undefined ? parseFloat(amount) : existing.amount.toNumber();

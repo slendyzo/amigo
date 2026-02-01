@@ -20,6 +20,8 @@ export type Project = {
 
 export type ExpenseType = "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
 
+export type ExpenseStatus = "PAID" | "PENDING";
+
 export type Expense = {
   id: string;
   name: string;
@@ -35,7 +37,9 @@ export type Expense = {
   projects: Project[];
   excludeFromBudget?: boolean;
   notes?: string;
-  status?: string;
+  status?: ExpenseStatus;
+  dueDate?: string;
+  paidAt?: string;
   importLogId?: string;
 };
 

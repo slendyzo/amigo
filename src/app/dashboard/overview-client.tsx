@@ -42,6 +42,7 @@ type Expense = {
   categoryName: string;
   projects: { id: string; name: string }[];
   excludeFromBudget?: boolean;
+  status?: "PAID" | "PENDING";
 };
 
 type Income = {
@@ -83,7 +84,7 @@ type Props = {
 };
 
 // Current announcement IDs - add new ones here when releasing new features
-const CURRENT_ANNOUNCEMENTS = ["unified-transactions-v1", "workspaces-v1"];
+const CURRENT_ANNOUNCEMENTS = ["unified-transactions-v1", "workspaces-v1", "scheduled-expenses-v1"];
 
 // Month keys for i18n
 const MONTH_KEYS = [
@@ -228,6 +229,11 @@ export default function DashboardOverview({
   }, [selectedMonth]);
 
   const goToNextMonth = useCallback(() => {
+    // Prevent navigation to future months
+    const now = new Date();
+    const atCurrentMonth = selectedYear === now.getFullYear() && selectedMonth === now.getMonth();
+    if (atCurrentMonth) return;
+
     setHasFilterChanged(true);
     if (selectedMonth === 11) {
       setSelectedMonth(0);
@@ -235,7 +241,7 @@ export default function DashboardOverview({
     } else {
       setSelectedMonth((m) => m + 1);
     }
-  }, [selectedMonth]);
+  }, [selectedMonth, selectedYear]);
 
   // Swipe handlers for month navigation (only in month view)
   const { handlers: swipeHandlers } = useSwipe({
@@ -320,6 +326,7 @@ export default function DashboardOverview({
           category?: { name: string } | null;
           projects?: { id: string; name: string }[];
           excludeFromBudget?: boolean;
+          status?: "PAID" | "PENDING";
         }) => ({
           id: e.id,
           name: e.name,
@@ -329,6 +336,7 @@ export default function DashboardOverview({
           categoryName: e.category?.name || "Uncategorized",
           projects: e.projects || [],
           excludeFromBudget: e.excludeFromBudget ?? false,
+          status: e.status || "PAID",
         })));
       }
 
@@ -421,6 +429,7 @@ export default function DashboardOverview({
         category?: { name: string } | null;
         projects?: { id: string; name: string }[];
         excludeFromBudget?: boolean;
+        status?: "PAID" | "PENDING";
       }) => ({
         id: e.id,
         name: e.name,
@@ -430,6 +439,7 @@ export default function DashboardOverview({
         categoryName: e.category?.name || "Uncategorized",
         projects: e.projects || [],
         excludeFromBudget: e.excludeFromBudget ?? false,
+        status: e.status || "PAID",
       });
 
       if (currentData.expenses) {
@@ -524,9 +534,9 @@ export default function DashboardOverview({
     const totalExcludingProjects = livingTotal + lifestyleTotal;
     const grandTotal = livingTotal + lifestyleTotal + projectTotal;
 
-    // Budget total excludes expenses marked as "excludeFromBudget"
+    // Budget total excludes expenses marked as "excludeFromBudget" and scheduled (PENDING) expenses
     const budgetTotal = expenses
-      .filter((e) => !e.excludeFromBudget)
+      .filter((e) => !e.excludeFromBudget && e.status !== "PENDING")
       .reduce((sum, e) => sum + e.amountEur, 0);
 
     return {
@@ -624,9 +634,15 @@ export default function DashboardOverview({
     }
   };
 
-  // Generate year options (last 5 years)
-  const currentYear = new Date().getFullYear();
+  // Generate year options (last 5 years) and current date for navigation limits
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
   const yearOptions = Array.from({ length: 5 }, (_, i) => currentYear - i);
+
+  // Check if viewing current month (can't go to future)
+  const isAtCurrentMonth = selectedYear === currentYear && selectedMonth === currentMonth;
+  const canGoNext = !isAtCurrentMonth;
 
   return (
     <div className="space-y-4 md:space-y-6" {...swipeHandlers}>
@@ -665,7 +681,12 @@ export default function DashboardOverview({
           </div>
           <button
             onClick={goToNextMonth}
-            className="p-2 rounded-lg text-slate-600 active:bg-slate-100 tap-none"
+            disabled={!canGoNext}
+            className={`p-2 rounded-lg tap-none transition-colors ${
+              canGoNext
+                ? "text-slate-600 active:bg-slate-100"
+                : "text-slate-300 cursor-not-allowed"
+            }`}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
@@ -753,9 +774,15 @@ export default function DashboardOverview({
                 onChange={(e) => handleFilterChange(setSelectedMonth, parseInt(e.target.value))}
                 className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
               >
-                {MONTH_KEYS.map((monthKey, i) => (
-                  <option key={i} value={i}>{tTime(`months.${monthKey}`)}</option>
-                ))}
+                {MONTH_KEYS.map((monthKey, i) => {
+                  // Disable future months when viewing current year
+                  const isFutureMonth = selectedYear === currentYear && i > currentMonth;
+                  return (
+                    <option key={i} value={i} disabled={isFutureMonth}>
+                      {tTime(`months.${monthKey}`)}
+                    </option>
+                  );
+                })}
               </select>
               <select
                 value={selectedYear}
@@ -776,9 +803,14 @@ export default function DashboardOverview({
                 onChange={(e) => handleFilterChange(setSelectedQuarter, parseInt(e.target.value))}
                 className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
               >
-                {[1, 2, 3, 4].map((q) => (
-                  <option key={q} value={q}>Q{q}</option>
-                ))}
+                {[1, 2, 3, 4].map((q) => {
+                  // Disable future quarters when viewing current year
+                  const currentQuarter = Math.floor(currentMonth / 3) + 1;
+                  const isFutureQuarter = selectedYear === currentYear && q > currentQuarter;
+                  return (
+                    <option key={q} value={q} disabled={isFutureQuarter}>Q{q}</option>
+                  );
+                })}
               </select>
               <select
                 value={selectedYear}
@@ -950,7 +982,7 @@ export default function DashboardOverview({
           <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-6">
             <CategoryBreakdown
               expenses={expenses
-                .filter((e) => !e.excludeFromBudget)
+                .filter((e) => !e.excludeFromBudget && e.status !== "PENDING")
                 .map((e) => ({
                   amountEur: e.amountEur,
                   categoryName: e.categoryName,
@@ -964,10 +996,10 @@ export default function DashboardOverview({
             <Suspense fallback={<ChartSkeleton />}>
               <BurnChart
                 currentMonthExpenses={expenses
-                  .filter((e) => !e.excludeFromBudget && (!e.projects || e.projects.length === 0))
+                  .filter((e) => !e.excludeFromBudget && e.status !== "PENDING" && (!e.projects || e.projects.length === 0))
                   .map((e) => ({ date: e.date, amountEur: e.amountEur }))}
                 previousMonthExpenses={previousMonthExpenses
-                  .filter((e) => !e.excludeFromBudget && (!e.projects || e.projects.length === 0))
+                  .filter((e) => !e.excludeFromBudget && e.status !== "PENDING" && (!e.projects || e.projects.length === 0))
                   .map((e) => ({ date: e.date, amountEur: e.amountEur }))}
                 currentMonthLabel={`${tTime(`months.${MONTH_KEYS[selectedMonth]}`)} ${selectedYear}`}
                 previousMonthLabel={`${tTime(`months.${MONTH_KEYS[selectedMonth === 0 ? 11 : selectedMonth - 1]}`)} ${selectedMonth === 0 ? selectedYear - 1 : selectedYear}`}
@@ -994,7 +1026,9 @@ export default function DashboardOverview({
                 <div
                   key={transaction.id}
                   className={`px-4 md:px-6 py-3 md:py-4 flex items-start md:items-center justify-between active:bg-slate-50 md:hover:bg-slate-50 transition-colors group tap-none ${
-                    isIncome ? "bg-green-50/30" : transaction.excludeFromBudget ? "bg-slate-50/50" : ""
+                    isIncome ? "bg-green-50/30" :
+                    !isIncome && transaction.status === "PENDING" ? "bg-blue-50/50 border-l-2 border-blue-400" :
+                    transaction.excludeFromBudget ? "bg-slate-50/50" : ""
                   }`}
                 >
                   <div className="flex-1 min-w-0 mr-3">
@@ -1017,6 +1051,14 @@ export default function DashboardOverview({
                       {!isIncome && transaction.excludeFromBudget && (
                         <span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-slate-200 text-slate-600">
                           {t("expenses.offshore")}
+                        </span>
+                      )}
+                      {!isIncome && transaction.status === "PENDING" && (
+                        <span className="flex items-center gap-1 px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-blue-100 text-blue-700">
+                          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {t("expenses.scheduled")}
                         </span>
                       )}
                     </div>

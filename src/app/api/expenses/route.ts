@@ -68,6 +68,9 @@ export async function GET(request: Request) {
           exchangeRate: true,
           type: true,
           date: true,
+          status: true,
+          dueDate: true,
+          paidAt: true,
           isRecurring: true,
           recurringTemplateId: true,
           excludeFromBudget: true,
@@ -97,7 +100,7 @@ export async function POST(request: Request) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { quickAdd, name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget } = body;
+    const { quickAdd, name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToConnect: string[] = projectIds || (projectId ? [projectId] : []);
@@ -240,18 +243,24 @@ export async function POST(request: Request) {
     const expenseCurrency = currency || workspace.defaultCurrency || "EUR";
     const { amountEur, exchangeRate } = await convertToEur(expenseData.amount, expenseCurrency);
 
+    // Determine expense status (PAID or PENDING for scheduled expenses)
+    const expenseStatus = status === "PENDING" ? "PENDING" : "PAID";
+    const expenseDate = date ? new Date(date) : new Date();
+    const expenseDueDate = dueDate ? new Date(dueDate) : null;
+
     const expense = await prisma.expense.create({
       data: {
         workspaceId: workspace.id,
         name: expenseData.name,
         rawInput: quickAdd ? stripHtmlTags(quickAdd, 500) : null,
         type: expenseData.type,
-        status: "PAID",
+        status: expenseStatus,
         amount: expenseData.amount,
         currency: expenseCurrency,
         amountEur,
         exchangeRate,
-        date: date ? new Date(date) : new Date(),
+        date: expenseDate,
+        dueDate: expenseDueDate,
         categoryId: expenseData.categoryId,
         bankAccountId: expenseData.bankAccountId,
         excludeFromBudget: excludeFromBudget || false,

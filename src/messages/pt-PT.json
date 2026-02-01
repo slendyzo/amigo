@@ -158,6 +158,7 @@
       "count": "Despesas ({count})",
       "noExpenses": "Nenhuma despesa encontrada para este período.",
       "offshore": "Offshore",
+      "scheduled": "Agendado",
       "includeInBudget": "Incluir no orçamento",
       "excludeFromBudget": "Excluir do orçamento (offshore)"
     },
@@ -904,7 +905,12 @@
       "createNew": "Criar nova categoria"
     },
     "excludeFromBudget": "Apenas no projeto (excluir dos totais mensais)",
-    "excludeFromBudgetHint": "Esta despesa só aparecerá no projeto, não no orçamento mensal"
+    "excludeFromBudgetHint": "Esta despesa só aparecerá no projeto, não no orçamento mensal",
+    "scheduleForLater": "Agendar para mais tarde",
+    "scheduleForLaterHint": "Esta despesa aparecerá em {month}",
+    "expenseStatus": "Estado da Despesa",
+    "statusPaid": "Pago",
+    "statusScheduled": "Agendado"
   },
   "install": {
     "title": "Instalar Amigo",
@@ -1128,6 +1134,23 @@
       "feature4": {
         "title": "Filtrar por Tipo",
         "description": "Novo filtro de Receitas permite ver apenas os teus ganhos. Filtra por despesas, receitas, ou vê tudo junto."
+      },
+      "dismiss": "Entendido!"
+    },
+    "scheduled_expenses": {
+      "title": "Despesas Agendadas!",
+      "subtitle": "Planeia os teus gastos futuros",
+      "feature1": {
+        "title": "Planeia com Antecedência",
+        "description": "Sabes que tens um pagamento a caminho? Adiciona-o agora como despesa agendada para não te esqueceres."
+      },
+      "feature2": {
+        "title": "Aparecem Automaticamente",
+        "description": "As despesas agendadas aparecem automaticamente no mês correto quando este chega."
+      },
+      "feature3": {
+        "title": "Marcar como Pago",
+        "description": "Quando pagares uma despesa agendada, marca-a como paga para a incluir nos totais do orçamento."
       },
       "dismiss": "Entendido!"
     }

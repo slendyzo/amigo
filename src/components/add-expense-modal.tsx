@@ -90,10 +90,14 @@ export default function AddExpenseModal({
   const [categoryId, setCategoryId] = useState("");
   const [bankAccountId, setBankAccountId] = useState("");
   const [excludeFromBudget, setExcludeFromBudget] = useState(false);
+  const [isScheduled, setIsScheduled] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // Check if selected date is in the future
+  const isFutureDate = new Date(date) > new Date(getTodayDateString());
 
   const EXPENSE_TYPES = EXPENSE_TYPE_VALUES.map((value) => ({
     value,
@@ -121,6 +125,7 @@ export default function AddExpenseModal({
       setSelectedProjectIds(defaultProjectId ? [defaultProjectId] : []);
       resetTagInput();
       setExcludeFromBudget(defaultExcludeFromBudget);
+      setIsScheduled(false);
       setShowAdvanced(false);
       setError("");
     }
@@ -158,6 +163,9 @@ export default function AddExpenseModal({
         projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
         date,
         excludeFromBudget,
+        // Scheduled expense fields
+        status: (isScheduled ? "PENDING" : "PAID") as "PAID" | "PENDING",
+        dueDate: isScheduled ? date : undefined,
       };
 
       // Try to submit online first
@@ -200,6 +208,8 @@ export default function AddExpenseModal({
             projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
             date,
             excludeFromBudget,
+            status: (isScheduled ? "PENDING" : "PAID") as "PAID" | "PENDING",
+            dueDate: isScheduled ? date : undefined,
           });
           window.dispatchEvent(new CustomEvent("offline-expense-added"));
           onClose();
@@ -310,11 +320,43 @@ export default function AddExpenseModal({
               <input
                 type="date"
                 value={date}
-                onChange={(e) => setDate(e.target.value)}
+                onChange={(e) => {
+                  setDate(e.target.value);
+                  // Auto-enable scheduling for future dates
+                  const selectedDate = new Date(e.target.value);
+                  const today = new Date(getTodayDateString());
+                  if (selectedDate > today) {
+                    setIsScheduled(true);
+                  }
+                }}
                 className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
               />
             )}
           </div>
+
+          {/* Schedule for future - shown when future date selected or manually toggled */}
+          {(isFutureDate || isScheduled) && (
+            <div className="p-3 rounded-lg bg-blue-50 border border-blue-200">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isScheduled}
+                  onChange={(e) => setIsScheduled(e.target.checked)}
+                  className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="text-sm font-medium text-blue-800">
+                    {t("scheduleForLater")}
+                  </span>
+                  <p className="text-xs text-blue-600 mt-0.5">
+                    {t("scheduleForLaterHint", {
+                      month: new Date(date).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+                    })}
+                  </p>
+                </div>
+              </label>
+            </div>
+          )}
 
           {/* Project Tags */}
           <div>
