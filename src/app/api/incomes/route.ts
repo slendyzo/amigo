@@ -65,6 +65,9 @@ export async function GET(request: NextRequest) {
     // even if they were created in a previous month
     let virtualRecurringIncomes: typeof incomes = [];
 
+    // Late-month threshold: if paid on day >= 25, that salary funds NEXT month's budget
+    const LATE_MONTH_THRESHOLD = 25;
+
     if (month && year) {
       const requestedMonth = parseInt(month);
       const requestedYear = parseInt(year);
@@ -87,15 +90,28 @@ export async function GET(request: NextRequest) {
       // Create "virtual" entries for recurring incomes that apply to the requested month
       for (const recurring of recurringIncomes) {
         if (!existingIds.has(recurring.id)) {
-          // Create a virtual entry with the date set to the requested month
-          // Cap dayOfMonth to the last day of the month (e.g., day 29 in Feb → 28)
-          const lastDayOfMonth = new Date(requestedYear, requestedMonth + 1, 0).getDate();
-          const safeDay = Math.min(recurring.dayOfMonth || 1, lastDayOfMonth);
-          const virtualDate = new Date(
-            requestedYear,
-            requestedMonth,
-            safeDay
-          );
+          const dayOfMonth = recurring.dayOfMonth || 1;
+
+          // For late-month pay (day >= 25), the income from PREVIOUS month funds THIS month
+          // So for February's budget, we show January 29th's salary
+          const isLateMonthPay = dayOfMonth >= LATE_MONTH_THRESHOLD;
+
+          let sourceMonth = requestedMonth;
+          let sourceYear = requestedYear;
+
+          if (isLateMonthPay) {
+            // Show previous month's payday as this month's income
+            sourceMonth = requestedMonth - 1;
+            if (sourceMonth < 0) {
+              sourceMonth = 11;
+              sourceYear = requestedYear - 1;
+            }
+          }
+
+          // Cap dayOfMonth to the last day of the source month
+          const lastDayOfSourceMonth = new Date(sourceYear, sourceMonth + 1, 0).getDate();
+          const safeDay = Math.min(dayOfMonth, lastDayOfSourceMonth);
+          const virtualDate = new Date(sourceYear, sourceMonth, safeDay);
 
           virtualRecurringIncomes.push({
             ...recurring,

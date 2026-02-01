@@ -154,15 +154,37 @@ export default async function DashboardPage({
   ]);
 
   // Include recurring incomes from previous months that should apply to current month
+  // Late-month threshold: if paid on day >= 25, that salary funds NEXT month's budget
+  const LATE_MONTH_THRESHOLD = 25;
   const currentMonthIncomeIds = new Set(monthlyIncomes.map((i) => i.id));
-  const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const virtualRecurringIncomes = recurringIncomes
     .filter((i) => !currentMonthIncomeIds.has(i.id) && i.date < startOfMonth)
-    .map((i) => ({
-      ...i,
-      // Cap dayOfMonth to the last day of the month (e.g., day 29 in Feb → 28)
-      date: new Date(now.getFullYear(), now.getMonth(), Math.min(i.dayOfMonth || 1, lastDayOfCurrentMonth)),
-    }));
+    .map((i) => {
+      const dayOfMonth = i.dayOfMonth || 1;
+      const isLateMonthPay = dayOfMonth >= LATE_MONTH_THRESHOLD;
+
+      // For late-month pay (day >= 25), show PREVIOUS month's payday as this month's income
+      // e.g., February's budget comes from January 29th salary
+      let sourceMonth = now.getMonth();
+      let sourceYear = now.getFullYear();
+
+      if (isLateMonthPay) {
+        sourceMonth = now.getMonth() - 1;
+        if (sourceMonth < 0) {
+          sourceMonth = 11;
+          sourceYear = now.getFullYear() - 1;
+        }
+      }
+
+      // Cap dayOfMonth to the last day of the source month
+      const lastDayOfSourceMonth = new Date(sourceYear, sourceMonth + 1, 0).getDate();
+      const safeDay = Math.min(dayOfMonth, lastDayOfSourceMonth);
+
+      return {
+        ...i,
+        date: new Date(sourceYear, sourceMonth, safeDay),
+      };
+    });
 
   // Merge actual incomes with virtual recurring entries
   const allMonthlyIncomes = [...monthlyIncomes, ...virtualRecurringIncomes];
