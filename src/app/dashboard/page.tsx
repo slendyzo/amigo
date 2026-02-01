@@ -155,11 +155,13 @@ export default async function DashboardPage({
 
   // Include recurring incomes from previous months that should apply to current month
   const currentMonthIncomeIds = new Set(monthlyIncomes.map((i) => i.id));
+  const lastDayOfCurrentMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
   const virtualRecurringIncomes = recurringIncomes
     .filter((i) => !currentMonthIncomeIds.has(i.id) && i.date < startOfMonth)
     .map((i) => ({
       ...i,
-      date: new Date(now.getFullYear(), now.getMonth(), i.dayOfMonth || 1),
+      // Cap dayOfMonth to the last day of the month (e.g., day 29 in Feb → 28)
+      date: new Date(now.getFullYear(), now.getMonth(), Math.min(i.dayOfMonth || 1, lastDayOfCurrentMonth)),
     }));
 
   // Merge actual incomes with virtual recurring entries

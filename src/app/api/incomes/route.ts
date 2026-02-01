@@ -88,10 +88,13 @@ export async function GET(request: NextRequest) {
       for (const recurring of recurringIncomes) {
         if (!existingIds.has(recurring.id)) {
           // Create a virtual entry with the date set to the requested month
+          // Cap dayOfMonth to the last day of the month (e.g., day 29 in Feb → 28)
+          const lastDayOfMonth = new Date(requestedYear, requestedMonth + 1, 0).getDate();
+          const safeDay = Math.min(recurring.dayOfMonth || 1, lastDayOfMonth);
           const virtualDate = new Date(
             requestedYear,
             requestedMonth,
-            recurring.dayOfMonth || 1
+            safeDay
           );
 
           virtualRecurringIncomes.push({
