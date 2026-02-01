@@ -61,17 +61,65 @@ export async function GET(request: NextRequest) {
       orderBy: { date: "desc" },
     });
 
+    // For month/year queries, also include recurring incomes that should apply to this month
+    // even if they were created in a previous month
+    let virtualRecurringIncomes: typeof incomes = [];
+
+    if (month && year) {
+      const requestedMonth = parseInt(month);
+      const requestedYear = parseInt(year);
+      const requestedDate = new Date(requestedYear, requestedMonth, 1);
+
+      // Find recurring incomes created BEFORE the requested month that aren't already in results
+      const existingIds = new Set(incomes.map((i) => i.id));
+
+      const recurringIncomes = await prisma.income.findMany({
+        where: {
+          workspaceId,
+          isRecurring: true,
+          date: { lt: requestedDate }, // Created before the requested month
+        },
+        include: {
+          bankAccount: { select: { id: true, name: true } },
+        },
+      });
+
+      // Create "virtual" entries for recurring incomes that apply to the requested month
+      for (const recurring of recurringIncomes) {
+        if (!existingIds.has(recurring.id)) {
+          // Create a virtual entry with the date set to the requested month
+          const virtualDate = new Date(
+            requestedYear,
+            requestedMonth,
+            recurring.dayOfMonth || 1
+          );
+
+          virtualRecurringIncomes.push({
+            ...recurring,
+            date: virtualDate,
+            // Mark as virtual (won't affect DB, just for display)
+          });
+        }
+      }
+    }
+
+    // Combine actual incomes with virtual recurring entries
+    const allIncomes = [...incomes, ...virtualRecurringIncomes];
+
+    // Sort by date descending
+    allIncomes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
     // Calculate totals
-    const total = incomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
-    const recurringTotal = incomes
+    const total = allIncomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
+    const recurringTotal = allIncomes
       .filter((i) => i.isRecurring)
       .reduce((sum, i) => sum + Number(i.amountEur), 0);
 
     return NextResponse.json({
-      incomes,
+      incomes: allIncomes,
       total,
       recurringTotal,
-      count: incomes.length,
+      count: allIncomes.length,
     });
   } catch (error) {
     console.error("Failed to fetch incomes:", error);

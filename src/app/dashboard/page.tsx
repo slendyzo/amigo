@@ -131,19 +131,41 @@ export default async function DashboardPage({
         type: true,
         amountEur: true,
         date: true,
+        isRecurring: true,
+        dayOfMonth: true,
       },
     }),
-    // Recurring income for expected monthly
+    // Recurring income for expected monthly (also used to find recurring from previous months)
     prisma.income.findMany({
       where: {
         workspaceId: workspace.id,
         isRecurring: true,
       },
-      select: { amountEur: true },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        amountEur: true,
+        date: true,
+        isRecurring: true,
+        dayOfMonth: true,
+      },
     }),
   ]);
 
-  const monthlyIncome = monthlyIncomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
+  // Include recurring incomes from previous months that should apply to current month
+  const currentMonthIncomeIds = new Set(monthlyIncomes.map((i) => i.id));
+  const virtualRecurringIncomes = recurringIncomes
+    .filter((i) => !currentMonthIncomeIds.has(i.id) && i.date < startOfMonth)
+    .map((i) => ({
+      ...i,
+      date: new Date(now.getFullYear(), now.getMonth(), i.dayOfMonth || 1),
+    }));
+
+  // Merge actual incomes with virtual recurring entries
+  const allMonthlyIncomes = [...monthlyIncomes, ...virtualRecurringIncomes];
+
+  const monthlyIncome = allMonthlyIncomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
   const expectedMonthlyIncome = recurringIncomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
 
   // Transform expenses for client component
@@ -159,7 +181,7 @@ export default async function DashboardPage({
   });
 
   // Transform incomes for client component (unified transaction format)
-  const transformIncome = (i: typeof monthlyIncomes[0]) => ({
+  const transformIncome = (i: typeof allMonthlyIncomes[0]) => ({
     id: i.id,
     name: i.name,
     date: i.date.toISOString(),
@@ -180,7 +202,7 @@ export default async function DashboardPage({
       workspaceId={workspace.id}
       userName={displayName}
       initialExpenses={expenses.map(transformExpense)}
-      initialIncomes={monthlyIncomes.map(transformIncome)}
+      initialIncomes={allMonthlyIncomes.map(transformIncome)}
       initialPreviousMonthExpenses={previousMonthExpenses.map(transformExpense)}
       projects={projects}
       categories={categories}

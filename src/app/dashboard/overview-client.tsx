@@ -502,6 +502,11 @@ export default function DashboardOverview({
     });
   }, [expenses, typeFilter]);
 
+  // Calculate income from state (updates when navigating months)
+  const currentMonthIncome = useMemo(() => {
+    return incomes.reduce((sum, i) => sum + i.amountEur, 0);
+  }, [incomes]);
+
   // Calculate stats (excluding projects from living/lifestyle totals unless viewing project)
   const stats = useMemo(() => {
     const hasProjects = (e: Expense) => e.projects && e.projects.length > 0;
@@ -868,7 +873,7 @@ export default function DashboardOverview({
           {/* Income Received */}
           <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 md:p-5 rounded-xl border border-green-200">
             <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">{t("income.received")}</p>
-            <p className="text-base md:text-2xl font-bold text-green-600">€{monthlyIncome.toFixed(2)}</p>
+            <p className="text-base md:text-2xl font-bold text-green-600">€{currentMonthIncome.toFixed(2)}</p>
             <p className="hidden md:block text-xs text-green-600/70 mt-1">{t("income.allSources")}</p>
           </div>
           {/* Total Spent */}
@@ -879,28 +884,28 @@ export default function DashboardOverview({
           </div>
           {/* Net Balance (Income - Expenses) */}
           <div className={`p-3 md:p-5 rounded-xl border ${
-            (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
+            (currentMonthIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
               ? "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
               : "bg-gradient-to-br from-red-50 to-orange-50 border-red-200"
           }`}>
             <p className={`text-xs md:text-sm mb-0.5 md:mb-1 ${
-              (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
+              (currentMonthIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
                 ? "text-blue-700"
                 : "text-red-700"
             }`}>{t("income.balance")}</p>
             <p className={`text-base md:text-2xl font-bold ${
-              (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
+              (currentMonthIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
                 ? "text-blue-600"
                 : "text-red-600"
             }`}>
-              €{((monthlyIncome || expectedMonthlyIncome) - stats.grandTotal).toFixed(2)}
+              €{((currentMonthIncome || expectedMonthlyIncome) - stats.grandTotal).toFixed(2)}
             </p>
             <p className={`hidden md:block text-xs mt-1 ${
-              (monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
+              (currentMonthIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
                 ? "text-blue-600/70"
                 : "text-red-600/70"
             }`}>
-              {(monthlyIncome || expectedMonthlyIncome) - stats.grandTotal >= 0 ? t("income.surplus") : t("income.deficit")}
+              {(currentMonthIncome || expectedMonthlyIncome) - stats.grandTotal >= 0 ? t("income.surplus") : t("income.deficit")}
             </p>
           </div>
         </div>
