@@ -534,9 +534,10 @@ export default function DashboardOverview({
     const totalExcludingProjects = livingTotal + lifestyleTotal;
     const grandTotal = livingTotal + lifestyleTotal + projectTotal;
 
-    // Budget total excludes expenses marked as "excludeFromBudget" and scheduled (PENDING) expenses
+    // Budget total excludes only expenses explicitly marked as "excludeFromBudget"
+    // PENDING (scheduled) expenses still count towards budget since they're planned spending
     const budgetTotal = expenses
-      .filter((e) => !e.excludeFromBudget && e.status !== "PENDING")
+      .filter((e) => !e.excludeFromBudget)
       .reduce((sum, e) => sum + e.amountEur, 0);
 
     return {
@@ -982,7 +983,7 @@ export default function DashboardOverview({
           <div className="bg-white rounded-xl border border-slate-200 p-4 md:p-6">
             <CategoryBreakdown
               expenses={expenses
-                .filter((e) => !e.excludeFromBudget && e.status !== "PENDING")
+                .filter((e) => !e.excludeFromBudget)
                 .map((e) => ({
                   amountEur: e.amountEur,
                   categoryName: e.categoryName,
