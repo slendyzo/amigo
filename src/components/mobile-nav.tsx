@@ -27,6 +27,7 @@ const navGroups = [
     items: [
       { key: "projects", href: "/dashboard/projects", icon: "folder" },
       { key: "categories", href: "/dashboard/categories", icon: "tag" },
+      { key: "categorize", href: "/dashboard/categorize", icon: "wand" },
       { key: "mappings", href: "/dashboard/mappings", icon: "key" },
       { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
     ],
@@ -110,6 +111,11 @@ const icons: Record<string, ReactNode> = {
   close: (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
+  wand: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
     </svg>
   ),
 };

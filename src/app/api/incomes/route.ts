@@ -42,12 +42,12 @@ export async function GET(request: NextRequest) {
       where.type = type as IncomeType;
     }
 
-    // Filter by month/year
-    if (month && year) {
+    // Filter by month/year (explicit null check - "0" is valid for January)
+    if (month !== null && year !== null) {
       const startDate = new Date(parseInt(year), parseInt(month), 1);
       const endDate = new Date(parseInt(year), parseInt(month) + 1, 0, 23, 59, 59);
       where.date = { gte: startDate, lte: endDate };
-    } else if (year) {
+    } else if (year !== null) {
       const startDate = new Date(parseInt(year), 0, 1);
       const endDate = new Date(parseInt(year), 11, 31, 23, 59, 59);
       where.date = { gte: startDate, lte: endDate };
