@@ -87,13 +87,6 @@ export async function GET() {
       const expenseDay = Math.min(dayOfMonth, lastDayOfMonth);
       const expenseDate = new Date(targetYear, targetMonth, expenseDay);
 
-      // Determine status: PAID if date is in the past, PENDING if today or future
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const expenseDateNormalized = new Date(expenseDate);
-      expenseDateNormalized.setHours(0, 0, 0, 0);
-      const status = expenseDateNormalized < today ? "PAID" : "PENDING";
-
       // Convert template amount to EUR
       const templateAmount = Number(template.amount) || 0;
       const templateCurrency = template.currency || "EUR";
@@ -105,7 +98,7 @@ export async function GET() {
         name: template.name,
         rawInput: `[Auto] ${template.name}`,
         type: template.type,
-        status: status as "PAID" | "PENDING",
+        status: "PAID" as const,
         amount: templateAmount,
         currency: templateCurrency,
         amountEur,
@@ -269,13 +262,6 @@ export async function POST(request: Request) {
       const expenseDay = Math.min(dayOfMonth, lastDayOfMonth);
       const expenseDate = new Date(targetYear, targetMonth, expenseDay);
 
-      // Determine status: PAID if date is in the past, PENDING if today or future
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const expenseDateNormalized = new Date(expenseDate);
-      expenseDateNormalized.setHours(0, 0, 0, 0);
-      const status = expenseDateNormalized < today ? "PAID" : "PENDING";
-
       // Convert template amount to EUR
       const templateAmount = Number(template.amount) || 0;
       const templateCurrency = template.currency || "EUR";
@@ -287,7 +273,7 @@ export async function POST(request: Request) {
         name: template.name,
         rawInput: `[Recurring] ${template.name}`,
         type: template.type,
-        status: status as "PAID" | "PENDING",
+        status: "PAID" as const,
         amount: templateAmount,
         currency: templateCurrency,
         amountEur,
