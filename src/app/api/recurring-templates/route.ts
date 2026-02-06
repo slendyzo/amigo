@@ -1,23 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { ExpenseType, RecurrenceInterval } from "@prisma/client";
 
 // GET - List recurring templates
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
+    const { workspace } = context;
 
     const templates = await prisma.recurringTemplate.findMany({
       where: { workspaceId: workspace.id },
@@ -39,10 +32,11 @@ export async function GET() {
 // POST - Create recurring template
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspace } = context;
 
     const body = await request.json();
     const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId, autoGenerate } = body;
@@ -53,14 +47,6 @@ export async function POST(request: Request) {
 
     if (!type || !Object.values(ExpenseType).includes(type)) {
       return NextResponse.json({ error: "Valid expense type is required" }, { status: 400 });
-    }
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
     }
 
     // Calculate next due date (use day 1 if no specific day set)
@@ -102,24 +88,17 @@ export async function POST(request: Request) {
 // DELETE - Bulk delete recurring templates
 export async function DELETE(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspace } = context;
 
     const body = await request.json();
     const { ids } = body;
 
     if (!ids || !Array.isArray(ids) || ids.length === 0) {
       return NextResponse.json({ error: "Template IDs are required" }, { status: 400 });
-    }
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
     }
 
     // Delete templates that belong to this workspace

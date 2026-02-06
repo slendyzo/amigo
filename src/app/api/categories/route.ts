@@ -1,23 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { stripHtmlTags } from "@/lib/utils";
+import { getActiveWorkspace } from "@/lib/workspace";
 
 // GET - List categories
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
+    const { workspace } = context;
 
     const categories = await prisma.category.findMany({
       where: { workspaceId: workspace.id },
@@ -37,10 +30,11 @@ export async function GET() {
 // POST - Create category
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspace } = context;
 
     const body = await request.json();
     // Note: isSystem is intentionally NOT extracted from body to prevent mass assignment
@@ -54,14 +48,6 @@ export async function POST(request: Request) {
     const sanitizedName = stripHtmlTags(name, 100);
     const sanitizedIcon = icon ? stripHtmlTags(icon, 50) : null;
     const sanitizedColor = color ? stripHtmlTags(color, 7) : null;
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
 
     // Check for duplicate name
     const existing = await prisma.category.findFirst({

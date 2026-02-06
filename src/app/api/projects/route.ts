@@ -1,23 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { stripHtmlTags } from "@/lib/utils";
 
 // GET - List projects
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
+    const { workspace } = context;
 
     const projects = await prisma.project.findMany({
       where: { workspaceId: workspace.id },
@@ -51,10 +44,11 @@ export async function GET() {
 // POST - Create project
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspace } = context;
 
     const body = await request.json();
     const { name, description, budget, startDate, endDate } = body;
@@ -66,14 +60,6 @@ export async function POST(request: Request) {
     // Sanitize inputs
     const sanitizedName = stripHtmlTags(name, 100);
     const sanitizedDescription = description ? stripHtmlTags(description, 500) : null;
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
 
     // Check if project with same name already exists
     const existing = await prisma.project.findFirst({

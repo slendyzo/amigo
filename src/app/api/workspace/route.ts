@@ -1,34 +1,23 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 
 // GET /api/workspace - Get current workspace settings
 export async function GET() {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const membership = await prisma.workspaceMember.findFirst({
-      where: { userId: session.user.id },
-      include: {
-        workspace: true,
-      },
-    });
-
-    if (!membership) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 404 });
-    }
+    const { workspace } = context;
 
     return NextResponse.json({
       workspace: {
-        id: membership.workspace.id,
-        name: membership.workspace.name,
-        monthlyBudget: membership.workspace.monthlyBudget,
-        defaultCurrency: membership.workspace.defaultCurrency,
-        language: membership.workspace.language,
+        id: workspace.id,
+        name: workspace.name,
+        monthlyBudget: workspace.monthlyBudget,
+        defaultCurrency: workspace.defaultCurrency,
+        language: workspace.language,
       },
     });
   } catch (error) {
@@ -43,23 +32,14 @@ export async function GET() {
 // PUT /api/workspace - Update workspace settings
 export async function PUT(request: NextRequest) {
   try {
-    const session = await auth();
-
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspace } = context;
 
     const body = await request.json();
     const { monthlyBudget, defaultCurrency, name, language, resetOnboarding } = body;
-
-    const membership = await prisma.workspaceMember.findFirst({
-      where: { userId: session.user.id },
-      include: { workspace: true },
-    });
-
-    if (!membership) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 404 });
-    }
 
     // Build update object
     const updateData: Record<string, unknown> = {};
@@ -76,18 +56,18 @@ export async function PUT(request: NextRequest) {
       updateData.onboardingCompleted = false;
     }
 
-    const workspace = await prisma.workspace.update({
-      where: { id: membership.workspaceId },
+    const updatedWorkspace = await prisma.workspace.update({
+      where: { id: workspace.id },
       data: updateData,
     });
 
     return NextResponse.json({
       workspace: {
-        id: workspace.id,
-        name: workspace.name,
-        monthlyBudget: workspace.monthlyBudget,
-        defaultCurrency: workspace.defaultCurrency,
-        language: workspace.language,
+        id: updatedWorkspace.id,
+        name: updatedWorkspace.name,
+        monthlyBudget: updatedWorkspace.monthlyBudget,
+        defaultCurrency: updatedWorkspace.defaultCurrency,
+        language: updatedWorkspace.language,
       },
     });
   } catch (error) {

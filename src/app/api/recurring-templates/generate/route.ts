@@ -1,23 +1,16 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
 
 // GET - Auto-generate expenses for templates with autoGenerate=true for current month
 export async function GET() {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
+    const { workspace } = context;
 
     const now = new Date();
     const targetMonth = now.getMonth();
@@ -140,10 +133,11 @@ export async function GET() {
 // POST - Generate expenses from templates for a given month
 export async function POST(request: Request) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspace } = context;
 
     const body = await request.json();
     const { month, year, templateIds, templateOverrides } = body;
@@ -151,14 +145,6 @@ export async function POST(request: Request) {
     // Default to current month if not specified
     const targetMonth = month !== undefined ? month : new Date().getMonth();
     const targetYear = year !== undefined ? year : new Date().getFullYear();
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
 
     // Build a map of day overrides if provided
     const dayOverrideMap = new Map<string, number | null>();

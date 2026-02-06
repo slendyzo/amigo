@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { stripHtmlTags } from "@/lib/utils";
 
@@ -9,10 +9,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspace } = context;
 
     const { id } = await params;
     const body = await request.json();
@@ -25,14 +26,6 @@ export async function PUT(
 
     // Sanitize inputs
     const sanitizedName = stripHtmlTags(name, 100);
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
 
     // Verify category exists and belongs to workspace
     const existing = await prisma.category.findFirst({
@@ -91,20 +84,13 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const context = await getActiveWorkspace();
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const { workspace } = context;
 
     const { id } = await params;
-
-    const workspace = await prisma.workspace.findFirst({
-      where: { members: { some: { userId: session.user.id } } },
-    });
-
-    if (!workspace) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 400 });
-    }
 
     // Verify category exists and belongs to workspace
     const existing = await prisma.category.findFirst({
