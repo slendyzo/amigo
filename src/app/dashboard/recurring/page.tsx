@@ -15,6 +15,11 @@ type BankAccount = {
   name: string;
 };
 
+type Project = {
+  id: string;
+  name: string;
+};
+
 type Template = {
   id: string;
   name: string;
@@ -27,8 +32,11 @@ type Template = {
   autoGenerate: boolean;
   lastGenerated: string | null;
   nextDue: string | null;
+  description: string | null;
+  excludeFromBudget: boolean;
   category: Category | null;
   bankAccount: BankAccount | null;
+  projects: Project[];
   _count: { expenses: number };
 };
 
@@ -62,6 +70,7 @@ export default function RecurringTemplatesPage() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -91,12 +100,16 @@ export default function RecurringTemplatesPage() {
     categoryId: "",
     bankAccountId: "",
     autoGenerate: false,
+    projectIds: [] as string[],
+    excludeFromBudget: false,
+    description: "",
   });
 
   useEffect(() => {
     fetchTemplates();
     fetchCategories();
     fetchBankAccounts();
+    fetchProjects();
   }, []);
 
   const fetchTemplates = async () => {
@@ -137,6 +150,18 @@ export default function RecurringTemplatesPage() {
     }
   };
 
+  const fetchProjects = async () => {
+    try {
+      const response = await fetch("/api/projects");
+      const data = await response.json();
+      if (data.projects) {
+        setProjects(data.projects);
+      }
+    } catch (error) {
+      console.error("Failed to fetch projects:", error);
+    }
+  };
+
   const handleCreate = async () => {
     if (!formData.name.trim()) return;
 
@@ -157,6 +182,9 @@ export default function RecurringTemplatesPage() {
           categoryId: "",
           bankAccountId: "",
           autoGenerate: false,
+          projectIds: [],
+          excludeFromBudget: false,
+          description: "",
         });
         setIsCreating(false);
         fetchTemplates();
@@ -304,6 +332,9 @@ export default function RecurringTemplatesPage() {
       categoryId: template.category?.id || "",
       bankAccountId: template.bankAccount?.id || "",
       autoGenerate: template.autoGenerate || false,
+      projectIds: template.projects?.map((p) => p.id) || [],
+      excludeFromBudget: template.excludeFromBudget || false,
+      description: template.description || "",
     });
     setEditingId(template.id);
     setIsCreating(false);
@@ -319,6 +350,9 @@ export default function RecurringTemplatesPage() {
       categoryId: "",
       bankAccountId: "",
       autoGenerate: false,
+      projectIds: [],
+      excludeFromBudget: false,
+      description: "",
     });
     setIsCreating(true);
     setEditingId(null);
@@ -550,24 +584,94 @@ export default function RecurringTemplatesPage() {
             </div>
           </div>
 
-          {/* Auto-generate toggle */}
-          <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-            <label className="flex items-center gap-3 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={formData.autoGenerate}
-                onChange={(e) => setFormData({ ...formData, autoGenerate: e.target.checked })}
-                className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
-              />
-              <div>
-                <span className="font-medium text-slate-900">{t("autoGenerateAtMonthStart")}</span>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {formData.type === "SURVIVAL_FIXED" || formData.amount
-                    ? t("autoGenerateFixed")
-                    : t("autoGenerateVariable")}
-                </p>
+          {/* Projects, Description, and Options */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t("projects")}</label>
+              <div className="flex flex-wrap gap-2 mb-2">
+                {formData.projectIds.map((pid) => {
+                  const project = projects.find((p) => p.id === pid);
+                  return project ? (
+                    <span key={pid} className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
+                      {project.name}
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, projectIds: formData.projectIds.filter((id) => id !== pid) })}
+                        className="hover:text-amber-900"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </span>
+                  ) : null;
+                })}
               </div>
-            </label>
+              <select
+                value=""
+                onChange={(e) => {
+                  if (e.target.value && !formData.projectIds.includes(e.target.value)) {
+                    setFormData({ ...formData, projectIds: [...formData.projectIds, e.target.value] });
+                  }
+                }}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">{t("noProjects")}</option>
+                {projects.filter((p) => !formData.projectIds.includes(p.id)).map((proj) => (
+                  <option key={proj.id} value={proj.id}>{proj.name}</option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-400 mt-1">
+                <a href="/dashboard/projects" className="text-blue-500 hover:underline">{t("manageProjects")}</a>
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-1">{t("notes")}</label>
+              <input
+                type="text"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                placeholder={t("notesPlaceholder")}
+                maxLength={500}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          {/* Auto-generate and Exclude from budget toggles */}
+          <div className="mt-4 space-y-3">
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.autoGenerate}
+                  onChange={(e) => setFormData({ ...formData, autoGenerate: e.target.checked })}
+                  className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="font-medium text-slate-900">{t("autoGenerateAtMonthStart")}</span>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {formData.type === "SURVIVAL_FIXED" || formData.amount
+                      ? t("autoGenerateFixed")
+                      : t("autoGenerateVariable")}
+                  </p>
+                </div>
+              </label>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <label className="flex items-center gap-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={formData.excludeFromBudget}
+                  onChange={(e) => setFormData({ ...formData, excludeFromBudget: e.target.checked })}
+                  className="w-5 h-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                />
+                <div>
+                  <span className="font-medium text-slate-900">{t("excludeFromBudget")}</span>
+                  <p className="text-xs text-slate-500 mt-0.5">{t("excludeFromBudgetHint")}</p>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div className="flex gap-3 mt-4">
@@ -696,8 +800,60 @@ export default function RecurringTemplatesPage() {
                           <a href="/dashboard/accounts" className="text-blue-500 hover:underline">{t("manageAccounts")}</a>
                         </p>
                       </div>
-                      {/* Auto-generate toggle in edit */}
-                      <div className="lg:col-span-2">
+                    </div>
+                    {/* Projects and Notes in edit */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{t("projects")}</label>
+                        <div className="flex flex-wrap gap-2 mb-2">
+                          {formData.projectIds.map((pid) => {
+                            const project = projects.find((p) => p.id === pid);
+                            return project ? (
+                              <span key={pid} className="inline-flex items-center gap-1 px-2 py-1 bg-amber-100 text-amber-800 text-xs rounded-full">
+                                {project.name}
+                                <button
+                                  type="button"
+                                  onClick={() => setFormData({ ...formData, projectIds: formData.projectIds.filter((id) => id !== pid) })}
+                                  className="hover:text-amber-900"
+                                >
+                                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                  </svg>
+                                </button>
+                              </span>
+                            ) : null;
+                          })}
+                        </div>
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            if (e.target.value && !formData.projectIds.includes(e.target.value)) {
+                              setFormData({ ...formData, projectIds: [...formData.projectIds, e.target.value] });
+                            }
+                          }}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">{t("noProjects")}</option>
+                          {projects.filter((p) => !formData.projectIds.includes(p.id)).map((proj) => (
+                            <option key={proj.id} value={proj.id}>{proj.name}</option>
+                          ))}
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-xs font-medium text-slate-500 mb-1">{t("notes")}</label>
+                        <input
+                          type="text"
+                          value={formData.description}
+                          onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                          placeholder={t("notesPlaceholder")}
+                          maxLength={500}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    </div>
+                    {/* Auto-generate and Exclude from budget toggles in edit */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div>
                         <label className="flex items-center gap-3 cursor-pointer p-3 bg-slate-50 rounded-lg">
                           <input
                             type="checkbox"
@@ -710,6 +866,20 @@ export default function RecurringTemplatesPage() {
                             <p className="text-xs text-slate-500">
                               {formData.amount ? t("createsWithFixed") : t("createsAtZero")}
                             </p>
+                          </div>
+                        </label>
+                      </div>
+                      <div>
+                        <label className="flex items-center gap-3 cursor-pointer p-3 bg-slate-50 rounded-lg">
+                          <input
+                            type="checkbox"
+                            checked={formData.excludeFromBudget}
+                            onChange={(e) => setFormData({ ...formData, excludeFromBudget: e.target.checked })}
+                            className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                          />
+                          <div>
+                            <span className="text-sm font-medium text-slate-900">{t("excludeFromBudget")}</span>
+                            <p className="text-xs text-slate-500">{t("excludeFromBudgetHint")}</p>
                           </div>
                         </label>
                       </div>
@@ -773,7 +943,24 @@ export default function RecurringTemplatesPage() {
                               {template.bankAccount.name}
                             </span>
                           )}
+                          {template.projects && template.projects.length > 0 && (
+                            <>
+                              {template.projects.map((proj) => (
+                                <span key={proj.id} className="px-2 py-0.5 text-xs rounded-full bg-amber-100 text-amber-800 whitespace-nowrap">
+                                  {proj.name}
+                                </span>
+                              ))}
+                            </>
+                          )}
+                          {template.excludeFromBudget && (
+                            <span className="px-2 py-0.5 text-xs rounded-full bg-orange-100 text-orange-700 whitespace-nowrap">
+                              {t("excludeFromBudget")}
+                            </span>
+                          )}
                         </div>
+                        {template.description && (
+                          <p className="text-xs text-slate-400 mt-0.5 truncate">{template.description}</p>
+                        )}
                         <div className="text-sm text-slate-500 mt-1 flex flex-wrap items-center gap-x-1 gap-y-0.5">
                           <span className="whitespace-nowrap">{template.dayOfMonth ? `${t("day")} ${template.dayOfMonth}` : t("intervals.monthly")}</span>
                           <span>•</span>

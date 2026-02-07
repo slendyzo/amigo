@@ -22,6 +22,7 @@ export async function GET(
       include: {
         category: { select: { id: true, name: true } },
         bankAccount: { select: { id: true, name: true } },
+        projects: { select: { id: true, name: true } },
         _count: { select: { expenses: true } },
       },
     });
@@ -51,7 +52,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId, isActive, autoGenerate } = body;
+    const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId, isActive, autoGenerate, projectIds, excludeFromBudget, description } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -93,11 +94,17 @@ export async function PUT(
         bankAccountId: bankAccountId !== undefined ? (bankAccountId || null) : existing.bankAccountId,
         isActive: isActive !== undefined ? isActive : existing.isActive,
         autoGenerate: autoGenerate !== undefined ? autoGenerate : existing.autoGenerate,
+        description: description !== undefined ? (description || null) : existing.description,
+        excludeFromBudget: excludeFromBudget !== undefined ? excludeFromBudget : existing.excludeFromBudget,
         nextDue,
+        ...(projectIds !== undefined
+          ? { projects: { set: projectIds.map((pid: string) => ({ id: pid })) } }
+          : {}),
       },
       include: {
         category: { select: { id: true, name: true } },
         bankAccount: { select: { id: true, name: true } },
+        projects: { select: { id: true, name: true } },
       },
     });
 

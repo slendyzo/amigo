@@ -459,6 +459,13 @@
     "selected": "sélectionnés",
     "default": "Par défaut",
     "first": "1er",
+    "projects": "Projets",
+    "noProjects": "Pas de projets",
+    "manageProjects": "Gérer les projets",
+    "excludeFromBudget": "Exclure du budget",
+    "excludeFromBudgetHint": "Les dépenses générées ne comptent pas dans le budget mensuel",
+    "notes": "Notes",
+    "notesPlaceholder": "Notes optionnelles pour les dépenses générées",
     "expenseTypes": {
       "survivalFixed": "Factures (Fixes)",
       "survivalVariable": "Factures (Variables)",
@@ -638,6 +645,9 @@
     "totalCategories": "Total des Catégories",
     "totalProjects": "Total des Projets",
     "memberSince": "Membre depuis",
+    "defaultBankAccount": "Compte Bancaire par Défaut",
+    "defaultBankAccountDescription": "Présélectionné lors de l'ajout de nouvelles dépenses",
+    "noDefault": "Aucun (pas de défaut)",
     "restartSetup": "Relancer la Configuration",
     "restartSetupDescription": "Relancez l'assistant de configuration initial pour mettre à jour votre salaire, budget et dépenses fixes",
     "restartSetupButton": "Relancer l'Assistant de Configuration"

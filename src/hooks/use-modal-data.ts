@@ -8,6 +8,7 @@ type ModalData = {
   projects: Project[];
   bankAccounts: BankAccount[];
   defaultCurrency: string;
+  defaultBankAccountId: string | null;
   isLoading: boolean;
   error: string | null;
   setCategories: React.Dispatch<React.SetStateAction<Category[]>>;
@@ -51,6 +52,7 @@ export function useModalData(
   const [projects, setProjects] = useState<Project[]>(propProjects || []);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(propBankAccounts || []);
   const [defaultCurrency, setDefaultCurrency] = useState("EUR");
+  const [defaultBankAccountId, setDefaultBankAccountId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -125,6 +127,9 @@ export function useModalData(
         if (workspaceData?.workspace?.defaultCurrency) {
           setDefaultCurrency(workspaceData.workspace.defaultCurrency);
         }
+        if (workspaceData?.workspace) {
+          setDefaultBankAccountId(workspaceData.workspace.defaultBankAccountId || null);
+        }
       })
       .catch((err) => {
         console.error("Failed to load modal data:", err);
@@ -138,6 +143,7 @@ export function useModalData(
     projects,
     bankAccounts,
     defaultCurrency,
+    defaultBankAccountId,
     isLoading,
     error,
     setCategories,

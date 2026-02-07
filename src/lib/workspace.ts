@@ -18,6 +18,7 @@ export interface WorkspaceContext {
     ownerId: string;
     monthlyBudget: number | null;
     defaultCurrency: string;
+    defaultBankAccountId: string | null;
     language: string;
     onboardingCompleted: boolean;
   };
@@ -86,6 +87,7 @@ export async function getActiveWorkspace(): Promise<WorkspaceContext | null> {
             ownerId: true,
             monthlyBudget: true,
             defaultCurrency: true,
+            defaultBankAccountId: true,
             language: true,
             onboardingCompleted: true,
           },
@@ -107,6 +109,7 @@ export async function getActiveWorkspace(): Promise<WorkspaceContext | null> {
             ownerId: true,
             monthlyBudget: true,
             defaultCurrency: true,
+            defaultBankAccountId: true,
             language: true,
             onboardingCompleted: true,
           },
@@ -140,6 +143,7 @@ export async function getActiveWorkspace(): Promise<WorkspaceContext | null> {
         ? Number(membership.workspace.monthlyBudget)
         : null,
       defaultCurrency: membership.workspace.defaultCurrency,
+      defaultBankAccountId: membership.workspace.defaultBankAccountId,
       language: membership.workspace.language,
       onboardingCompleted: membership.workspace.onboardingCompleted,
     },
@@ -179,6 +183,7 @@ export async function getWorkspaceById(
           ownerId: true,
           monthlyBudget: true,
           defaultCurrency: true,
+          defaultBankAccountId: true,
           language: true,
           onboardingCompleted: true,
         },
@@ -202,6 +207,7 @@ export async function getWorkspaceById(
         ? Number(membership.workspace.monthlyBudget)
         : null,
       defaultCurrency: membership.workspace.defaultCurrency,
+      defaultBankAccountId: membership.workspace.defaultBankAccountId,
       language: membership.workspace.language,
       onboardingCompleted: membership.workspace.onboardingCompleted,
     },

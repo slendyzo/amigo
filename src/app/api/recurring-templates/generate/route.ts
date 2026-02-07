@@ -23,6 +23,9 @@ export async function GET() {
         isActive: true,
         autoGenerate: true,
       },
+      include: {
+        projects: { select: { id: true } },
+      },
     });
 
     if (templates.length === 0) {
@@ -98,16 +101,30 @@ export async function GET() {
         date: expenseDate,
         isRecurring: true,
         recurringTemplateId: template.id,
+        description: template.description || null,
+        excludeFromBudget: template.excludeFromBudget,
+        projectIds: template.projects.map((p) => p.id),
       });
     }
 
     let generated = 0;
 
     if (expensesToCreate.length > 0) {
-      const result = await prisma.expense.createMany({
-        data: expensesToCreate,
-      });
-      generated = result.count;
+      // Use individual creates within a transaction to support project connections
+      const createdExpenses = await prisma.$transaction(
+        expensesToCreate.map((expense) => {
+          const { projectIds, ...expenseData } = expense;
+          return prisma.expense.create({
+            data: {
+              ...expenseData,
+              ...(projectIds.length > 0
+                ? { projects: { connect: projectIds.map((id: string) => ({ id })) } }
+                : {}),
+            },
+          });
+        })
+      );
+      generated = createdExpenses.length;
 
       // Update lastGenerated for templates
       const generatedTemplateIds = expensesToCreate.map((e) => e.recurringTemplateId);
@@ -176,6 +193,7 @@ export async function POST(request: Request) {
       where: whereClause,
       include: {
         category: true,
+        projects: { select: { id: true } },
       },
     });
 
@@ -265,16 +283,30 @@ export async function POST(request: Request) {
         date: expenseDate,
         isRecurring: true,
         recurringTemplateId: template.id,
+        description: template.description || null,
+        excludeFromBudget: template.excludeFromBudget,
+        projectIds: template.projects.map((p) => p.id),
       });
     }
 
     let generated = 0;
 
     if (expensesToCreate.length > 0) {
-      const result = await prisma.expense.createMany({
-        data: expensesToCreate,
-      });
-      generated = result.count;
+      // Use individual creates within a transaction to support project connections
+      const createdExpenses = await prisma.$transaction(
+        expensesToCreate.map((expense) => {
+          const { projectIds, ...expenseData } = expense;
+          return prisma.expense.create({
+            data: {
+              ...expenseData,
+              ...(projectIds.length > 0
+                ? { projects: { connect: projectIds.map((id: string) => ({ id })) } }
+                : {}),
+            },
+          });
+        })
+      );
+      generated = createdExpenses.length;
 
       // Update lastGenerated for templates
       const generatedTemplateIds = expensesToCreate.map((e) => e.recurringTemplateId);

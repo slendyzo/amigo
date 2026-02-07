@@ -18,7 +18,13 @@ type Workspace = {
   name: string;
   monthlyBudget: number | null;
   defaultCurrency: string;
+  defaultBankAccountId: string | null;
   language: string;
+};
+
+type BankAccount = {
+  id: string;
+  name: string;
 };
 
 type RecurringIncome = {
@@ -58,7 +64,9 @@ export default function SettingsPage() {
   // Budget form
   const [monthlyBudget, setMonthlyBudget] = useState("");
   const [currency, setCurrency] = useState("EUR");
+  const [defaultBankAccountId, setDefaultBankAccountId] = useState("");
   const [language, setLanguage] = useState("en");
+  const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
 
   // Salary form
   const [showSalaryModal, setShowSalaryModal] = useState(false);
@@ -91,14 +99,22 @@ export default function SettingsPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch workspace settings
-      const workspaceRes = await fetch("/api/workspace");
+      // Fetch workspace settings and bank accounts in parallel
+      const [workspaceRes, bankAccountsRes] = await Promise.all([
+        fetch("/api/workspace"),
+        fetch("/api/bank-accounts"),
+      ]);
       if (workspaceRes.ok) {
         const data = await workspaceRes.json();
         setWorkspace(data.workspace);
         setMonthlyBudget(data.workspace.monthlyBudget?.toString() || "");
         setCurrency(data.workspace.defaultCurrency || "EUR");
+        setDefaultBankAccountId(data.workspace.defaultBankAccountId || "");
         setLanguage(data.workspace.language || "en");
+      }
+      if (bankAccountsRes.ok) {
+        const data = await bankAccountsRes.json();
+        setBankAccounts(data.bankAccounts || []);
       }
 
       // Fetch expenses stats
@@ -173,6 +189,7 @@ export default function SettingsPage() {
         body: JSON.stringify({
           monthlyBudget,
           defaultCurrency: currency,
+          defaultBankAccountId: defaultBankAccountId || null,
           language,
         }),
       });
@@ -459,6 +476,32 @@ export default function SettingsPage() {
               ))}
             </select>
           </div>
+
+          {/* Default Bank Account */}
+          {bankAccounts.length > 0 && (
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <div className="flex-1">
+                <label className="block text-sm font-medium text-slate-700 mb-1">
+                  {t("defaultBankAccount")}
+                </label>
+                <p className="text-xs text-slate-500">
+                  {t("defaultBankAccountDescription")}
+                </p>
+              </div>
+              <select
+                value={defaultBankAccountId}
+                onChange={(e) => setDefaultBankAccountId(e.target.value)}
+                className="rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+              >
+                <option value="">{t("noDefault")}</option>
+                {bankAccounts.map((acc) => (
+                  <option key={acc.id} value={acc.id}>
+                    {acc.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {saveMessage && (
             <div

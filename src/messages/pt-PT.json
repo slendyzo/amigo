@@ -459,6 +459,13 @@
     "selected": "selecionados",
     "default": "Predefinido",
     "first": "1º",
+    "projects": "Projetos",
+    "noProjects": "Sem projetos",
+    "manageProjects": "Gerir projetos",
+    "excludeFromBudget": "Excluir do orçamento",
+    "excludeFromBudgetHint": "As despesas geradas não contam para o orçamento mensal",
+    "notes": "Notas",
+    "notesPlaceholder": "Notas opcionais para as despesas geradas",
     "expenseTypes": {
       "survivalFixed": "Contas (Fixas)",
       "survivalVariable": "Contas (Variáveis)",
@@ -657,6 +664,9 @@
     "totalCategories": "Total de Categorias",
     "totalProjects": "Total de Projetos",
     "memberSince": "Membro desde",
+    "defaultBankAccount": "Conta Bancária Padrão",
+    "defaultBankAccountDescription": "Pré-selecionada ao adicionar novas despesas",
+    "noDefault": "Nenhuma (sem padrão)",
     "restartSetup": "Reiniciar Configuração",
     "restartSetupDescription": "Volta a executar o assistente de configuração inicial para atualizar o teu salário, orçamento e despesas fixas",
     "restartSetupButton": "Reiniciar Assistente de Configuração"

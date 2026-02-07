@@ -17,6 +17,7 @@ export async function GET() {
         name: workspace.name,
         monthlyBudget: workspace.monthlyBudget,
         defaultCurrency: workspace.defaultCurrency,
+        defaultBankAccountId: workspace.defaultBankAccountId,
         language: workspace.language,
       },
     });
@@ -39,7 +40,7 @@ export async function PUT(request: NextRequest) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { monthlyBudget, defaultCurrency, name, language, resetOnboarding } = body;
+    const { monthlyBudget, defaultCurrency, defaultBankAccountId, name, language, resetOnboarding } = body;
 
     // Build update object
     const updateData: Record<string, unknown> = {};
@@ -49,6 +50,9 @@ export async function PUT(request: NextRequest) {
       updateData.monthlyBudget = monthlyBudget === "" || monthlyBudget === null ? null : parseFloat(monthlyBudget);
     }
     if (defaultCurrency) updateData.defaultCurrency = defaultCurrency;
+    if (defaultBankAccountId !== undefined) {
+      updateData.defaultBankAccountId = defaultBankAccountId || null;
+    }
     if (language) updateData.language = language;
 
     // Reset onboarding flag if requested
@@ -67,6 +71,7 @@ export async function PUT(request: NextRequest) {
         name: updatedWorkspace.name,
         monthlyBudget: updatedWorkspace.monthlyBudget,
         defaultCurrency: updatedWorkspace.defaultCurrency,
+        defaultBankAccountId: updatedWorkspace.defaultBankAccountId,
         language: updatedWorkspace.language,
       },
     });

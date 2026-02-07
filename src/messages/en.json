@@ -459,6 +459,13 @@
     "selected": "selected",
     "default": "Default",
     "first": "1st",
+    "projects": "Projects",
+    "noProjects": "No projects",
+    "manageProjects": "Manage projects",
+    "excludeFromBudget": "Exclude from budget",
+    "excludeFromBudgetHint": "Generated expenses won't count towards monthly budget",
+    "notes": "Notes",
+    "notesPlaceholder": "Optional notes for generated expenses",
     "expenseTypes": {
       "survivalFixed": "Bills (Fixed)",
       "survivalVariable": "Bills (Variable)",
@@ -638,6 +645,9 @@
     "totalCategories": "Total Categories",
     "totalProjects": "Total Projects",
     "memberSince": "Member since",
+    "defaultBankAccount": "Default Bank Account",
+    "defaultBankAccountDescription": "Pre-selected when adding new expenses",
+    "noDefault": "None (no default)",
     "restartSetup": "Restart Setup",
     "restartSetupDescription": "Re-run the initial setup wizard to update your salary, budget, and fixed expenses",
     "restartSetupButton": "Restart Setup Wizard"

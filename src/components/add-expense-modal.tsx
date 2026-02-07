@@ -24,6 +24,7 @@ type AddExpenseModalProps = {
   projects?: Project[];
   defaultProjectId?: string;
   defaultExcludeFromBudget?: boolean;
+  defaultBankAccountId?: string;
 };
 
 export default function AddExpenseModal({
@@ -34,6 +35,7 @@ export default function AddExpenseModal({
   projects: propProjects,
   defaultProjectId,
   defaultExcludeFromBudget = false,
+  defaultBankAccountId: propDefaultBankAccountId,
 }: AddExpenseModalProps) {
   const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -49,9 +51,13 @@ export default function AddExpenseModal({
     projects: fetchedProjects,
     bankAccounts: localBankAccounts,
     defaultCurrency,
+    defaultBankAccountId: workspaceDefaultBankAccountId,
     setCategories: setLocalCategories,
     setProjects: setFetchedProjects,
   } = useModalData(isOpen, propCategories, propProjects, propBankAccounts);
+
+  // Use prop default if provided, otherwise fall back to workspace default
+  const resolvedDefaultBankAccountId = propDefaultBankAccountId || workspaceDefaultBankAccountId || "";
 
   const {
     localProjects,
@@ -121,7 +127,7 @@ export default function AddExpenseModal({
       setShowDatePicker(false);
       setExpenseType("LIFESTYLE");
       setCategoryId("");
-      setBankAccountId("");
+      setBankAccountId(resolvedDefaultBankAccountId);
       setSelectedProjectIds(defaultProjectId ? [defaultProjectId] : []);
       resetTagInput();
       setExcludeFromBudget(defaultExcludeFromBudget);
@@ -129,7 +135,7 @@ export default function AddExpenseModal({
       setShowAdvanced(false);
       setError("");
     }
-  }, [isOpen, defaultCurrency, defaultProjectId, defaultExcludeFromBudget, setSelectedProjectIds, resetTagInput]);
+  }, [isOpen, defaultCurrency, resolvedDefaultBankAccountId, defaultProjectId, defaultExcludeFromBudget, setSelectedProjectIds, resetTagInput]);
 
   const handleCreateTag = async () => {
     await createTag();

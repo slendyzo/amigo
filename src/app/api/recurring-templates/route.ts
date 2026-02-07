@@ -18,6 +18,7 @@ export async function GET() {
       include: {
         category: { select: { id: true, name: true } },
         bankAccount: { select: { id: true, name: true } },
+        projects: { select: { id: true, name: true } },
         _count: { select: { expenses: true } },
       },
     });
@@ -39,7 +40,7 @@ export async function POST(request: Request) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId, autoGenerate } = body;
+    const { name, type, amount, currency, interval, dayOfMonth, categoryId, bankAccountId, autoGenerate, projectIds, excludeFromBudget, description } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -69,12 +70,18 @@ export async function POST(request: Request) {
         categoryId: categoryId || null,
         bankAccountId: bankAccountId || null,
         autoGenerate: autoGenerate || false,
+        description: description || null,
+        excludeFromBudget: excludeFromBudget || false,
         nextDue,
         isActive: true,
+        ...(projectIds && projectIds.length > 0
+          ? { projects: { connect: projectIds.map((id: string) => ({ id })) } }
+          : {}),
       },
       include: {
         category: { select: { id: true, name: true } },
         bankAccount: { select: { id: true, name: true } },
+        projects: { select: { id: true, name: true } },
       },
     });
 
