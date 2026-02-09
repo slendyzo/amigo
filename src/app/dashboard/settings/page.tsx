@@ -99,11 +99,17 @@ export default function SettingsPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      // Fetch workspace settings and bank accounts in parallel
-      const [workspaceRes, bankAccountsRes] = await Promise.all([
-        fetch("/api/workspace"),
-        fetch("/api/bank-accounts"),
-      ]);
+      // Fetch ALL data in parallel instead of sequentially
+      const [workspaceRes, bankAccountsRes, expensesRes, categoriesRes, projectsRes, incomesRes] =
+        await Promise.all([
+          fetch("/api/workspace"),
+          fetch("/api/bank-accounts"),
+          fetch("/api/expenses?limit=10000"),
+          fetch("/api/categories"),
+          fetch("/api/projects"),
+          fetch("/api/incomes"),
+        ]);
+
       if (workspaceRes.ok) {
         const data = await workspaceRes.json();
         setWorkspace(data.workspace);
@@ -117,60 +123,42 @@ export default function SettingsPage() {
         setBankAccounts(data.bankAccounts || []);
       }
 
-      // Fetch expenses stats
-      const expensesRes = await fetch("/api/expenses?limit=10000");
+      let newStats: Stats = {
+        totalExpenses: 0,
+        totalAmount: 0,
+        totalCategories: 0,
+        totalProjects: 0,
+        totalIncomes: 0,
+        totalIncomeAmount: 0,
+      };
+
       if (expensesRes.ok) {
         const data = await expensesRes.json();
-        setStats({
-          totalExpenses: data.total,
-          totalAmount: data.expenses.reduce(
-            (sum: number, e: { amount: number }) => sum + Number(e.amount),
-            0
-          ),
-          totalCategories: 0,
-          totalProjects: 0,
-          totalIncomes: 0,
-          totalIncomeAmount: 0,
-        });
+        newStats.totalExpenses = data.total;
+        newStats.totalAmount = data.expenses.reduce(
+          (sum: number, e: { amount: number }) => sum + Number(e.amount),
+          0
+        );
       }
-
-      // Fetch categories count
-      const categoriesRes = await fetch("/api/categories");
       if (categoriesRes.ok) {
         const data = await categoriesRes.json();
-        setStats((prev) =>
-          prev ? { ...prev, totalCategories: data.categories?.length || 0 } : prev
-        );
+        newStats.totalCategories = data.categories?.length || 0;
       }
-
-      // Fetch projects count
-      const projectsRes = await fetch("/api/projects");
       if (projectsRes.ok) {
         const data = await projectsRes.json();
-        setStats((prev) =>
-          prev ? { ...prev, totalProjects: data.projects?.length || 0 } : prev
-        );
+        newStats.totalProjects = data.projects?.length || 0;
       }
-
-      // Fetch incomes
-      const incomesRes = await fetch("/api/incomes");
       if (incomesRes.ok) {
         const data = await incomesRes.json();
-        setStats((prev) =>
-          prev
-            ? {
-                ...prev,
-                totalIncomes: data.count || 0,
-                totalIncomeAmount: data.total || 0,
-              }
-            : prev
-        );
-        // Get recurring incomes (salary type)
+        newStats.totalIncomes = data.count || 0;
+        newStats.totalIncomeAmount = data.total || 0;
         const recurring = data.incomes?.filter(
           (i: { isRecurring: boolean; type: string }) => i.isRecurring && i.type === "SALARY"
         ) || [];
         setRecurringIncomes(recurring);
       }
+
+      setStats(newStats);
     } catch (error) {
       console.error("Failed to fetch data:", error);
     } finally {

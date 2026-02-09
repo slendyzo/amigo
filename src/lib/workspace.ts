@@ -54,76 +54,60 @@ export class WorkspaceAccessError extends Error {
  * Returns null if user is not authenticated or has no workspaces
  */
 export async function getActiveWorkspace(): Promise<WorkspaceContext | null> {
+  const t0 = performance.now();
   const session = await auth();
   if (!session?.user?.id) {
     return null;
   }
+  const tAuth = performance.now();
 
   const userId = session.user.id;
 
-  // First, try to get user's preferred active workspace
-  const user = await prisma.user.findUnique({
-    where: { id: userId },
-    select: { activeWorkspaceId: true },
-  });
+  const workspaceSelect = {
+    id: true,
+    name: true,
+    type: true,
+    ownerId: true,
+    monthlyBudget: true,
+    defaultCurrency: true,
+    defaultBankAccountId: true,
+    language: true,
+    onboardingCompleted: true,
+  } as const;
 
-  let membership;
-
-  if (user?.activeWorkspaceId) {
-    // Verify user still has access to this workspace
-    membership = await prisma.workspaceMember.findUnique({
-      where: {
-        workspaceId_userId: {
-          workspaceId: user.activeWorkspaceId,
-          userId,
-        },
-      },
-      include: {
-        workspace: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            ownerId: true,
-            monthlyBudget: true,
-            defaultCurrency: true,
-            defaultBankAccountId: true,
-            language: true,
-            onboardingCompleted: true,
-          },
-        },
-      },
-    });
-  }
-
-  // Fallback to first workspace if active workspace is invalid
-  if (!membership) {
-    membership = await prisma.workspaceMember.findFirst({
+  // Fetch user preferences and all memberships in a single parallel query
+  const [user, allMemberships] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: userId },
+      select: { activeWorkspaceId: true },
+    }),
+    prisma.workspaceMember.findMany({
       where: { userId },
-      include: {
-        workspace: {
-          select: {
-            id: true,
-            name: true,
-            type: true,
-            ownerId: true,
-            monthlyBudget: true,
-            defaultCurrency: true,
-            defaultBankAccountId: true,
-            language: true,
-            onboardingCompleted: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "asc" }, // Oldest first (usually personal workspace)
-    });
+      include: { workspace: { select: workspaceSelect } },
+      orderBy: { createdAt: "asc" },
+    }),
+  ]);
 
-    // Update user's activeWorkspaceId if we found a workspace
+  const tDb = performance.now();
+  console.log(
+    `[PERF] getActiveWorkspace: auth=${(tAuth - t0).toFixed(0)}ms | db=${(tDb - tAuth).toFixed(0)}ms | total=${(tDb - t0).toFixed(0)}ms`
+  );
+
+  // Find the active workspace membership, or fall back to the first one
+  let membership = user?.activeWorkspaceId
+    ? allMemberships.find((m) => m.workspaceId === user.activeWorkspaceId)
+    : undefined;
+
+  if (!membership) {
+    membership = allMemberships[0];
+
+    // Update user's activeWorkspaceId if we found a fallback workspace
     if (membership) {
-      await prisma.user.update({
+      // Fire-and-forget — don't block the response for a preference update
+      prisma.user.update({
         where: { id: userId },
         data: { activeWorkspaceId: membership.workspaceId },
-      });
+      }).catch(() => {});
     }
   }
 

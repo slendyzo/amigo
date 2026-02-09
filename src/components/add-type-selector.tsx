@@ -1,10 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { useTranslations } from "next-intl";
-import AddExpenseModal from "./add-expense-modal";
-import AddIncomeModal from "./add-income-modal";
-import ReceiptScannerModal from "./receipt-scanner-modal";
+
+// Lazy-load all modals to avoid pulling tesseract.js (~300KB) and other heavy deps into initial bundle
+const AddExpenseModal = lazy(() => import("./add-expense-modal"));
+const AddIncomeModal = lazy(() => import("./add-income-modal"));
+const ReceiptScannerModal = lazy(() => import("./receipt-scanner-modal"));
 
 type AddTypeSelectorProps = {
   isOpen: boolean;
@@ -144,19 +146,31 @@ export default function AddTypeSelector({ isOpen, onClose, onSuccess }: AddTypeS
         </>
       )}
 
-      {/* Modals - always rendered when their state is true */}
-      <AddExpenseModal
-        isOpen={showExpenseModal}
-        onClose={handleModalClose}
-      />
-      <AddIncomeModal
-        isOpen={showIncomeModal}
-        onClose={handleModalClose}
-      />
-      <ReceiptScannerModal
-        isOpen={showReceiptScanner}
-        onClose={handleModalClose}
-      />
+      {/* Modals - lazy loaded, only rendered when their state is true */}
+      {showExpenseModal && (
+        <Suspense fallback={null}>
+          <AddExpenseModal
+            isOpen={showExpenseModal}
+            onClose={handleModalClose}
+          />
+        </Suspense>
+      )}
+      {showIncomeModal && (
+        <Suspense fallback={null}>
+          <AddIncomeModal
+            isOpen={showIncomeModal}
+            onClose={handleModalClose}
+          />
+        </Suspense>
+      )}
+      {showReceiptScanner && (
+        <Suspense fallback={null}>
+          <ReceiptScannerModal
+            isOpen={showReceiptScanner}
+            onClose={handleModalClose}
+          />
+        </Suspense>
+      )}
     </>
   );
 }

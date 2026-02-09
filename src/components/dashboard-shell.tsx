@@ -1,20 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import MobileNav from "./mobile-nav";
-import GlobalAddButton from "./global-add-button";
-import FeedbackButton from "./feedback-button";
-import IOSInstallPrompt from "./ios-install-prompt";
 import WorkspaceSwitcher from "./workspace-switcher";
-import AnnouncementModal from "./announcement-modal";
-import { OfflineIndicator } from "./offline-indicator";
-import { ServiceWorkerRegister } from "./service-worker-register";
-import { ChangelogModal } from "./changelog-modal";
 import type { ReactNode } from "react";
+
+// Lazy-load non-critical shell components
+const GlobalAddButton = lazy(() => import("./global-add-button"));
+const FeedbackButton = lazy(() => import("./feedback-button"));
+const IOSInstallPrompt = lazy(() => import("./ios-install-prompt"));
+const AnnouncementModal = lazy(() => import("./announcement-modal"));
+const OfflineIndicator = lazy(() => import("./offline-indicator").then(mod => ({ default: mod.OfflineIndicator })));
+const ServiceWorkerRegister = lazy(() => import("./service-worker-register").then(mod => ({ default: mod.ServiceWorkerRegister })));
+const ChangelogModal = lazy(() => import("./changelog-modal").then(mod => ({ default: mod.ChangelogModal })));
 
 // Current announcement ID - should match the one in overview-client.tsx
 const CURRENT_ANNOUNCEMENT_ID = "workspaces-v1";
@@ -313,30 +315,46 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
       />
 
       {/* Global Add Button (desktop floating button + modal) */}
-      <GlobalAddButton />
+      <Suspense fallback={null}>
+        <GlobalAddButton />
+      </Suspense>
 
       {/* Feedback Button */}
-      <FeedbackButton />
+      <Suspense fallback={null}>
+        <FeedbackButton />
+      </Suspense>
 
       {/* iOS Install Prompt */}
-      <IOSInstallPrompt />
+      <Suspense fallback={null}>
+        <IOSInstallPrompt />
+      </Suspense>
 
       {/* What's New Announcement Modal */}
-      <AnnouncementModal
-        isOpen={showAnnouncement}
-        onClose={() => setShowAnnouncement(false)}
-        announcementId={CURRENT_ANNOUNCEMENT_ID}
-        viewOnly
-      />
+      {showAnnouncement && (
+        <Suspense fallback={null}>
+          <AnnouncementModal
+            isOpen={showAnnouncement}
+            onClose={() => setShowAnnouncement(false)}
+            announcementId={CURRENT_ANNOUNCEMENT_ID}
+            viewOnly
+          />
+        </Suspense>
+      )}
 
       {/* Offline Indicator */}
-      <OfflineIndicator />
+      <Suspense fallback={null}>
+        <OfflineIndicator />
+      </Suspense>
 
       {/* Service Worker Registration */}
-      <ServiceWorkerRegister />
+      <Suspense fallback={null}>
+        <ServiceWorkerRegister />
+      </Suspense>
 
       {/* Changelog Modal */}
-      <ChangelogModal />
+      <Suspense fallback={null}>
+        <ChangelogModal />
+      </Suspense>
     </div>
   );
 }

@@ -188,6 +188,7 @@ model WorkspaceMember {
   createdAt DateTime @default(now())
 
   @@unique([workspaceId, userId])
+  @@index([userId])
   @@map("workspace_members")
 }
 

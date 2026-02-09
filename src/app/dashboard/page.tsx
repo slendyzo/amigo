@@ -12,7 +12,10 @@ export default async function DashboardPage({
 }: {
   searchParams: Promise<{ skipUsername?: string }>;
 }) {
+  const t0 = performance.now();
+
   const session = await auth();
+  const tAuth = performance.now();
 
   if (!session?.user) {
     redirect("/auth/signin");
@@ -20,33 +23,34 @@ export default async function DashboardPage({
 
   const params = await searchParams;
 
-  // Check if user needs to set up username (email-only users)
-  // Only prompt once - skip if they already dismissed it this session
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { username: true, name: true, seenAnnouncements: true },
-  });
+  // Fetch user + workspace in parallel instead of sequentially
+  const [user, workspace] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { username: true, name: true, seenAnnouncements: true },
+    }),
+    prisma.workspace.findFirst({
+      where: {
+        members: {
+          some: {
+            userId: session.user.id,
+          },
+        },
+      },
+      select: {
+        id: true,
+        monthlyBudget: true,
+        monthlySalary: true,
+        onboardingCompleted: true,
+      },
+    }),
+  ]);
+
+  const tUserWorkspace = performance.now();
 
   if (!user?.username && params.skipUsername !== "true") {
     redirect("/auth/setup-username");
   }
-
-  // Get user's workspace first (needed for all other queries)
-  const workspace = await prisma.workspace.findFirst({
-    where: {
-      members: {
-        some: {
-          userId: session.user.id,
-        },
-      },
-    },
-    select: {
-      id: true,
-      monthlyBudget: true,
-      monthlySalary: true,
-      onboardingCompleted: true,
-    },
-  });
 
   if (!workspace) {
     return (
@@ -95,28 +99,40 @@ export default async function DashboardPage({
       orderBy: { name: "asc" },
       select: { id: true, name: true },
     }),
-    // Current month expenses
+    // Current month expenses — select only needed fields
     prisma.expense.findMany({
       where: {
         workspaceId: workspace.id,
         date: { gte: startOfMonth, lte: endOfMonth },
       },
       orderBy: { date: "desc" },
-      include: {
-        category: true,
-        projects: true,
+      select: {
+        id: true,
+        name: true,
+        date: true,
+        type: true,
+        amountEur: true,
+        excludeFromBudget: true,
+        category: { select: { name: true } },
+        projects: { select: { id: true, name: true } },
       },
     }),
-    // Previous month expenses (for burn chart - server-side now!)
+    // Previous month expenses (for burn chart) — select only needed fields
     prisma.expense.findMany({
       where: {
         workspaceId: workspace.id,
         date: { gte: startOfPrevMonth, lte: endOfPrevMonth },
       },
       orderBy: { date: "desc" },
-      include: {
-        category: true,
-        projects: true,
+      select: {
+        id: true,
+        name: true,
+        date: true,
+        type: true,
+        amountEur: true,
+        excludeFromBudget: true,
+        category: { select: { name: true } },
+        projects: { select: { id: true, name: true } },
       },
     }),
     // Current month income (with full details for transaction list)
@@ -152,6 +168,12 @@ export default async function DashboardPage({
       },
     }),
   ]);
+
+  const tQueries = performance.now();
+
+  console.log(
+    `[PERF] Dashboard: auth=${(tAuth - t0).toFixed(0)}ms | user+workspace=${(tUserWorkspace - tAuth).toFixed(0)}ms | 7 queries=${(tQueries - tUserWorkspace).toFixed(0)}ms | total=${(tQueries - t0).toFixed(0)}ms | expenses=${expenses.length} | prevExpenses=${previousMonthExpenses.length}`
+  );
 
   // Include recurring incomes from previous months that should apply to current month
   // Late-month threshold: if paid on day >= 25, that salary funds NEXT month's budget

@@ -3,15 +3,15 @@
 import { useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import AddTypeSelector from "@/components/add-type-selector";
-import EditExpenseModal from "@/components/edit-expense-modal";
-import OnboardingModal from "@/components/onboarding-modal";
-import AnnouncementModal from "@/components/announcement-modal";
 import { CategoryBreakdown } from "@/components/ui/category-breakdown";
 import { useSwipe } from "@/hooks/use-swipe";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
-// Lazy load BurnChart to reduce initial bundle size (Recharts is ~45kB!)
+// Lazy load heavy modals and charts to reduce initial bundle size
+const AddTypeSelector = lazy(() => import("@/components/add-type-selector"));
+const EditExpenseModal = lazy(() => import("@/components/edit-expense-modal"));
+const OnboardingModal = lazy(() => import("@/components/onboarding-modal"));
+const AnnouncementModal = lazy(() => import("@/components/announcement-modal"));
 const BurnChart = lazy(() => import("@/components/ui/burn-chart").then(mod => ({ default: mod.BurnChart })));
 
 // Loading skeleton for the chart
@@ -1178,43 +1178,57 @@ export default function DashboardOverview({
       </div>
 
       {/* Add Type Selector - Choose between Expense or Income */}
-      <AddTypeSelector
-        isOpen={isSelectorOpen}
-        onClose={() => setIsSelectorOpen(false)}
-        onSuccess={() => fetchExpenses()}
-      />
+      {isSelectorOpen && (
+        <Suspense fallback={null}>
+          <AddTypeSelector
+            isOpen={isSelectorOpen}
+            onClose={() => setIsSelectorOpen(false)}
+            onSuccess={() => fetchExpenses()}
+          />
+        </Suspense>
+      )}
 
       {/* Edit Expense Modal */}
-      <EditExpenseModal
-        isOpen={!!editingExpense}
-        onClose={() => setEditingExpense(null)}
-        expense={editingExpense}
-        categories={categories}
-        bankAccounts={bankAccounts}
-        projects={projects}
-        onSave={() => {
-          setEditingExpense(null);
-          fetchExpenses();
-        }}
-      />
+      {editingExpense && (
+        <Suspense fallback={null}>
+          <EditExpenseModal
+            isOpen={!!editingExpense}
+            onClose={() => setEditingExpense(null)}
+            expense={editingExpense}
+            categories={categories}
+            bankAccounts={bankAccounts}
+            projects={projects}
+            onSave={() => {
+              setEditingExpense(null);
+              fetchExpenses();
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Onboarding Modal - shown for new users */}
-      <OnboardingModal
-        isOpen={showOnboarding}
-        onClose={handleOnboardingClose}
-        existingData={{
-          monthlySalary,
-          monthlyBudget,
-        }}
-      />
+      {showOnboarding && (
+        <Suspense fallback={null}>
+          <OnboardingModal
+            isOpen={showOnboarding}
+            onClose={handleOnboardingClose}
+            existingData={{
+              monthlySalary,
+              monthlyBudget,
+            }}
+          />
+        </Suspense>
+      )}
 
       {/* Announcement Modal - shown after onboarding for new features */}
-      {currentAnnouncementId && (
-        <AnnouncementModal
-          isOpen={showAnnouncement}
-          onClose={() => setShowAnnouncement(false)}
-          announcementId={currentAnnouncementId}
-        />
+      {currentAnnouncementId && showAnnouncement && (
+        <Suspense fallback={null}>
+          <AnnouncementModal
+            isOpen={showAnnouncement}
+            onClose={() => setShowAnnouncement(false)}
+            announcementId={currentAnnouncementId}
+          />
+        </Suspense>
       )}
     </div>
   );
