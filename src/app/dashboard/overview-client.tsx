@@ -883,7 +883,7 @@ export default function DashboardOverview({
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4">
           {/* Budget Remaining - Shows how much of your strict budget is left */}
           {monthlyBudget && (
-            <div className={`p-3 md:p-5 rounded-xl border ${
+            <div className={`p-3 md:p-5 rounded-xl border min-w-0 ${
               monthlyBudget - stats.budgetTotal >= 0
                 ? "bg-gradient-to-br from-slate-50 to-slate-100 border-slate-200"
                 : "bg-gradient-to-br from-red-50 to-orange-50 border-red-200"
@@ -891,7 +891,7 @@ export default function DashboardOverview({
               <p className={`text-xs md:text-sm mb-0.5 md:mb-1 ${
                 monthlyBudget - stats.budgetTotal >= 0 ? "text-slate-600" : "text-red-700"
               }`}>{t("budget.remaining")}</p>
-              <p className={`text-base md:text-2xl font-bold ${
+              <p className={`text-base md:text-xl lg:text-2xl font-bold truncate ${
                 monthlyBudget - stats.budgetTotal >= 0 ? "text-slate-900" : "text-red-600"
               }`}>
                 €{(monthlyBudget - stats.budgetTotal).toFixed(2)}
@@ -904,19 +904,19 @@ export default function DashboardOverview({
             </div>
           )}
           {/* Income Received */}
-          <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 md:p-5 rounded-xl border border-green-200">
+          <div className="bg-gradient-to-br from-green-50 to-emerald-50 p-3 md:p-5 rounded-xl border border-green-200 min-w-0">
             <p className="text-xs md:text-sm text-green-700 mb-0.5 md:mb-1">{t("income.received")}</p>
-            <p className="text-base md:text-2xl font-bold text-green-600">€{currentMonthIncome.toFixed(2)}</p>
+            <p className="text-base md:text-xl lg:text-2xl font-bold text-green-600 truncate">€{currentMonthIncome.toFixed(2)}</p>
             <p className="hidden md:block text-xs text-green-600/70 mt-1">{t("income.allSources")}</p>
           </div>
           {/* Total Spent */}
-          <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-3 md:p-5 rounded-xl border border-slate-200">
+          <div className="bg-gradient-to-br from-slate-50 to-slate-100 p-3 md:p-5 rounded-xl border border-slate-200 min-w-0">
             <p className="text-xs md:text-sm text-slate-600 mb-0.5 md:mb-1">{t("budget.spent")}</p>
-            <p className="text-base md:text-2xl font-bold text-slate-900">€{stats.grandTotal.toFixed(2)}</p>
+            <p className="text-base md:text-xl lg:text-2xl font-bold text-slate-900 truncate">€{stats.grandTotal.toFixed(2)}</p>
             <p className="hidden md:block text-xs text-slate-500 mt-1">{t("budget.thisMonth")}</p>
           </div>
           {/* Net Balance (Income - Expenses) */}
-          <div className={`p-3 md:p-5 rounded-xl border ${
+          <div className={`p-3 md:p-5 rounded-xl border min-w-0 ${
             (currentMonthIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
               ? "bg-gradient-to-br from-blue-50 to-indigo-50 border-blue-200"
               : "bg-gradient-to-br from-red-50 to-orange-50 border-red-200"
@@ -926,7 +926,7 @@ export default function DashboardOverview({
                 ? "text-blue-700"
                 : "text-red-700"
             }`}>{t("income.balance")}</p>
-            <p className={`text-base md:text-2xl font-bold ${
+            <p className={`text-base md:text-xl lg:text-2xl font-bold truncate ${
               (currentMonthIncome || expectedMonthlyIncome) - stats.grandTotal >= 0
                 ? "text-blue-600"
                 : "text-red-600"
@@ -946,32 +946,32 @@ export default function DashboardOverview({
 
       {/* Stats Cards - Mobile optimized */}
       <div className="grid grid-cols-2 gap-2 md:gap-4 md:grid-cols-4 lg:grid-cols-5">
-        <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
+        <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200 min-w-0">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.total")}</p>
-          <p className="text-lg md:text-2xl font-bold text-slate-900">€{stats.total.toFixed(2)}</p>
+          <p className="text-lg md:text-xl lg:text-2xl font-bold text-slate-900 truncate">€{stats.total.toFixed(2)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{getDateRangeLabel()}</p>
         </div>
-        <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
+        <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200 min-w-0">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.living")}</p>
-          <p className="text-lg md:text-2xl font-bold text-[#0070f3]">€{stats.living.toFixed(2)}</p>
+          <p className="text-lg md:text-xl lg:text-2xl font-bold text-[#0070f3] truncate">€{stats.living.toFixed(2)}</p>
           <div className="hidden md:block text-xs text-slate-400 mt-1 space-y-0.5">
             <p>{t("stats.fixed")}: €{stats.livingFixed.toFixed(2)}</p>
             <p>{t("stats.variable")}: €{stats.livingVariable.toFixed(2)}</p>
           </div>
         </div>
-        <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
+        <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200 min-w-0">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.lifestyle")}</p>
-          <p className="text-lg md:text-2xl font-bold text-purple-600">€{stats.lifestyle.toFixed(2)}</p>
+          <p className="text-lg md:text-xl lg:text-2xl font-bold text-purple-600 truncate">€{stats.lifestyle.toFixed(2)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.dailySpending")}</p>
         </div>
-        <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200">
+        <div className="bg-white p-3 md:p-5 rounded-xl border border-slate-200 min-w-0">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.projects")}</p>
-          <p className="text-lg md:text-2xl font-bold text-orange-600">€{stats.projects.toFixed(2)}</p>
+          <p className="text-lg md:text-xl lg:text-2xl font-bold text-orange-600 truncate">€{stats.projects.toFixed(2)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.projectCount", { count: projects.length })}</p>
         </div>
-        <div className="col-span-2 md:col-span-1 bg-white p-3 md:p-5 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="col-span-2 md:col-span-1 bg-white p-3 md:p-5 rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-slate-100 min-w-0">
           <p className="text-xs md:text-sm text-slate-500 mb-0.5 md:mb-1">{t("stats.grandTotal")}</p>
-          <p className="text-lg md:text-2xl font-bold text-slate-900">€{stats.grandTotal.toFixed(2)}</p>
+          <p className="text-lg md:text-xl lg:text-2xl font-bold text-slate-900 truncate">€{stats.grandTotal.toFixed(2)}</p>
           <p className="hidden md:block text-xs text-slate-400 mt-1">{t("stats.includingProjects")}</p>
         </div>
       </div>
