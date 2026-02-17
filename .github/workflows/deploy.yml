@@ -46,6 +46,12 @@ jobs:
             echo "Build ID: $BUILD_ID"
             echo "Build Date: $BUILD_DATE"
 
+            # Free up disk space before building
+            echo "=== Cleaning up Docker ==="
+            docker builder prune -af
+            docker image prune -af
+            echo "Disk usage: $(df -h / | tail -1 | awk '{print $5}')"
+
             # Build the Docker image
             echo "=== Building Docker image ==="
             docker compose build \
@@ -59,9 +65,6 @@ jobs:
             # Wait for container to be healthy
             echo "=== Waiting for container to start ==="
             sleep 5
-
-            # Clean up old images
-            docker image prune -f
 
             # Show status
             echo "=== Deployment complete ==="
