@@ -3,7 +3,7 @@
  * Centralizes all currency-related code to avoid duplication across components.
  */
 
-export const CURRENCIES = ["EUR", "USD", "GBP", "BRL", "PLN"] as const;
+export const CURRENCIES = ["EUR", "USD", "GBP", "BRL", "PLN", "CAD"] as const;
 
 export type Currency = (typeof CURRENCIES)[number];
 
@@ -13,6 +13,7 @@ export const CURRENCY_SYMBOLS: Record<Currency, string> = {
   GBP: "£",
   BRL: "R$",
   PLN: "zł",
+  CAD: "C$",
 };
 
 /**
@@ -25,6 +26,7 @@ export const SYMBOL_TO_CURRENCY: Record<string, Currency> = {
   "£": "GBP",
   "R$": "BRL",
   "zł": "PLN",
+  "C$": "CAD",
 };
 
 /**

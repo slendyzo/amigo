@@ -20,6 +20,7 @@ const CURRENCIES = [
   { code: "GBP", symbol: "£", name: "British Pound" },
   { code: "BRL", symbol: "R$", name: "Brazilian Real" },
   { code: "PLN", symbol: "zł", name: "Polish Zloty" },
+  { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
 ];
 
 export default function OnboardingModal({

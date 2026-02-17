@@ -8,6 +8,7 @@ const STATIC_RATES: Record<string, number> = {
   GBP: 1.17, // 1 GBP = 1.17 EUR (approximate)
   BRL: 0.18, // 1 BRL = 0.18 EUR (approximate)
   PLN: 0.23, // 1 PLN = 0.23 EUR (approximate)
+  CAD: 0.65, // 1 CAD = 0.65 EUR (approximate)
 };
 
 // Cache for exchange rates (refreshed every 24h)
@@ -79,6 +80,7 @@ export function formatCurrency(
     GBP: "\u00a3",
     BRL: "R$",
     PLN: "z\u0142",
+    CAD: "C$",
   };
 
   const symbol = symbols[currency] || currency;

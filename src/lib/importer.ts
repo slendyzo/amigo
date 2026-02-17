@@ -1821,12 +1821,13 @@ export function parseEmailTransaction(
     let amountStr = amountMatch[1];
     // Detect currency
     let currency = "EUR";
-    if (amountStr.includes("$")) currency = "USD";
-    else if (amountStr.includes("£")) currency = "GBP";
+    if (amountStr.includes("C$")) currency = "CAD";
     else if (amountStr.includes("R$")) currency = "BRL";
+    else if (amountStr.includes("$")) currency = "USD";
+    else if (amountStr.includes("£")) currency = "GBP";
 
     // Clean amount
-    amountStr = amountStr.replace(/[€$£R\s]/g, "");
+    amountStr = amountStr.replace(/[€$£RC\s]/g, "");
     // Handle European format (1.234,56) vs US format (1,234.56)
     if (amountStr.includes(",") && amountStr.includes(".")) {
       // If comma comes after dot, it's European
