@@ -181,14 +181,15 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       day: "2-digit",
       month: "short",
       year: "numeric",
+      timeZone: "UTC",
     });
   };
 
   // Group expenses by month
   const expensesByMonth = expenses.reduce((groups, expense) => {
     const date = new Date(expense.date);
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const label = date.toLocaleDateString("en-GB", { month: "long", year: "numeric" });
+    const key = `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, "0")}`;
+    const label = date.toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" });
 
     if (!groups[key]) {
       groups[key] = { label, expenses: [], total: 0 };

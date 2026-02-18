@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       include: {
         bankAccount: { select: { id: true, name: true } },
       },
-      orderBy: { date: "desc" },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
     });
 
     // For month/year queries, also include recurring incomes that should apply to this month

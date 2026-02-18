@@ -105,7 +105,7 @@ export default async function DashboardPage({
         workspaceId: workspace.id,
         date: { gte: startOfMonth, lte: endOfMonth },
       },
-      orderBy: { date: "desc" },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       select: {
         id: true,
         name: true,
@@ -113,6 +113,7 @@ export default async function DashboardPage({
         type: true,
         amountEur: true,
         excludeFromBudget: true,
+        createdAt: true,
         category: { select: { name: true } },
         projects: { select: { id: true, name: true } },
       },
@@ -123,7 +124,7 @@ export default async function DashboardPage({
         workspaceId: workspace.id,
         date: { gte: startOfPrevMonth, lte: endOfPrevMonth },
       },
-      orderBy: { date: "desc" },
+      orderBy: [{ date: "desc" }, { createdAt: "desc" }],
       select: {
         id: true,
         name: true,
@@ -131,6 +132,7 @@ export default async function DashboardPage({
         type: true,
         amountEur: true,
         excludeFromBudget: true,
+        createdAt: true,
         category: { select: { name: true } },
         projects: { select: { id: true, name: true } },
       },
@@ -149,6 +151,7 @@ export default async function DashboardPage({
         date: true,
         isRecurring: true,
         dayOfMonth: true,
+        createdAt: true,
       },
     }),
     // Recurring income for expected monthly (also used to find recurring from previous months)
@@ -165,6 +168,7 @@ export default async function DashboardPage({
         date: true,
         isRecurring: true,
         dayOfMonth: true,
+        createdAt: true,
       },
     }),
   ]);
@@ -224,6 +228,7 @@ export default async function DashboardPage({
     categoryName: e.category?.name || "Uncategorized",
     projects: e.projects.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })),
     excludeFromBudget: e.excludeFromBudget,
+    createdAt: e.createdAt.toISOString(),
   });
 
   // Transform incomes for client component (unified transaction format)
@@ -238,6 +243,7 @@ export default async function DashboardPage({
     projects: [] as { id: string; name: string }[],
     excludeFromBudget: false,
     isIncome: true as const,
+    createdAt: i.createdAt.toISOString(),
   });
 
   // Use username (nickname) if set, otherwise fall back to name or "User"

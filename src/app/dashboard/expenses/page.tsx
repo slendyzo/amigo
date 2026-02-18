@@ -22,6 +22,7 @@ type Expense = {
   category: { id: string; name: string } | null;
   bankAccount: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
+  createdAt: string;
 };
 
 type Category = {
@@ -279,7 +280,7 @@ export default function ExpensesPage() {
     if (selectedMonthFilter !== "all") {
       filtered = filtered.filter((e) => {
         const date = new Date(e.date);
-        const monthKey = `${date.getFullYear()}-${String(date.getMonth()).padStart(2, "0")}`;
+        const monthKey = `${date.getUTCFullYear()}-${String(date.getUTCMonth()).padStart(2, "0")}`;
         return monthKey === selectedMonthFilter;
       });
     }
@@ -290,7 +291,12 @@ export default function ExpensesPage() {
         // Include full timestamp for proper time-based sorting
         const dateA = new Date(a.date).getTime();
         const dateB = new Date(b.date).getTime();
-        return sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+        const dateDiff = sortOrder === "desc" ? dateB - dateA : dateA - dateB;
+        if (dateDiff !== 0) return dateDiff;
+        // Tiebreaker: most recently created first
+        const createdA = new Date(a.createdAt).getTime();
+        const createdB = new Date(b.createdAt).getTime();
+        return createdB - createdA;
       } else if (sortBy === "amount") {
         const amountA = Number(a.amount);
         const amountB = Number(b.amount);
@@ -347,7 +353,7 @@ export default function ExpensesPage() {
     // Always include current year
     years.add(currentYear);
     expenses.forEach((e) => {
-      const year = new Date(e.date).getFullYear();
+      const year = new Date(e.date).getUTCFullYear();
       years.add(year);
     });
     return Array.from(years).sort((a, b) => b - a); // Most recent first
@@ -707,8 +713,8 @@ export default function ExpensesPage() {
                             </svg>
                           )}
                           <div className="flex flex-col">
-                            <span>{new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}</span>
-                            <span className="text-xs text-slate-400">{new Date(expense.date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}</span>
+                            <span>{new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}</span>
+                            <span className="text-xs text-slate-400">{new Date(expense.date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })}</span>
                           </div>
                         </div>
                       </td>
@@ -819,10 +825,10 @@ export default function ExpensesPage() {
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                         <span className="text-xs text-slate-500">
-                          {new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                          {new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}
                           {" "}
                           <span className="text-slate-400">
-                            {new Date(expense.date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+                            {new Date(expense.date).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit", timeZone: "UTC" })}
                           </span>
                         </span>
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${typeColors[expense.type]}`}>

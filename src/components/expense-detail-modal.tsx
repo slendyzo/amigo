@@ -41,6 +41,7 @@ export default function ExpenseDetailModal({
       day: "numeric",
       month: "long",
       year: "numeric",
+      timeZone: "UTC",
       hour: "2-digit",
       minute: "2-digit",
     });

@@ -148,6 +148,7 @@ export default function InboxPage() {
       day: "numeric",
       month: "short",
       year: "numeric",
+      timeZone: "UTC",
       hour: "2-digit",
       minute: "2-digit",
     });

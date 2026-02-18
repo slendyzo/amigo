@@ -56,7 +56,7 @@ export async function GET(request: Request) {
     const [expenses, total] = await Promise.all([
       prisma.expense.findMany({
         where,
-        orderBy: { date: "desc" },
+        orderBy: [{ date: "desc" }, { createdAt: "desc" }],
         take: limit,
         skip: offset,
         select: {
@@ -77,6 +77,7 @@ export async function GET(request: Request) {
           category: true,
           bankAccount: true,
           projects: true,
+          createdAt: true,
         },
       }),
       prisma.expense.count({ where }),

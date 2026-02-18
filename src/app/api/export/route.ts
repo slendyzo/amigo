@@ -108,7 +108,7 @@ export async function GET(request: NextRequest) {
         };
 
         expensesSheet.addRow({
-          date: new Date(expense.date).toLocaleDateString("en-GB"),
+          date: new Date(expense.date).toLocaleDateString("en-GB", { timeZone: "UTC" }),
           name: expense.name,
           amount: Number(expense.amountEur).toFixed(2),
           type: typeLabels[expense.type] || expense.type,
@@ -152,7 +152,7 @@ export async function GET(request: NextRequest) {
 
       for (const income of incomes) {
         incomesSheet.addRow({
-          date: new Date(income.date).toLocaleDateString("en-GB"),
+          date: new Date(income.date).toLocaleDateString("en-GB", { timeZone: "UTC" }),
           name: income.name,
           amount: Number(income.amountEur).toFixed(2),
           type: income.type || "",
@@ -258,7 +258,7 @@ export async function GET(request: NextRequest) {
       };
 
       const row = [
-        new Date(expense.date).toLocaleDateString("en-GB"),
+        new Date(expense.date).toLocaleDateString("en-GB", { timeZone: "UTC" }),
         `"${(expense.name || "").replace(/"/g, '""')}"`,
         Number(expense.amountEur).toFixed(2),
         typeLabels[expense.type] || expense.type,

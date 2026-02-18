@@ -43,6 +43,7 @@ type Expense = {
   projects: { id: string; name: string }[];
   excludeFromBudget?: boolean;
   status?: "PAID" | "PENDING";
+  createdAt: string;
 };
 
 type Income = {
@@ -56,6 +57,7 @@ type Income = {
   projects: { id: string; name: string }[];
   excludeFromBudget: boolean;
   isIncome: true;
+  createdAt: string;
 };
 
 type Transaction = Expense | Income;
@@ -327,6 +329,7 @@ export default function DashboardOverview({
           projects?: { id: string; name: string }[];
           excludeFromBudget?: boolean;
           status?: "PAID" | "PENDING";
+          createdAt?: string;
         }) => ({
           id: e.id,
           name: e.name,
@@ -337,6 +340,7 @@ export default function DashboardOverview({
           projects: e.projects || [],
           excludeFromBudget: e.excludeFromBudget ?? false,
           status: e.status || "PAID",
+          createdAt: e.createdAt || e.date,
         })));
       }
 
@@ -350,6 +354,7 @@ export default function DashboardOverview({
           amountEur?: number;
           amount?: number;
           category?: { name: string } | null;
+          createdAt?: string;
         }) => ({
           id: i.id,
           name: i.name,
@@ -361,6 +366,7 @@ export default function DashboardOverview({
           projects: [],
           excludeFromBudget: false,
           isIncome: true as const,
+          createdAt: i.createdAt || i.date,
         })));
       } else {
         // Clear incomes if none found for this period
@@ -430,6 +436,7 @@ export default function DashboardOverview({
         projects?: { id: string; name: string }[];
         excludeFromBudget?: boolean;
         status?: "PAID" | "PENDING";
+        createdAt?: string;
       }) => ({
         id: e.id,
         name: e.name,
@@ -440,6 +447,7 @@ export default function DashboardOverview({
         projects: e.projects || [],
         excludeFromBudget: e.excludeFromBudget ?? false,
         status: e.status || "PAID",
+        createdAt: e.createdAt || e.date,
       });
 
       if (currentData.expenses) {
@@ -459,6 +467,7 @@ export default function DashboardOverview({
           amountEur?: number;
           amount?: number;
           category?: { name: string } | null;
+          createdAt?: string;
         }) => ({
           id: i.id,
           name: i.name,
@@ -470,6 +479,7 @@ export default function DashboardOverview({
           projects: [],
           excludeFromBudget: false,
           isIncome: true as const,
+          createdAt: i.createdAt || i.date,
         })));
       } else {
         // Clear incomes if none found for this period
@@ -485,7 +495,11 @@ export default function DashboardOverview({
   // Merge expenses and incomes into unified transactions list, sorted by date
   const transactions = useMemo(() => {
     const allTransactions: Transaction[] = [...expenses, ...incomes];
-    return allTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return allTransactions.sort((a, b) => {
+      const dateDiff = new Date(b.date).getTime() - new Date(a.date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+    });
   }, [expenses, incomes]);
 
   // Filter transactions by type
@@ -1065,7 +1079,7 @@ export default function DashboardOverview({
                     </div>
                     <div className="flex items-center gap-1.5 md:gap-2 mt-0.5 md:mt-1 flex-wrap">
                       <span className="text-xs md:text-sm text-slate-500">
-                        {new Date(transaction.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}
+                        {new Date(transaction.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short", timeZone: "UTC" })}
                       </span>
                       {isIncome ? (
                         <span className="text-xs md:text-sm font-medium text-green-600">

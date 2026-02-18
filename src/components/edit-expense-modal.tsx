@@ -263,7 +263,7 @@ export default function EditExpenseModal({
                 onClick={() => setShowDatePicker(!showDatePicker)}
                 className="text-sm text-[#0070f3] hover:underline"
               >
-                {isToday ? t("today") : new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                {isToday ? t("today") : new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
                 {!showDatePicker && ` ${t("change")}`}
               </button>
             </div>

@@ -318,7 +318,7 @@ export default function AddExpenseModal({
                 onClick={() => setShowDatePicker(!showDatePicker)}
                 className="text-sm text-[#0070f3] hover:underline"
               >
-                {isToday ? t("today") : new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                {isToday ? t("today") : new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
                 {!showDatePicker && ` ${t("change")}`}
               </button>
             </div>
@@ -356,7 +356,7 @@ export default function AddExpenseModal({
                   </span>
                   <p className="text-xs text-blue-600 mt-0.5">
                     {t("scheduleForLaterHint", {
-                      month: new Date(date).toLocaleDateString("en-GB", { month: "long", year: "numeric" })
+                      month: new Date(date).toLocaleDateString("en-GB", { month: "long", year: "numeric", timeZone: "UTC" })
                     })}
                   </p>
                 </div>
