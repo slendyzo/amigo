@@ -14,7 +14,7 @@ type AddTypeSelectorProps = {
   onSuccess?: () => void;
 };
 
-export default function AddTypeSelector({ isOpen, onClose, onSuccess }: AddTypeSelectorProps) {
+export default function AddTypeSelector({ isOpen, onClose }: AddTypeSelectorProps) {
   const t = useTranslations("common");
   const tScanner = useTranslations("receiptScanner");
   const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -45,7 +45,9 @@ export default function AddTypeSelector({ isOpen, onClose, onSuccess }: AddTypeS
     setShowIncomeModal(false);
     setShowReceiptScanner(false);
     onClose();
-    if (onSuccess) onSuccess();
+    // Don't call onSuccess here - modals call router.refresh() which
+    // triggers server re-render. The parent syncs via useEffect on prop changes.
+    // Calling both causes a race condition that makes the budget display go haywire.
   };
 
   return (

@@ -262,7 +262,6 @@ export default function ReceiptScannerModal({
                 ref={fileInputRef}
                 type="file"
                 accept="image/*"
-                capture="environment"
                 onChange={handleFileInputChange}
                 className="hidden"
               />

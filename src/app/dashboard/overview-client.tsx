@@ -191,6 +191,17 @@ export default function DashboardOverview({
   // Track if we're on initial load (server data) vs user-changed filters
   const [hasFilterChanged, setHasFilterChanged] = useState(false);
 
+  // Sync server-rendered data to state when router.refresh() triggers a re-render.
+  // This ensures budget/expense data updates correctly after adding/editing expenses
+  // without needing a separate fetchExpenses() call (which would race with router.refresh).
+  useEffect(() => {
+    if (!hasFilterChanged) {
+      setExpenses(initialExpenses);
+      setIncomes(initialIncomes);
+      setPreviousMonthExpenses(initialPreviousMonthExpenses);
+    }
+  }, [initialExpenses, initialIncomes, initialPreviousMonthExpenses, hasFilterChanged]);
+
   // Listen for quick-add event from bottom nav
   // This page handles its own modal, so stop propagation to prevent GlobalAddButton from also opening
   useEffect(() => {
@@ -1197,7 +1208,6 @@ export default function DashboardOverview({
           <AddTypeSelector
             isOpen={isSelectorOpen}
             onClose={() => setIsSelectorOpen(false)}
-            onSuccess={() => fetchExpenses()}
           />
         </Suspense>
       )}

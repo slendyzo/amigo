@@ -28,19 +28,28 @@ export function parseAmountSafe(amountStr: string): number | null {
 
 /**
  * Returns today's date in YYYY-MM-DD format for date inputs.
- * @returns Date string in ISO format (YYYY-MM-DD)
+ * Uses local timezone so the date matches the user's device.
+ * @returns Date string in YYYY-MM-DD format
  */
 export function getTodayDateString(): string {
-  return new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /**
  * Formats a Date object to YYYY-MM-DD string.
+ * Uses local timezone so the date matches the user's device.
  * @param date - The Date object to format
- * @returns Date string in ISO format (YYYY-MM-DD)
+ * @returns Date string in YYYY-MM-DD format
  */
 export function formatDateString(date: Date): string {
-  return date.toISOString().split("T")[0];
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 /**

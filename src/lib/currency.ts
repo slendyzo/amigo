@@ -1,19 +1,20 @@
 // Currency conversion utility
-// Uses exchangerate-api.com free tier (1500 requests/month)
+// Uses Frankfurter API (free, no API key, ECB data) with in-memory cache
 // Falls back to static rates if API fails
 
+// Fallback rates: EUR per 1 unit of foreign currency (updated Feb 2026)
 const STATIC_RATES: Record<string, number> = {
   EUR: 1,
-  USD: 0.92, // 1 USD = 0.92 EUR (approximate)
-  GBP: 1.17, // 1 GBP = 1.17 EUR (approximate)
-  BRL: 0.18, // 1 BRL = 0.18 EUR (approximate)
-  PLN: 0.23, // 1 PLN = 0.23 EUR (approximate)
-  CAD: 0.65, // 1 CAD = 0.65 EUR (approximate)
+  USD: 0.84,  // 1 USD ≈ 0.84 EUR
+  GBP: 1.15,  // 1 GBP ≈ 1.15 EUR
+  BRL: 0.16,  // 1 BRL ≈ 0.16 EUR
+  PLN: 0.24,  // 1 PLN ≈ 0.24 EUR
+  CAD: 0.62,  // 1 CAD ≈ 0.62 EUR
 };
 
-// Cache for exchange rates (refreshed every 24h)
+// Cache for exchange rates (refreshed every hour for more current rates)
 let ratesCache: { rates: Record<string, number>; timestamp: number } | null = null;
-const CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
 export async function getExchangeRates(): Promise<Record<string, number>> {
   // Return cached rates if still valid
@@ -22,14 +23,14 @@ export async function getExchangeRates(): Promise<Record<string, number>> {
   }
 
   try {
-    // Using exchangerate-api.com free tier
+    // Frankfurter API: free, no key, no rate limits, ECB data
     const response = await fetch(
-      "https://api.exchangerate-api.com/v4/latest/EUR",
-      { next: { revalidate: 86400 } } // Cache for 24h in Next.js
+      "https://api.frankfurter.dev/v1/latest",
+      { next: { revalidate: 3600 } } // Cache for 1h in Next.js
     );
 
     if (!response.ok) {
-      throw new Error("Failed to fetch exchange rates");
+      throw new Error(`Frankfurter API returned ${response.status}`);
     }
 
     const data = await response.json();
@@ -46,9 +47,10 @@ export async function getExchangeRates(): Promise<Record<string, number>> {
     }
 
     ratesCache = { rates, timestamp: Date.now() };
+    console.log(`[FOREX] Fetched live rates from Frankfurter (date: ${data.date})`);
     return rates;
   } catch (error) {
-    console.error("Failed to fetch exchange rates, using static rates:", error);
+    console.error("[FOREX] Failed to fetch live rates, using static fallback:", error);
     return STATIC_RATES;
   }
 }
