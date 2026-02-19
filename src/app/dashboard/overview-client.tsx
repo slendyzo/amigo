@@ -154,6 +154,8 @@ export default function DashboardOverview({
     category: { id: string; name: string } | null;
     bankAccount: { id: string; name: string } | null;
     projects: { id: string; name: string }[];
+    excludeFromBudget?: boolean;
+    status?: "PAID" | "PENDING";
   } | null>(null);
   const [isLoadingExpense, setIsLoadingExpense] = useState(false);
 
@@ -638,6 +640,8 @@ export default function DashboardOverview({
           category: exp.category,
           bankAccount: exp.bankAccount,
           projects: exp.projects || [],
+          excludeFromBudget: exp.excludeFromBudget || false,
+          status: exp.status || "PAID",
         });
       }
     } catch (error) {
@@ -1224,7 +1228,9 @@ export default function DashboardOverview({
             projects={projects}
             onSave={() => {
               setEditingExpense(null);
-              fetchExpenses();
+              // Don't call fetchExpenses() here - modal calls router.refresh() which
+              // triggers server re-render. We sync via useEffect on prop changes.
+              // Calling both causes a race condition that breaks budget display.
             }}
           />
         </Suspense>

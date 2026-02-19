@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import QuickCreateCategory from "./quick-create-category";
 import ProjectTagSelector from "./project-tag-selector";
@@ -32,6 +33,7 @@ export default function EditExpenseModal({
   projects = [],
   onSave,
 }: EditExpenseModalProps) {
+  const router = useRouter();
   const inputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("modals");
   const tCommon = useTranslations("common");
@@ -165,6 +167,8 @@ export default function EditExpenseModal({
         throw new Error(data.error || "Failed to update expense");
       }
 
+      // Refresh server data first, then notify parent
+      router.refresh();
       onSave();
       onClose();
     } catch (err) {
