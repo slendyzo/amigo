@@ -19,6 +19,7 @@ export async function GET() {
         defaultCurrency: workspace.defaultCurrency,
         defaultBankAccountId: workspace.defaultBankAccountId,
         language: workspace.language,
+        currencyDisplayMode: workspace.currencyDisplayMode,
       },
     });
   } catch (error) {
@@ -40,7 +41,7 @@ export async function PUT(request: NextRequest) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { monthlyBudget, defaultCurrency, defaultBankAccountId, name, language, resetOnboarding } = body;
+    const { monthlyBudget, defaultCurrency, defaultBankAccountId, name, language, resetOnboarding, currencyDisplayMode } = body;
 
     // Build update object
     const updateData: Record<string, unknown> = {};
@@ -54,6 +55,9 @@ export async function PUT(request: NextRequest) {
       updateData.defaultBankAccountId = defaultBankAccountId || null;
     }
     if (language) updateData.language = language;
+    if (currencyDisplayMode && ["converted", "original", "original_only"].includes(currencyDisplayMode)) {
+      updateData.currencyDisplayMode = currencyDisplayMode;
+    }
 
     // Reset onboarding flag if requested
     if (resetOnboarding) {
@@ -73,6 +77,7 @@ export async function PUT(request: NextRequest) {
         defaultCurrency: updatedWorkspace.defaultCurrency,
         defaultBankAccountId: updatedWorkspace.defaultBankAccountId,
         language: updatedWorkspace.language,
+        currencyDisplayMode: updatedWorkspace.currencyDisplayMode,
       },
     });
   } catch (error) {

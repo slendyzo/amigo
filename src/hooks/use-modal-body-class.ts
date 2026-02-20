@@ -14,16 +14,17 @@ export function useModalBodyClass(isOpen: boolean): void {
   useEffect(() => {
     if (isOpen) {
       scrollPositionRef.current = window.scrollY;
+      document.body.style.top = `-${scrollPositionRef.current}px`;
       document.body.classList.add("modal-open");
     } else {
       document.body.classList.remove("modal-open");
+      document.body.style.top = "";
       const savedPosition = scrollPositionRef.current;
-      requestAnimationFrame(() => {
-        window.scrollTo(0, savedPosition);
-      });
+      window.scrollTo(0, savedPosition);
     }
     return () => {
       document.body.classList.remove("modal-open");
+      document.body.style.top = "";
     };
   }, [isOpen]);
 }

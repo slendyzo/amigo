@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { CategoryBreakdown } from "@/components/ui/category-breakdown";
 import { useSwipe } from "@/hooks/use-swipe";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import { formatCurrency } from "@/lib/currencies";
 import type { Expense as FullExpense } from "@/types/models";
 
 // Lazy load heavy modals and charts to reduce initial bundle size
@@ -40,6 +41,8 @@ type Expense = {
   name: string;
   date: string;
   type: string;
+  amount: number;
+  currency: string;
   amountEur: number;
   categoryName: string;
   projects: { id: string; name: string }[];
@@ -54,6 +57,8 @@ type Income = {
   date: string;
   type: "INCOME";
   incomeType: string;
+  amount: number;
+  currency: string;
   amountEur: number;
   categoryName: string;
   projects: { id: string; name: string }[];
@@ -85,6 +90,8 @@ type Props = {
   expectedMonthlyIncome: number;
   onboardingCompleted: boolean;
   seenAnnouncements: string[];
+  currencyDisplayMode: string;
+  defaultCurrency: string;
 };
 
 // Current announcement IDs - add new ones here when releasing new features
@@ -121,6 +128,8 @@ export default function DashboardOverview({
   expectedMonthlyIncome,
   onboardingCompleted,
   seenAnnouncements,
+  currencyDisplayMode,
+  defaultCurrency,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("dashboard");
@@ -341,6 +350,7 @@ export default function DashboardOverview({
           type: string;
           amountEur?: number;
           amount?: number;
+          currency?: string;
           category?: { name: string } | null;
           projects?: { id: string; name: string }[];
           excludeFromBudget?: boolean;
@@ -351,6 +361,8 @@ export default function DashboardOverview({
           name: e.name,
           date: e.date,
           type: e.type,
+          amount: Number(e.amount ?? 0),
+          currency: e.currency || "EUR",
           amountEur: Number(e.amountEur ?? e.amount ?? 0),
           categoryName: e.category?.name || "Uncategorized",
           projects: e.projects || [],
@@ -369,6 +381,7 @@ export default function DashboardOverview({
           type: string;
           amountEur?: number;
           amount?: number;
+          currency?: string;
           category?: { name: string } | null;
           createdAt?: string;
         }) => ({
@@ -377,6 +390,8 @@ export default function DashboardOverview({
           date: i.date,
           type: "INCOME" as const,
           incomeType: i.type,
+          amount: Number(i.amount ?? 0),
+          currency: i.currency || "EUR",
           amountEur: Number(i.amountEur ?? i.amount ?? 0),
           categoryName: i.category?.name || "Uncategorized",
           projects: [],
@@ -448,6 +463,7 @@ export default function DashboardOverview({
         type: string;
         amountEur?: number;
         amount?: number;
+        currency?: string;
         category?: { name: string } | null;
         projects?: { id: string; name: string }[];
         excludeFromBudget?: boolean;
@@ -458,6 +474,8 @@ export default function DashboardOverview({
         name: e.name,
         date: e.date,
         type: e.type,
+        amount: Number(e.amount ?? 0),
+        currency: e.currency || "EUR",
         amountEur: Number(e.amountEur ?? e.amount ?? 0),
         categoryName: e.category?.name || "Uncategorized",
         projects: e.projects || [],
@@ -482,6 +500,7 @@ export default function DashboardOverview({
           type: string;
           amountEur?: number;
           amount?: number;
+          currency?: string;
           category?: { name: string } | null;
           createdAt?: string;
         }) => ({
@@ -490,6 +509,8 @@ export default function DashboardOverview({
           date: i.date,
           type: "INCOME" as const,
           incomeType: i.type,
+          amount: Number(i.amount ?? 0),
+          currency: i.currency || "EUR",
           amountEur: Number(i.amountEur ?? i.amount ?? 0),
           categoryName: i.category?.name || "Uncategorized",
           projects: [],
@@ -678,6 +699,32 @@ export default function DashboardOverview({
       case "all":
         return t("allTime");
     }
+  };
+
+  // Render transaction amount based on currency display mode
+  const renderAmount = (transaction: Transaction) => {
+    const isIncome = isIncomeTransaction(transaction);
+    const eur = transaction.amountEur;
+    const original = transaction.amount;
+    const cur = transaction.currency || "EUR";
+    const isSameCurrency = cur === "EUR";
+
+    if (currencyDisplayMode === "converted" || isSameCurrency) {
+      if (isIncome) return { text: `+€${eur.toFixed(2)}` };
+      if (eur < 0) return { text: `(€${Math.abs(eur).toFixed(2)})` };
+      return { text: `€${eur.toFixed(2)}` };
+    }
+
+    const mainText = isIncome
+      ? `+${formatCurrency(original, cur)}`
+      : formatCurrency(original, cur);
+
+    if (currencyDisplayMode === "original") {
+      return { text: mainText, secondary: `≈€${Math.abs(eur).toFixed(2)}` };
+    }
+
+    // original_only
+    return { text: mainText };
   };
 
   // Generate year options (last 5 years) and current date for navigation limits
@@ -1142,17 +1189,26 @@ export default function DashboardOverview({
                     </div>
                   </div>
                   <div className="flex items-center gap-2 md:gap-4 flex-shrink-0">
-                    <p className={`font-semibold tabular-nums text-sm md:text-base ${
-                      isIncome ? "text-green-600" :
-                      transaction.excludeFromBudget ? "text-slate-400 line-through" :
-                      transaction.amountEur < 0 ? "text-green-600" : "text-slate-900"
-                    }`}>
-                      {isIncome
-                        ? `+€${transaction.amountEur.toFixed(2)}`
-                        : transaction.amountEur < 0
-                          ? `(€${Math.abs(transaction.amountEur).toFixed(2)})`
-                          : `€${transaction.amountEur.toFixed(2)}`}
-                    </p>
+                    {(() => {
+                      const amt = renderAmount(transaction);
+                      const colorClass = isIncome ? "text-green-600" :
+                        transaction.excludeFromBudget ? "text-slate-400 line-through" :
+                        transaction.amountEur < 0 ? "text-green-600" : "text-slate-900";
+                      return amt.secondary ? (
+                        <div className="text-right">
+                          <p className={`font-semibold tabular-nums text-sm md:text-base ${colorClass}`}>
+                            {amt.text}
+                          </p>
+                          <p className="text-[10px] md:text-xs text-slate-400 tabular-nums">
+                            {amt.secondary}
+                          </p>
+                        </div>
+                      ) : (
+                        <p className={`font-semibold tabular-nums text-sm md:text-base ${colorClass}`}>
+                          {amt.text}
+                        </p>
+                      );
+                    })()}
                     {!isIncome && (
                       <>
                         {confirmDeleteId === transaction.id ? (

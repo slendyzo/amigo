@@ -649,6 +649,13 @@
     "budgetDescription": "Define o teu objetivo de gastos mensais",
     "currency": "Moeda Padrão",
     "currencyDescription": "Usada para mostrar totais e novas entradas",
+    "currencyDisplayMode": "Exibição de Moeda",
+    "currencyDisplayModeDescription": "Como os valores aparecem nas listas de transações",
+    "currencyModes": {
+      "converted": "Convertido (mostrar em EUR)",
+      "original": "Original + conversão",
+      "originalOnly": "Apenas original"
+    },
     "saveSettings": "Guardar Definições",
     "saved": "Definições guardadas com sucesso",
     "saveFailed": "Erro ao guardar definições",

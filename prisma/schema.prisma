@@ -158,6 +158,7 @@ model Workspace {
   defaultCurrency      String   @default("EUR") @db.VarChar(3)
   defaultBankAccountId String?  // Default bank account for new expenses
   language             String   @default("en") @db.VarChar(10) // User's preferred language (en, pt-PT, fr-FR)
+  currencyDisplayMode  String   @default("converted") @db.VarChar(20) // "converted", "original", "original_only"
 
   // Relations
   owner        User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)

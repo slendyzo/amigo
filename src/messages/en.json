@@ -630,6 +630,13 @@
     "budgetDescription": "Set your monthly spending target",
     "currency": "Default Currency",
     "currencyDescription": "Used for displaying totals and new entries",
+    "currencyDisplayMode": "Currency Display",
+    "currencyDisplayModeDescription": "How amounts are shown in transaction lists",
+    "currencyModes": {
+      "converted": "Converted (show in EUR)",
+      "original": "Original + conversion",
+      "originalOnly": "Original only"
+    },
     "saveSettings": "Save Settings",
     "saved": "Settings saved successfully",
     "saveFailed": "Failed to save settings",

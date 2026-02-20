@@ -20,6 +20,7 @@ export interface WorkspaceContext {
     defaultCurrency: string;
     defaultBankAccountId: string | null;
     language: string;
+    currencyDisplayMode: string;
     onboardingCompleted: boolean;
   };
   role: WorkspaceRole;
@@ -72,6 +73,7 @@ export async function getActiveWorkspace(): Promise<WorkspaceContext | null> {
     defaultCurrency: true,
     defaultBankAccountId: true,
     language: true,
+    currencyDisplayMode: true,
     onboardingCompleted: true,
   } as const;
 
@@ -129,6 +131,7 @@ export async function getActiveWorkspace(): Promise<WorkspaceContext | null> {
       defaultCurrency: membership.workspace.defaultCurrency,
       defaultBankAccountId: membership.workspace.defaultBankAccountId,
       language: membership.workspace.language,
+      currencyDisplayMode: membership.workspace.currencyDisplayMode,
       onboardingCompleted: membership.workspace.onboardingCompleted,
     },
     role,
@@ -169,6 +172,7 @@ export async function getWorkspaceById(
           defaultCurrency: true,
           defaultBankAccountId: true,
           language: true,
+          currencyDisplayMode: true,
           onboardingCompleted: true,
         },
       },
@@ -193,6 +197,7 @@ export async function getWorkspaceById(
       defaultCurrency: membership.workspace.defaultCurrency,
       defaultBankAccountId: membership.workspace.defaultBankAccountId,
       language: membership.workspace.language,
+      currencyDisplayMode: membership.workspace.currencyDisplayMode,
       onboardingCompleted: membership.workspace.onboardingCompleted,
     },
     role,

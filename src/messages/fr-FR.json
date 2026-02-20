@@ -630,6 +630,13 @@
     "budgetDescription": "Définissez votre objectif de dépenses mensuelles",
     "currency": "Devise par Défaut",
     "currencyDescription": "Utilisée pour afficher les totaux et nouvelles entrées",
+    "currencyDisplayMode": "Affichage des Devises",
+    "currencyDisplayModeDescription": "Comment les montants sont affichés dans les listes de transactions",
+    "currencyModes": {
+      "converted": "Converti (afficher en EUR)",
+      "original": "Original + conversion",
+      "originalOnly": "Original uniquement"
+    },
     "saveSettings": "Enregistrer les Paramètres",
     "saved": "Paramètres enregistrés avec succès",
     "saveFailed": "Échec de l'enregistrement des paramètres",

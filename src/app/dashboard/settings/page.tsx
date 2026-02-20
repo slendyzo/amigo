@@ -20,6 +20,7 @@ type Workspace = {
   defaultCurrency: string;
   defaultBankAccountId: string | null;
   language: string;
+  currencyDisplayMode: string;
 };
 
 type BankAccount = {
@@ -67,6 +68,7 @@ export default function SettingsPage() {
   const [currency, setCurrency] = useState("EUR");
   const [defaultBankAccountId, setDefaultBankAccountId] = useState("");
   const [language, setLanguage] = useState("en");
+  const [currencyDisplayMode, setCurrencyDisplayMode] = useState("converted");
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
 
   // Salary form
@@ -118,6 +120,7 @@ export default function SettingsPage() {
         setCurrency(data.workspace.defaultCurrency || "EUR");
         setDefaultBankAccountId(data.workspace.defaultBankAccountId || "");
         setLanguage(data.workspace.language || "en");
+        setCurrencyDisplayMode(data.workspace.currencyDisplayMode || "converted");
       }
       if (bankAccountsRes.ok) {
         const data = await bankAccountsRes.json();
@@ -180,6 +183,7 @@ export default function SettingsPage() {
           defaultCurrency: currency,
           defaultBankAccountId: defaultBankAccountId || null,
           language,
+          currencyDisplayMode,
         }),
       });
 
@@ -463,6 +467,27 @@ export default function SettingsPage() {
                   {l.name}
                 </option>
               ))}
+            </select>
+          </div>
+
+          {/* Currency Display Mode */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+            <div className="flex-1">
+              <label className="block text-sm font-medium text-slate-700 mb-1">
+                {t("currencyDisplayMode")}
+              </label>
+              <p className="text-xs text-slate-500">
+                {t("currencyDisplayModeDescription")}
+              </p>
+            </div>
+            <select
+              value={currencyDisplayMode}
+              onChange={(e) => setCurrencyDisplayMode(e.target.value)}
+              className="rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+            >
+              <option value="converted">{t("currencyModes.converted")}</option>
+              <option value="original">{t("currencyModes.original")}</option>
+              <option value="original_only">{t("currencyModes.originalOnly")}</option>
             </select>
           </div>
 

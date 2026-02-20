@@ -42,6 +42,8 @@ export default async function DashboardPage({
         monthlyBudget: true,
         monthlySalary: true,
         onboardingCompleted: true,
+        currencyDisplayMode: true,
+        defaultCurrency: true,
       },
     }),
   ]);
@@ -111,6 +113,8 @@ export default async function DashboardPage({
         name: true,
         date: true,
         type: true,
+        amount: true,
+        currency: true,
         amountEur: true,
         excludeFromBudget: true,
         createdAt: true,
@@ -130,6 +134,8 @@ export default async function DashboardPage({
         name: true,
         date: true,
         type: true,
+        amount: true,
+        currency: true,
         amountEur: true,
         excludeFromBudget: true,
         createdAt: true,
@@ -147,6 +153,8 @@ export default async function DashboardPage({
         id: true,
         name: true,
         type: true,
+        amount: true,
+        currency: true,
         amountEur: true,
         date: true,
         isRecurring: true,
@@ -164,6 +172,8 @@ export default async function DashboardPage({
         id: true,
         name: true,
         type: true,
+        amount: true,
+        currency: true,
         amountEur: true,
         date: true,
         isRecurring: true,
@@ -224,6 +234,8 @@ export default async function DashboardPage({
     name: e.name,
     date: e.date.toISOString(),
     type: e.type,
+    amount: Number(e.amount),
+    currency: e.currency,
     amountEur: Number(e.amountEur),
     categoryName: e.category?.name || "Uncategorized",
     projects: e.projects.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })),
@@ -238,6 +250,8 @@ export default async function DashboardPage({
     date: i.date.toISOString(),
     type: "INCOME" as const,
     incomeType: i.type,
+    amount: Number(i.amount),
+    currency: i.currency,
     amountEur: Number(i.amountEur),
     categoryName: i.type, // Use income type as category for display
     projects: [] as { id: string; name: string }[],
@@ -267,6 +281,8 @@ export default async function DashboardPage({
       expectedMonthlyIncome={expectedMonthlyIncome}
       onboardingCompleted={workspace.onboardingCompleted}
       seenAnnouncements={user?.seenAnnouncements || []}
+      currencyDisplayMode={workspace.currencyDisplayMode ?? "converted"}
+      defaultCurrency={workspace.defaultCurrency ?? "EUR"}
     />
   );
 }
