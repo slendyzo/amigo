@@ -34,7 +34,7 @@ export function BurnChart({
   const t = useTranslations("dashboard");
   const chartData = useMemo(() => {
     // Create cumulative data for each day of the month (1-31)
-    const data: { day: number; current: number; previous: number }[] = [];
+    const data: { day: number; current: number | null; previous: number }[] = [];
 
     // Group expenses by day and calculate cumulative totals
     const currentByDay = new Map<number, number>();
@@ -64,7 +64,7 @@ export function BurnChart({
 
       data.push({
         day,
-        current: day <= maxDay ? currentCumulative : 0,
+        current: day <= maxDay ? currentCumulative : null,
         previous: previousCumulative,
       });
     }
@@ -76,7 +76,8 @@ export function BurnChart({
     return data.slice(0, lastDay);
   }, [currentMonthExpenses, previousMonthExpenses]);
 
-  const currentTotal = chartData[chartData.length - 1]?.current || 0;
+  const lastCurrentEntry = [...chartData].reverse().find((d) => d.current !== null);
+  const currentTotal = lastCurrentEntry?.current || 0;
   const previousTotal = chartData[chartData.length - 1]?.previous || 0;
   const difference = currentTotal - previousTotal;
   const percentChange = previousTotal > 0 ? (difference / previousTotal) * 100 : 0;
@@ -124,7 +125,7 @@ export function BurnChart({
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
               }}
               formatter={(value, name) => [
-                `€${Number(value ?? 0).toFixed(2)}`,
+                value === null ? "—" : `€${Number(value ?? 0).toFixed(2)}`,
                 name === "current" ? currentMonthLabel : previousMonthLabel,
               ]}
               labelFormatter={(day) => t("chart.day", { day })}
