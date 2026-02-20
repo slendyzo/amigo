@@ -4,6 +4,25 @@ import { prisma } from "@/lib/db";
 
 const LEARNING_THRESHOLD = 3; // Number of times before auto-creating mapping
 
+/**
+ * Normalize a keyword for consistent matching:
+ * - lowercase
+ * - strip diacritics/accents (gás → gas, café → cafe)
+ * - strip apostrophes and common punctuation (mcdonald's → mcdonalds)
+ * - collapse whitespace
+ */
+function normalizeKeyword(input: string): string {
+  return input
+    .toLowerCase()
+    .trim()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // strip diacritics
+    .replace(/[''`]/g, "")           // strip apostrophes
+    .replace(/[^\w\s-]/g, "")        // strip other punctuation
+    .replace(/\s+/g, " ")            // collapse whitespace
+    .trim();
+}
+
 // POST - Learn from categorization patterns and create mappings when threshold is met
 export async function POST(request: Request) {
   try {
@@ -38,18 +57,17 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "No workspace found" }, { status: 400 });
     }
 
-    // Normalize expense name for keyword (lowercase, trimmed)
-    const keyword = expenseName.toLowerCase().trim();
+    const keyword = normalizeKeyword(expenseName);
 
-    // Skip very short keywords (less than 3 chars) or generic ones
-    if (keyword.length < 3) {
+    // Skip very short keywords (less than 2 chars)
+    if (keyword.length < 2) {
       return NextResponse.json({
         learned: false,
         reason: "Keyword too short"
       });
     }
 
-    // Check if mapping already exists for this keyword
+    // Check if mapping already exists for this normalized keyword
     const existingMapping = await prisma.keywordMapping.findUnique({
       where: {
         workspaceId_keyword: {
@@ -76,20 +94,23 @@ export async function POST(request: Request) {
       });
     }
 
-    // Count how many times this expense name was categorized to this category
-    const count = await prisma.expense.count({
-      where: {
-        workspaceId: workspace.id,
-        categoryId,
-        name: {
-          equals: expenseName,
-          mode: "insensitive",
-        },
-      },
-    });
+    // Count how many times expenses with similar names were categorized to this category.
+    // We use the normalized keyword for a broader match: "gás", "gas", "Gás" all count together.
+    // Prisma insensitive mode handles case; we also check the non-accented form via raw SQL.
+    const count = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
+      `SELECT COUNT(*) as count FROM expenses
+       WHERE "workspaceId" = $1
+         AND "categoryId" = $2
+         AND LOWER(REGEXP_REPLACE(UNACCENT(name), '[''\\x60]', '', 'g')) = $3`,
+      workspace.id,
+      categoryId,
+      keyword
+    );
 
-    if (count >= LEARNING_THRESHOLD) {
-      // Create the keyword mapping
+    const matchCount = Number(count[0]?.count ?? 0);
+
+    if (matchCount >= LEARNING_THRESHOLD) {
+      // Create the keyword mapping with normalized keyword
       const mapping = await prisma.keywordMapping.create({
         data: {
           workspaceId: workspace.id,
@@ -102,16 +123,16 @@ export async function POST(request: Request) {
       return NextResponse.json({
         learned: true,
         mapping,
-        count,
+        count: matchCount,
         message: `Created mapping: "${keyword}" → category`,
       });
     }
 
     return NextResponse.json({
       learned: false,
-      count,
+      count: matchCount,
       threshold: LEARNING_THRESHOLD,
-      remaining: LEARNING_THRESHOLD - count,
+      remaining: LEARNING_THRESHOLD - matchCount,
     });
   } catch (error) {
     console.error("Learn keyword mapping error:", error);
@@ -156,9 +177,9 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: "No workspace found" }, { status: 400 });
     }
 
-    const keyword = expenseName.toLowerCase().trim();
+    const keyword = normalizeKeyword(expenseName);
 
-    // First check if there's an existing mapping
+    // First check if there's an existing mapping (using normalized keyword)
     const existingMapping = await prisma.keywordMapping.findUnique({
       where: {
         workspaceId_keyword: {
@@ -182,27 +203,22 @@ export async function GET(request: Request) {
       });
     }
 
-    // No mapping exists - check historical categorizations
-    const categorizations = await prisma.expense.groupBy({
-      by: ["categoryId"],
-      where: {
-        workspaceId: workspace.id,
-        categoryId: { not: null },
-        name: {
-          equals: expenseName,
-          mode: "insensitive",
-        },
-      },
-      _count: {
-        categoryId: true,
-      },
-      orderBy: {
-        _count: {
-          categoryId: "desc",
-        },
-      },
-      take: 1,
-    });
+    // No mapping exists - check historical categorizations using normalized name matching.
+    // This groups expenses by categoryId where the normalized name matches,
+    // so "gás", "gas", "Gás" and "mcdonald's", "mcdonalds" all count together.
+    const categorizations = await prisma.$queryRawUnsafe<
+      { categoryId: string; cnt: bigint }[]
+    >(
+      `SELECT "categoryId", COUNT(*) as cnt FROM expenses
+       WHERE "workspaceId" = $1
+         AND "categoryId" IS NOT NULL
+         AND LOWER(REGEXP_REPLACE(UNACCENT(name), '[''\\x60]', '', 'g')) = $2
+       GROUP BY "categoryId"
+       ORDER BY cnt DESC
+       LIMIT 1`,
+      workspace.id,
+      keyword
+    );
 
     if (categorizations.length > 0 && categorizations[0].categoryId) {
       const topCategory = await prisma.category.findUnique({
@@ -210,7 +226,7 @@ export async function GET(request: Request) {
       });
 
       if (topCategory && topCategory.name !== "Uncategorized") {
-        const count = categorizations[0]._count.categoryId;
+        const count = Number(categorizations[0].cnt);
         return NextResponse.json({
           suggestion: {
             categoryId: topCategory.id,
