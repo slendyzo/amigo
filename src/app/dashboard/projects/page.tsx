@@ -244,19 +244,19 @@ export default function ProjectsPage() {
               <div className="mt-4 pt-3 border-t border-slate-100 flex gap-2">
                 <button
                   onClick={(e) => { e.stopPropagation(); openModal(project); }}
-                  className="flex-1 text-sm text-slate-600 hover:text-slate-900 py-1"
+                  className="flex-1 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 py-1.5 rounded-lg transition-colors"
                 >
                   {tCommon("edit")}
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); handleToggleArchive(project); }}
-                  className="flex-1 text-sm text-slate-600 hover:text-slate-900 py-1"
+                  className="flex-1 text-sm font-medium text-slate-700 hover:text-slate-900 hover:bg-slate-100 py-1.5 rounded-lg transition-colors"
                 >
                   {project.isActive ? t("archive") : t("unarchive")}
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setDeleteId(project.id); }}
-                  className="flex-1 text-sm text-red-500 hover:text-red-700 py-1"
+                  className="flex-1 text-sm font-medium text-red-600 hover:text-red-700 hover:bg-red-50 py-1.5 rounded-lg transition-colors"
                 >
                   {tCommon("delete")}
                 </button>

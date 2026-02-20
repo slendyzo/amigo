@@ -167,8 +167,7 @@ export default function EditExpenseModal({
         throw new Error(data.error || "Failed to update expense");
       }
 
-      // Refresh server data first, then notify parent
-      router.refresh();
+      // Notify parent to refresh data, then close
       onSave();
       onClose();
     } catch (err) {

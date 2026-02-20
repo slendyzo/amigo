@@ -399,7 +399,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                         </div>
                         <button
                           onClick={() => handleEditExpense(expense)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 opacity-0 group-hover:opacity-100 transition-opacity"
+                          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
                           title="Edit expense"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
