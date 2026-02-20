@@ -28,6 +28,7 @@ export type Expense = {
   amount: number;
   currency?: string;
   amountEur?: number;
+  exchangeRate?: number;
   type: ExpenseType;
   date: string;
   isRecurring?: boolean;
@@ -37,10 +38,15 @@ export type Expense = {
   projects: Project[];
   excludeFromBudget?: boolean;
   notes?: string;
+  description?: string;
+  rawInput?: string;
+  merchant?: string;
   status?: ExpenseStatus;
   dueDate?: string;
   paidAt?: string;
   importLogId?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type IncomeType = "SALARY" | "FREELANCE" | "INVESTMENT" | "SALE" | "GIFT" | "REFUND" | "OTHER";

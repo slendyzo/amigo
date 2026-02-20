@@ -6,10 +6,12 @@ import { useTranslations } from "next-intl";
 import { CategoryBreakdown } from "@/components/ui/category-breakdown";
 import { useSwipe } from "@/hooks/use-swipe";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import type { Expense as FullExpense } from "@/types/models";
 
 // Lazy load heavy modals and charts to reduce initial bundle size
 const AddTypeSelector = lazy(() => import("@/components/add-type-selector"));
 const EditExpenseModal = lazy(() => import("@/components/edit-expense-modal"));
+const ExpenseDetailModal = lazy(() => import("@/components/expense-detail-modal"));
 const OnboardingModal = lazy(() => import("@/components/onboarding-modal"));
 const AnnouncementModal = lazy(() => import("@/components/announcement-modal"));
 const BurnChart = lazy(() => import("@/components/ui/burn-chart").then(mod => ({ default: mod.BurnChart })));
@@ -158,6 +160,7 @@ export default function DashboardOverview({
     status?: "PAID" | "PENDING";
   } | null>(null);
   const [isLoadingExpense, setIsLoadingExpense] = useState(false);
+  const [viewingExpense, setViewingExpense] = useState<FullExpense | null>(null);
 
   // Previous month data for burn chart (pre-loaded from server!)
   const [previousMonthExpenses, setPreviousMonthExpenses] = useState<Expense[]>(initialPreviousMonthExpenses);
@@ -651,6 +654,19 @@ export default function DashboardOverview({
     }
   };
 
+  // Fetch full expense data for detail view
+  const handleViewExpense = async (expenseId: string) => {
+    try {
+      const response = await fetch(`/api/expenses/${expenseId}`);
+      if (response.ok) {
+        const data = await response.json();
+        setViewingExpense(data.expense);
+      }
+    } catch (error) {
+      console.error("Failed to fetch expense:", error);
+    }
+  };
+
   const getDateRangeLabel = () => {
     switch (viewMode) {
       case "month":
@@ -1055,7 +1071,14 @@ export default function DashboardOverview({
               return (
                 <div
                   key={transaction.id}
-                  className={`px-4 md:px-6 py-3 md:py-4 flex items-start md:items-center justify-between active:bg-slate-50 md:hover:bg-slate-50 transition-colors group tap-none ${
+                  onClick={(e) => {
+                    const target = e.target as HTMLElement;
+                    if (target.closest("button")) return;
+                    if (!isIncome) {
+                      handleViewExpense(transaction.id);
+                    }
+                  }}
+                  className={`px-4 md:px-6 py-3 md:py-4 flex items-start md:items-center justify-between active:bg-slate-50 md:hover:bg-slate-50 transition-colors group tap-none cursor-pointer ${
                     isIncome ? "bg-green-50/30" :
                     !isIncome && transaction.status === "PENDING" ? "bg-blue-50/50 border-l-2 border-blue-400" :
                     transaction.excludeFromBudget ? "bg-slate-50/50" : ""
@@ -1231,6 +1254,39 @@ export default function DashboardOverview({
               // Don't call fetchExpenses() here - modal calls router.refresh() which
               // triggers server re-render. We sync via useEffect on prop changes.
               // Calling both causes a race condition that breaks budget display.
+            }}
+          />
+        </Suspense>
+      )}
+
+      {/* Expense Detail Modal */}
+      {viewingExpense && (
+        <Suspense fallback={null}>
+          <ExpenseDetailModal
+            isOpen={!!viewingExpense}
+            onClose={() => setViewingExpense(null)}
+            expense={viewingExpense}
+            onEdit={() => {
+              const exp = viewingExpense;
+              setViewingExpense(null);
+              setEditingExpense({
+                id: exp.id,
+                name: exp.name,
+                amount: Number(exp.amount),
+                currency: exp.currency || "EUR",
+                type: exp.type as "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT",
+                date: exp.date,
+                category: exp.category,
+                bankAccount: exp.bankAccount,
+                projects: exp.projects || [],
+                excludeFromBudget: exp.excludeFromBudget || false,
+                status: exp.status || "PAID",
+              });
+            }}
+            onDelete={() => {
+              const id = viewingExpense.id;
+              setViewingExpense(null);
+              setConfirmDeleteId(id);
             }}
           />
         </Suspense>

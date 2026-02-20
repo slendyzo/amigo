@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transaction Detail Modal - Refined</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+  <style>
+    /* ============================================
+       AMIGO - Transaction Detail Modal
+       Refined Option B: Compact Centered Popup
+       Mobile + Desktop side by side
+       ============================================ */
+    * { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* ---- Device Frames ---- */
+    .phone-frame {
+      width: 375px;
+      height: 720px;
+      border-radius: 2.5rem;
+      border: 8px solid #1e293b;
+      overflow: hidden;
+      position: relative;
+      background: #e2e8f0;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      flex-shrink: 0;
+    }
+    .desktop-frame {
+      width: 820px;
+      height: 560px;
+      border-radius: 0.75rem;
+      border: 2px solid #cbd5e1;
+      overflow: hidden;
+      position: relative;
+      background: #e2e8f0;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+    .desktop-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 32px;
+      background: #f1f5f9;
+      border-bottom: 1px solid #e2e8f0;
+      z-index: 1;
+    }
+    .desktop-frame::after {
+      content: '● ● ●';
+      position: absolute;
+      top: 8px; left: 12px;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: #cbd5e1;
+      z-index: 2;
+    }
+
+    /* ---- Shared Modal Shell ---- */
+    .modal-shell {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;      /* CENTERED, not bottom */
+      justify-content: center;
+      padding: 1rem;
+    }
+    .desktop-frame .modal-shell {
+      top: 32px;                 /* Below title bar */
+      padding: 2rem;
+    }
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+    .desktop-frame .modal-backdrop {
+      top: 32px;
+    }
+
+    /* ---- Modal Card ---- */
+    .modal-card {
+      position: relative;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 20px 60px -15px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.05);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      animation: popup 0.28s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    .phone-frame .modal-card {
+      width: 100%;
+      max-height: 75%;          /* Compact: doesn't fill the screen */
+    }
+    .desktop-frame .modal-card {
+      width: 420px;
+      max-height: 90%;
+    }
+
+    @keyframes popup {
+      from { opacity: 0; transform: scale(0.92) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    /* ---- Scroll area ---- */
+    .scroll-area {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .scroll-area::-webkit-scrollbar { width: 0; }
+
+    /* ---- Metadata collapse ---- */
+    .meta-content { max-height: 0; opacity: 0; overflow: hidden; transition: all 0.25s ease; }
+    .meta-content.open { max-height: 600px; opacity: 1; }
+    .meta-chevron { transition: transform 0.2s ease; }
+    .meta-chevron.open { transform: rotate(180deg); }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen p-8">
+
+  <!-- Page Header -->
+  <div class="max-w-7xl mx-auto mb-10">
+    <h1 class="text-2xl font-bold text-slate-900 mb-1">Transaction Detail Modal &mdash; Refined</h1>
+    <p class="text-slate-500 text-sm">Centered popup with smooth scale animation. Compact, doesn't dominate the screen.</p>
+  </div>
+
+  <!-- ==============================
+       MOBILE + DESKTOP SIDE BY SIDE
+       ============================== -->
+  <div class="max-w-7xl mx-auto flex flex-wrap gap-10 justify-center items-start">
+
+    <!-- ==============================
+         MOBILE
+         ============================== -->
+    <div class="flex flex-col items-center gap-3">
+      <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Mobile</h2>
+
+      <div class="phone-frame">
+        <div class="modal-shell">
+          <div class="modal-backdrop"></div>
+
+          <div class="modal-card">
+
+            <!-- HERO: Compact, softer gradient -->
+            <div class="flex-shrink-0 relative px-4 pt-3.5 pb-4" style="background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 40%, #f8fafc 100%);">
+              <!-- Close -->
+              <button class="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 text-slate-400 hover:bg-white/80 hover:text-slate-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+
+              <!-- Pills row -->
+              <div class="flex items-center gap-1.5 mb-2.5">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100/80 text-purple-700">Lifestyle</span>
+                <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100/80 text-green-700">
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Paid
+                </span>
+                <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100/80 text-sky-700">
+                  <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                  Recurring
+                </span>
+              </div>
+
+              <!-- Name -->
+              <p class="text-base font-semibold text-slate-900 pr-8 mb-1">McDonald's</p>
+
+              <!-- Amount -->
+              <p class="text-3xl font-extrabold text-slate-900 tracking-tight leading-none mb-1">$12.50</p>
+
+              <!-- Forex subtitle -->
+              <p class="text-xs text-slate-500">
+                ≈ <span class="font-medium text-slate-600">EUR 10.45</span>
+                <span class="mx-0.5 text-slate-300">&middot;</span>
+                1 USD = 0.836 EUR
+              </p>
+            </div>
+
+            <!-- SCROLLABLE BODY -->
+            <div class="scroll-area">
+
+              <!-- Forex strip -->
+              <div class="px-4 py-2.5 bg-slate-50/80 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                  <div class="flex items-center gap-1.5 flex-1">
+                    <span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">$</span>
+                    <span class="text-xs font-medium text-slate-600">12.50 USD</span>
+                  </div>
+                  <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                  <div class="flex items-center gap-1.5 flex-1 justify-end">
+                    <span class="text-xs font-semibold text-slate-900">10.45 EUR</span>
+                    <span class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[9px] font-bold text-blue-600">&euro;</span>
+                  </div>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1.5 text-center">Rate from 14 Feb 2026</p>
+              </div>
+
+              <!-- Detail rows -->
+              <div class="px-4 py-3 space-y-3">
+
+                <!-- Classification -->
+                <div class="space-y-2.5">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Type</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Lifestyle</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Category</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Dining Out</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Account</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Millennium Pessoal</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-start gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Projects</p>
+                      <div class="flex flex-wrap gap-1 mt-1">
+                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">House</span>
+                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">Renovation</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="h-px bg-slate-100"></div>
+
+                <!-- Timeline -->
+                <div class="space-y-2.5">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Date</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Fri, 14 February 2026</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Due Date</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Mon, 17 February 2026</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Paid On</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Sat, 15 Feb 2026, 14:22</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="h-px bg-slate-100"></div>
+
+                <!-- Notes -->
+                <div>
+                  <p class="text-[10px] text-slate-400 uppercase tracking-wide mb-1.5">Notes</p>
+                  <div class="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg p-2.5" style="border-left: 3px solid #e2e8f0;">
+                    Lunch with team at the office cafeteria. Got the McChicken meal.
+                  </div>
+                </div>
+
+                <!-- Metadata toggle -->
+                <button onclick="toggleMeta('mobile')" class="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600 transition-colors">
+                  <svg id="chevron-mobile" class="meta-chevron w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                  <span id="meta-text-mobile">Show details</span>
+                </button>
+                <div id="meta-mobile" class="meta-content">
+                  <div class="space-y-1.5 pl-4 border-l-2 border-slate-100 ml-0.5">
+                    <div>
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide">Original Input</p>
+                      <p class="text-xs font-mono text-slate-500 mt-0.5">mcd 12.50</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide">Merchant</p>
+                      <p class="text-xs text-slate-500 mt-0.5">McDonalds</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide">Created</p>
+                      <p class="text-xs text-slate-500 mt-0.5">14 Feb 2026, 10:15</p>
+                    </div>
+                    <div>
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide">Last Updated</p>
+                      <p class="text-xs text-slate-500 mt-0.5">14 Feb 2026, 10:32</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="h-1"></div>
+              </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="flex-shrink-0 px-4 py-2.5 border-t border-slate-100 flex gap-2.5 bg-white">
+              <button class="flex-1 py-2 rounded-lg bg-[#0070f3] text-white text-sm font-semibold hover:bg-[#0060df] transition-colors">Edit</button>
+              <button class="py-2 px-4 rounded-lg border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors">Delete</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==============================
+         DESKTOP
+         ============================== -->
+    <div class="flex flex-col items-center gap-3">
+      <h2 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Desktop</h2>
+
+      <div class="desktop-frame">
+        <div class="modal-shell">
+          <div class="modal-backdrop"></div>
+
+          <div class="modal-card">
+
+            <!-- HERO -->
+            <div class="flex-shrink-0 relative px-5 pt-4 pb-4" style="background: linear-gradient(135deg, #ede9fe 0%, #e0e7ff 40%, #f8fafc 100%);">
+              <!-- Close -->
+              <button class="absolute top-3.5 right-3.5 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 text-slate-400 hover:bg-white/80 hover:text-slate-600 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+              </button>
+
+              <!-- Pills -->
+              <div class="flex items-center gap-1.5 mb-3">
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-purple-100/80 text-purple-700">Lifestyle</span>
+                <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-100/80 text-green-700">
+                  <svg class="w-2.5 h-2.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  Paid
+                </span>
+                <span class="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-sky-100/80 text-sky-700">
+                  <svg class="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+                  Recurring
+                </span>
+              </div>
+
+              <!-- Name + Amount side by side on desktop -->
+              <div class="flex items-end justify-between gap-4">
+                <div class="min-w-0">
+                  <p class="text-base font-semibold text-slate-900 truncate pr-4">McDonald's</p>
+                  <p class="text-xs text-slate-500 mt-0.5">
+                    ≈ <span class="font-medium text-slate-600">EUR 10.45</span>
+                    <span class="mx-0.5 text-slate-300">&middot;</span>
+                    1 USD = 0.836 EUR
+                  </p>
+                </div>
+                <p class="text-3xl font-extrabold text-slate-900 tracking-tight leading-none flex-shrink-0">$12.50</p>
+              </div>
+            </div>
+
+            <!-- SCROLLABLE BODY -->
+            <div class="scroll-area">
+
+              <!-- Forex strip -->
+              <div class="px-5 py-2.5 bg-slate-50/80 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                  <div class="flex items-center gap-1.5 flex-1">
+                    <span class="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">$</span>
+                    <span class="text-xs font-medium text-slate-600">12.50 USD</span>
+                  </div>
+                  <svg class="w-3.5 h-3.5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+                  <div class="flex items-center gap-1.5 flex-1 justify-end">
+                    <span class="text-xs font-semibold text-slate-900">10.45 EUR</span>
+                    <span class="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[9px] font-bold text-blue-600">&euro;</span>
+                  </div>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1.5 text-center">Rate from 14 Feb 2026</p>
+              </div>
+
+              <!-- Detail rows: 2-column grid on desktop -->
+              <div class="px-5 py-4">
+
+                <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+                  <!-- Type -->
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Type</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Lifestyle</p>
+                    </div>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Category</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Dining Out</p>
+                    </div>
+                  </div>
+
+                  <!-- Account -->
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Account</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Millennium</p>
+                    </div>
+                  </div>
+
+                  <!-- Date -->
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Date</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Fri, 14 Feb 2026</p>
+                    </div>
+                  </div>
+
+                  <!-- Projects (full width) -->
+                  <div class="col-span-2 flex items-start gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Projects</p>
+                      <div class="flex flex-wrap gap-1 mt-1">
+                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">House</span>
+                        <span class="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">Renovation</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="h-px bg-slate-100 my-3"></div>
+
+                <!-- Timeline row -->
+                <div class="grid grid-cols-2 gap-x-6 gap-y-3">
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Due Date</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Mon, 17 Feb 2026</p>
+                    </div>
+                  </div>
+
+                  <div class="flex items-center gap-2.5">
+                    <div class="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+                      <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-[10px] text-slate-400 uppercase tracking-wide leading-none">Paid On</p>
+                      <p class="text-sm font-medium text-slate-900 mt-0.5">Sat, 15 Feb, 14:22</p>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Divider -->
+                <div class="h-px bg-slate-100 my-3"></div>
+
+                <!-- Notes -->
+                <div>
+                  <p class="text-[10px] text-slate-400 uppercase tracking-wide mb-1.5">Notes</p>
+                  <div class="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg p-2.5" style="border-left: 3px solid #e2e8f0;">
+                    Lunch with team at the office cafeteria. Got the McChicken meal.
+                  </div>
+                </div>
+
+                <!-- Metadata toggle -->
+                <div class="mt-3">
+                  <button onclick="toggleMeta('desktop')" class="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600 transition-colors">
+                    <svg id="chevron-desktop" class="meta-chevron w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                    <span id="meta-text-desktop">Show details</span>
+                  </button>
+                  <div id="meta-desktop" class="meta-content">
+                    <div class="grid grid-cols-2 gap-x-6 gap-y-1.5 pl-4 border-l-2 border-slate-100 ml-0.5 mt-2">
+                      <div>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wide">Original Input</p>
+                        <p class="text-xs font-mono text-slate-500 mt-0.5">mcd 12.50</p>
+                      </div>
+                      <div>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wide">Merchant</p>
+                        <p class="text-xs text-slate-500 mt-0.5">McDonalds</p>
+                      </div>
+                      <div>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wide">Created</p>
+                        <p class="text-xs text-slate-500 mt-0.5">14 Feb 2026, 10:15</p>
+                      </div>
+                      <div>
+                        <p class="text-[10px] text-slate-400 uppercase tracking-wide">Last Updated</p>
+                        <p class="text-xs text-slate-500 mt-0.5">14 Feb 2026, 10:32</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="h-1"></div>
+              </div>
+            </div>
+
+            <!-- FOOTER -->
+            <div class="flex-shrink-0 px-5 py-2.5 border-t border-slate-100 flex gap-2.5 bg-white">
+              <button class="flex-1 py-2 rounded-lg bg-[#0070f3] text-white text-sm font-semibold hover:bg-[#0060df] transition-colors">Edit</button>
+              <button class="py-2 px-4 rounded-lg border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors">Delete</button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+
+  <!-- ==============================
+       DESIGN NOTES
+       ============================== -->
+  <div class="max-w-3xl mx-auto mt-16 mb-12">
+    <h2 class="text-lg font-semibold text-slate-900 mb-4">Design Notes</h2>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm divide-y divide-slate-100">
+      <div class="px-5 py-3 flex items-start gap-3">
+        <span class="text-sm mt-0.5">1.</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900">Centered popup, not bottom sheet</p>
+          <p class="text-sm text-slate-500">Modal floats in the center on both mobile and desktop. Feels lighter — doesn't anchor to any edge.</p>
+        </div>
+      </div>
+      <div class="px-5 py-3 flex items-start gap-3">
+        <span class="text-sm mt-0.5">2.</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900">75% max-height on mobile</p>
+          <p class="text-sm text-slate-500">Leaves visible backdrop around all edges. Doesn't take over the screen.</p>
+        </div>
+      </div>
+      <div class="px-5 py-3 flex items-start gap-3">
+        <span class="text-sm mt-0.5">3.</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900">Scale + translate animation</p>
+          <p class="text-sm text-slate-500">Pops in from <code class="bg-slate-100 px-1 rounded text-xs">scale(0.92)</code> + slight Y offset. Cubic-bezier easing for a springy, native feel.</p>
+        </div>
+      </div>
+      <div class="px-5 py-3 flex items-start gap-3">
+        <span class="text-sm mt-0.5">4.</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900">Softer gradient hero</p>
+          <p class="text-sm text-slate-500">Replaced the saturated purple-to-indigo with a light <code class="bg-slate-100 px-1 rounded text-xs">#ede9fe → #e0e7ff → #f8fafc</code> wash. Type-tinted but not heavy.</p>
+        </div>
+      </div>
+      <div class="px-5 py-3 flex items-start gap-3">
+        <span class="text-sm mt-0.5">5.</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900">Desktop: 2-column grid</p>
+          <p class="text-sm text-slate-500">Detail rows pair up in a grid to reduce vertical height. Name left, amount right in the hero.</p>
+        </div>
+      </div>
+      <div class="px-5 py-3 flex items-start gap-3">
+        <span class="text-sm mt-0.5">6.</span>
+        <div>
+          <p class="text-sm font-medium text-slate-900">Tighter spacing throughout</p>
+          <p class="text-sm text-slate-500">Smaller icons (w-7), less padding, compact rows. Amount at <code class="bg-slate-100 px-1 rounded text-xs">text-3xl</code> instead of 5xl.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Interactivity -->
+  <script>
+    function toggleMeta(variant) {
+      const content = document.getElementById('meta-' + variant);
+      const chevron = document.getElementById('chevron-' + variant);
+      const text = document.getElementById('meta-text-' + variant);
+
+      content.classList.toggle('open');
+      chevron.classList.toggle('open');
+
+      if (text) {
+        text.textContent = content.classList.contains('open') ? 'Hide details' : 'Show details';
+      }
+    }
+  </script>
+
+</body>
+</html>
