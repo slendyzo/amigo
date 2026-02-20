@@ -105,7 +105,7 @@ export function useModalData(
 
     const fetchPromises: Promise<Response | null>[] = [
       needsCategoriesFetch ? fetch("/api/categories") : Promise.resolve(null),
-      needsProjectsFetch ? fetch("/api/projects") : Promise.resolve(null),
+      needsProjectsFetch ? fetch("/api/projects?activeOnly=true") : Promise.resolve(null),
       needsBankAccountsFetch ? fetch("/api/bank-accounts") : Promise.resolve(null),
       needsWorkspaceFetch ? fetch("/api/workspace") : Promise.resolve(null),
     ];

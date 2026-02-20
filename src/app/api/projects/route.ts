@@ -4,7 +4,7 @@ import { prisma } from "@/lib/db";
 import { stripHtmlTags } from "@/lib/utils";
 
 // GET - List projects
-export async function GET() {
+export async function GET(request: Request) {
   try {
     const context = await getActiveWorkspace();
     if (!context) {
@@ -12,8 +12,15 @@ export async function GET() {
     }
     const { workspace } = context;
 
+    // Parse query params
+    const { searchParams } = new URL(request.url);
+    const activeOnly = searchParams.get("activeOnly") === "true";
+
     const projects = await prisma.project.findMany({
-      where: { workspaceId: workspace.id },
+      where: {
+        workspaceId: workspace.id,
+        ...(activeOnly && { isActive: true }),
+      },
       orderBy: { createdAt: "desc" },
       include: {
         _count: { select: { expenses: true } },

@@ -388,6 +388,22 @@
       "completed": "Completed",
       "on_hold": "On Hold",
       "cancelled": "Cancelled"
+    },
+    "archive": "Archive",
+    "unarchive": "Unarchive",
+    "archived": "Archived",
+    "viewWrapped": "View Wrapped",
+    "projectWrapped": {
+      "yourSummary": "Here's your project summary",
+      "totalSpent": "Total Spent",
+      "budgetUsed": "Budget Used",
+      "topCategories": "Top Categories",
+      "spendingTimeline": "Spending Timeline",
+      "summary": "Summary",
+      "expenseCount": "Total Expenses",
+      "averageExpense": "Average Expense",
+      "highestExpense": "Highest Expense",
+      "done": "Done"
     }
   },
   "recurring": {

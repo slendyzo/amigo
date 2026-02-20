@@ -12,6 +12,7 @@ type Project = {
   startDate: string | null;
   endDate: string | null;
   status: string;
+  isActive: boolean;
   _count?: { expenses: number };
   totalSpent?: number;
 };
@@ -137,6 +138,23 @@ export default function ProjectsPage() {
     setDeleteId(null);
   };
 
+  const handleToggleArchive = async (project: Project) => {
+    try {
+      const response = await fetch(`/api/projects/${project.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: !project.isActive }),
+      });
+      if (response.ok) {
+        setProjects(projects.map((p) =>
+          p.id === project.id ? { ...p, isActive: !p.isActive } : p
+        ));
+      }
+    } catch (error) {
+      console.error("Failed to toggle archive:", error);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -188,7 +206,14 @@ export default function ProjectsPage() {
               onClick={() => router.push(`/dashboard/projects/${project.id}`)}
             >
               <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-slate-900">{project.name}</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="font-semibold text-slate-900">{project.name}</h3>
+                  {!project.isActive && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-600">
+                      {t("archived")}
+                    </span>
+                  )}
+                </div>
                 <span className={`text-xs px-2 py-1 rounded-full ${STATUS_COLORS[project.status] || "bg-slate-100 text-slate-600"}`}>
                   {STATUS_LABELS[project.status] || project.status}
                 </span>
@@ -222,6 +247,12 @@ export default function ProjectsPage() {
                   className="flex-1 text-sm text-slate-600 hover:text-slate-900 py-1"
                 >
                   {tCommon("edit")}
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleToggleArchive(project); }}
+                  className="flex-1 text-sm text-slate-600 hover:text-slate-900 py-1"
+                >
+                  {project.isActive ? t("archive") : t("unarchive")}
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setDeleteId(project.id); }}

@@ -388,6 +388,22 @@
       "completed": "Concluído",
       "on_hold": "Em Pausa",
       "cancelled": "Cancelado"
+    },
+    "archive": "Arquivar",
+    "unarchive": "Desarquivar",
+    "archived": "Arquivado",
+    "viewWrapped": "Ver Resumo",
+    "projectWrapped": {
+      "yourSummary": "Aqui está o resumo do teu projeto",
+      "totalSpent": "Total Gasto",
+      "budgetUsed": "Orçamento Usado",
+      "topCategories": "Principais Categorias",
+      "spendingTimeline": "Cronograma de Gastos",
+      "summary": "Resumo",
+      "expenseCount": "Total de Despesas",
+      "averageExpense": "Despesa Média",
+      "highestExpense": "Maior Despesa",
+      "done": "Feito"
     }
   },
   "recurring": {
