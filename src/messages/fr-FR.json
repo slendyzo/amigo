@@ -1093,7 +1093,11 @@
     "tipDescription": "Configurez des mappings de mots-clés dans les Paramètres pour catégoriser automatiquement les futures dépenses.",
     "suggested": "Suggéré",
     "usedTimes": "utilisé {count}x avant",
-    "learnedMapping": "Motif appris ! Sera auto-catégorisé la prochaine fois."
+    "learnedMapping": "Motif appris ! Sera auto-catégorisé la prochaine fois.",
+    "recentlyDone": "Récemment Faits",
+    "recentlyCategorized": "Récemment Catégorisés",
+    "change": "Modifier",
+    "undo": "Annuler"
   },
   "receiptScanner": {
     "title": "Scanner un Reçu",

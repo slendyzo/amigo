@@ -1079,7 +1079,11 @@
     "tipDescription": "Configura mapeamentos de palavras-chave nas Definições para categorizar automaticamente despesas futuras com base nos seus nomes.",
     "suggested": "Sugerido",
     "usedTimes": "usado {count}x antes",
-    "learnedMapping": "Padrão aprendido! Vai categorizar automaticamente da próxima vez."
+    "learnedMapping": "Padrão aprendido! Vai categorizar automaticamente da próxima vez.",
+    "recentlyDone": "Feitos Recentemente",
+    "recentlyCategorized": "Categorizados Recentemente",
+    "change": "Alterar",
+    "undo": "Desfazer"
   },
   "receiptScanner": {
     "title": "Digitalizar Recibo",

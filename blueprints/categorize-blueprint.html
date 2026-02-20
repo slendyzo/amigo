@@ -1,0 +1,961 @@
+D<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quick Categorize — Design Options</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        }
+      }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', system-ui, sans-serif; }
+
+    /* ---- Device Frames ---- */
+    .phone-frame {
+      width: 375px;
+      height: 780px;
+      border-radius: 2.5rem;
+      border: 8px solid #1e293b;
+      overflow: hidden;
+      position: relative;
+      background: #f8fafc;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      flex-shrink: 0;
+    }
+    .desktop-frame {
+      width: 900px;
+      height: 620px;
+      border-radius: 0.75rem;
+      border: 2px solid #cbd5e1;
+      overflow: hidden;
+      position: relative;
+      background: #f8fafc;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.15);
+      flex-shrink: 0;
+    }
+    .desktop-frame::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 32px;
+      background: #f1f5f9;
+      border-bottom: 1px solid #e2e8f0;
+      z-index: 1;
+    }
+    .desktop-frame::after {
+      content: '● ● ●';
+      position: absolute;
+      top: 8px; left: 12px;
+      font-size: 10px;
+      letter-spacing: 4px;
+      color: #cbd5e1;
+      z-index: 2;
+    }
+    .frame-content {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    .desktop-frame .frame-content {
+      top: 32px;
+    }
+    .frame-content::-webkit-scrollbar { width: 0; }
+
+    /* ---- Undo toast animation ---- */
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    .undo-toast { animation: slideUp 0.25s ease-out; }
+
+    /* ---- Card swipe animation ---- */
+    @keyframes cardEnter {
+      from { opacity: 0; transform: scale(0.95) translateY(8px); }
+      to   { opacity: 1; transform: scale(1) translateY(0); }
+    }
+    .card-enter { animation: cardEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1); }
+
+    /* ---- Section separators ---- */
+    .option-section {
+      border-top: 3px solid #e2e8f0;
+      padding-top: 3rem;
+      margin-top: 3rem;
+    }
+  </style>
+</head>
+
+<body class="bg-slate-100 min-h-screen p-8">
+
+  <!-- ==============================
+       PAGE HEADER
+       ============================== -->
+  <div class="max-w-7xl mx-auto mb-10">
+    <h1 class="text-2xl font-bold text-slate-900 mb-1">Quick Categorize &mdash; Design Options</h1>
+    <p class="text-slate-500 text-sm">Feature request: "Being able to go back to previously completed tasks in case I mistagged"</p>
+    <p class="text-slate-400 text-xs mt-1">3 variants with undo/history functionality &middot; Mobile + Desktop</p>
+  </div>
+
+
+  <!-- ============================================================
+       OPTION A: Card Stack with Undo Button
+       ============================================================ -->
+  <div class="max-w-7xl mx-auto" id="option-a">
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-bold rounded-full">OPTION A</span>
+        <h2 class="text-xl font-bold text-slate-900">Card Stack with Undo Button</h2>
+      </div>
+      <p class="text-slate-600 text-sm max-w-2xl">
+        Keeps the current card-based flow but adds a persistent <strong>Undo</strong> button that reveals the last categorized expense.
+        A "Recently done" counter shows how many can be undone. Simple, minimal change from current UX.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap gap-10 justify-center items-start">
+
+      <!-- MOBILE A -->
+      <div class="flex flex-col items-center gap-3">
+        <h3 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Mobile</h3>
+        <div class="phone-frame">
+          <div class="frame-content p-4 space-y-4">
+
+            <!-- Header -->
+            <div class="flex items-start justify-between">
+              <div>
+                <h1 class="text-xl font-bold text-slate-900">Quick Categorize</h1>
+                <p class="text-slate-500 text-sm mt-0.5">Tidy up your uncategorized expenses</p>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-slate-900">7</div>
+                <div class="text-xs text-slate-500">remaining</div>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="bg-slate-200 rounded-full h-2 overflow-hidden">
+              <div class="bg-[#0070f3] h-full rounded-full" style="width: 42%"></div>
+            </div>
+
+            <!-- Undo bar -->
+            <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                <span class="text-sm text-amber-800 font-medium">5 recently categorized</span>
+              </div>
+              <button class="text-sm font-semibold text-amber-700 hover:text-amber-900 px-2 py-1 rounded hover:bg-amber-100 transition-colors">
+                Undo last
+              </button>
+            </div>
+
+            <!-- Current expense card -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden card-enter">
+              <div class="p-5 border-b border-slate-100">
+                <div class="flex items-start justify-between mb-2">
+                  <h2 class="text-lg font-semibold text-slate-900">McDonald's</h2>
+                  <span class="text-lg font-bold text-slate-900">€12.50</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm text-slate-500">
+                  <span>14 Feb 2026</span>
+                  <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                  <span>Lifestyle</span>
+                </div>
+              </div>
+
+              <!-- Suggested -->
+              <div class="p-4">
+                <div class="mb-4">
+                  <div class="flex items-center gap-2 text-sm font-medium text-purple-700 mb-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    <span>Suggested</span>
+                    <span class="text-xs text-purple-500">(used 8x before)</span>
+                  </div>
+                  <button class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 text-left transition-all">
+                    <svg class="w-5 h-5 flex-shrink-0 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    <span class="text-sm font-semibold">Dining Out</span>
+                  </button>
+                </div>
+
+                <p class="text-sm font-medium text-slate-700 mb-3">Select a category:</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Groceries</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Transport</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Shopping</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-blue-50 text-slate-500 hover:text-[#0070f3] text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    <span class="truncate text-sm font-medium">New category</span>
+                  </button>
+                </div>
+              </div>
+
+              <!-- Skip -->
+              <div class="px-4 pb-4">
+                <button class="w-full py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1">
+                  Skip for now
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Navigation dots -->
+            <div class="flex justify-center gap-1.5">
+              <button class="w-2 h-2 rounded-full bg-[#0070f3]"></button>
+              <button class="w-2 h-2 rounded-full bg-slate-300"></button>
+              <button class="w-2 h-2 rounded-full bg-slate-300"></button>
+              <button class="w-2 h-2 rounded-full bg-slate-300"></button>
+              <button class="w-2 h-2 rounded-full bg-slate-300"></button>
+              <span class="text-xs text-slate-400 ml-1">+2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESKTOP A -->
+      <div class="flex flex-col items-center gap-3">
+        <h3 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Desktop</h3>
+        <div class="desktop-frame">
+          <div class="frame-content p-6">
+
+            <!-- Header row -->
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <h1 class="text-2xl font-bold text-slate-900">Quick Categorize</h1>
+                <p class="text-slate-500 text-sm mt-1">Tidy up your uncategorized expenses</p>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-slate-900">7</div>
+                <div class="text-xs text-slate-500">remaining</div>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="bg-slate-200 rounded-full h-2 overflow-hidden mb-4">
+              <div class="bg-[#0070f3] h-full rounded-full" style="width: 42%"></div>
+            </div>
+
+            <!-- Undo bar -->
+            <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg px-4 py-2.5 mb-5">
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/></svg>
+                <span class="text-sm text-amber-800 font-medium">5 recently categorized</span>
+              </div>
+              <button class="text-sm font-semibold text-amber-700 hover:text-amber-900 px-3 py-1 rounded-lg hover:bg-amber-100 transition-colors">
+                Undo last
+              </button>
+            </div>
+
+            <!-- Card centered with max-width -->
+            <div class="max-w-lg mx-auto bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden card-enter">
+              <div class="p-6 border-b border-slate-100">
+                <div class="flex items-start justify-between mb-2">
+                  <h2 class="text-lg font-semibold text-slate-900">McDonald's</h2>
+                  <span class="text-lg font-bold text-slate-900">€12.50</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm text-slate-500">
+                  <span>14 February 2026</span>
+                  <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                  <span>Lifestyle</span>
+                </div>
+              </div>
+
+              <div class="p-5">
+                <!-- Suggestion -->
+                <div class="mb-4">
+                  <div class="flex items-center gap-2 text-sm font-medium text-purple-700 mb-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    <span>Suggested</span>
+                    <span class="text-xs text-purple-500">(used 8x before)</span>
+                  </div>
+                  <button class="w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700 text-left transition-all">
+                    <svg class="w-5 h-5 flex-shrink-0 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                    <span class="text-sm font-semibold">Dining Out</span>
+                  </button>
+                </div>
+
+                <p class="text-sm font-medium text-slate-700 mb-3">Select a category:</p>
+                <div class="grid grid-cols-3 gap-2">
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Groceries</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Transport</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Shopping</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Subscriptions</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Entertainment</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-blue-50 text-slate-500 hover:text-[#0070f3] text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    <span class="truncate text-sm font-medium">New category</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="px-5 pb-4">
+                <button class="w-full py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1">
+                  Skip for now
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       OPTION B: Card Stack with Undo Toast + History Drawer
+       ============================================================ -->
+  <div class="max-w-7xl mx-auto option-section" id="option-b">
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">OPTION B</span>
+        <h2 class="text-xl font-bold text-slate-900">Undo Toast + Collapsible History</h2>
+      </div>
+      <p class="text-slate-600 text-sm max-w-2xl">
+        After categorizing, a <strong>floating undo toast</strong> appears for 5 seconds (like Gmail's "undo send").
+        Below the card, a <strong>collapsible "Recently done" section</strong> shows the last 10 with inline re-categorize buttons.
+        Best balance of minimal UI and full power.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap gap-10 justify-center items-start">
+
+      <!-- MOBILE B -->
+      <div class="flex flex-col items-center gap-3">
+        <h3 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Mobile</h3>
+        <div class="phone-frame">
+          <div class="frame-content p-4 space-y-4">
+
+            <!-- Header -->
+            <div class="flex items-start justify-between">
+              <div>
+                <h1 class="text-xl font-bold text-slate-900">Quick Categorize</h1>
+                <p class="text-slate-500 text-sm mt-0.5">Tidy up your uncategorized expenses</p>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-slate-900">7</div>
+                <div class="text-xs text-slate-500">remaining</div>
+              </div>
+            </div>
+
+            <!-- Progress -->
+            <div class="bg-slate-200 rounded-full h-2 overflow-hidden">
+              <div class="bg-[#0070f3] h-full rounded-full" style="width: 42%"></div>
+            </div>
+
+            <!-- Current expense card (same as current) -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden card-enter">
+              <div class="p-5 border-b border-slate-100">
+                <div class="flex items-start justify-between mb-2">
+                  <h2 class="text-lg font-semibold text-slate-900">Uber Ride</h2>
+                  <span class="text-lg font-bold text-slate-900">€8.40</span>
+                </div>
+                <div class="flex items-center gap-3 text-sm text-slate-500">
+                  <span>13 Feb 2026</span>
+                  <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                  <span>Lifestyle</span>
+                </div>
+              </div>
+
+              <div class="p-4">
+                <p class="text-sm font-medium text-slate-700 mb-3">Select a category:</p>
+                <div class="grid grid-cols-2 gap-2">
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Transport</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Dining Out</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                    <span class="truncate text-sm font-medium">Shopping</span>
+                  </button>
+                  <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-blue-50 text-slate-500 hover:text-[#0070f3] text-left transition-all">
+                    <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                    <span class="truncate text-sm font-medium">New category</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="px-4 pb-4">
+                <button class="w-full py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1">
+                  Skip for now
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- Recently Done - Collapsible -->
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <button class="w-full flex items-center justify-between px-4 py-3 text-left" onclick="this.parentElement.querySelector('.history-content').classList.toggle('hidden')">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  <span class="text-sm font-medium text-slate-700">Recently categorized</span>
+                  <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">5</span>
+                </div>
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+              <div class="history-content border-t border-slate-100 divide-y divide-slate-50">
+                <!-- Item 1 -->
+                <div class="px-4 py-2.5 flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-medium text-slate-900 truncate">Spotify</p>
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">Subscriptions</span>
+                    </div>
+                    <p class="text-xs text-slate-500">€9.99 &middot; 12 Feb</p>
+                  </div>
+                  <button class="text-xs font-medium text-[#0070f3] hover:underline flex-shrink-0 ml-2">Change</button>
+                </div>
+                <!-- Item 2 -->
+                <div class="px-4 py-2.5 flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-medium text-slate-900 truncate">Lidl</p>
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-green-100 text-green-700">Groceries</span>
+                    </div>
+                    <p class="text-xs text-slate-500">€34.20 &middot; 11 Feb</p>
+                  </div>
+                  <button class="text-xs font-medium text-[#0070f3] hover:underline flex-shrink-0 ml-2">Change</button>
+                </div>
+                <!-- Item 3 -->
+                <div class="px-4 py-2.5 flex items-center justify-between">
+                  <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2">
+                      <p class="text-sm font-medium text-slate-900 truncate">Zara</p>
+                      <span class="text-xs px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">Shopping</span>
+                    </div>
+                    <p class="text-xs text-slate-500">€45.00 &middot; 10 Feb</p>
+                  </div>
+                  <button class="text-xs font-medium text-[#0070f3] hover:underline flex-shrink-0 ml-2">Change</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating undo toast (shown after categorizing) -->
+            <div class="fixed bottom-24 left-4 right-4 undo-toast" style="max-width: 343px;">
+              <div class="bg-slate-800 text-white rounded-xl px-4 py-3 shadow-lg flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <span class="text-sm font-medium">McDonald's → Dining Out</span>
+                </div>
+                <button class="text-sm font-bold text-[#60a5fa] hover:text-white ml-3 flex-shrink-0">Undo</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- DESKTOP B -->
+      <div class="flex flex-col items-center gap-3">
+        <h3 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Desktop</h3>
+        <div class="desktop-frame">
+          <div class="frame-content p-6">
+
+            <!-- Header -->
+            <div class="flex items-start justify-between mb-4">
+              <div>
+                <h1 class="text-2xl font-bold text-slate-900">Quick Categorize</h1>
+                <p class="text-slate-500 text-sm mt-1">Tidy up your uncategorized expenses</p>
+              </div>
+              <div class="text-right">
+                <div class="text-2xl font-bold text-slate-900">7</div>
+                <div class="text-xs text-slate-500">remaining</div>
+              </div>
+            </div>
+
+            <div class="bg-slate-200 rounded-full h-2 overflow-hidden mb-5">
+              <div class="bg-[#0070f3] h-full rounded-full" style="width: 42%"></div>
+            </div>
+
+            <!-- Two-column: Card + History sidebar -->
+            <div class="flex gap-5">
+              <!-- Card -->
+              <div class="flex-1 max-w-lg bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden card-enter">
+                <div class="p-6 border-b border-slate-100">
+                  <div class="flex items-start justify-between mb-2">
+                    <h2 class="text-lg font-semibold text-slate-900">Uber Ride</h2>
+                    <span class="text-lg font-bold text-slate-900">€8.40</span>
+                  </div>
+                  <div class="flex items-center gap-3 text-sm text-slate-500">
+                    <span>13 February 2026</span>
+                    <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                    <span>Lifestyle</span>
+                  </div>
+                </div>
+
+                <div class="p-5">
+                  <p class="text-sm font-medium text-slate-700 mb-3">Select a category:</p>
+                  <div class="grid grid-cols-3 gap-2">
+                    <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                      <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                      <span class="truncate text-sm font-medium">Transport</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                      <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                      <span class="truncate text-sm font-medium">Dining Out</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                      <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                      <span class="truncate text-sm font-medium">Shopping</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                      <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                      <span class="truncate text-sm font-medium">Subscriptions</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700 text-left transition-all">
+                      <svg class="w-4 h-4 flex-shrink-0 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z"/></svg>
+                      <span class="truncate text-sm font-medium">Entertainment</span>
+                    </button>
+                    <button class="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-blue-50 text-slate-500 hover:text-[#0070f3] text-left transition-all">
+                      <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                      <span class="truncate text-sm font-medium">New category</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div class="px-5 pb-4">
+                  <button class="w-full py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium flex items-center justify-center gap-1">
+                    Skip for now
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
+                  </button>
+                </div>
+              </div>
+
+              <!-- History sidebar -->
+              <div class="w-64 bg-white rounded-xl border border-slate-200 overflow-hidden flex-shrink-0">
+                <div class="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                    <span class="text-sm font-semibold text-slate-700">Recently done</span>
+                  </div>
+                  <span class="text-xs text-slate-400">5</span>
+                </div>
+                <div class="divide-y divide-slate-50 max-h-[330px] overflow-y-auto">
+                  <div class="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-slate-900 truncate">Spotify</p>
+                      <button class="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity">Change</button>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <span class="text-xs text-slate-500">€9.99</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">Subscriptions</span>
+                    </div>
+                  </div>
+                  <div class="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-slate-900 truncate">Lidl</p>
+                      <button class="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity">Change</button>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <span class="text-xs text-slate-500">€34.20</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">Groceries</span>
+                    </div>
+                  </div>
+                  <div class="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-slate-900 truncate">Zara</p>
+                      <button class="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity">Change</button>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <span class="text-xs text-slate-500">€45.00</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-100 text-purple-700">Shopping</span>
+                    </div>
+                  </div>
+                  <div class="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-slate-900 truncate">BP Gas</p>
+                      <button class="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity">Change</button>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <span class="text-xs text-slate-500">€52.10</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">Transport</span>
+                    </div>
+                  </div>
+                  <div class="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
+                    <div class="flex items-center justify-between">
+                      <p class="text-sm font-medium text-slate-900 truncate">McDonald's</p>
+                      <button class="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity">Change</button>
+                    </div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <span class="text-xs text-slate-500">€12.50</span>
+                      <span class="text-[10px] px-1.5 py-0.5 rounded bg-pink-100 text-pink-700">Dining Out</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Floating undo toast -->
+            <div class="absolute bottom-6 left-1/2 -translate-x-1/2 undo-toast">
+              <div class="bg-slate-800 text-white rounded-xl px-5 py-3 shadow-lg flex items-center gap-4">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                  <span class="text-sm font-medium">McDonald's → Dining Out</span>
+                </div>
+                <button class="text-sm font-bold text-[#60a5fa] hover:text-white whitespace-nowrap">Undo</button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       OPTION C: Inbox List with Inline Actions
+       ============================================================ -->
+  <div class="max-w-7xl mx-auto option-section" id="option-c">
+    <div class="mb-6">
+      <div class="flex items-center gap-3 mb-2">
+        <span class="px-3 py-1 bg-violet-100 text-violet-700 text-xs font-bold rounded-full">OPTION C</span>
+        <h2 class="text-xl font-bold text-slate-900">Inbox List with Inline Categorization</h2>
+      </div>
+      <p class="text-slate-600 text-sm max-w-2xl">
+        Shows <strong>all uncategorized expenses as a scrollable list</strong>. Each row has a category dropdown.
+        Categorized items slide to a "Done" section below with a <strong>"Change" button</strong>.
+        Good for power users who want to see everything at once and batch-process.
+      </p>
+    </div>
+
+    <div class="flex flex-wrap gap-10 justify-center items-start">
+
+      <!-- MOBILE C -->
+      <div class="flex flex-col items-center gap-3">
+        <h3 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Mobile</h3>
+        <div class="phone-frame">
+          <div class="frame-content">
+            <!-- Header -->
+            <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200 px-4 py-3">
+              <div class="flex items-center justify-between">
+                <div>
+                  <h1 class="text-lg font-bold text-slate-900">Quick Categorize</h1>
+                  <p class="text-xs text-slate-500">4 uncategorized &middot; 5 done this session</p>
+                </div>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-xs font-bold text-[#0070f3] bg-blue-50 px-2 py-1 rounded-full">4 left</span>
+                </div>
+              </div>
+              <!-- Progress -->
+              <div class="bg-slate-200 rounded-full h-1.5 overflow-hidden mt-2">
+                <div class="bg-[#0070f3] h-full rounded-full" style="width: 56%"></div>
+              </div>
+            </div>
+
+            <!-- Uncategorized list -->
+            <div class="divide-y divide-slate-100">
+              <!-- Row 1 -->
+              <div class="px-4 py-3 bg-white">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex-1 min-w-0 mr-3">
+                    <p class="text-sm font-semibold text-slate-900">Uber Ride</p>
+                    <p class="text-xs text-slate-500">€8.40 &middot; 13 Feb &middot; Lifestyle</p>
+                  </div>
+                </div>
+                <div class="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Transport</button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Dining Out</button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Shopping</button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Groceries</button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-dashed border-slate-300 text-slate-400">+</button>
+                </div>
+              </div>
+              <!-- Row 2 -->
+              <div class="px-4 py-3 bg-white">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex-1 min-w-0 mr-3">
+                    <p class="text-sm font-semibold text-slate-900">Wolt Delivery</p>
+                    <p class="text-xs text-slate-500">€18.90 &middot; 12 Feb &middot; Lifestyle</p>
+                  </div>
+                </div>
+                <div class="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border-2 border-purple-400 bg-purple-50 text-purple-700">
+                    <span class="flex items-center gap-1">
+                      <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
+                      Dining Out
+                    </span>
+                  </button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Transport</button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Shopping</button>
+                </div>
+              </div>
+              <!-- Row 3 -->
+              <div class="px-4 py-3 bg-white">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex-1 min-w-0 mr-3">
+                    <p class="text-sm font-semibold text-slate-900">Amazon Purchase</p>
+                    <p class="text-xs text-slate-500">€29.99 &middot; 11 Feb &middot; Lifestyle</p>
+                  </div>
+                </div>
+                <div class="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Shopping</button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Subscriptions</button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Groceries</button>
+                </div>
+              </div>
+              <!-- Row 4 -->
+              <div class="px-4 py-3 bg-white">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex-1 min-w-0 mr-3">
+                    <p class="text-sm font-semibold text-slate-900">Netflix</p>
+                    <p class="text-xs text-slate-500">€13.99 &middot; 10 Feb &middot; Fixed</p>
+                  </div>
+                </div>
+                <div class="flex gap-1.5 overflow-x-auto scrollbar-hide">
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Subscriptions</button>
+                  <button class="flex-shrink-0 px-3 py-1.5 rounded-full text-xs font-medium border border-slate-200 text-slate-700 hover:bg-slate-50 active:bg-slate-100">Entertainment</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Done section -->
+            <div class="bg-slate-50 border-t border-slate-200">
+              <div class="px-4 py-2.5 flex items-center gap-2">
+                <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span class="text-sm font-medium text-slate-600">Done this session</span>
+              </div>
+              <div class="divide-y divide-slate-100">
+                <div class="px-4 py-2 flex items-center justify-between bg-green-50/50">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <span class="text-sm text-slate-700">Spotify</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">Subscriptions</span>
+                  </div>
+                  <button class="text-xs font-medium text-[#0070f3]">Change</button>
+                </div>
+                <div class="px-4 py-2 flex items-center justify-between bg-green-50/50">
+                  <div class="flex items-center gap-2">
+                    <svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                    <span class="text-sm text-slate-700">Lidl</span>
+                    <span class="text-[10px] px-1.5 py-0.5 rounded bg-green-100 text-green-700">Groceries</span>
+                  </div>
+                  <button class="text-xs font-medium text-[#0070f3]">Change</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- DESKTOP C -->
+      <div class="flex flex-col items-center gap-3">
+        <h3 class="text-sm font-semibold text-slate-600 uppercase tracking-wider">Desktop</h3>
+        <div class="desktop-frame">
+          <div class="frame-content p-6">
+
+            <!-- Header -->
+            <div class="flex items-center justify-between mb-5">
+              <div>
+                <h1 class="text-2xl font-bold text-slate-900">Quick Categorize</h1>
+                <p class="text-slate-500 text-sm mt-1">4 uncategorized &middot; 5 done this session</p>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="bg-slate-200 rounded-full h-2 w-48 overflow-hidden">
+                  <div class="bg-[#0070f3] h-full rounded-full" style="width: 56%"></div>
+                </div>
+                <span class="text-sm font-bold text-[#0070f3]">56%</span>
+              </div>
+            </div>
+
+            <!-- Table-style list -->
+            <div class="bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <!-- Table header -->
+              <div class="grid grid-cols-[1fr_120px_100px_200px_80px] gap-4 px-5 py-2.5 bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                <span>Expense</span>
+                <span>Amount</span>
+                <span>Date</span>
+                <span>Category</span>
+                <span></span>
+              </div>
+              <!-- Uncategorized rows -->
+              <div class="divide-y divide-slate-100">
+                <div class="grid grid-cols-[1fr_120px_100px_200px_80px] gap-4 px-5 py-3 items-center hover:bg-slate-50 transition-colors">
+                  <span class="text-sm font-medium text-slate-900">Uber Ride</span>
+                  <span class="text-sm text-slate-700 font-medium">€8.40</span>
+                  <span class="text-sm text-slate-500">13 Feb</span>
+                  <select class="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent">
+                    <option value="">Choose...</option>
+                    <option>Transport</option>
+                    <option>Dining Out</option>
+                    <option>Shopping</option>
+                    <option>Groceries</option>
+                  </select>
+                  <button class="text-xs text-slate-400 hover:text-slate-600">Skip</button>
+                </div>
+                <div class="grid grid-cols-[1fr_120px_100px_200px_80px] gap-4 px-5 py-3 items-center hover:bg-slate-50 transition-colors">
+                  <span class="text-sm font-medium text-slate-900">Wolt Delivery</span>
+                  <span class="text-sm text-slate-700 font-medium">€18.90</span>
+                  <span class="text-sm text-slate-500">12 Feb</span>
+                  <select class="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent">
+                    <option value="">Choose...</option>
+                    <option>Transport</option>
+                    <option>Dining Out</option>
+                    <option>Shopping</option>
+                  </select>
+                  <button class="text-xs text-slate-400 hover:text-slate-600">Skip</button>
+                </div>
+                <div class="grid grid-cols-[1fr_120px_100px_200px_80px] gap-4 px-5 py-3 items-center hover:bg-slate-50 transition-colors">
+                  <span class="text-sm font-medium text-slate-900">Amazon Purchase</span>
+                  <span class="text-sm text-slate-700 font-medium">€29.99</span>
+                  <span class="text-sm text-slate-500">11 Feb</span>
+                  <select class="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent">
+                    <option value="">Choose...</option>
+                    <option>Shopping</option>
+                    <option>Subscriptions</option>
+                    <option>Groceries</option>
+                  </select>
+                  <button class="text-xs text-slate-400 hover:text-slate-600">Skip</button>
+                </div>
+                <div class="grid grid-cols-[1fr_120px_100px_200px_80px] gap-4 px-5 py-3 items-center hover:bg-slate-50 transition-colors">
+                  <span class="text-sm font-medium text-slate-900">Netflix</span>
+                  <span class="text-sm text-slate-700 font-medium">€13.99</span>
+                  <span class="text-sm text-slate-500">10 Feb</span>
+                  <select class="text-sm border border-slate-200 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent">
+                    <option value="">Choose...</option>
+                    <option>Subscriptions</option>
+                    <option>Entertainment</option>
+                  </select>
+                  <button class="text-xs text-slate-400 hover:text-slate-600">Skip</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Done section -->
+            <div class="mt-5 bg-white rounded-xl border border-slate-200 overflow-hidden">
+              <div class="px-5 py-3 bg-green-50 border-b border-green-100 flex items-center gap-2">
+                <svg class="w-4 h-4 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                <span class="text-sm font-semibold text-green-800">Done this session (5)</span>
+              </div>
+              <div class="divide-y divide-slate-100">
+                <div class="grid grid-cols-[1fr_120px_100px_200px_80px] gap-4 px-5 py-2.5 items-center text-slate-500">
+                  <span class="text-sm">Spotify</span>
+                  <span class="text-sm">€9.99</span>
+                  <span class="text-sm">12 Feb</span>
+                  <span class="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700 w-fit">Subscriptions</span>
+                  <button class="text-xs font-medium text-[#0070f3] hover:underline">Change</button>
+                </div>
+                <div class="grid grid-cols-[1fr_120px_100px_200px_80px] gap-4 px-5 py-2.5 items-center text-slate-500">
+                  <span class="text-sm">Lidl</span>
+                  <span class="text-sm">€34.20</span>
+                  <span class="text-sm">11 Feb</span>
+                  <span class="text-xs px-2 py-0.5 rounded bg-green-100 text-green-700 w-fit">Groceries</span>
+                  <button class="text-xs font-medium text-[#0070f3] hover:underline">Change</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ============================================================
+       COMPARISON TABLE
+       ============================================================ -->
+  <div class="max-w-4xl mx-auto option-section" id="comparison">
+    <h2 class="text-xl font-bold text-slate-900 mb-4">Comparison</h2>
+    <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-sm">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200">
+            <th class="text-left px-5 py-3 font-semibold text-slate-700">Criteria</th>
+            <th class="text-center px-4 py-3 font-semibold text-blue-700">A: Undo Button</th>
+            <th class="text-center px-4 py-3 font-semibold text-emerald-700">B: Toast + History</th>
+            <th class="text-center px-4 py-3 font-semibold text-violet-700">C: Inbox List</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr>
+            <td class="px-5 py-3 font-medium text-slate-900">Undo discovery</td>
+            <td class="text-center px-4 py-3 text-slate-600">Always visible bar</td>
+            <td class="text-center px-4 py-3 text-slate-600">Toast auto-appears + history panel</td>
+            <td class="text-center px-4 py-3 text-slate-600">"Change" buttons in Done section</td>
+          </tr>
+          <tr>
+            <td class="px-5 py-3 font-medium text-slate-900">Implementation effort</td>
+            <td class="text-center px-4 py-3"><span class="text-green-600 font-medium">Low</span> — add undo stack to existing page</td>
+            <td class="text-center px-4 py-3"><span class="text-amber-600 font-medium">Medium</span> — toast + history component</td>
+            <td class="text-center px-4 py-3"><span class="text-red-600 font-medium">High</span> — full page rewrite</td>
+          </tr>
+          <tr>
+            <td class="px-5 py-3 font-medium text-slate-900">Preserves current UX</td>
+            <td class="text-center px-4 py-3"><span class="text-green-600 font-semibold">Yes</span> — card flow unchanged</td>
+            <td class="text-center px-4 py-3"><span class="text-green-600 font-semibold">Yes</span> — card flow + bonus</td>
+            <td class="text-center px-4 py-3"><span class="text-red-600 font-semibold">No</span> — completely new UX</td>
+          </tr>
+          <tr>
+            <td class="px-5 py-3 font-medium text-slate-900">Batch re-categorize</td>
+            <td class="text-center px-4 py-3">One at a time (undo last)</td>
+            <td class="text-center px-4 py-3">Browse history + change any</td>
+            <td class="text-center px-4 py-3">Change any in done list</td>
+          </tr>
+          <tr>
+            <td class="px-5 py-3 font-medium text-slate-900">Mobile experience</td>
+            <td class="text-center px-4 py-3"><span class="font-medium">Great</span> — focused card</td>
+            <td class="text-center px-4 py-3"><span class="font-medium">Great</span> — card + collapsible</td>
+            <td class="text-center px-4 py-3"><span class="font-medium">Good</span> — lots of scrolling</td>
+          </tr>
+          <tr>
+            <td class="px-5 py-3 font-medium text-slate-900">Desktop space usage</td>
+            <td class="text-center px-4 py-3">Centered card (narrow)</td>
+            <td class="text-center px-4 py-3">Card + sidebar (balanced)</td>
+            <td class="text-center px-4 py-3">Full-width table (efficient)</td>
+          </tr>
+          <tr class="bg-blue-50/50">
+            <td class="px-5 py-3 font-semibold text-slate-900">Recommendation</td>
+            <td class="text-center px-4 py-3 text-slate-600">Quick win, minimal risk</td>
+            <td class="text-center px-4 py-3 font-semibold text-emerald-700">Best balance of power + simplicity</td>
+            <td class="text-center px-4 py-3 text-slate-600">Power-user oriented</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="h-16"></div>
+
+</body>
+</html>

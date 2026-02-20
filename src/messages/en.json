@@ -1093,7 +1093,11 @@
     "tipDescription": "Set up keyword mappings in Settings to auto-categorize future expenses based on their names.",
     "suggested": "Suggested",
     "usedTimes": "used {count}x before",
-    "learnedMapping": "Pattern learned! Will auto-categorize next time."
+    "learnedMapping": "Pattern learned! Will auto-categorize next time.",
+    "recentlyDone": "Recently Done",
+    "recentlyCategorized": "Recently Categorized",
+    "change": "Change",
+    "undo": "Undo"
   },
   "receiptScanner": {
     "title": "Scan Receipt",
