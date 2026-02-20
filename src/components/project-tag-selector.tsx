@@ -55,8 +55,8 @@ export default function ProjectTagSelector({
           {t("noTags")}
         </button>
 
-        {/* Existing project tags (multi-select) */}
-        {projects.map((project) => {
+        {/* Existing project tags (multi-select, hide locked) */}
+        {projects.filter((p) => p.isActive !== false).map((project) => {
           const isSelected = selectedIds.includes(project.id);
           return (
             <button

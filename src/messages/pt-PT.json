@@ -410,9 +410,9 @@
       "on_hold": "Em Pausa",
       "cancelled": "Cancelado"
     },
-    "archive": "Arquivar",
-    "unarchive": "Desarquivar",
-    "archived": "Arquivado",
+    "lock": "Trancar",
+    "unlock": "Destrancar",
+    "locked": "Trancado",
     "viewWrapped": "Ver Resumo",
     "projectWrapped": {
       "yourSummary": "Aqui está o resumo do teu projeto",

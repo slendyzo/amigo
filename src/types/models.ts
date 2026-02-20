@@ -16,6 +16,7 @@ export type BankAccount = {
 export type Project = {
   id: string;
   name: string;
+  isActive?: boolean;
 };
 
 export type ExpenseType = "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";

@@ -410,9 +410,9 @@
       "on_hold": "On Hold",
       "cancelled": "Cancelled"
     },
-    "archive": "Archive",
-    "unarchive": "Unarchive",
-    "archived": "Archived",
+    "lock": "Lock",
+    "unlock": "Unlock",
+    "locked": "Locked",
     "viewWrapped": "View Wrapped",
     "projectWrapped": {
       "yourSummary": "Here's your project summary",

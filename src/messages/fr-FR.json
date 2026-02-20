@@ -410,9 +410,9 @@
       "on_hold": "En Attente",
       "cancelled": "Annulé"
     },
-    "archive": "Archiver",
-    "unarchive": "Désarchiver",
-    "archived": "Archivé",
+    "lock": "Verrouiller",
+    "unlock": "Déverrouiller",
+    "locked": "Verrouillé",
     "viewWrapped": "Voir le Résumé",
     "projectWrapped": {
       "yourSummary": "Voici le résumé de votre projet",
