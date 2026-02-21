@@ -37,7 +37,7 @@ type DoneItem = {
 };
 
 export default function CategorizePage() {
-  const t = useTranslations("categorize");
+  const t = useTranslations("tidyUp");
   const tCommon = useTranslations("common");
   const tTime = useTranslations("time");
   const tQuickCategory = useTranslations("modals.quickCategory");

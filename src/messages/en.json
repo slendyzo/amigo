@@ -44,7 +44,7 @@
     "recurring": "Recurring",
     "projects": "Projects",
     "categories": "Categories",
-    "categorize": "Quick Categorize",
+    "tidyUp": "Tidy Up",
     "accounts": "Bank Accounts",
     "import": "Import",
     "importHistory": "Import History",
@@ -55,7 +55,10 @@
     "more": "More",
     "menu": "Menu",
     "inbox": "Inbox",
-    "whatsNew": "What's New"
+    "whatsNew": "What's New",
+    "sectionMoney": "Money",
+    "sectionOrganize": "Organize",
+    "sectionData": "Data"
   },
   "auth": {
     "signIn": "Sign In",
@@ -1088,9 +1091,9 @@
     "olderUpdates": "Older updates",
     "newerUpdates": "Newer updates"
   },
-  "categorize": {
-    "title": "Quick Categorize",
-    "subtitle": "Tidy up your uncategorized expenses",
+  "tidyUp": {
+    "title": "Tidy Up",
+    "subtitle": "Swipe through your uncategorized expenses",
     "remaining": "remaining",
     "selectCategory": "Select a category:",
     "skip": "Skip for now",

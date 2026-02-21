@@ -44,7 +44,7 @@
     "recurring": "Recorrentes",
     "projects": "Projetos",
     "categories": "Categorias",
-    "categorize": "Categorizar",
+    "tidyUp": "Arrumar",
     "accounts": "Contas Bancárias",
     "import": "Importar",
     "importHistory": "Histórico de Importações",
@@ -55,7 +55,10 @@
     "more": "Mais",
     "menu": "Menu",
     "inbox": "Caixa de Entrada",
-    "whatsNew": "Novidades"
+    "whatsNew": "Novidades",
+    "sectionMoney": "Dinheiro",
+    "sectionOrganize": "Organizar",
+    "sectionData": "Dados"
   },
   "auth": {
     "signIn": "Iniciar Sessão",
@@ -1074,9 +1077,9 @@
     "olderUpdates": "Atualizações anteriores",
     "newerUpdates": "Atualizações mais recentes"
   },
-  "categorize": {
-    "title": "Categorizar Rápido",
-    "subtitle": "Organiza as tuas despesas sem categoria",
+  "tidyUp": {
+    "title": "Arrumar",
+    "subtitle": "Arruma as tuas despesas sem categoria",
     "remaining": "restantes",
     "selectCategory": "Seleciona uma categoria:",
     "skip": "Saltar por agora",

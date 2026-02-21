@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { signOut } from "next-auth/react";
 import { usePathname } from "next/navigation";
 import Link from "next/link";
@@ -21,8 +21,21 @@ const ChangelogModal = lazy(() => import("./changelog-modal").then(mod => ({ def
 // Current announcement ID - should match the one in overview-client.tsx
 const CURRENT_ANNOUNCEMENT_ID = "workspaces-v1";
 
-// Navigation grouped by section (keys for translation)
-const navigationGroups = [
+// Navigation grouped by section with labels and collapsible support
+type NavItem = {
+  key: string;
+  href: string;
+  icon: string;
+  badgeKey?: string;
+};
+
+type NavGroup = {
+  label?: string;
+  collapsible?: boolean;
+  items: NavItem[];
+};
+
+const navigationGroups: NavGroup[] = [
   {
     items: [
       { key: "overview", href: "/dashboard", icon: "home" },
@@ -30,35 +43,41 @@ const navigationGroups = [
     ],
   },
   {
+    label: "sectionMoney",
+    collapsible: true,
     items: [
       { key: "incomes", href: "/dashboard/incomes", icon: "dollar" },
       { key: "recurring", href: "/dashboard/recurring", icon: "repeat" },
     ],
   },
   {
+    label: "sectionOrganize",
+    collapsible: true,
     items: [
       { key: "projects", href: "/dashboard/projects", icon: "folder" },
       { key: "categories", href: "/dashboard/categories", icon: "tag" },
-      { key: "categorize", href: "/dashboard/categorize", icon: "wand" },
+      { key: "tidyUp", href: "/dashboard/tidy-up", icon: "wand", badgeKey: "uncategorizedCount" },
       { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
     ],
   },
   {
+    label: "sectionData",
+    collapsible: true,
     items: [
       { key: "import", href: "/dashboard/import", icon: "upload" },
       { key: "importHistory", href: "/dashboard/imports", icon: "history" },
+      { key: "mappings", href: "/dashboard/mappings", icon: "key" },
     ],
   },
   {
     items: [
-      { key: "mappings", href: "/dashboard/mappings", icon: "key" },
       { key: "settings", href: "/dashboard/settings", icon: "settings" },
     ],
   },
 ];
 
 // Admin-only navigation items
-const adminItems = [
+const adminItems: NavItem[] = [
   { key: "inbox", href: "/dashboard/inbox", icon: "inbox" },
 ];
 
@@ -148,6 +167,36 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [badgeCounts, setBadgeCounts] = useState<Record<string, number>>({});
+  const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
+
+  // Load collapsed state from localStorage
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("amigo-sidebar-collapsed");
+      if (stored) setCollapsedSections(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  // Fetch badge counts
+  useEffect(() => {
+    fetch("/api/expenses/uncategorized-count")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.count > 0) {
+          setBadgeCounts((prev) => ({ ...prev, uncategorizedCount: data.count }));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const toggleSection = (label: string) => {
+    setCollapsedSections((prev) => {
+      const next = { ...prev, [label]: !prev[label] };
+      localStorage.setItem("amigo-sidebar-collapsed", JSON.stringify(next));
+      return next;
+    });
+  };
 
   const handleSignOut = () => {
     signOut({ callbackUrl: "/" });
@@ -175,41 +224,86 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-          {navigationGroups.map((group, groupIndex) => (
-            <div key={groupIndex}>
-              {groupIndex > 0 && (
-                <div className="my-3 border-t border-slate-200" />
-              )}
-              <div className="space-y-1">
-                {group.items.map((item) => {
-                  const active = isActive(item.href);
-                  return (
-                    <Link
-                      key={item.key}
-                      href={item.href}
-                      className={`
-                        flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
-                        ${active
-                          ? "bg-[#0070f3] text-white"
-                          : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                        }
-                      `}
-                    >
-                      {icons[item.icon]}
-                      {t(item.key)}
-                    </Link>
-                  );
-                })}
+        <nav className="flex-1 px-4 py-3 overflow-y-auto">
+          {navigationGroups.map((group, groupIndex) => {
+            // Auto-expand section if it contains the active route
+            const hasActiveItem = group.items.some((item) => isActive(item.href));
+            const isCollapsed = group.label && !hasActiveItem ? collapsedSections[group.label] : false;
+
+            return (
+              <div key={groupIndex}>
+                {/* Section header or divider */}
+                {group.label ? (
+                  <button
+                    onClick={() => group.collapsible && toggleSection(group.label!)}
+                    className={`w-full flex items-center justify-between px-3 py-1.5 mt-5 mb-1 rounded-md ${
+                      group.collapsible ? "cursor-pointer hover:bg-slate-50" : "cursor-default"
+                    }`}
+                  >
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                      {t(group.label)}
+                    </span>
+                    {group.collapsible && (
+                      <svg
+                        className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${isCollapsed ? "-rotate-90" : ""}`}
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    )}
+                  </button>
+                ) : groupIndex > 0 ? (
+                  <div className="my-3 border-t border-slate-200" />
+                ) : null}
+
+                {/* Nav items with collapse animation */}
+                <div
+                  className={`space-y-0.5 overflow-hidden transition-all duration-200 ${
+                    isCollapsed ? "max-h-0 opacity-0" : "max-h-[500px] opacity-100"
+                  }`}
+                >
+                  {group.items.map((item) => {
+                    const active = isActive(item.href);
+                    const badgeCount = item.badgeKey ? badgeCounts[item.badgeKey] : 0;
+
+                    return (
+                      <Link
+                        key={item.key}
+                        href={item.href}
+                        className={`
+                          flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                          ${active
+                            ? "bg-[#0070f3] text-white"
+                            : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                          }
+                        `}
+                      >
+                        {icons[item.icon]}
+                        <span className="flex-1">{t(item.key)}</span>
+                        {badgeCount > 0 && (
+                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${
+                            active
+                              ? "bg-white/20 text-white"
+                              : "bg-amber-100 text-amber-700"
+                          }`}>
+                            {badgeCount > 99 ? "99+" : badgeCount}
+                          </span>
+                        )}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {/* Admin-only section */}
           {userEmail === "kikoman200@gmail.com" && (
             <div>
               <div className="my-3 border-t border-slate-200" />
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {adminItems.map((item) => {
                   const active = isActive(item.href);
                   return (

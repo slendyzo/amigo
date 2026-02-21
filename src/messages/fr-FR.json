@@ -44,7 +44,7 @@
     "recurring": "Récurrents",
     "projects": "Projets",
     "categories": "Catégories",
-    "categorize": "Catégoriser",
+    "tidyUp": "Ranger",
     "accounts": "Comptes Bancaires",
     "import": "Importer",
     "importHistory": "Historique d'Import",
@@ -55,7 +55,10 @@
     "more": "Plus",
     "menu": "Menu",
     "inbox": "Boîte de Réception",
-    "whatsNew": "Nouveautés"
+    "whatsNew": "Nouveautés",
+    "sectionMoney": "Argent",
+    "sectionOrganize": "Organiser",
+    "sectionData": "Données"
   },
   "auth": {
     "signIn": "Connexion",
@@ -1088,9 +1091,9 @@
     "olderUpdates": "Mises à jour précédentes",
     "newerUpdates": "Mises à jour plus récentes"
   },
-  "categorize": {
-    "title": "Catégorisation Rapide",
-    "subtitle": "Organisez vos dépenses non catégorisées",
+  "tidyUp": {
+    "title": "Ranger",
+    "subtitle": "Rangez vos dépenses non catégorisées",
     "remaining": "restantes",
     "selectCategory": "Sélectionnez une catégorie :",
     "skip": "Passer pour l'instant",
