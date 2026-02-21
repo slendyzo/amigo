@@ -122,6 +122,29 @@ export default function InboxPage() {
     }
   };
 
+  const handleResolveAll = async () => {
+    const unresolvedCount = feedback.filter((f) => !f.isResolved).length;
+    if (unresolvedCount === 0) return;
+    if (!confirm(`Mark all ${unresolvedCount} unresolved items as resolved?`)) return;
+
+    try {
+      const response = await fetch("/api/feedback", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ resolveAll: true }),
+      });
+
+      if (response.ok) {
+        setFeedback((prev) =>
+          prev.map((f) => ({ ...f, isResolved: true, isRead: true }))
+        );
+        setUnreadCount(0);
+      }
+    } catch {
+      // Silently fail
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!confirm("Are you sure you want to delete this feedback?")) return;
 
@@ -177,6 +200,14 @@ export default function InboxPage() {
             </p>
           )}
         </div>
+        {feedback.some((f) => !f.isResolved) && (
+          <button
+            onClick={handleResolveAll}
+            className="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+          >
+            {t("resolveAll")}
+          </button>
+        )}
       </div>
 
       {/* Filters */}

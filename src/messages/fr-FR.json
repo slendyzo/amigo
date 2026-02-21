@@ -929,6 +929,7 @@
     "markAsRead": "Marquer comme lu",
     "markAsUnread": "Marquer comme non lu",
     "markAsResolved": "Marquer comme résolu",
+    "resolveAll": "Tout résoudre",
     "delete": "Supprimer",
     "from": "De",
     "page": "Page",

@@ -131,7 +131,16 @@ export async function PATCH(request: Request) {
     }
 
     const body = await request.json();
-    const { id, isRead, isResolved } = body;
+    const { id, isRead, isResolved, resolveAll } = body;
+
+    // Bulk resolve all unresolved feedback
+    if (resolveAll) {
+      const result = await prisma.feedback.updateMany({
+        where: { isResolved: false },
+        data: { isResolved: true, isRead: true },
+      });
+      return NextResponse.json({ updated: result.count });
+    }
 
     if (!id) {
       return NextResponse.json(
