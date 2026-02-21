@@ -431,7 +431,7 @@ export default function CategorizePage() {
   }
 
   // Card content shared between mobile and desktop layouts
-  const cardContent = (
+  const renderCardContent = (gridCols: string, formColSpan: string) => (
     <div className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 ${showSuccess ? 'scale-95 opacity-50' : ''}`}>
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-start justify-between mb-2">
@@ -480,7 +480,7 @@ export default function CategorizePage() {
         )}
 
         <p className="text-sm font-medium text-slate-700 mb-3">{t("selectCategory")}</p>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        <div className={`grid ${gridCols} gap-2`}>
           {categories
             .filter((c) => !suggestion || c.id !== suggestion.categoryId)
             .map((category) => (
@@ -513,7 +513,7 @@ export default function CategorizePage() {
               <span className="truncate text-sm font-medium">{tQuickCategory("createNew")}</span>
             </button>
           ) : (
-            <div className="col-span-2 md:col-span-3 p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5">
+            <div className={`${formColSpan} p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5`}>
               <div className="flex items-center gap-2 mb-2">
                 <Tag className="w-4 h-4 text-[#0070f3]" />
                 <span className="text-sm font-medium text-[#0070f3]">{tQuickCategory("title")}</span>
@@ -574,7 +574,7 @@ export default function CategorizePage() {
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 md:space-y-5">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
@@ -610,77 +610,83 @@ export default function CategorizePage() {
         />
       </div>
 
-      {/* Desktop: two-column layout (card + history sidebar) */}
-      <div className="hidden md:flex gap-5">
-        {/* Card - left side */}
-        <div className="flex-1 max-w-lg">
-          {currentExpense && cardContent}
-        </div>
+      {/* Desktop layout */}
+      <div className="hidden md:block">
+        {doneStack.length > 0 ? (
+          <div className="flex gap-5">
+            {/* Card - left side */}
+            <div className="flex-1">
+              {currentExpense && renderCardContent("grid-cols-2 md:grid-cols-4", "col-span-2 md:col-span-4")}
+            </div>
 
-        {/* History sidebar - right side (desktop only) */}
-        {doneStack.length > 0 && (
-          <div className="w-64 bg-white rounded-xl border border-slate-200 overflow-hidden flex-shrink-0 self-start">
-            <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4 text-slate-400" />
-                <span className="text-sm font-semibold text-slate-700">{t("recentlyDone")}</span>
-              </div>
-              <span className="text-xs text-slate-400">{doneStack.length}</span>
-            </div>
-            <div className="divide-y divide-slate-50 max-h-[330px] overflow-y-auto">
-              {doneStack.map((item) => (
-                <div key={item.expense.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
-                  {changingItemId === item.expense.id ? (
-                    <div className="space-y-1.5">
-                      <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
-                      <select
-                        autoFocus
-                        defaultValue={item.categoryId}
-                        onChange={(e) => handleChangeDoneItem(item, e.target.value)}
-                        onBlur={() => setChangingItemId(null)}
-                        className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-                      >
-                        {categories.map((cat) => (
-                          <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
-                        ))}
-                      </select>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
-                        <button
-                          onClick={() => setChangingItemId(item.expense.id)}
-                          className="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2"
-                        >
-                          {t("change")}
-                        </button>
-                      </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-xs text-slate-500">
-                          {formatCurrency(Number(item.expense.amount), item.expense.currency)}
-                        </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
-                          {translateCategory(item.categoryName)}
-                        </span>
-                      </div>
-                    </>
-                  )}
+            {/* History sidebar - right side */}
+            <div className="w-72 bg-white rounded-xl border border-slate-200 overflow-hidden flex-shrink-0 self-start">
+              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  <span className="text-sm font-semibold text-slate-700">{t("recentlyDone")}</span>
                 </div>
-              ))}
+                <span className="text-xs text-slate-400">{doneStack.length}</span>
+              </div>
+              <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
+                {doneStack.map((item) => (
+                  <div key={item.expense.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
+                    {changingItemId === item.expense.id ? (
+                      <div className="space-y-1.5">
+                        <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
+                        <select
+                          autoFocus
+                          defaultValue={item.categoryId}
+                          onChange={(e) => handleChangeDoneItem(item, e.target.value)}
+                          onBlur={() => setChangingItemId(null)}
+                          className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                        >
+                          {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
+                          ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
+                          <button
+                            onClick={() => setChangingItemId(item.expense.id)}
+                            className="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2"
+                          >
+                            {t("change")}
+                          </button>
+                        </div>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          <span className="text-xs text-slate-500">
+                            {formatCurrency(Number(item.expense.amount), item.expense.currency)}
+                          </span>
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                            {translateCategory(item.categoryName)}
+                          </span>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ))}
+              </div>
             </div>
+          </div>
+        ) : (
+          <div className="max-w-3xl">
+            {currentExpense && renderCardContent("grid-cols-2 md:grid-cols-4", "col-span-2 md:col-span-4")}
           </div>
         )}
       </div>
 
       {/* Mobile: single column layout */}
       <div className="md:hidden">
-        {currentExpense && cardContent}
+        {currentExpense && renderCardContent("grid-cols-2", "col-span-2")}
       </div>
 
-      {/* Navigation dots (for mobile to show position) */}
+      {/* Navigation dots (mobile only) */}
       {expenses.length > 1 && (
-        <div className="flex justify-center gap-1.5">
+        <div className="flex justify-center gap-1.5 md:hidden">
           {expenses.slice(0, Math.min(10, expenses.length)).map((_, index) => (
             <button
               key={index}
@@ -716,8 +722,8 @@ export default function CategorizePage() {
         </div>
       )}
 
-      {/* Tips section */}
-      <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
+      {/* Tips section (mobile only) */}
+      <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 md:hidden">
         <h3 className="text-sm font-medium text-slate-700 mb-2">{t("tip")}</h3>
         <p className="text-sm text-slate-600">{t("tipDescription")}</p>
       </div>
