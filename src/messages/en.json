@@ -1104,7 +1104,10 @@
     "recentlyDone": "Recently Done",
     "recentlyCategorized": "Recently Categorized",
     "change": "Change",
-    "undo": "Undo"
+    "undo": "Undo",
+    "autoAssignAll": "Auto-assign all",
+    "autoAssigning": "Assigning...",
+    "autoAssigned": "{count} expenses auto-categorized"
   },
   "receiptScanner": {
     "title": "Scan Receipt",

@@ -1,27 +1,9 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
+import { normalizeKeyword, levenshteinDistance, maxFuzzyDistance } from "@/lib/fuzzy";
 
 const LEARNING_THRESHOLD = 3; // Number of times before auto-creating mapping
-
-/**
- * Normalize a keyword for consistent matching:
- * - lowercase
- * - strip diacritics/accents (gás → gas, café → cafe)
- * - strip apostrophes and common punctuation (mcdonald's → mcdonalds)
- * - collapse whitespace
- */
-function normalizeKeyword(input: string): string {
-  return input
-    .toLowerCase()
-    .trim()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "") // strip diacritics
-    .replace(/[''`]/g, "")           // strip apostrophes
-    .replace(/[^\w\s-]/g, "")        // strip other punctuation
-    .replace(/\s+/g, " ")            // collapse whitespace
-    .trim();
-}
 
 // POST - Learn from categorization patterns and create mappings when threshold is met
 export async function POST(request: Request) {
@@ -201,6 +183,37 @@ export async function GET(request: Request) {
           source: "mapping",
         },
       });
+    }
+
+    // Try fuzzy matching against existing keyword mappings (handles typos like "aleixpress" ≈ "aliexpress")
+    const maxDist = maxFuzzyDistance(keyword);
+    if (maxDist > 0) {
+      const allMappings = await prisma.keywordMapping.findMany({
+        where: { workspaceId: workspace.id },
+        include: { category: true },
+      });
+
+      let bestMatch: (typeof allMappings)[0] | null = null;
+      let bestDistance = Infinity;
+
+      for (const mapping of allMappings) {
+        const dist = levenshteinDistance(keyword, mapping.keyword);
+        if (dist > 0 && dist <= maxDist && dist < bestDistance) {
+          bestDistance = dist;
+          bestMatch = mapping;
+        }
+      }
+
+      if (bestMatch?.category) {
+        return NextResponse.json({
+          suggestion: {
+            categoryId: bestMatch.categoryId,
+            categoryName: bestMatch.category.name,
+            confidence: bestDistance <= 1 ? "high" : "medium",
+            source: "mapping",
+          },
+        });
+      }
     }
 
     // No mapping exists - check historical categorizations using normalized name matching.

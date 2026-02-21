@@ -62,6 +62,10 @@ export default function CategorizePage() {
   const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
   const [showLearnedToast, setShowLearnedToast] = useState(false);
 
+  // Auto-assign state
+  const [isAutoAssigning, setIsAutoAssigning] = useState(false);
+  const [autoAssignResult, setAutoAssignResult] = useState<{ assigned: number } | null>(null);
+
   // Undo / history state
   const [doneStack, setDoneStack] = useState<DoneItem[]>([]);
   const [undoToast, setUndoToast] = useState<DoneItem | null>(null);
@@ -209,6 +213,9 @@ export default function CategorizePage() {
     setSelectedCategory(categoryId);
     setIsSaving(true);
 
+    // Capture expense ID before any async/timeout to avoid stale closures
+    const removedId = currentExpense.id;
+
     try {
       const response = await fetch(`/api/expenses/${currentExpense.id}`, {
         method: "PUT",
@@ -253,17 +260,25 @@ export default function CategorizePage() {
           setShowSuccess(false);
           setSelectedCategory(null);
           setSuggestion(null);
-          // Move to next or remove from list
-          setExpenses((prev) => prev.filter((e) => e.id !== currentExpense.id));
-          // Keep currentIndex the same (or decrease if at end)
-          if (currentIndex >= expenses.length - 1 && currentIndex > 0) {
-            setCurrentIndex((prev) => prev - 1);
-          }
+          // Remove expense and adjust index using functional updaters (avoids stale closures)
+          setExpenses((prev) => {
+            const filtered = prev.filter((e) => e.id !== removedId);
+            setCurrentIndex((prevIndex) => {
+              if (prevIndex >= filtered.length && prevIndex > 0) {
+                return prevIndex - 1;
+              }
+              return prevIndex;
+            });
+            return filtered;
+          });
+          // Release saving lock after animation completes
+          setIsSaving(false);
         }, 300);
+      } else {
+        setIsSaving(false);
       }
     } catch (error) {
       console.error("Failed to categorize:", error);
-    } finally {
       setIsSaving(false);
     }
   };
@@ -274,6 +289,26 @@ export default function CategorizePage() {
     } else {
       // Loop back to start
       setCurrentIndex(0);
+    }
+  };
+
+  const handleAutoAssign = async () => {
+    setIsAutoAssigning(true);
+    setAutoAssignResult(null);
+    try {
+      const res = await fetch("/api/expenses/auto-categorize", { method: "POST" });
+      if (res.ok) {
+        const data = await res.json();
+        if (data.assigned > 0) {
+          setAutoAssignResult({ assigned: data.assigned });
+          fetchData();
+          setTimeout(() => setAutoAssignResult(null), 4000);
+        }
+      }
+    } catch (error) {
+      console.error("Auto-assign failed:", error);
+    } finally {
+      setIsAutoAssigning(false);
     }
   };
 
@@ -545,6 +580,21 @@ export default function CategorizePage() {
         <div>
           <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("title")}</h1>
           <p className="text-slate-500 text-sm mt-1">{t("subtitle")}</p>
+          {expenses.length > 0 && (
+            <button
+              onClick={handleAutoAssign}
+              disabled={isAutoAssigning}
+              className="mt-2 flex items-center gap-1.5 text-sm text-purple-600 hover:text-purple-800 font-medium disabled:opacity-50 transition-colors"
+            >
+              <Sparkles className="w-4 h-4" />
+              {isAutoAssigning ? t("autoAssigning") : t("autoAssignAll")}
+            </button>
+          )}
+          {autoAssignResult && (
+            <p className="mt-1 text-xs text-green-600 font-medium">
+              {t("autoAssigned", { count: autoAssignResult.assigned })}
+            </p>
+          )}
         </div>
         <div className="text-right">
           <div className="text-2xl font-bold text-slate-900">{expenses.length}</div>
@@ -674,7 +724,7 @@ export default function CategorizePage() {
 
       {/* Floating undo toast */}
       {undoToast && (
-        <div className="fixed bottom-24 md:bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:left-auto md:right-auto md:w-auto z-50 animate-in slide-in-from-bottom-4">
+        <div className={`fixed ${showLearnedToast ? "bottom-32" : "bottom-24"} md:bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:left-auto md:right-auto md:w-auto z-50 animate-in slide-in-from-bottom-4 transition-all`}>
           <div className="bg-slate-800 text-white rounded-xl px-4 py-3 shadow-lg flex items-center justify-between gap-4 md:min-w-[320px]">
             <div className="flex items-center gap-2 min-w-0">
               <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
@@ -694,9 +744,11 @@ export default function CategorizePage() {
 
       {/* Learned mapping toast */}
       {showLearnedToast && (
-        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2 animate-in slide-in-from-bottom-4 z-50">
-          <Brain className="w-5 h-5" />
-          <span className="text-sm font-medium">{t("learnedMapping")}</span>
+        <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:w-auto z-50 animate-in slide-in-from-bottom-4">
+          <div className="bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
+            <Brain className="w-5 h-5" />
+            <span className="text-sm font-medium">{t("learnedMapping")}</span>
+          </div>
         </div>
       )}
     </div>

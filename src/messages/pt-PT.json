@@ -1090,7 +1090,10 @@
     "recentlyDone": "Feitos Recentemente",
     "recentlyCategorized": "Categorizados Recentemente",
     "change": "Alterar",
-    "undo": "Desfazer"
+    "undo": "Desfazer",
+    "autoAssignAll": "Atribuir automaticamente",
+    "autoAssigning": "A atribuir...",
+    "autoAssigned": "{count} despesas categorizadas automaticamente"
   },
   "receiptScanner": {
     "title": "Digitalizar Recibo",

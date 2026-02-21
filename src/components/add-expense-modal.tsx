@@ -110,6 +110,10 @@ export default function AddExpenseModal({
     label: t(`types.${value.toLowerCase().replace("survival_", "")}`),
   }));
 
+  // Track whether modal was previously open (to detect open transitions)
+  const prevIsOpenRef = useRef(false);
+  const hasSetInitialDefaults = useRef(false);
+
   // Focus input when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -117,9 +121,9 @@ export default function AddExpenseModal({
     }
   }, [isOpen]);
 
-  // Reset form when modal opens/closes
+  // Reset form only when modal transitions from closed → open
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !prevIsOpenRef.current) {
       setName("");
       setAmount("");
       setCurrency(defaultCurrency);
@@ -134,8 +138,25 @@ export default function AddExpenseModal({
       setIsScheduled(false);
       setShowAdvanced(false);
       setError("");
+      hasSetInitialDefaults.current = false;
     }
-  }, [isOpen, defaultCurrency, resolvedDefaultBankAccountId, defaultProjectId, defaultExcludeFromBudget, setSelectedProjectIds, resetTagInput]);
+    prevIsOpenRef.current = isOpen;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  // Silently update currency/bank account when async data arrives (without clearing other fields)
+  useEffect(() => {
+    if (isOpen && !hasSetInitialDefaults.current && defaultCurrency !== "EUR") {
+      setCurrency(defaultCurrency);
+      hasSetInitialDefaults.current = true;
+    }
+  }, [isOpen, defaultCurrency]);
+
+  useEffect(() => {
+    if (isOpen && resolvedDefaultBankAccountId) {
+      setBankAccountId((prev) => prev || resolvedDefaultBankAccountId);
+    }
+  }, [isOpen, resolvedDefaultBankAccountId]);
 
   const handleCreateTag = async () => {
     await createTag();

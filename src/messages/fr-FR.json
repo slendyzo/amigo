@@ -1104,7 +1104,10 @@
     "recentlyDone": "Récemment Faits",
     "recentlyCategorized": "Récemment Catégorisés",
     "change": "Modifier",
-    "undo": "Annuler"
+    "undo": "Annuler",
+    "autoAssignAll": "Attribuer automatiquement",
+    "autoAssigning": "Attribution...",
+    "autoAssigned": "{count} dépenses catégorisées automatiquement"
   },
   "receiptScanner": {
     "title": "Scanner un Reçu",
