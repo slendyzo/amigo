@@ -68,11 +68,52 @@ export async function POST(request: Request) {
           existingMapping: true,
         });
       }
-      // Different category - don't override existing mapping
+
+      // Different category - check if user consistently re-categorizes to the new category.
+      // Count recent categorizations for this keyword with the NEW category.
+      const correctionCount = await prisma.$queryRawUnsafe<[{ count: bigint }]>(
+        `SELECT COUNT(*) as count FROM expenses
+         WHERE "workspaceId" = $1
+           AND "categoryId" = $2
+           AND LOWER(REGEXP_REPLACE(UNACCENT(name), '[''\\x60]', '', 'g')) = $3`,
+        workspace.id,
+        categoryId,
+        keyword
+      );
+
+      const corrections = Number(correctionCount[0]?.count ?? 0);
+
+      // Also check if the existing mapping points to "Uncategorized" - override immediately
+      let isUncategorized = false;
+      if (existingMapping.categoryId) {
+        const existingCategory = await prisma.category.findUnique({
+          where: { id: existingMapping.categoryId },
+        });
+        isUncategorized = existingCategory?.name === "Uncategorized";
+      }
+
+      if (isUncategorized || corrections >= LEARNING_THRESHOLD - 1) {
+        // Override the mapping: user is correcting a bad mapping
+        await prisma.keywordMapping.update({
+          where: { id: existingMapping.id },
+          data: { categoryId },
+        });
+
+        return NextResponse.json({
+          learned: true,
+          updated: true,
+          count: corrections + 1,
+          message: `Updated mapping: "${keyword}" → new category`,
+        });
+      }
+
       return NextResponse.json({
         learned: false,
         reason: "Different mapping exists",
         existingMapping: true,
+        corrections,
+        threshold: LEARNING_THRESHOLD - 1,
+        remaining: (LEARNING_THRESHOLD - 1) - corrections,
       });
     }
 
@@ -174,7 +215,7 @@ export async function GET(request: Request) {
       },
     });
 
-    if (existingMapping?.category) {
+    if (existingMapping?.category && existingMapping.category.name !== "Uncategorized") {
       return NextResponse.json({
         suggestion: {
           categoryId: existingMapping.categoryId,
@@ -204,7 +245,7 @@ export async function GET(request: Request) {
         }
       }
 
-      if (bestMatch?.category) {
+      if (bestMatch?.category && bestMatch.category.name !== "Uncategorized") {
         return NextResponse.json({
           suggestion: {
             categoryId: bestMatch.categoryId,
