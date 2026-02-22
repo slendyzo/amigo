@@ -351,7 +351,10 @@
     "organizeDescription": "Groupez vos catégories en groupes parent/enfant pour un meilleur suivi des dépenses.",
     "organizeButton": "Organiser les catégories",
     "organizing": "Organisation...",
-    "systemCategory": "Catégorie système"
+    "systemCategory": "Catégorie système",
+    "unmatchedTitle": "Certaines catégories n'ont pas pu être reconnues",
+    "unmatchedDescription": "Ces catégories ne correspondent à aucun groupe standard. Vous pouvez les attribuer manuellement à un groupe parent via le bouton modifier.",
+    "unmatchedHint": "Astuce : Modifiez une catégorie et choisissez un groupe parent pour l'organiser."
   },
   "accounts": {
     "title": "Comptes Bancaires",

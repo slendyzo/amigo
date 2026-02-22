@@ -351,7 +351,10 @@
     "organizeDescription": "Group your categories into parent/child groups for better expense tracking.",
     "organizeButton": "Organize categories",
     "organizing": "Organizing...",
-    "systemCategory": "System category"
+    "systemCategory": "System category",
+    "unmatchedTitle": "Some categories couldn't be matched",
+    "unmatchedDescription": "These categories didn't match any standard group. You can manually assign them to a parent using the edit button, or leave them as they are.",
+    "unmatchedHint": "Tip: Edit a category and pick a parent group to organize it."
   },
   "accounts": {
     "title": "Bank Accounts",

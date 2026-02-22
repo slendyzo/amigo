@@ -327,6 +327,43 @@ export async function seedDefaultCategories(
  * Adopts existing categories as children of new parents where they match.
  * Idempotent - safe to run multiple times.
  */
+/**
+ * Normalize a string for fuzzy comparison: lowercase, strip accents, trim.
+ */
+function normalize(s: string): string {
+  return s.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+}
+
+/**
+ * Simple fuzzy match: returns true if strings are similar enough.
+ * Checks substring containment and word overlap.
+ */
+function fuzzyMatch(a: string, b: string): boolean {
+  const na = normalize(a);
+  const nb = normalize(b);
+
+  // Exact match after normalization
+  if (na === nb) return true;
+
+  // One is a substring of the other (e.g. "Restaurante" in "Restaurantes")
+  if (na.length >= 3 && nb.length >= 3) {
+    if (na.includes(nb) || nb.includes(na)) return true;
+  }
+
+  // Word overlap: split into words, check if significant words overlap
+  const wordsA = na.split(/[\s&/,>]+/).filter((w) => w.length > 2);
+  const wordsB = nb.split(/[\s&/,>]+/).filter((w) => w.length > 2);
+  if (wordsA.length === 0 || wordsB.length === 0) return false;
+
+  const overlap = wordsA.filter((wa) =>
+    wordsB.some((wb) => wa.includes(wb) || wb.includes(wa))
+  ).length;
+  const maxLen = Math.max(wordsA.length, wordsB.length);
+
+  // At least half of the significant words overlap
+  return overlap / maxLen >= 0.5;
+}
+
 export async function upgradeToHierarchy(
   workspaceId: string,
   language?: string
@@ -335,6 +372,7 @@ export async function upgradeToHierarchy(
   childrenCreated: number;
   adopted: number;
   merged: number;
+  unmatched: string[];
 }> {
   let lang = language;
   if (!lang) {
@@ -523,7 +561,83 @@ export async function upgradeToHierarchy(
     }
   }
 
-  return { parentsCreated, childrenCreated, adopted, merged };
+  // Fuzzy match pass: try to match remaining orphans to subcategories
+  const afterMerge = await prisma.category.findMany({
+    where: { workspaceId, parentId: null },
+    select: { id: true, name: true },
+  });
+
+  const uncategorizedNames = ["uncategorized", "sem categoria", "non catégorisé"];
+  const isParentName = (name: string) =>
+    DEFAULT_CATEGORY_HIERARCHY.some((p) =>
+      Object.values(p.translations).some((t) => t.toLowerCase() === name.toLowerCase())
+    );
+
+  // Build a flat list of all subcategories with their parent IDs for fuzzy matching
+  const allSubcategories: { name: string; parentId: string; id: string }[] = [];
+  const finalCategories = await prisma.category.findMany({
+    where: { workspaceId },
+    select: { id: true, name: true, parentId: true },
+  });
+  for (const c of finalCategories) {
+    if (c.parentId !== null) {
+      allSubcategories.push({ name: c.name, parentId: c.parentId, id: c.id });
+    }
+  }
+
+  const unmatched: string[] = [];
+
+  for (const orphan of afterMerge) {
+    // Skip Uncategorized and parent categories
+    if (uncategorizedNames.includes(orphan.name.toLowerCase())) continue;
+    if (isParentName(orphan.name)) continue;
+
+    // Try fuzzy match against all subcategory names (all languages)
+    let bestMatch: { subcatId: string; parentId: string } | null = null;
+
+    // First try matching against the default hierarchy definitions (all translations)
+    for (const parentDef of DEFAULT_CATEGORY_HIERARCHY) {
+      for (const childDef of parentDef.children) {
+        const matchesAnyLang = Object.values(childDef.translations).some((t) =>
+          fuzzyMatch(orphan.name, t)
+        );
+        if (matchesAnyLang) {
+          // Find the actual subcategory and parent in the DB
+          const childName = childDef.translations[safeLang];
+          const subcat = allSubcategories.find(
+            (s) => s.name.toLowerCase() === childName.toLowerCase()
+          );
+          if (subcat) {
+            bestMatch = { subcatId: subcat.id, parentId: subcat.parentId };
+            break;
+          }
+        }
+      }
+      if (bestMatch) break;
+    }
+
+    if (bestMatch) {
+      // Merge into the matched subcategory
+      await prisma.expense.updateMany({
+        where: { categoryId: orphan.id },
+        data: { categoryId: bestMatch.subcatId },
+      });
+      await prisma.recurringTemplate.updateMany({
+        where: { categoryId: orphan.id },
+        data: { categoryId: bestMatch.subcatId },
+      });
+      await prisma.keywordMapping.updateMany({
+        where: { categoryId: orphan.id },
+        data: { categoryId: bestMatch.subcatId },
+      });
+      await prisma.category.delete({ where: { id: orphan.id } });
+      merged++;
+    } else {
+      unmatched.push(orphan.name);
+    }
+  }
+
+  return { parentsCreated, childrenCreated, adopted, merged, unmatched };
 }
 
 // Translations for the "Uncategorized" category

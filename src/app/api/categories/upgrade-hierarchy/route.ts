@@ -21,9 +21,10 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       ...result,
+      unmatched: result.unmatched,
       message:
         result.parentsCreated + result.childrenCreated + result.adopted + result.merged > 0
-          ? `Created ${result.parentsCreated} groups, ${result.childrenCreated} subcategories, organized ${result.adopted} existing, merged ${result.merged} old categories`
+          ? `Created ${result.parentsCreated} groups, ${result.childrenCreated} subcategories, organized ${result.adopted + result.merged} existing categories`
           : "Categories are already organized",
     });
   } catch (error) {

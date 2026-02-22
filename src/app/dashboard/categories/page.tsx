@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
-import { Sparkles, ChevronDown, ChevronRight, FolderTree } from "lucide-react";
+import { Sparkles, ChevronDown, ChevronRight, FolderTree, AlertTriangle } from "lucide-react";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { buildCategoryTree, getParentExpenseCount, type CategoryNode, type FlatCategory } from "@/lib/category-utils";
 
@@ -38,6 +38,7 @@ export default function CategoriesPage() {
   const [seedResult, setSeedResult] = useState<{ created: number; categories: string[] } | null>(null);
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [upgradeResult, setUpgradeResult] = useState<string | null>(null);
+  const [unmatchedCategories, setUnmatchedCategories] = useState<string[]>([]);
   const [expandedParents, setExpandedParents] = useState<Set<string>>(new Set());
 
   // Form state
@@ -170,6 +171,9 @@ export default function CategoriesPage() {
       if (response.ok) {
         const data = await response.json();
         setUpgradeResult(data.message);
+        if (data.unmatched?.length > 0) {
+          setUnmatchedCategories(data.unmatched);
+        }
         fetchCategories();
         setTimeout(() => setUpgradeResult(null), 5000);
       }
@@ -299,6 +303,37 @@ export default function CategoriesPage() {
       {upgradeResult && (
         <div className="p-4 rounded-xl bg-green-50 border border-green-200">
           <p className="text-sm font-medium text-green-700">{upgradeResult}</p>
+        </div>
+      )}
+
+      {/* Unmatched Categories Prompt */}
+      {unmatchedCategories.length > 0 && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-lg bg-amber-100">
+              <AlertTriangle className="w-5 h-5 text-amber-600" />
+            </div>
+            <div className="flex-1">
+              <h3 className="font-medium text-slate-900 mb-1">{t("unmatchedTitle")}</h3>
+              <p className="text-sm text-slate-600 mb-2">{t("unmatchedDescription")}</p>
+              <div className="flex flex-wrap gap-2 mb-3">
+                {unmatchedCategories.map((name) => (
+                  <span key={name} className="px-2.5 py-1 text-xs font-medium bg-amber-100 text-amber-800 rounded-full">
+                    {translateCategory(name)}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500">{t("unmatchedHint")}</p>
+            </div>
+            <button
+              onClick={() => setUnmatchedCategories([])}
+              className="text-slate-400 hover:text-slate-600 p-1"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
         </div>
       )}
 
