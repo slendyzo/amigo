@@ -12,6 +12,7 @@ import { useProjectTags } from "@/hooks/use-project-tags";
 import { CURRENCIES } from "@/lib/currencies";
 import { EXPENSE_TYPE_VALUES, getExpenseTypeButtonClass } from "@/lib/expense-types";
 import { parseAmount, getTodayDateString } from "@/lib/utils";
+import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
 import type { Category, BankAccount, Project, Expense, ExpenseType } from "@/types/models";
 
 type EditExpenseModalProps = {
@@ -351,11 +352,21 @@ export default function EditExpenseModal({
                 className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               >
                 <option value="">{t("uncategorized")}</option>
-                {localCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {translateCategory(cat.name)}
-                  </option>
-                ))}
+                {buildCategoryTree(localCategories as FlatCategory[]).map((parent) =>
+                  parent.children.length > 0 ? (
+                    <optgroup key={parent.id} label={translateCategory(parent.name)}>
+                      {parent.children.map((child) => (
+                        <option key={child.id} value={child.id}>
+                          {translateCategory(child.name)}
+                        </option>
+                      ))}
+                    </optgroup>
+                  ) : (
+                    <option key={parent.id} value={parent.id}>
+                      {translateCategory(parent.name)}
+                    </option>
+                  )
+                )}
               </select>
               <QuickCreateCategory
                 onCreated={(newCat) => {

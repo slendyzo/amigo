@@ -18,7 +18,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     // Note: isSystem is intentionally NOT extracted to prevent mass assignment
-    const { name, icon, color } = body;
+    const { name, icon, color, parentId } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -55,8 +55,24 @@ export async function PUT(
       return NextResponse.json({ error: "Category with this name already exists" }, { status: 400 });
     }
 
+    // Validate parentId if provided
+    if (parentId !== undefined && parentId !== null) {
+      if (parentId === id) {
+        return NextResponse.json({ error: "Category cannot be its own parent" }, { status: 400 });
+      }
+      const parent = await prisma.category.findFirst({
+        where: { id: parentId, workspaceId: workspace.id },
+      });
+      if (!parent) {
+        return NextResponse.json({ error: "Parent category not found" }, { status: 400 });
+      }
+      if (parent.parentId) {
+        return NextResponse.json({ error: "Cannot nest more than one level" }, { status: 400 });
+      }
+    }
+
     // Build update data - only include provided fields, never isSystem
-    const updateData: { name: string; icon?: string | null; color?: string | null } = {
+    const updateData: { name: string; icon?: string | null; color?: string | null; parentId?: string | null } = {
       name: sanitizedName,
     };
     if (icon !== undefined) {
@@ -64,6 +80,9 @@ export async function PUT(
     }
     if (color !== undefined) {
       updateData.color = color ? stripHtmlTags(color, 7) : null;
+    }
+    if (parentId !== undefined) {
+      updateData.parentId = parentId;
     }
 
     const category = await prisma.category.update({
@@ -118,7 +137,26 @@ export async function DELETE(
       });
     }
 
-    // Move expenses to Uncategorized
+    // If this is a parent category, handle children first
+    const children = await prisma.category.findMany({
+      where: { parentId: id },
+      select: { id: true },
+    });
+
+    if (children.length > 0) {
+      const childIds = children.map((c) => c.id);
+      // Move all expenses from children to Uncategorized
+      await prisma.expense.updateMany({
+        where: { categoryId: { in: childIds } },
+        data: { categoryId: uncategorized.id },
+      });
+      // Delete all children
+      await prisma.category.deleteMany({
+        where: { id: { in: childIds } },
+      });
+    }
+
+    // Move expenses from this category to Uncategorized
     await prisma.expense.updateMany({
       where: { categoryId: id },
       data: { categoryId: uncategorized.id },

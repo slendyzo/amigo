@@ -71,7 +71,7 @@ export async function GET(
     const expense = await prisma.expense.findFirst({
       where: { id, workspaceId: workspace.id },
       include: {
-        category: true,
+        category: { include: { parent: true } },
         bankAccount: true,
         projects: true,
       },
@@ -173,7 +173,7 @@ export async function PUT(
       where: { id },
       data: updateData,
       include: {
-        category: true,
+        category: { include: { parent: true } },
         bankAccount: true,
         projects: true,
       },

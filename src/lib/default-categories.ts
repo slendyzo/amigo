@@ -2,101 +2,223 @@ import { prisma } from "@/lib/db";
 
 type SupportedLanguage = "en" | "pt-PT" | "fr-FR";
 
-// Default categories with translations for all supported languages
-// These cover the most common expense types users need
-const DEFAULT_CATEGORY_TRANSLATIONS: Record<
-  string,
-  { icon: string; translations: Record<SupportedLanguage, string> }
-> = {
-  // Essentials
-  groceries: {
-    icon: "🛒",
-    translations: { en: "Groceries", "pt-PT": "Mercearia", "fr-FR": "Courses" },
-  },
-  utilities: {
-    icon: "💡",
-    translations: { en: "Utilities", "pt-PT": "Serviços", "fr-FR": "Services" },
-  },
-  rent: {
-    icon: "🏠",
-    translations: { en: "Rent", "pt-PT": "Renda", "fr-FR": "Loyer" },
-  },
-  transport: {
-    icon: "🚗",
-    translations: { en: "Transport", "pt-PT": "Transporte", "fr-FR": "Transport" },
-  },
-  health: {
-    icon: "💊",
-    translations: { en: "Health", "pt-PT": "Saúde", "fr-FR": "Santé" },
-  },
-  insurance: {
-    icon: "🛡️",
-    translations: { en: "Insurance", "pt-PT": "Seguros", "fr-FR": "Assurance" },
-  },
-
-  // Lifestyle
-  dining: {
-    icon: "🍽️",
-    translations: { en: "Dining", "pt-PT": "Restaurantes", "fr-FR": "Restaurants" },
-  },
-  entertainment: {
-    icon: "🎬",
-    translations: { en: "Entertainment", "pt-PT": "Entretenimento", "fr-FR": "Divertissement" },
-  },
-  shopping: {
-    icon: "🛍️",
-    translations: { en: "Shopping", "pt-PT": "Compras", "fr-FR": "Shopping" },
-  },
-  subscriptions: {
-    icon: "📺",
-    translations: { en: "Subscriptions", "pt-PT": "Subscrições", "fr-FR": "Abonnements" },
-  },
-
-  // Other common
-  education: {
-    icon: "📚",
-    translations: { en: "Education", "pt-PT": "Educação", "fr-FR": "Éducation" },
-  },
-  travel: {
-    icon: "✈️",
-    translations: { en: "Travel", "pt-PT": "Viagens", "fr-FR": "Voyages" },
-  },
-  personalCare: {
-    icon: "💇",
-    translations: { en: "Personal Care", "pt-PT": "Cuidados Pessoais", "fr-FR": "Soins Personnels" },
-  },
-  gifts: {
-    icon: "🎁",
-    translations: { en: "Gifts", "pt-PT": "Presentes", "fr-FR": "Cadeaux" },
-  },
-  pets: {
-    icon: "🐾",
-    translations: { en: "Pets", "pt-PT": "Animais", "fr-FR": "Animaux" },
-  },
+type SubcategoryDef = {
+  key: string;
+  icon: string;
+  translations: Record<SupportedLanguage, string>;
 };
 
+type ParentCategoryDef = {
+  key: string;
+  icon: string;
+  color: string;
+  translations: Record<SupportedLanguage, string>;
+  children: SubcategoryDef[];
+};
+
+// Hierarchical default categories with translations
+const DEFAULT_CATEGORY_HIERARCHY: ParentCategoryDef[] = [
+  {
+    key: "food_dining",
+    icon: "🍽️",
+    color: "#f59e0b",
+    translations: { en: "Food & Dining", "pt-PT": "Alimentação & Restauração", "fr-FR": "Alimentation & Restaurants" },
+    children: [
+      { key: "groceries", icon: "🛒", translations: { en: "Groceries", "pt-PT": "Mercearia", "fr-FR": "Courses" } },
+      { key: "restaurants", icon: "🍽️", translations: { en: "Restaurants & Dining Out", "pt-PT": "Restaurantes", "fr-FR": "Restaurants" } },
+      { key: "fast_food", icon: "🍔", translations: { en: "Fast Food & Takeaway", "pt-PT": "Fast Food & Takeaway", "fr-FR": "Restauration Rapide" } },
+      { key: "coffee_snacks_breakfast", icon: "☕", translations: { en: "Coffee, Snacks & Breakfast", "pt-PT": "Café, Snacks & Pequeno-almoço", "fr-FR": "Café, Snacks & Petit-déjeuner" } },
+    ],
+  },
+  {
+    key: "home",
+    icon: "🏠",
+    color: "#6366f1",
+    translations: { en: "Home", "pt-PT": "Casa", "fr-FR": "Maison" },
+    children: [
+      { key: "rent_mortgage", icon: "🏠", translations: { en: "Rent / Mortgage", "pt-PT": "Renda / Hipoteca", "fr-FR": "Loyer / Hypothèque" } },
+      { key: "furniture_appliances", icon: "🛋️", translations: { en: "Furniture & Appliances", "pt-PT": "Mobília & Eletrodomésticos", "fr-FR": "Meubles & Électroménager" } },
+      { key: "renovation", icon: "🔨", translations: { en: "Renovation", "pt-PT": "Obras", "fr-FR": "Rénovation" } },
+      { key: "materials_supplies", icon: "🧱", translations: { en: "Materials & Supplies", "pt-PT": "Materiais", "fr-FR": "Matériaux" } },
+      { key: "maintenance_repairs", icon: "🔧", translations: { en: "Maintenance & Repairs", "pt-PT": "Manutenção & Reparações", "fr-FR": "Entretien & Réparations" } },
+    ],
+  },
+  {
+    key: "transport",
+    icon: "🚗",
+    color: "#10b981",
+    translations: { en: "Transport", "pt-PT": "Transporte", "fr-FR": "Transport" },
+    children: [
+      { key: "car", icon: "🚗", translations: { en: "Car", "pt-PT": "Carro", "fr-FR": "Voiture" } },
+      { key: "public_transport", icon: "🚌", translations: { en: "Public Transport", "pt-PT": "Transporte Público", "fr-FR": "Transport en Commun" } },
+      { key: "taxi_ridesharing", icon: "🚕", translations: { en: "Taxi / Ride-sharing", "pt-PT": "Táxi / TVDE", "fr-FR": "Taxi / VTC" } },
+    ],
+  },
+  {
+    key: "health_wellness",
+    icon: "💪",
+    color: "#ef4444",
+    translations: { en: "Health & Wellness", "pt-PT": "Saúde & Bem-estar", "fr-FR": "Santé & Bien-être" },
+    children: [
+      { key: "medical_pharmacy", icon: "💊", translations: { en: "Medical & Pharmacy", "pt-PT": "Médico & Farmácia", "fr-FR": "Médecin & Pharmacie" } },
+      { key: "fitness_sports", icon: "🏃", translations: { en: "Fitness & Sports", "pt-PT": "Fitness & Desporto", "fr-FR": "Fitness & Sport" } },
+      { key: "personal_care", icon: "💇", translations: { en: "Personal Care", "pt-PT": "Cuidados Pessoais", "fr-FR": "Soins Personnels" } },
+    ],
+  },
+  {
+    key: "shopping",
+    icon: "🛍️",
+    color: "#ec4899",
+    translations: { en: "Shopping", "pt-PT": "Compras", "fr-FR": "Shopping" },
+    children: [
+      { key: "clothing_beauty", icon: "👗", translations: { en: "Clothing & Beauty", "pt-PT": "Roupa & Beleza", "fr-FR": "Vêtements & Beauté" } },
+      { key: "electronics_tech", icon: "💻", translations: { en: "Electronics & Tech", "pt-PT": "Eletrónica & Tecnologia", "fr-FR": "Électronique & Tech" } },
+      { key: "general_shopping", icon: "🛍️", translations: { en: "General Shopping", "pt-PT": "Compras Gerais", "fr-FR": "Achats Divers" } },
+    ],
+  },
+  {
+    key: "entertainment",
+    icon: "🎭",
+    color: "#8b5cf6",
+    translations: { en: "Entertainment", "pt-PT": "Entretenimento", "fr-FR": "Divertissement" },
+    children: [
+      { key: "hobbies", icon: "🎨", translations: { en: "Hobbies", "pt-PT": "Hobbies", "fr-FR": "Loisirs" } },
+      { key: "events_outings", icon: "🎬", translations: { en: "Events & Outings", "pt-PT": "Eventos & Saídas", "fr-FR": "Événements & Sorties" } },
+      { key: "travel_vacation", icon: "✈️", translations: { en: "Travel & Vacation", "pt-PT": "Viagens & Férias", "fr-FR": "Voyages & Vacances" } },
+    ],
+  },
+  {
+    key: "bills_subscriptions",
+    icon: "📱",
+    color: "#06b6d4",
+    translations: { en: "Bills & Subscriptions", "pt-PT": "Contas & Subscrições", "fr-FR": "Factures & Abonnements" },
+    children: [
+      { key: "utilities", icon: "💡", translations: { en: "Utilities", "pt-PT": "Serviços", "fr-FR": "Services" } },
+      { key: "internet_phone", icon: "📱", translations: { en: "Internet & Phone", "pt-PT": "Internet & Telefone", "fr-FR": "Internet & Téléphone" } },
+      { key: "subscriptions", icon: "📺", translations: { en: "Subscriptions", "pt-PT": "Subscrições", "fr-FR": "Abonnements" } },
+    ],
+  },
+  {
+    key: "finance_taxes",
+    icon: "💰",
+    color: "#0070f3",
+    translations: { en: "Finance & Taxes", "pt-PT": "Finanças & Impostos", "fr-FR": "Finances & Impôts" },
+    children: [
+      { key: "taxes", icon: "🏛️", translations: { en: "Taxes", "pt-PT": "Impostos", "fr-FR": "Impôts" } },
+      { key: "accounting", icon: "📊", translations: { en: "Accounting", "pt-PT": "Contabilidade", "fr-FR": "Comptabilité" } },
+      { key: "insurance", icon: "🛡️", translations: { en: "Insurance", "pt-PT": "Seguros", "fr-FR": "Assurance" } },
+      { key: "bank_fees", icon: "🏦", translations: { en: "Bank Fees", "pt-PT": "Taxas Bancárias", "fr-FR": "Frais Bancaires" } },
+    ],
+  },
+  {
+    key: "education",
+    icon: "🎓",
+    color: "#f97316",
+    translations: { en: "Education", "pt-PT": "Educação", "fr-FR": "Éducation" },
+    children: [
+      { key: "courses_training", icon: "📚", translations: { en: "Courses & Training", "pt-PT": "Cursos & Formação", "fr-FR": "Cours & Formation" } },
+      { key: "books_materials", icon: "📖", translations: { en: "Books & Materials", "pt-PT": "Livros & Materiais", "fr-FR": "Livres & Matériel" } },
+    ],
+  },
+  {
+    key: "gifts_donations",
+    icon: "🎁",
+    color: "#d946ef",
+    translations: { en: "Gifts & Donations", "pt-PT": "Presentes & Doações", "fr-FR": "Cadeaux & Dons" },
+    children: [],
+  },
+  {
+    key: "other",
+    icon: "❓",
+    color: "#64748b",
+    translations: { en: "Other", "pt-PT": "Outros", "fr-FR": "Autre" },
+    children: [],
+  },
+];
+
+export { DEFAULT_CATEGORY_HIERARCHY };
+export type { ParentCategoryDef, SubcategoryDef, SupportedLanguage };
+
+// Map old flat default category names (all languages) to new subcategory keys
+// Used during migration to adopt existing categories under parents
+const LEGACY_CATEGORY_MIGRATION: Record<string, string> = {
+  // English
+  "Groceries": "groceries",
+  "Dining": "restaurants",
+  "Transport": "car",
+  "Health": "medical_pharmacy",
+  "Insurance": "insurance",
+  "Utilities": "utilities",
+  "Entertainment": "hobbies",
+  "Shopping": "general_shopping",
+  "Subscriptions": "subscriptions",
+  "Education": "courses_training",
+  "Travel": "travel_vacation",
+  "Personal Care": "personal_care",
+  "Gifts": "gifts_donations",
+  "Pets": "other",
+  "Rent": "rent_mortgage",
+  // Portuguese
+  "Mercearia": "groceries",
+  "Restaurantes": "restaurants",
+  "Transporte": "car",
+  "Saúde": "medical_pharmacy",
+  "Seguros": "insurance",
+  "Serviços": "utilities",
+  "Entretenimento": "hobbies",
+  "Compras": "general_shopping",
+  "Subscrições": "subscriptions",
+  "Educação": "courses_training",
+  "Viagens": "travel_vacation",
+  "Cuidados Pessoais": "personal_care",
+  "Presentes": "gifts_donations",
+  "Animais": "other",
+  "Renda": "rent_mortgage",
+  // French
+  "Courses": "groceries",
+  "Restaurants": "restaurants",
+  "Santé": "medical_pharmacy",
+  "Assurance": "insurance",
+  "Services": "utilities",
+  "Divertissement": "hobbies",
+  "Abonnements": "subscriptions",
+  "Éducation": "courses_training",
+  "Voyages": "travel_vacation",
+  "Soins Personnels": "personal_care",
+  "Cadeaux": "gifts_donations",
+  "Animaux": "other",
+  "Loyer": "rent_mortgage",
+};
+
+export { LEGACY_CATEGORY_MIGRATION };
+
 /**
- * Get default categories for a specific language
+ * Get default categories for a specific language (flat list for backward compat)
  */
 export function getDefaultCategories(language: string = "en") {
   const lang = (["en", "pt-PT", "fr-FR"].includes(language) ? language : "en") as SupportedLanguage;
 
-  return Object.values(DEFAULT_CATEGORY_TRANSLATIONS).map((cat) => ({
-    name: cat.translations[lang],
-    icon: cat.icon,
-  }));
+  const result: { name: string; icon: string }[] = [];
+  for (const parent of DEFAULT_CATEGORY_HIERARCHY) {
+    if (parent.children.length === 0) {
+      // Flat parent (like Gifts & Donations) - include as leaf
+      result.push({ name: parent.translations[lang], icon: parent.icon });
+    } else {
+      for (const child of parent.children) {
+        result.push({ name: child.translations[lang], icon: child.icon });
+      }
+    }
+  }
+  return result;
 }
 
-// Legacy export for backward compatibility (English names)
+// Legacy export for backward compatibility
 export const DEFAULT_CATEGORIES = getDefaultCategories("en");
 
 /**
- * Seeds default categories for a workspace, skipping any that already exist.
- * This is safe to run multiple times - it won't create duplicates.
- *
- * @param workspaceId - The workspace to seed categories for
- * @param language - The language for category names (defaults to workspace language or 'en')
- * @returns Object with counts of created and skipped categories
+ * Seeds default categories with hierarchy for a workspace.
+ * Creates parent categories and their children.
+ * Safe to run multiple times - skips existing names.
  */
 export async function seedDefaultCategories(
   workspaceId: string,
@@ -106,7 +228,6 @@ export async function seedDefaultCategories(
   skipped: number;
   categories: string[];
 }> {
-  // If no language provided, fetch from workspace
   let lang = language;
   if (!lang) {
     const workspace = await prisma.workspace.findUnique({
@@ -116,40 +237,203 @@ export async function seedDefaultCategories(
     lang = workspace?.language || "en";
   }
 
-  const defaultCategories = getDefaultCategories(lang);
+  const safeLang = (["en", "pt-PT", "fr-FR"].includes(lang) ? lang : "en") as SupportedLanguage;
 
-  // Get existing category names for this workspace (case-insensitive)
+  // Get existing category names
   const existingCategories = await prisma.category.findMany({
     where: { workspaceId },
-    select: { name: true },
+    select: { id: true, name: true },
   });
-
-  const existingNames = new Set(
-    existingCategories.map((c) => c.name.toLowerCase())
+  const existingNames = new Map(
+    existingCategories.map((c) => [c.name.toLowerCase(), c.id])
   );
 
-  // Filter to only categories that don't exist yet
-  const categoriesToCreate = defaultCategories.filter(
-    (cat) => !existingNames.has(cat.name.toLowerCase())
-  );
+  let created = 0;
+  const createdNames: string[] = [];
 
-  // Create missing categories
-  if (categoriesToCreate.length > 0) {
-    await prisma.category.createMany({
-      data: categoriesToCreate.map((cat) => ({
-        workspaceId,
-        name: cat.name,
-        icon: cat.icon,
-        isSystem: true, // Mark as system so they appear first in lists
-      })),
-    });
+  for (const parentDef of DEFAULT_CATEGORY_HIERARCHY) {
+    const parentName = parentDef.translations[safeLang];
+
+    // Create or find parent
+    let parentId: string;
+    if (existingNames.has(parentName.toLowerCase())) {
+      parentId = existingNames.get(parentName.toLowerCase())!;
+    } else {
+      const parent = await prisma.category.create({
+        data: {
+          workspaceId,
+          name: parentName,
+          icon: parentDef.icon,
+          color: parentDef.color,
+          isSystem: true,
+          parentId: null,
+        },
+      });
+      parentId = parent.id;
+      existingNames.set(parentName.toLowerCase(), parentId);
+      created++;
+      createdNames.push(parentName);
+    }
+
+    // Create children under parent
+    for (const childDef of parentDef.children) {
+      const childName = childDef.translations[safeLang];
+      if (!existingNames.has(childName.toLowerCase())) {
+        const child = await prisma.category.create({
+          data: {
+            workspaceId,
+            name: childName,
+            icon: childDef.icon,
+            isSystem: true,
+            parentId,
+          },
+        });
+        existingNames.set(childName.toLowerCase(), child.id);
+        created++;
+        createdNames.push(childName);
+      }
+    }
   }
 
   return {
-    created: categoriesToCreate.length,
-    skipped: defaultCategories.length - categoriesToCreate.length,
-    categories: categoriesToCreate.map((c) => c.name),
+    created,
+    skipped: 0,
+    categories: createdNames,
   };
+}
+
+/**
+ * Upgrades existing flat categories to hierarchical structure.
+ * Adopts existing categories as children of new parents where they match.
+ * Idempotent - safe to run multiple times.
+ */
+export async function upgradeToHierarchy(
+  workspaceId: string,
+  language?: string
+): Promise<{
+  parentsCreated: number;
+  childrenCreated: number;
+  adopted: number;
+}> {
+  let lang = language;
+  if (!lang) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      select: { language: true },
+    });
+    lang = workspace?.language || "en";
+  }
+
+  const safeLang = (["en", "pt-PT", "fr-FR"].includes(lang) ? lang : "en") as SupportedLanguage;
+
+  // Get all existing categories
+  const existing = await prisma.category.findMany({
+    where: { workspaceId },
+    select: { id: true, name: true, parentId: true },
+  });
+  const existingByName = new Map(
+    existing.map((c) => [c.name.toLowerCase(), c])
+  );
+
+  let parentsCreated = 0;
+  let childrenCreated = 0;
+  let adopted = 0;
+
+  // Build a lookup: subcategory key -> parentDef
+  const childKeyToParent = new Map<string, ParentCategoryDef>();
+  for (const parentDef of DEFAULT_CATEGORY_HIERARCHY) {
+    for (const childDef of parentDef.children) {
+      childKeyToParent.set(childDef.key, parentDef);
+    }
+  }
+
+  for (const parentDef of DEFAULT_CATEGORY_HIERARCHY) {
+    const parentName = parentDef.translations[safeLang];
+
+    // Create or find parent category
+    let parentId: string;
+    const existingParent = existingByName.get(parentName.toLowerCase());
+    if (existingParent) {
+      parentId = existingParent.id;
+      // Ensure it has no parentId (it's a top-level)
+      if (existingParent.parentId !== null) {
+        await prisma.category.update({
+          where: { id: parentId },
+          data: { parentId: null, icon: parentDef.icon, color: parentDef.color },
+        });
+      }
+    } else {
+      const parent = await prisma.category.create({
+        data: {
+          workspaceId,
+          name: parentName,
+          icon: parentDef.icon,
+          color: parentDef.color,
+          isSystem: true,
+          parentId: null,
+        },
+      });
+      parentId = parent.id;
+      existingByName.set(parentName.toLowerCase(), { id: parentId, name: parentName, parentId: null });
+      parentsCreated++;
+    }
+
+    // Process children
+    for (const childDef of parentDef.children) {
+      const childName = childDef.translations[safeLang];
+      const existingChild = existingByName.get(childName.toLowerCase());
+
+      if (existingChild) {
+        // Adopt: set parentId if not already set
+        if (existingChild.parentId === null) {
+          await prisma.category.update({
+            where: { id: existingChild.id },
+            data: { parentId, icon: childDef.icon },
+          });
+          adopted++;
+        }
+      } else {
+        // Create new child
+        const child = await prisma.category.create({
+          data: {
+            workspaceId,
+            name: childName,
+            icon: childDef.icon,
+            isSystem: true,
+            parentId,
+          },
+        });
+        existingByName.set(childName.toLowerCase(), { id: child.id, name: childName, parentId });
+        childrenCreated++;
+      }
+    }
+  }
+
+  // Also try to adopt existing flat categories that match legacy names
+  for (const cat of existing) {
+    if (cat.parentId !== null) continue; // Already has a parent
+    const legacyKey = LEGACY_CATEGORY_MIGRATION[cat.name];
+    if (!legacyKey) continue;
+
+    // Find which parent this key belongs to
+    const parentDef = childKeyToParent.get(legacyKey);
+    if (!parentDef) continue;
+
+    const parentName = parentDef.translations[safeLang];
+    const parent = existingByName.get(parentName.toLowerCase());
+    if (!parent) continue;
+
+    // Don't adopt if the category is itself a parent now
+    if (parent.id === cat.id) continue;
+
+    await prisma.category.update({
+      where: { id: cat.id },
+      data: { parentId: parent.id },
+    });
+    adopted++;
+  }
+
+  return { parentsCreated, childrenCreated, adopted };
 }
 
 // Translations for the "Uncategorized" category
@@ -175,7 +459,6 @@ export async function ensureUncategorizedCategory(
   workspaceId: string,
   language?: string
 ): Promise<string> {
-  // If no language provided, fetch from workspace
   let lang = language;
   if (!lang) {
     const workspace = await prisma.workspace.findUnique({
@@ -187,7 +470,6 @@ export async function ensureUncategorizedCategory(
 
   const uncategorizedName = getUncategorizedName(lang);
 
-  // Check for any existing "Uncategorized" category (any language)
   let uncategorized = await prisma.category.findFirst({
     where: {
       workspaceId,

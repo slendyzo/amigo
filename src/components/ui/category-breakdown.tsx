@@ -8,6 +8,7 @@ type CategoryBreakdownProps = {
   expenses: Array<{
     amountEur: number;
     categoryName: string;
+    parentCategoryName?: string;
   }>;
   budget: number;
 };
@@ -30,11 +31,13 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   const categoryData = useMemo(() => {
-    // Group expenses by category and sum amounts
+    // Group expenses by parent category (for roll-up) or by category name
     const categoryMap = new Map<string, number>();
 
     expenses.forEach((expense) => {
-      const category = expense.categoryName ? translateCategory(expense.categoryName) : t("uncategorized");
+      // Use parent category name for roll-up if available, otherwise use category name
+      const rawName = expense.parentCategoryName || expense.categoryName;
+      const category = rawName ? translateCategory(rawName) : t("uncategorized");
       const current = categoryMap.get(category) || 0;
       categoryMap.set(category, current + expense.amountEur);
     });

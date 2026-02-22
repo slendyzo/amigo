@@ -57,7 +57,7 @@ export async function GET(request: NextRequest) {
     const expenses = await prisma.expense.findMany({
       where,
       include: {
-        category: true,
+        category: { include: { parent: true } },
         bankAccount: true,
         projects: true,
       },
@@ -112,7 +112,9 @@ export async function GET(request: NextRequest) {
           name: expense.name,
           amount: Number(expense.amountEur).toFixed(2),
           type: typeLabels[expense.type] || expense.type,
-          category: expense.category?.name || "",
+          category: expense.category?.parent
+            ? `${expense.category.parent.name} > ${expense.category.name}`
+            : expense.category?.name || "",
           bankAccount: expense.bankAccount?.name || "",
           projects: expense.projects.map((p: { name: string }) => p.name).join(", "),
           status: expense.status,
@@ -262,7 +264,7 @@ export async function GET(request: NextRequest) {
         `"${(expense.name || "").replace(/"/g, '""')}"`,
         Number(expense.amountEur).toFixed(2),
         typeLabels[expense.type] || expense.type,
-        `"${(expense.category?.name || "").replace(/"/g, '""')}"`,
+        `"${(expense.category?.parent ? `${expense.category.parent.name} > ${expense.category.name}` : expense.category?.name || "").replace(/"/g, '""')}"`,
         `"${(expense.bankAccount?.name || "").replace(/"/g, '""')}"`,
         `"${expense.projects.map((p: { name: string }) => p.name).join(", ").replace(/"/g, '""')}"`,
         expense.status,

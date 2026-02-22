@@ -38,7 +38,7 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     // Note: isSystem is intentionally NOT extracted from body to prevent mass assignment
-    const { name, icon, color } = body;
+    const { name, icon, color, parentId } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -48,6 +48,20 @@ export async function POST(request: Request) {
     const sanitizedName = stripHtmlTags(name, 100);
     const sanitizedIcon = icon ? stripHtmlTags(icon, 50) : null;
     const sanitizedColor = color ? stripHtmlTags(color, 7) : null;
+
+    // Validate parentId if provided
+    if (parentId) {
+      const parent = await prisma.category.findFirst({
+        where: { id: parentId, workspaceId: workspace.id },
+      });
+      if (!parent) {
+        return NextResponse.json({ error: "Parent category not found" }, { status: 400 });
+      }
+      // Enforce max 1 level of nesting
+      if (parent.parentId) {
+        return NextResponse.json({ error: "Cannot nest more than one level" }, { status: 400 });
+      }
+    }
 
     // Check for duplicate name
     const existing = await prisma.category.findFirst({
@@ -64,6 +78,7 @@ export async function POST(request: Request) {
         name: sanitizedName,
         icon: sanitizedIcon,
         color: sanitizedColor,
+        parentId: parentId || null,
         isSystem: false, // Always false for user-created categories (cannot be overridden)
       },
     });

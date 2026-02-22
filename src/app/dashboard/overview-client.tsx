@@ -45,6 +45,7 @@ type Expense = {
   currency: string;
   amountEur: number;
   categoryName: string;
+  parentCategoryName?: string;
   projects: { id: string; name: string }[];
   excludeFromBudget?: boolean;
   status?: "PAID" | "PENDING";
@@ -363,7 +364,7 @@ export default function DashboardOverview({
           amountEur?: number;
           amount?: number;
           currency?: string;
-          category?: { name: string } | null;
+          category?: { name: string; parent?: { name: string } | null } | null;
           projects?: { id: string; name: string }[];
           excludeFromBudget?: boolean;
           status?: "PAID" | "PENDING";
@@ -377,6 +378,7 @@ export default function DashboardOverview({
           currency: e.currency || "EUR",
           amountEur: Number(e.amountEur ?? e.amount ?? 0),
           categoryName: e.category?.name || "Uncategorized",
+          parentCategoryName: e.category?.parent?.name || e.category?.name || "Uncategorized",
           projects: e.projects || [],
           excludeFromBudget: e.excludeFromBudget ?? false,
           status: e.status || "PAID",
@@ -394,7 +396,7 @@ export default function DashboardOverview({
           amountEur?: number;
           amount?: number;
           currency?: string;
-          category?: { name: string } | null;
+          category?: { name: string; parent?: { name: string } | null } | null;
           createdAt?: string;
         }) => ({
           id: i.id,
@@ -476,7 +478,7 @@ export default function DashboardOverview({
         amountEur?: number;
         amount?: number;
         currency?: string;
-        category?: { name: string } | null;
+        category?: { name: string; parent?: { name: string } | null } | null;
         projects?: { id: string; name: string }[];
         excludeFromBudget?: boolean;
         status?: "PAID" | "PENDING";
@@ -490,6 +492,7 @@ export default function DashboardOverview({
         currency: e.currency || "EUR",
         amountEur: Number(e.amountEur ?? e.amount ?? 0),
         categoryName: e.category?.name || "Uncategorized",
+        parentCategoryName: e.category?.parent?.name || e.category?.name || "Uncategorized",
         projects: e.projects || [],
         excludeFromBudget: e.excludeFromBudget ?? false,
         status: e.status || "PAID",
@@ -513,7 +516,7 @@ export default function DashboardOverview({
           amountEur?: number;
           amount?: number;
           currency?: string;
-          category?: { name: string } | null;
+          category?: { name: string; parent?: { name: string } | null } | null;
           createdAt?: string;
         }) => ({
           id: i.id,
@@ -1101,6 +1104,7 @@ export default function DashboardOverview({
                 .map((e) => ({
                   amountEur: e.amountEur,
                   categoryName: e.categoryName,
+                  parentCategoryName: e.parentCategoryName,
                 }))}
               budget={livingBudget}
             />

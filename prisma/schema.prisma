@@ -246,21 +246,25 @@ model BankAccount {
 model Category {
   id          String  @id @default(cuid())
   workspaceId String
-  name        String  @db.VarChar(100) // e.g., "Dining", "Transport", "Utilities"
-  icon        String? @db.VarChar(50) // Optional icon identifier
-  color       String? @db.VarChar(7) // Hex color for UI (e.g., #FF5733)
-  isSystem    Boolean @default(false) // System-defined categories can't be deleted
+  parentId    String? // null = top-level parent category
+  name        String  @db.VarChar(100)
+  icon        String? @db.VarChar(50)
+  color       String? @db.VarChar(7)
+  isSystem    Boolean @default(false)
 
   // Relations
-  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  expenses  Expense[]
+  workspace          Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent             Category?          @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children           Category[]         @relation("CategoryHierarchy")
+  expenses           Expense[]
   recurringTemplates RecurringTemplate[]
-  keywordMappings KeywordMapping[]
+  keywordMappings    KeywordMapping[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@unique([workspaceId, name])
+  @@index([workspaceId, parentId])
   @@map("categories")
 }
 

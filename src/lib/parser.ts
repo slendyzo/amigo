@@ -9,41 +9,46 @@ export type ParsedExpense = {
   merchant: string | null;
 };
 
-// Category name variants (English -> alternatives to try)
+// Category name variants (subcategory name -> alternatives to try)
 // This allows matching workspaces with Portuguese, French, or other language categories
 export const CATEGORY_VARIANTS: Record<string, string[]> = {
-  "Dining": ["Dining", "Comida", "Restauração", "Alimentação", "Restauration", "Repas"],
-  "Transport": ["Transport", "Transporte"],
-  "Subscriptions": ["Subscriptions", "Subscrição", "Assinaturas", "Abonnements"],
+  "Restaurants & Dining Out": ["Restaurants & Dining Out", "Restaurantes", "Comida", "Restauração", "Alimentação", "Restauration", "Repas"],
+  "Car": ["Car", "Carro", "Voiture"],
+  "Public Transport": ["Public Transport", "Transporte Público", "Transport en Commun"],
+  "Taxi / Ride-sharing": ["Taxi / Ride-sharing", "Táxi / TVDE", "Taxi / VTC"],
+  "Subscriptions": ["Subscriptions", "Subscrições", "Subscrição", "Assinaturas", "Abonnements"],
   "Utilities": ["Utilities", "Utilitários", "Serviços", "Services"],
-  "Housing": ["Housing", "Casa", "Habitação", "Logement", "Maison"],
+  "Rent / Mortgage": ["Rent / Mortgage", "Renda / Hipoteca", "Loyer / Hypothèque", "Renda", "Casa"],
   "Groceries": ["Groceries", "Mercearia", "Supermercado", "Épicerie", "Courses"],
-  "Health": ["Health", "Saúde", "Santé"],
+  "Medical & Pharmacy": ["Medical & Pharmacy", "Médico & Farmácia", "Médecin & Pharmacie", "Saúde", "Santé"],
+  "Fast Food & Takeaway": ["Fast Food & Takeaway", "Fast Food"],
+  "Coffee, Snacks & Breakfast": ["Coffee, Snacks & Breakfast", "Café, Snacks & Pequeno-almoço"],
+  "Internet & Phone": ["Internet & Phone", "Internet & Telefone", "Internet & Téléphone"],
 };
 
 // Hardcoded keyword mappings for Level 1 parsing
 export const KEYWORD_MAP: Record<string, { merchant: string; category: string }> = {
-  // Dining
-  mcd: { merchant: "McDonald's", category: "Dining" },
-  mcdonalds: { merchant: "McDonald's", category: "Dining" },
-  burger: { merchant: "Burger King", category: "Dining" },
-  kfc: { merchant: "KFC", category: "Dining" },
-  subway: { merchant: "Subway", category: "Dining" },
-  pizza: { merchant: "Pizza", category: "Dining" },
-  starbucks: { merchant: "Starbucks", category: "Dining" },
-  cafe: { merchant: "Café", category: "Dining" },
-  restaurante: { merchant: "Restaurante", category: "Dining" },
-  almoco: { merchant: "Almoço", category: "Dining" },
-  jantar: { merchant: "Jantar", category: "Dining" },
+  // Restaurants & Dining Out
+  mcd: { merchant: "McDonald's", category: "Fast Food & Takeaway" },
+  mcdonalds: { merchant: "McDonald's", category: "Fast Food & Takeaway" },
+  burger: { merchant: "Burger King", category: "Fast Food & Takeaway" },
+  kfc: { merchant: "KFC", category: "Fast Food & Takeaway" },
+  subway: { merchant: "Subway", category: "Fast Food & Takeaway" },
+  pizza: { merchant: "Pizza", category: "Restaurants & Dining Out" },
+  starbucks: { merchant: "Starbucks", category: "Coffee, Snacks & Breakfast" },
+  cafe: { merchant: "Café", category: "Coffee, Snacks & Breakfast" },
+  restaurante: { merchant: "Restaurante", category: "Restaurants & Dining Out" },
+  almoco: { merchant: "Almoço", category: "Restaurants & Dining Out" },
+  jantar: { merchant: "Jantar", category: "Restaurants & Dining Out" },
 
   // Transport
-  uber: { merchant: "Uber", category: "Transport" },
-  bolt: { merchant: "Bolt", category: "Transport" },
-  taxi: { merchant: "Taxi", category: "Transport" },
-  gasolina: { merchant: "Gasolina", category: "Transport" },
-  combustivel: { merchant: "Combustível", category: "Transport" },
-  metro: { merchant: "Metro", category: "Transport" },
-  comboio: { merchant: "Comboio", category: "Transport" },
+  uber: { merchant: "Uber", category: "Taxi / Ride-sharing" },
+  bolt: { merchant: "Bolt", category: "Taxi / Ride-sharing" },
+  taxi: { merchant: "Taxi", category: "Taxi / Ride-sharing" },
+  gasolina: { merchant: "Gasolina", category: "Car" },
+  combustivel: { merchant: "Combustível", category: "Car" },
+  metro: { merchant: "Metro", category: "Public Transport" },
+  comboio: { merchant: "Comboio", category: "Public Transport" },
 
   // Subscriptions
   spotify: { merchant: "Spotify", category: "Subscriptions" },
@@ -53,20 +58,20 @@ export const KEYWORD_MAP: Record<string, { merchant: string; category: string }>
   disney: { merchant: "Disney+", category: "Subscriptions" },
   amazon: { merchant: "Amazon Prime", category: "Subscriptions" },
 
-  // Utilities
+  // Utilities & Bills
   luz: { merchant: "Eletricidade", category: "Utilities" },
   agua: { merchant: "Água", category: "Utilities" },
   gas: { merchant: "Gás", category: "Utilities" },
-  internet: { merchant: "Internet", category: "Utilities" },
-  telefone: { merchant: "Telefone", category: "Utilities" },
-  telemovel: { merchant: "Telemóvel", category: "Utilities" },
+  internet: { merchant: "Internet", category: "Internet & Phone" },
+  telefone: { merchant: "Telefone", category: "Internet & Phone" },
+  telemovel: { merchant: "Telemóvel", category: "Internet & Phone" },
 
-  // Housing
-  renda: { merchant: "Renda", category: "Housing" },
-  aluguer: { merchant: "Aluguer", category: "Housing" },
-  condominio: { merchant: "Condomínio", category: "Housing" },
+  // Home
+  renda: { merchant: "Renda", category: "Rent / Mortgage" },
+  aluguer: { merchant: "Aluguer", category: "Rent / Mortgage" },
+  condominio: { merchant: "Condomínio", category: "Rent / Mortgage" },
 
-  // Shopping
+  // Groceries
   continente: { merchant: "Continente", category: "Groceries" },
   pingo: { merchant: "Pingo Doce", category: "Groceries" },
   lidl: { merchant: "Lidl", category: "Groceries" },
@@ -76,10 +81,10 @@ export const KEYWORD_MAP: Record<string, { merchant: string; category: string }>
   supermercado: { merchant: "Supermercado", category: "Groceries" },
 
   // Health
-  farmacia: { merchant: "Farmácia", category: "Health" },
-  medico: { merchant: "Médico", category: "Health" },
-  hospital: { merchant: "Hospital", category: "Health" },
-  dentista: { merchant: "Dentista", category: "Health" },
+  farmacia: { merchant: "Farmácia", category: "Medical & Pharmacy" },
+  medico: { merchant: "Médico", category: "Medical & Pharmacy" },
+  hospital: { merchant: "Hospital", category: "Medical & Pharmacy" },
+  dentista: { merchant: "Dentista", category: "Medical & Pharmacy" },
 };
 
 /**

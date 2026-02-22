@@ -74,7 +74,7 @@ export async function GET(request: Request) {
           isRecurring: true,
           recurringTemplateId: true,
           excludeFromBudget: true,
-          category: true,
+          category: { include: { parent: true } },
           bankAccount: true,
           projects: true,
           createdAt: true,
@@ -270,7 +270,7 @@ export async function POST(request: Request) {
           : undefined,
       },
       include: {
-        category: true,
+        category: { include: { parent: true } },
         bankAccount: true,
         projects: true,
       },

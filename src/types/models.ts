@@ -6,6 +6,10 @@
 export type Category = {
   id: string;
   name: string;
+  parentId?: string | null;
+  icon?: string | null;
+  color?: string | null;
+  parent?: { id: string; name: string } | null;
 };
 
 export type BankAccount = {

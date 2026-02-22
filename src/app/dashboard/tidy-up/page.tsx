@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { Check, ChevronDown, ChevronRight, Clock, Tag, Loader2, Plus, Sparkles, Brain } from "lucide-react";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
+import { buildCategoryTree, type FlatCategory, type CategoryNode } from "@/lib/category-utils";
 
 type Expense = {
   id: string;
@@ -19,6 +20,8 @@ type Expense = {
 type Category = {
   id: string;
   name: string;
+  parentId: string | null;
+  icon?: string | null;
   isSystem?: boolean;
 };
 
@@ -480,82 +483,125 @@ export default function CategorizePage() {
         )}
 
         <p className="text-sm font-medium text-slate-700 mb-3">{t("selectCategory")}</p>
-        <div className={`grid ${gridCols} gap-2`}>
-          {categories
-            .filter((c) => !suggestion || c.id !== suggestion.categoryId)
-            .map((category) => (
-            <button
-              key={category.id}
-              onClick={() => handleCategorize(category.id)}
-              disabled={isSaving || isCreatingCategory}
-              className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-left transition-all ${
-                selectedCategory === category.id
-                  ? "border-[#0070f3] bg-[#0070f3]/5 text-[#0070f3]"
-                  : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
-              } disabled:opacity-50`}
-            >
-              <Tag className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate text-sm font-medium">{translateCategory(category.name)}</span>
-              {selectedCategory === category.id && (
-                <Check className="w-4 h-4 ml-auto flex-shrink-0" />
-              )}
-            </button>
-          ))}
+        <div className="space-y-4">
+          {buildCategoryTree(categories as FlatCategory[]).map((parent) => {
+            const visibleChildren = parent.children.filter(
+              (c) => !suggestion || c.id !== suggestion.categoryId
+            );
+            const isParentSuggested = suggestion && parent.id === suggestion.categoryId;
+
+            // Parent with children: show as grouped section
+            if (parent.children.length > 0) {
+              if (visibleChildren.length === 0) return null;
+              return (
+                <div key={parent.id}>
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                    {parent.icon && <span>{parent.icon}</span>}
+                    {translateCategory(parent.name)}
+                  </p>
+                  <div className={`grid ${gridCols} gap-2`}>
+                    {visibleChildren.map((child) => (
+                      <button
+                        key={child.id}
+                        onClick={() => handleCategorize(child.id)}
+                        disabled={isSaving || isCreatingCategory}
+                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-left transition-all ${
+                          selectedCategory === child.id
+                            ? "border-[#0070f3] bg-[#0070f3]/5 text-[#0070f3]"
+                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                        } disabled:opacity-50`}
+                      >
+                        <Tag className="w-4 h-4 flex-shrink-0" />
+                        <span className="truncate text-sm font-medium">{translateCategory(child.name)}</span>
+                        {selectedCategory === child.id && (
+                          <Check className="w-4 h-4 ml-auto flex-shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              );
+            }
+
+            // Flat parent (no children, like "Gifts & Donations"): render as button
+            if (isParentSuggested) return null;
+            return (
+              <div key={parent.id} className={`grid ${gridCols} gap-2`}>
+                <button
+                  onClick={() => handleCategorize(parent.id)}
+                  disabled={isSaving || isCreatingCategory}
+                  className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-left transition-all ${
+                    selectedCategory === parent.id
+                      ? "border-[#0070f3] bg-[#0070f3]/5 text-[#0070f3]"
+                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                  } disabled:opacity-50`}
+                >
+                  <Tag className="w-4 h-4 flex-shrink-0" />
+                  <span className="truncate text-sm font-medium">{translateCategory(parent.name)}</span>
+                  {selectedCategory === parent.id && (
+                    <Check className="w-4 h-4 ml-auto flex-shrink-0" />
+                  )}
+                </button>
+              </div>
+            );
+          })}
 
           {/* New Category button or inline form */}
-          {!isCreatingCategory ? (
-            <button
-              onClick={() => setIsCreatingCategory(true)}
-              disabled={isSaving}
-              className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-[#0070f3]/5 text-slate-500 hover:text-[#0070f3] transition-all disabled:opacity-50"
-            >
-              <Plus className="w-4 h-4 flex-shrink-0" />
-              <span className="truncate text-sm font-medium">{tQuickCategory("createNew")}</span>
-            </button>
-          ) : (
-            <div className={`${formColSpan} p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5`}>
-              <div className="flex items-center gap-2 mb-2">
-                <Tag className="w-4 h-4 text-[#0070f3]" />
-                <span className="text-sm font-medium text-[#0070f3]">{tQuickCategory("title")}</span>
+          <div className={`grid ${gridCols} gap-2`}>
+            {!isCreatingCategory ? (
+              <button
+                onClick={() => setIsCreatingCategory(true)}
+                disabled={isSaving}
+                className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-[#0070f3]/5 text-slate-500 hover:text-[#0070f3] transition-all disabled:opacity-50"
+              >
+                <Plus className="w-4 h-4 flex-shrink-0" />
+                <span className="truncate text-sm font-medium">{tQuickCategory("createNew")}</span>
+              </button>
+            ) : (
+              <div className={`${formColSpan} p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <Tag className="w-4 h-4 text-[#0070f3]" />
+                  <span className="text-sm font-medium text-[#0070f3]">{tQuickCategory("title")}</span>
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    ref={newCategoryInputRef}
+                    type="text"
+                    value={newCategoryName}
+                    onChange={(e) => setNewCategoryName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        e.preventDefault();
+                        handleCreateCategory();
+                      } else if (e.key === "Escape") {
+                        handleCancelCreateCategory();
+                      }
+                    }}
+                    placeholder={tQuickCategory("placeholder")}
+                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                    disabled={isCreatingCategorySaving}
+                  />
+                  <button
+                    onClick={handleCreateCategory}
+                    disabled={isCreatingCategorySaving || !newCategoryName.trim()}
+                    className="px-4 py-2 bg-[#0070f3] text-white text-sm rounded-lg hover:bg-[#0070f3]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                  >
+                    {isCreatingCategorySaving ? tQuickCategory("creating") : tCommon("create")}
+                  </button>
+                  <button
+                    onClick={handleCancelCreateCategory}
+                    disabled={isCreatingCategorySaving}
+                    className="px-3 py-2 text-slate-600 text-sm hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                  >
+                    {tCommon("cancel")}
+                  </button>
+                </div>
+                {createCategoryError && (
+                  <p className="text-xs text-red-500 mt-2">{createCategoryError}</p>
+                )}
               </div>
-              <div className="flex gap-2">
-                <input
-                  ref={newCategoryInputRef}
-                  type="text"
-                  value={newCategoryName}
-                  onChange={(e) => setNewCategoryName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleCreateCategory();
-                    } else if (e.key === "Escape") {
-                      handleCancelCreateCategory();
-                    }
-                  }}
-                  placeholder={tQuickCategory("placeholder")}
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-                  disabled={isCreatingCategorySaving}
-                />
-                <button
-                  onClick={handleCreateCategory}
-                  disabled={isCreatingCategorySaving || !newCategoryName.trim()}
-                  className="px-4 py-2 bg-[#0070f3] text-white text-sm rounded-lg hover:bg-[#0070f3]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-                >
-                  {isCreatingCategorySaving ? tQuickCategory("creating") : tCommon("create")}
-                </button>
-                <button
-                  onClick={handleCancelCreateCategory}
-                  disabled={isCreatingCategorySaving}
-                  className="px-3 py-2 text-slate-600 text-sm hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                >
-                  {tCommon("cancel")}
-                </button>
-              </div>
-              {createCategoryError && (
-                <p className="text-xs text-red-500 mt-2">{createCategoryError}</p>
-              )}
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
@@ -641,9 +687,17 @@ export default function CategorizePage() {
                           onBlur={() => setChangingItemId(null)}
                           className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
                         >
-                          {categories.map((cat) => (
-                            <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
-                          ))}
+                          {buildCategoryTree(categories as FlatCategory[]).map((parent) =>
+                            parent.children.length > 0 ? (
+                              <optgroup key={parent.id} label={translateCategory(parent.name)}>
+                                {parent.children.map((child) => (
+                                  <option key={child.id} value={child.id}>{translateCategory(child.name)}</option>
+                                ))}
+                              </optgroup>
+                            ) : (
+                              <option key={parent.id} value={parent.id}>{translateCategory(parent.name)}</option>
+                            )
+                          )}
                         </select>
                       </div>
                     ) : (
@@ -827,9 +881,17 @@ function HistorySection({
                   onBlur={() => setChangingItemId(null)}
                   className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 ml-2 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
                 >
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
-                  ))}
+                  {buildCategoryTree(categories as FlatCategory[]).map((parent) =>
+                    parent.children.length > 0 ? (
+                      <optgroup key={parent.id} label={translateCategory(parent.name)}>
+                        {parent.children.map((child) => (
+                          <option key={child.id} value={child.id}>{translateCategory(child.name)}</option>
+                        ))}
+                      </optgroup>
+                    ) : (
+                      <option key={parent.id} value={parent.id}>{translateCategory(parent.name)}</option>
+                    )
+                  )}
                 </select>
               ) : (
                 <button
