@@ -22,8 +22,8 @@ export async function POST() {
       success: true,
       ...result,
       message:
-        result.parentsCreated + result.childrenCreated + result.adopted > 0
-          ? `Created ${result.parentsCreated} groups, ${result.childrenCreated} subcategories, organized ${result.adopted} existing categories`
+        result.parentsCreated + result.childrenCreated + result.adopted + result.merged > 0
+          ? `Created ${result.parentsCreated} groups, ${result.childrenCreated} subcategories, organized ${result.adopted} existing, merged ${result.merged} old categories`
           : "Categories are already organized",
     });
   } catch (error) {

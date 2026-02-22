@@ -142,7 +142,7 @@ export type { ParentCategoryDef, SubcategoryDef, SupportedLanguage };
 // Map old flat default category names (all languages) to new subcategory keys
 // Used during migration to adopt existing categories under parents
 const LEGACY_CATEGORY_MIGRATION: Record<string, string> = {
-  // English
+  // English defaults
   "Groceries": "groceries",
   "Dining": "restaurants",
   "Transport": "car",
@@ -158,7 +158,13 @@ const LEGACY_CATEGORY_MIGRATION: Record<string, string> = {
   "Gifts": "gifts_donations",
   "Pets": "other",
   "Rent": "rent_mortgage",
-  // Portuguese
+  "Miscellaneous": "other",
+  "Leisure": "events_outings",
+  "Photography": "hobbies",
+  "Musical Instruments": "hobbies",
+  "Technology": "electronics_tech",
+  "Telecommunications": "internet_phone",
+  // Portuguese defaults
   "Mercearia": "groceries",
   "Restaurantes": "restaurants",
   "Transporte": "car",
@@ -168,13 +174,27 @@ const LEGACY_CATEGORY_MIGRATION: Record<string, string> = {
   "Entretenimento": "hobbies",
   "Compras": "general_shopping",
   "Subscrições": "subscriptions",
+  "Subscrição": "subscriptions",
   "Educação": "courses_training",
   "Viagens": "travel_vacation",
   "Cuidados Pessoais": "personal_care",
   "Presentes": "gifts_donations",
   "Animais": "other",
   "Renda": "rent_mortgage",
-  // French
+  // Portuguese custom categories
+  "Comida": "restaurants",
+  "Desporto": "fitness_sports",
+  "Electrodomésticos": "furniture_appliances",
+  "Eletrodomésticos": "furniture_appliances",
+  "Fotografia": "hobbies",
+  "Instrumentos Musicais": "hobbies",
+  "Tecnologia": "electronics_tech",
+  "Telecomunicações": "internet_phone",
+  "Utilitários": "utilities",
+  "Roupa / Beauty": "clothing_beauty",
+  "Roupa": "clothing_beauty",
+  "Roupa & Beleza": "clothing_beauty",
+  // French defaults
   "Courses": "groceries",
   "Restaurants": "restaurants",
   "Santé": "medical_pharmacy",
@@ -314,6 +334,7 @@ export async function upgradeToHierarchy(
   parentsCreated: number;
   childrenCreated: number;
   adopted: number;
+  merged: number;
 }> {
   let lang = language;
   if (!lang) {
@@ -338,6 +359,7 @@ export async function upgradeToHierarchy(
   let parentsCreated = 0;
   let childrenCreated = 0;
   let adopted = 0;
+  let merged = 0;
 
   // Build a lookup: subcategory key -> parentDef
   const childKeyToParent = new Map<string, ParentCategoryDef>();
@@ -409,31 +431,99 @@ export async function upgradeToHierarchy(
     }
   }
 
-  // Also try to adopt existing flat categories that match legacy names
-  for (const cat of existing) {
-    if (cat.parentId !== null) continue; // Already has a parent
+  // Build a lookup: subcategory key -> child definition
+  const childKeyToDef = new Map<string, SubcategoryDef>();
+  for (const parentDef of DEFAULT_CATEGORY_HIERARCHY) {
+    for (const childDef of parentDef.children) {
+      childKeyToDef.set(childDef.key, childDef);
+    }
+  }
+
+  // Merge or adopt existing flat categories that match legacy names
+  // Re-fetch to get current state after parent/child creation above
+  const currentCategories = await prisma.category.findMany({
+    where: { workspaceId },
+    select: { id: true, name: true, parentId: true },
+  });
+  const currentByName = new Map(
+    currentCategories.map((c) => [c.name.toLowerCase(), c])
+  );
+
+  for (const cat of currentCategories) {
+    if (cat.parentId !== null) continue; // Already organized
     const legacyKey = LEGACY_CATEGORY_MIGRATION[cat.name];
     if (!legacyKey) continue;
 
     // Find which parent this key belongs to
     const parentDef = childKeyToParent.get(legacyKey);
-    if (!parentDef) continue;
+    if (!parentDef) {
+      // Key maps to a flat parent (e.g. gifts_donations) - find it directly
+      const flatParent = DEFAULT_CATEGORY_HIERARCHY.find((p) => p.key === legacyKey);
+      if (!flatParent) continue;
+      const flatParentName = flatParent.translations[safeLang];
+      const targetParent = currentByName.get(flatParentName.toLowerCase());
+      if (!targetParent || targetParent.id === cat.id) continue;
+
+      // Merge: reassign all relations from old category to the parent
+      await prisma.expense.updateMany({
+        where: { categoryId: cat.id },
+        data: { categoryId: targetParent.id },
+      });
+      await prisma.recurringTemplate.updateMany({
+        where: { categoryId: cat.id },
+        data: { categoryId: targetParent.id },
+      });
+      await prisma.keywordMapping.updateMany({
+        where: { categoryId: cat.id },
+        data: { categoryId: targetParent.id },
+      });
+      await prisma.category.delete({ where: { id: cat.id } });
+      merged++;
+      continue;
+    }
 
     const parentName = parentDef.translations[safeLang];
-    const parent = existingByName.get(parentName.toLowerCase());
+    const parent = currentByName.get(parentName.toLowerCase());
     if (!parent) continue;
 
-    // Don't adopt if the category is itself a parent now
+    // Don't merge if the category is itself a parent now
     if (parent.id === cat.id) continue;
 
-    await prisma.category.update({
-      where: { id: cat.id },
-      data: { parentId: parent.id },
-    });
-    adopted++;
+    // Find the target subcategory name for this key
+    const childDef = childKeyToDef.get(legacyKey);
+    if (!childDef) continue;
+    const targetName = childDef.translations[safeLang];
+    const targetCategory = currentByName.get(targetName.toLowerCase());
+
+    if (targetCategory && targetCategory.id !== cat.id) {
+      // Target subcategory exists and is different - MERGE
+      // Reassign all expenses, templates, and mappings to the target
+      await prisma.expense.updateMany({
+        where: { categoryId: cat.id },
+        data: { categoryId: targetCategory.id },
+      });
+      await prisma.recurringTemplate.updateMany({
+        where: { categoryId: cat.id },
+        data: { categoryId: targetCategory.id },
+      });
+      await prisma.keywordMapping.updateMany({
+        where: { categoryId: cat.id },
+        data: { categoryId: targetCategory.id },
+      });
+      // Delete the old category
+      await prisma.category.delete({ where: { id: cat.id } });
+      merged++;
+    } else {
+      // Old category IS the target (same name) - just adopt under parent
+      await prisma.category.update({
+        where: { id: cat.id },
+        data: { parentId: parent.id },
+      });
+      adopted++;
+    }
   }
 
-  return { parentsCreated, childrenCreated, adopted };
+  return { parentsCreated, childrenCreated, adopted, merged };
 }
 
 // Translations for the "Uncategorized" category
