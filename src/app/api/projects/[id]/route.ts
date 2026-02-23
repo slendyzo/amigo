@@ -61,7 +61,8 @@ export async function PUT(
     const body = await request.json();
     const { name, description, budget, startDate, endDate, isActive } = body;
 
-    if (!name) {
+    // Allow partial updates (e.g. toggling isActive only)
+    if (name !== undefined && !name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
@@ -77,8 +78,8 @@ export async function PUT(
     const project = await prisma.project.update({
       where: { id },
       data: {
-        name,
-        description: description || null,
+        name: name !== undefined ? name : existing.name,
+        description: description !== undefined ? (description || null) : existing.description,
         budget: budget !== undefined ? (budget ? parseFloat(budget) : null) : existing.budget,
         startDate: startDate !== undefined ? (startDate ? new Date(startDate) : null) : existing.startDate,
         endDate: endDate !== undefined ? (endDate ? new Date(endDate) : null) : existing.endDate,

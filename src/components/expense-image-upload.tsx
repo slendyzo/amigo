@@ -17,7 +17,7 @@ export default function ExpenseImageUpload({
   onChange,
   disabled = false,
 }: ExpenseImageUploadProps) {
-  const t = useTranslations("expenses");
+  const t = useTranslations("modals");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 

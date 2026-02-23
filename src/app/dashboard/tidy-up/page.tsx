@@ -790,7 +790,7 @@ export default function CategorizePage() {
 
       {/* Floating undo toast */}
       {undoToast && (
-        <div className={`fixed ${showLearnedToast ? "bottom-32" : "bottom-24"} md:bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:left-auto md:right-auto md:w-auto z-50 animate-in slide-in-from-bottom-4 transition-all`}>
+        <div className={`fixed ${showLearnedToast ? "bottom-32" : "bottom-24"} md:bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-md z-50 animate-in slide-in-from-bottom-4 transition-all`}>
           <div className="bg-slate-800 text-white rounded-xl px-4 py-3 shadow-lg flex items-center justify-between gap-4 md:min-w-[320px]">
             <div className="flex items-center gap-2 min-w-0">
               <Check className="w-4 h-4 text-green-400 flex-shrink-0" />

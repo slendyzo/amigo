@@ -76,14 +76,14 @@ export default function AddExpenseModal({
     clearSelection,
     resetTagInput,
   } = useProjectTags({
-    initialProjects: fetchedProjects,
+    initialProjects: fetchedProjects.filter((p) => p.isActive !== false),
     initialSelectedIds: defaultProjectId ? [defaultProjectId] : [],
   });
 
-  // Keep localProjects in sync with fetchedProjects
+  // Keep localProjects in sync with fetchedProjects (only active ones)
   useEffect(() => {
     if (fetchedProjects.length > 0 && localProjects.length === 0) {
-      setLocalProjects(fetchedProjects);
+      setLocalProjects(fetchedProjects.filter((p) => p.isActive !== false));
     }
   }, [fetchedProjects, localProjects.length, setLocalProjects]);
 
