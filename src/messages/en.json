@@ -1337,6 +1337,24 @@
         "description": "When you pay a scheduled expense, mark it as paid to include it in your budget totals."
       },
       "dismiss": "Got it!"
+    },
+    "category_groups": {
+      "title": "Categories Got an Upgrade!",
+      "subtitle": "Your categories are now organized into groups",
+      "feature1": {
+        "title": "Organized Groups",
+        "description": "Categories are now nested under parent groups like Food & Dining, Transport, and Housing for a cleaner overview."
+      },
+      "feature2": {
+        "title": "One-Click Migration",
+        "description": "Your existing categories will be automatically matched to the right group. Just hit \"Organize\" on the Categories page."
+      },
+      "feature3": {
+        "title": "Better Insights",
+        "description": "See spending broken down by group and subcategory, making it easier to spot where your money goes."
+      },
+      "dismiss": "Maybe Later",
+      "explore": "Go to Categories"
     }
   }
 }

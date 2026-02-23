@@ -19,7 +19,7 @@ const ServiceWorkerRegister = lazy(() => import("./service-worker-register").the
 const ChangelogModal = lazy(() => import("./changelog-modal").then(mod => ({ default: mod.ChangelogModal })));
 
 // Current announcement ID - should match the one in overview-client.tsx
-const CURRENT_ANNOUNCEMENT_ID = "workspaces-v1";
+const CURRENT_ANNOUNCEMENT_ID = "category-groups-v1";
 
 // Navigation grouped by section with labels and collapsible support
 type NavItem = {

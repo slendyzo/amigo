@@ -28,6 +28,10 @@ const ANNOUNCEMENT_CONFIG: Record<string, {
     gradient: "from-blue-500 to-cyan-600",
     exploreUrl: undefined, // No explore button, just dismiss
   },
+  "category-groups-v1": {
+    gradient: "from-violet-600 to-purple-600",
+    exploreUrl: "/dashboard/categories",
+  },
 };
 
 export default function AnnouncementModal({
@@ -332,6 +336,86 @@ export default function AnnouncementModal({
               className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50 transition-colors"
             >
               {t("scheduled_expenses.dismiss")}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render category groups announcement
+  if (announcementId === "category-groups-v1") {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
+          {/* Header with gradient */}
+          <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
+            <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-bold mb-2">{t("category_groups.title")}</h2>
+            <p className="text-white/80">{t("category_groups.subtitle")}</p>
+          </div>
+
+          {/* Features */}
+          <div className="px-6 py-6 space-y-4">
+            {/* Feature 1: Organized Groups */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">{t("category_groups.feature1.title")}</h3>
+                <p className="text-sm text-slate-600">{t("category_groups.feature1.description")}</p>
+              </div>
+            </div>
+
+            {/* Feature 2: Auto Migration */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">{t("category_groups.feature2.title")}</h3>
+                <p className="text-sm text-slate-600">{t("category_groups.feature2.description")}</p>
+              </div>
+            </div>
+
+            {/* Feature 3: Better Insights */}
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <svg className="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="font-semibold text-slate-900">{t("category_groups.feature3.title")}</h3>
+                <p className="text-sm text-slate-600">{t("category_groups.feature3.description")}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions */}
+          <div className="px-6 pb-6 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleDismiss}
+              disabled={isLoading}
+              className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium disabled:opacity-50 transition-colors"
+            >
+              {t("category_groups.dismiss")}
+            </button>
+            <button
+              onClick={handleExplore}
+              disabled={isLoading}
+              className="flex-1 px-4 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 font-medium disabled:opacity-50 transition-colors"
+            >
+              {t("category_groups.explore")}
             </button>
           </div>
         </div>

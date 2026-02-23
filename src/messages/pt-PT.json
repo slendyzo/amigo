@@ -1292,6 +1292,24 @@
         "description": "Quando pagares uma despesa agendada, marca-a como paga para a incluir nos totais do orçamento."
       },
       "dismiss": "Entendido!"
+    },
+    "category_groups": {
+      "title": "Categorias Melhoradas!",
+      "subtitle": "As tuas categorias estão agora organizadas em grupos",
+      "feature1": {
+        "title": "Grupos Organizados",
+        "description": "As categorias estão agora agrupadas sob grupos como Alimentação, Transportes e Habitação para uma visão mais clara."
+      },
+      "feature2": {
+        "title": "Migração com Um Clique",
+        "description": "As tuas categorias existentes serão automaticamente associadas ao grupo certo. Basta clicar em \"Organizar\" na página de Categorias."
+      },
+      "feature3": {
+        "title": "Melhores Análises",
+        "description": "Vê os gastos divididos por grupo e subcategoria, facilitando perceber para onde vai o teu dinheiro."
+      },
+      "dismiss": "Talvez Depois",
+      "explore": "Ir para Categorias"
     }
   }
 }

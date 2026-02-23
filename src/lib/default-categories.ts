@@ -52,6 +52,7 @@ const DEFAULT_CATEGORY_HIERARCHY: ParentCategoryDef[] = [
       { key: "car", icon: "🚗", translations: { en: "Car", "pt-PT": "Carro", "fr-FR": "Voiture" } },
       { key: "public_transport", icon: "🚌", translations: { en: "Public Transport", "pt-PT": "Transporte Público", "fr-FR": "Transport en Commun" } },
       { key: "taxi_ridesharing", icon: "🚕", translations: { en: "Taxi / Ride-sharing", "pt-PT": "Táxi / TVDE", "fr-FR": "Taxi / VTC" } },
+      { key: "tolls_parking", icon: "🅿️", translations: { en: "Tolls & Parking", "pt-PT": "Portagens & Estacionamento", "fr-FR": "Péages & Stationnement" } },
     ],
   },
   {
@@ -208,6 +209,15 @@ const LEGACY_CATEGORY_MIGRATION: Record<string, string> = {
   "Cadeaux": "gifts_donations",
   "Animaux": "other",
   "Loyer": "rent_mortgage",
+  // Tolls & Parking (all languages)
+  "Tolls": "tolls_parking",
+  "Parking": "tolls_parking",
+  "Tolls & Parking": "tolls_parking",
+  "Portagens": "tolls_parking",
+  "Estacionamento": "tolls_parking",
+  "Portagens & Estacionamento": "tolls_parking",
+  "Péages": "tolls_parking",
+  "Péages & Stationnement": "tolls_parking",
 };
 
 export { LEGACY_CATEGORY_MIGRATION };

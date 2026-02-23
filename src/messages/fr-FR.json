@@ -1308,6 +1308,24 @@
         "description": "Quand vous payez une dépense programmée, marquez-la comme payée pour l'inclure dans les totaux du budget."
       },
       "dismiss": "Compris !"
+    },
+    "category_groups": {
+      "title": "Catégories Améliorées !",
+      "subtitle": "Vos catégories sont désormais organisées en groupes",
+      "feature1": {
+        "title": "Groupes Organisés",
+        "description": "Les catégories sont maintenant regroupées sous des groupes comme Alimentation, Transport et Logement pour une vue plus claire."
+      },
+      "feature2": {
+        "title": "Migration en Un Clic",
+        "description": "Vos catégories existantes seront automatiquement associées au bon groupe. Cliquez sur « Organiser » sur la page Catégories."
+      },
+      "feature3": {
+        "title": "Meilleures Analyses",
+        "description": "Voyez vos dépenses réparties par groupe et sous-catégorie, pour mieux comprendre où va votre argent."
+      },
+      "dismiss": "Peut-être Plus Tard",
+      "explore": "Aller aux Catégories"
     }
   }
 }
