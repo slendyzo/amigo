@@ -22,6 +22,7 @@ type Expense = {
   category: { id: string; name: string } | null;
   bankAccount: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
+  imageUrls?: string | null;
   createdAt: string;
 };
 
@@ -719,7 +720,15 @@ export default function ExpensesPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="text-sm font-medium text-slate-900">{expense.name}</div>
+                        <div className="text-sm font-medium text-slate-900 flex items-center gap-1.5">
+                          {expense.name}
+                          {expense.imageUrls && (
+                            <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          )}
+                        </div>
                         {expense.projects && expense.projects.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
                             {expense.projects.map((project) => (
@@ -816,7 +825,15 @@ export default function ExpensesPage() {
                             <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                           </svg>
                         )}
-                        <p className="font-medium text-slate-900 text-sm truncate max-w-[160px]">{expense.name}</p>
+                        <p className="font-medium text-slate-900 text-sm truncate max-w-[160px] inline-flex items-center gap-1">
+                          {expense.name}
+                          {expense.imageUrls && (
+                            <svg className="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          )}
+                        </p>
                         {expense.projects && expense.projects.length > 0 && expense.projects.map((project) => (
                           <span key={project.id} className="px-1.5 py-0.5 text-[10px] rounded bg-amber-100 text-amber-700">
                             {project.name}

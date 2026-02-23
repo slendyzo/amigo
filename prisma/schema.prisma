@@ -328,6 +328,8 @@ model Expense {
   recurringTemplateId String? // Link to template if auto-generated
   importLogId   String?       // Link to import batch for bulk delete
   excludeFromBudget Boolean   @default(false) // Don't count towards monthly budget (offshore/one-off)
+  imageUrls         String?   @db.Text // JSON array of compressed WebP base64 data URLs
+  categorizedAt     DateTime? // When this expense was categorized via tidy-up page
 
   // Relations
   workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

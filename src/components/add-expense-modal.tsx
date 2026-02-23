@@ -14,6 +14,7 @@ import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { EXPENSE_TYPE_VALUES, getExpenseTypeButtonClass } from "@/lib/expense-types";
 import { parseAmount, getTodayDateString } from "@/lib/utils";
 import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
+import ExpenseImageUpload from "./expense-image-upload";
 import type { Category, BankAccount, Project, ExpenseType } from "@/types/models";
 
 type AddExpenseModalProps = {
@@ -97,6 +98,7 @@ export default function AddExpenseModal({
   const [bankAccountId, setBankAccountId] = useState("");
   const [excludeFromBudget, setExcludeFromBudget] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -136,6 +138,7 @@ export default function AddExpenseModal({
       resetTagInput();
       setExcludeFromBudget(defaultExcludeFromBudget);
       setIsScheduled(false);
+      setImageUrls([]);
       setShowAdvanced(false);
       setError("");
       hasSetInitialDefaults.current = false;
@@ -190,6 +193,7 @@ export default function AddExpenseModal({
         projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
         date,
         excludeFromBudget,
+        imageUrls: imageUrls.length > 0 ? JSON.stringify(imageUrls) : undefined,
         // Scheduled expense fields
         status: (isScheduled ? "PENDING" : "PAID") as "PAID" | "PENDING",
         dueDate: isScheduled ? date : undefined,
@@ -493,6 +497,13 @@ export default function AddExpenseModal({
               </select>
             </div>
           )}
+
+          {/* Photo Attachments */}
+          <ExpenseImageUpload
+            imageUrls={imageUrls}
+            onChange={setImageUrls}
+            disabled={isLoading}
+          />
 
           {/* Exclude from budget - Show when project is selected */}
           {selectedProjectIds.length > 0 && (

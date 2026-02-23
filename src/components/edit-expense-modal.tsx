@@ -12,6 +12,7 @@ import { CURRENCIES } from "@/lib/currencies";
 import { EXPENSE_TYPE_VALUES, getExpenseTypeButtonClass } from "@/lib/expense-types";
 import { parseAmount, getTodayDateString } from "@/lib/utils";
 import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
+import ExpenseImageUpload from "./expense-image-upload";
 import type { Category, BankAccount, Project, Expense, ExpenseType } from "@/types/models";
 
 type EditExpenseModalProps = {
@@ -55,6 +56,7 @@ export default function EditExpenseModal({
   const [error, setError] = useState("");
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
   const [excludeFromBudget, setExcludeFromBudget] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
@@ -118,6 +120,7 @@ export default function EditExpenseModal({
       setDate(expense.date.split("T")[0]);
       setExcludeFromBudget(expense.excludeFromBudget || false);
       setStatus(expense.status || "PAID");
+      setImageUrls(expense.imageUrls ? JSON.parse(expense.imageUrls) : []);
       setShowDatePicker(false);
       setShowAdvanced(false);
       setError("");
@@ -158,6 +161,7 @@ export default function EditExpenseModal({
           projectIds: selectedProjectIds,
           date,
           excludeFromBudget,
+          imageUrls: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null,
           status,
         }),
       });
@@ -410,6 +414,13 @@ export default function EditExpenseModal({
               </label>
             </div>
           )}
+
+          {/* Photo Attachments */}
+          <ExpenseImageUpload
+            imageUrls={imageUrls}
+            onChange={setImageUrls}
+            disabled={isLoading}
+          />
 
           {/* Expense Status (PAID/PENDING) */}
           <div className="p-3 rounded-lg bg-slate-50 border border-slate-200">

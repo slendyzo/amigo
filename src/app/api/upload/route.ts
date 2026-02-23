@@ -43,15 +43,30 @@ export async function POST(request: Request) {
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
 
-    // Compress and convert to WebP using sharp
-    // Max dimensions: 800x600 for feedback screenshots, quality: 70%
-    const compressedBuffer = await sharp(buffer)
-      .resize(800, 600, {
-        fit: "inside",
-        withoutEnlargement: true,
-      })
-      .webp({ quality: 70 })
-      .toBuffer();
+    // Select compression profile based on purpose
+    const { searchParams } = new URL(request.url);
+    const purpose = searchParams.get("purpose");
+
+    let compressedBuffer: Buffer;
+    if (purpose === "expense") {
+      // Expense receipts: higher res for readability, aggressive compression
+      compressedBuffer = await sharp(buffer)
+        .resize(1200, 1200, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 60, effort: 6 })
+        .toBuffer();
+    } else {
+      // Default (feedback screenshots): smaller dimensions
+      compressedBuffer = await sharp(buffer)
+        .resize(800, 600, {
+          fit: "inside",
+          withoutEnlargement: true,
+        })
+        .webp({ quality: 70 })
+        .toBuffer();
+    }
 
     // Convert to base64 data URL
     const base64 = compressedBuffer.toString("base64");

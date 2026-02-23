@@ -173,6 +173,26 @@ export default function ReceiptScannerModal({
         return;
       }
 
+      // Upload receipt image for attachment
+      let imageUrls: string | undefined;
+      if (imagePreview) {
+        try {
+          const blob = await fetch(imagePreview).then(r => r.blob());
+          const formData = new FormData();
+          formData.append("file", blob, "receipt.webp");
+          const uploadRes = await fetch("/api/upload?purpose=expense", {
+            method: "POST",
+            body: formData,
+          });
+          if (uploadRes.ok) {
+            const { imageUrl } = await uploadRes.json();
+            imageUrls = JSON.stringify([imageUrl]);
+          }
+        } catch {
+          // Continue without image if upload fails
+        }
+      }
+
       const response = await fetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -183,6 +203,7 @@ export default function ReceiptScannerModal({
           type: "LIFESTYLE",
           categoryId: categoryId || undefined,
           date,
+          imageUrls,
         }),
       });
 

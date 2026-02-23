@@ -49,6 +49,7 @@ export type Expense = {
   status?: ExpenseStatus;
   dueDate?: string;
   paidAt?: string;
+  imageUrls?: string | null;
   importLogId?: string;
   createdAt?: string;
   updatedAt?: string;

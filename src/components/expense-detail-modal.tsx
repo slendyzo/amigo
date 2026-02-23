@@ -266,6 +266,29 @@ export default function ExpenseDetailModal({
             </div>
           )}
 
+          {/* Photo gallery */}
+          {(() => {
+            const images: string[] = e.imageUrls ? JSON.parse(e.imageUrls) : [];
+            if (images.length === 0) return null;
+            return (
+              <div className="px-4 py-3 md:px-5 border-b border-slate-100">
+                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">{t("photos")}</p>
+                <div className="grid grid-cols-3 gap-2">
+                  {images.map((url, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => window.open(url, "_blank")}
+                      className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors"
+                    >
+                      <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
           {/* Detail rows */}
           <div className="px-4 py-3 md:px-5 md:py-4 space-y-3">
 
