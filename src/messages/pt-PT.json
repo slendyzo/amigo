@@ -980,7 +980,12 @@
     "scheduleForLaterHint": "Esta despesa aparecerá em {month}",
     "expenseStatus": "Estado da Despesa",
     "statusPaid": "Pago",
-    "statusScheduled": "Agendado"
+    "statusScheduled": "Agendado",
+    "attachPhotos": "Fotos",
+    "addPhoto": "Adicionar foto do recibo",
+    "addMorePhotos": "Adicionar mais fotos",
+    "uploading": "A carregar...",
+    "photos": "Fotos"
   },
   "install": {
     "title": "Instalar Amigo",
@@ -1109,7 +1114,8 @@
     "undo": "Desfazer",
     "autoAssignAll": "Atribuir automaticamente",
     "autoAssigning": "A atribuir...",
-    "autoAssigned": "{count} despesas categorizadas automaticamente"
+    "autoAssigned": "{count} despesas categorizadas automaticamente",
+    "noRecentlyDone": "Os itens categorizados aparecerão aqui"
   },
   "receiptScanner": {
     "title": "Digitalizar Recibo",

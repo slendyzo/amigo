@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { Check, ChevronDown, ChevronRight, Clock, Tag, Loader2, Plus, Sparkles, Brain } from "lucide-react";
+import { Check, ChevronDown, ChevronRight, Clock, Tag, Loader2, Sparkles, Brain } from "lucide-react";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import { buildCategoryTree, type FlatCategory, type CategoryNode } from "@/lib/category-utils";
@@ -117,9 +117,10 @@ export default function CategorizePage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [expensesRes, categoriesRes] = await Promise.all([
+      const [expensesRes, categoriesRes, recentRes] = await Promise.all([
         fetch("/api/expenses?limit=10000"),
         fetch("/api/categories"),
+        fetch("/api/expenses/recent-categorized"),
       ]);
 
       if (expensesRes.ok) {
@@ -138,6 +139,16 @@ export default function CategorizePage() {
           (c: Category) => c.name !== "Uncategorized"
         );
         setCategories(filtered);
+      }
+      // Load persisted recent categorizations into doneStack
+      if (recentRes.ok) {
+        const data = await recentRes.json();
+        const recentDone: DoneItem[] = (data.expenses || []).map((e: Expense & { categoryId: string; category: { id: string; name: string } }) => ({
+          expense: { id: e.id, name: e.name, amount: e.amount, currency: e.currency, type: e.type, date: e.date, category: e.category },
+          categoryId: e.categoryId,
+          categoryName: e.category?.name || "",
+        }));
+        setDoneStack(recentDone);
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -166,11 +177,11 @@ export default function CategorizePage() {
     setUndoToast(null);
 
     try {
-      // Remove category from expense via API
+      // Remove category and categorizedAt from expense via API
       await fetch(`/api/expenses/${target.expense.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ categoryId: null }),
+        body: JSON.stringify({ categoryId: null, categorizedAt: null }),
       });
 
       // Remove from done stack
@@ -223,7 +234,7 @@ export default function CategorizePage() {
       const response = await fetch(`/api/expenses/${currentExpense.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ categoryId }),
+        body: JSON.stringify({ categoryId, categorizedAt: new Date().toISOString() }),
       });
 
       if (response.ok) {
@@ -505,16 +516,15 @@ export default function CategorizePage() {
                         key={child.id}
                         onClick={() => handleCategorize(child.id)}
                         disabled={isSaving || isCreatingCategory}
-                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-left transition-all ${
+                        className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
                           selectedCategory === child.id
-                            ? "border-[#0070f3] bg-[#0070f3]/5 text-[#0070f3]"
-                            : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                            ? "bg-[#0070f3] text-white shadow-sm"
+                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                         } disabled:opacity-50`}
                       >
-                        {child.icon && <span className="text-sm flex-shrink-0">{child.icon}</span>}
-                        <span className="text-sm font-medium">{translateCategory(child.name)}</span>
+                        {translateCategory(child.name)}
                         {selectedCategory === child.id && (
-                          <Check className="w-3.5 h-3.5 flex-shrink-0" />
+                          <Check className="w-3.5 h-3.5 inline ml-1" />
                         )}
                       </button>
                     ))}
@@ -530,16 +540,15 @@ export default function CategorizePage() {
                 <button
                   onClick={() => handleCategorize(parent.id)}
                   disabled={isSaving || isCreatingCategory}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-left transition-all ${
+                  className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
                     selectedCategory === parent.id
-                      ? "border-[#0070f3] bg-[#0070f3]/5 text-[#0070f3]"
-                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
+                      ? "bg-[#0070f3] text-white shadow-sm"
+                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   } disabled:opacity-50`}
                 >
-                  {parent.icon && <span className="text-sm flex-shrink-0">{parent.icon}</span>}
-                  <span className="text-sm font-medium">{translateCategory(parent.name)}</span>
+                  {translateCategory(parent.name)}
                   {selectedCategory === parent.id && (
-                    <Check className="w-3.5 h-3.5 flex-shrink-0" />
+                    <Check className="w-3.5 h-3.5 inline ml-1" />
                   )}
                 </button>
               </div>
@@ -552,10 +561,9 @@ export default function CategorizePage() {
               <button
                 onClick={() => setIsCreatingCategory(true)}
                 disabled={isSaving}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-[#0070f3]/5 text-slate-500 hover:text-[#0070f3] transition-all disabled:opacity-50"
+                className="px-3.5 py-1.5 rounded-full text-sm font-medium border border-dashed border-slate-300 text-slate-400 hover:border-[#0070f3] hover:text-[#0070f3] hover:bg-[#0070f3]/5 transition-all disabled:opacity-50"
               >
-                <Plus className="w-3.5 h-3.5 flex-shrink-0" />
-                <span className="text-sm font-medium">{tQuickCategory("createNew")}</span>
+                + {tQuickCategory("createNew")}
               </button>
             ) : (
               <div className="w-full p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5">
@@ -656,81 +664,79 @@ export default function CategorizePage() {
         />
       </div>
 
-      {/* Desktop layout */}
-      <div className="hidden md:block">
-        {doneStack.length > 0 ? (
-          <div className="flex gap-5">
-            {/* Card - left side */}
-            <div className="flex-1">
-              {currentExpense && renderCardContent()}
-            </div>
+      {/* Desktop layout - always two-column for stable layout */}
+      <div className="hidden md:flex gap-5">
+        {/* Card - left side */}
+        <div className="flex-1">
+          {currentExpense && renderCardContent()}
+        </div>
 
-            {/* History sidebar - right side */}
-            <div className="w-72 bg-white rounded-xl border border-slate-200 overflow-hidden flex-shrink-0 self-start">
-              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-slate-400" />
-                  <span className="text-sm font-semibold text-slate-700">{t("recentlyDone")}</span>
-                </div>
-                <span className="text-xs text-slate-400">{doneStack.length}</span>
-              </div>
-              <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
-                {doneStack.map((item) => (
-                  <div key={item.expense.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
-                    {changingItemId === item.expense.id ? (
-                      <div className="space-y-1.5">
-                        <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
-                        <select
-                          autoFocus
-                          defaultValue={item.categoryId}
-                          onChange={(e) => handleChangeDoneItem(item, e.target.value)}
-                          onBlur={() => setChangingItemId(null)}
-                          className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-                        >
-                          {buildCategoryTree(categories as FlatCategory[]).map((parent) =>
-                            parent.children.length > 0 ? (
-                              <optgroup key={parent.id} label={translateCategory(parent.name)}>
-                                {parent.children.map((child) => (
-                                  <option key={child.id} value={child.id}>{translateCategory(child.name)}</option>
-                                ))}
-                              </optgroup>
-                            ) : (
-                              <option key={parent.id} value={parent.id}>{translateCategory(parent.name)}</option>
-                            )
-                          )}
-                        </select>
-                      </div>
-                    ) : (
-                      <>
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
-                          <button
-                            onClick={() => setChangingItemId(item.expense.id)}
-                            className="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2"
-                          >
-                            {t("change")}
-                          </button>
-                        </div>
-                        <div className="flex items-center gap-1.5 mt-0.5">
-                          <span className="text-xs text-slate-500">
-                            {formatCurrency(Number(item.expense.amount), item.expense.currency)}
-                          </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
-                            {translateCategory(item.categoryName)}
-                          </span>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
-              </div>
+        {/* History sidebar - always visible */}
+        <div className="w-72 bg-white rounded-xl border border-slate-200 overflow-hidden flex-shrink-0 self-start">
+          <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Clock className="w-4 h-4 text-slate-400" />
+              <span className="text-sm font-semibold text-slate-700">{t("recentlyDone")}</span>
             </div>
+            <span className="text-xs text-slate-400">{doneStack.length}</span>
           </div>
-        ) : (
-          <div className="max-w-2xl">
-            {currentExpense && renderCardContent()}
-          </div>
-        )}
+          {doneStack.length > 0 ? (
+            <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
+              {doneStack.map((item) => (
+                <div key={item.expense.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
+                  {changingItemId === item.expense.id ? (
+                    <div className="space-y-1.5">
+                      <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
+                      <select
+                        autoFocus
+                        defaultValue={item.categoryId}
+                        onChange={(e) => handleChangeDoneItem(item, e.target.value)}
+                        onBlur={() => setChangingItemId(null)}
+                        className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                      >
+                        {buildCategoryTree(categories as FlatCategory[]).map((parent) =>
+                          parent.children.length > 0 ? (
+                            <optgroup key={parent.id} label={translateCategory(parent.name)}>
+                              {parent.children.map((child) => (
+                                <option key={child.id} value={child.id}>{translateCategory(child.name)}</option>
+                              ))}
+                            </optgroup>
+                          ) : (
+                            <option key={parent.id} value={parent.id}>{translateCategory(parent.name)}</option>
+                          )
+                        )}
+                      </select>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
+                        <button
+                          onClick={() => setChangingItemId(item.expense.id)}
+                          className="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2"
+                        >
+                          {t("change")}
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-1.5 mt-0.5">
+                        <span className="text-xs text-slate-500">
+                          {formatCurrency(Number(item.expense.amount), item.expense.currency)}
+                        </span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                          {translateCategory(item.categoryName)}
+                        </span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="px-4 py-8 text-center">
+              <p className="text-sm text-slate-400">{t("noRecentlyDone")}</p>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Mobile: single column layout */}

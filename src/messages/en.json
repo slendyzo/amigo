@@ -994,7 +994,12 @@
     "scheduleForLaterHint": "This expense will appear in {month}",
     "expenseStatus": "Expense Status",
     "statusPaid": "Paid",
-    "statusScheduled": "Scheduled"
+    "statusScheduled": "Scheduled",
+    "attachPhotos": "Photos",
+    "addPhoto": "Add receipt photo",
+    "addMorePhotos": "Add more photos",
+    "uploading": "Uploading...",
+    "photos": "Photos"
   },
   "install": {
     "title": "Install Amigo",
@@ -1123,7 +1128,8 @@
     "undo": "Undo",
     "autoAssignAll": "Auto-assign all",
     "autoAssigning": "Assigning...",
-    "autoAssigned": "{count} expenses auto-categorized"
+    "autoAssigned": "{count} expenses auto-categorized",
+    "noRecentlyDone": "Categorized items will appear here"
   },
   "receiptScanner": {
     "title": "Scan Receipt",
