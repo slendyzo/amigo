@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import QuickCreateCategory from "./quick-create-category";
 import ProjectTagSelector from "./project-tag-selector";
 import { AmountInput } from "./ui/amount-input";
 import { savePendingExpense, isOfflineStorageAvailable } from "@/lib/offline-storage";
@@ -450,37 +449,28 @@ export default function AddExpenseModal({
             <label className="block text-sm font-medium text-slate-700 mb-1">
               {t("category")}
             </label>
-            <div className="flex gap-2">
-              <select
-                value={categoryId}
-                onChange={(e) => setCategoryId(e.target.value)}
-                className="flex-1 rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              >
-                <option value="">{t("auto")}</option>
-                {buildCategoryTree(localCategories as FlatCategory[]).map((parent) =>
-                  parent.children.length > 0 ? (
-                    <optgroup key={parent.id} label={translateCategory(parent.name)}>
-                      {parent.children.map((child) => (
-                        <option key={child.id} value={child.id}>
-                          {translateCategory(child.name)}
-                        </option>
-                      ))}
-                    </optgroup>
-                  ) : (
-                    <option key={parent.id} value={parent.id}>
-                      {translateCategory(parent.name)}
-                    </option>
-                  )
-                )}
-              </select>
-              <QuickCreateCategory
-                onCreated={(newCat) => {
-                  setLocalCategories([...localCategories, newCat]);
-                  setCategoryId(newCat.id);
-                }}
-                buttonClassName="p-3 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors border border-slate-300"
-              />
-            </div>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+            >
+              <option value="">{t("auto")}</option>
+              {buildCategoryTree(localCategories as FlatCategory[]).map((parent) =>
+                parent.children.length > 0 ? (
+                  <optgroup key={parent.id} label={translateCategory(parent.name)}>
+                    {parent.children.map((child) => (
+                      <option key={child.id} value={child.id}>
+                        {translateCategory(child.name)}
+                      </option>
+                    ))}
+                  </optgroup>
+                ) : (
+                  <option key={parent.id} value={parent.id}>
+                    {translateCategory(parent.name)}
+                  </option>
+                )
+              )}
+            </select>
           </div>
 
           {/* Bank Account - Always visible if available */}

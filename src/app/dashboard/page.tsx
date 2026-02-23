@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { upgradeToHierarchy } from "@/lib/default-categories";
 import DashboardOverview from "./overview-client";
 
 // Disable caching to ensure fresh data on every request
@@ -61,6 +62,9 @@ export default async function DashboardPage({
       </div>
     );
   }
+
+  // Silently sync any new system categories the developer has added
+  try { await upgradeToHierarchy(workspace.id); } catch {}
 
   // Calculate date ranges
   const now = new Date();

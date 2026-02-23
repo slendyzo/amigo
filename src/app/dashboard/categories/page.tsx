@@ -82,11 +82,19 @@ export default function CategoriesPage() {
 
   const openModal = (category?: Category) => {
     if (category) {
+      if (category.isSystem) return; // Cannot edit system categories
       setEditingCategory(category);
       setName(category.name);
       setParentId(category.parentId || "");
     } else {
       resetForm();
+      // Default to first parent group
+      const parents = categories.filter(
+        (c) => c.parentId === null && !isUncategorizedCategory(c.name)
+      );
+      if (parents.length > 0) {
+        setParentId(parents[0].id);
+      }
     }
     setIsModalOpen(true);
   };
@@ -230,7 +238,7 @@ export default function CategoriesPage() {
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          {t("addCategory")}
+          {t("addSubcategory")}
         </button>
       </div>
 
@@ -417,7 +425,6 @@ export default function CategoriesPage() {
                   onChange={(e) => setParentId(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
                 >
-                  <option value="">{t("noParent")}</option>
                   {parentCategories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {translateCategory(cat.name)}
@@ -526,8 +533,8 @@ function CategoryRow({
             <span className={`${isParent ? "font-semibold" : "font-medium"} text-slate-900`}>
               {translateCategory(node.name)}
             </span>
-            {isUncategorized && (
-              <span title={t("systemCategory")}>
+            {node.isSystem && (
+              <span title={t("systemLocked")}>
                 <svg className="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                 </svg>
@@ -539,7 +546,7 @@ function CategoryRow({
           {totalExpenses}
         </td>
         <td className="px-4 py-3 text-right">
-          {!isUncategorized && (
+          {!node.isSystem && (
             <div className="flex justify-end gap-2">
               <button
                 onClick={() => onEdit({

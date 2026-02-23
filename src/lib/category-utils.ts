@@ -46,6 +46,12 @@ export function buildCategoryTree(categories: FlatCategory[]): CategoryNode[] {
     }
   }
 
+  // Sort parents and children alphabetically by name
+  roots.sort((a, b) => a.name.localeCompare(b.name));
+  for (const node of roots) {
+    node.children.sort((a, b) => a.name.localeCompare(b.name));
+  }
+
   return roots;
 }
 

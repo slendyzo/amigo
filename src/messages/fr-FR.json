@@ -316,6 +316,7 @@
   "categories": {
     "title": "Catégories",
     "addCategory": "Ajouter une Catégorie",
+    "addSubcategory": "Ajouter Sous-catégorie",
     "editCategory": "Modifier la Catégorie",
     "deleteCategory": "Supprimer la Catégorie",
     "noCategories": "Aucune catégorie trouvée",
@@ -328,7 +329,8 @@
     "uncategorized": "Non catégorisé",
     "createQuick": "Créer une nouvelle catégorie",
     "organizeExpenses": "Organisez vos dépenses en catégories",
-    "systemNote": "Les catégories avec une icône de cadenas sont des paramètres par défaut du système et ne peuvent pas être supprimées. Vos dépenses seront auto-catégorisées en fonction des correspondances de mots-clés.",
+    "systemNote": "Les catégories avec une icône de cadenas sont des paramètres par défaut du système et ne peuvent pas être modifiées ou supprimées. Vous pouvez ajouter vos propres sous-catégories dans n'importe quel groupe.",
+    "systemLocked": "Catégorie système - ne peut pas être modifiée ou supprimée",
     "note": "Note",
     "noCategoriesYet": "Pas encore de catégories",
     "createToOrganize": "Créez des catégories pour organiser vos dépenses",

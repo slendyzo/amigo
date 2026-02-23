@@ -316,6 +316,7 @@
   "categories": {
     "title": "Categorias",
     "addCategory": "Adicionar Categoria",
+    "addSubcategory": "Adicionar Subcategoria",
     "editCategory": "Editar Categoria",
     "deleteCategory": "Eliminar Categoria",
     "noCategories": "Nenhuma categoria encontrada",
@@ -328,7 +329,8 @@
     "uncategorized": "Sem Categoria",
     "createQuick": "Criar nova categoria",
     "organizeExpenses": "Organiza as tuas despesas em categorias",
-    "systemNote": "Categorias com ícone de cadeado são padrões do sistema e não podem ser eliminadas. As tuas despesas serão auto-categorizadas com base nos mapeamentos de palavras-chave.",
+    "systemNote": "Categorias com ícone de cadeado são padrões do sistema e não podem ser editadas ou eliminadas. Podes adicionar as tuas próprias subcategorias em qualquer grupo.",
+    "systemLocked": "Categoria do sistema - não pode ser editada ou eliminada",
     "note": "Nota",
     "noCategoriesYet": "Ainda sem categorias",
     "createToOrganize": "Cria categorias para organizar as tuas despesas",

@@ -316,6 +316,7 @@
   "categories": {
     "title": "Categories",
     "addCategory": "Add Category",
+    "addSubcategory": "Add Subcategory",
     "editCategory": "Edit Category",
     "deleteCategory": "Delete Category",
     "noCategories": "No categories found",
@@ -328,7 +329,8 @@
     "uncategorized": "Uncategorized",
     "createQuick": "Create new category",
     "organizeExpenses": "Organize your expenses into categories",
-    "systemNote": "Categories marked with a lock icon are system defaults and cannot be deleted. Your expenses will be auto-categorized based on keyword mappings.",
+    "systemNote": "Categories marked with a lock icon are system defaults and cannot be edited or deleted. You can add your own subcategories under any group.",
+    "systemLocked": "System category - cannot be edited or deleted",
     "note": "Note",
     "noCategoriesYet": "No categories yet",
     "createToOrganize": "Create categories to organize your expenses",

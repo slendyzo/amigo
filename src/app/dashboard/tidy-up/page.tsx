@@ -434,7 +434,7 @@ export default function CategorizePage() {
   }
 
   // Card content shared between mobile and desktop layouts
-  const renderCardContent = (gridCols: string, formColSpan: string) => (
+  const renderCardContent = () => (
     <div className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 ${showSuccess ? 'scale-95 opacity-50' : ''}`}>
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-start justify-between mb-2">
@@ -483,7 +483,7 @@ export default function CategorizePage() {
         )}
 
         <p className="text-sm font-medium text-slate-700 mb-3">{t("selectCategory")}</p>
-        <div className="space-y-4">
+        <div className="space-y-2">
           {buildCategoryTree(categories as FlatCategory[]).map((parent) => {
             const visibleChildren = parent.children.filter(
               (c) => !suggestion || c.id !== suggestion.categoryId
@@ -495,26 +495,26 @@ export default function CategorizePage() {
               if (visibleChildren.length === 0) return null;
               return (
                 <div key={parent.id}>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
                     {parent.icon && <span>{parent.icon}</span>}
                     {translateCategory(parent.name)}
                   </p>
-                  <div className={`grid ${gridCols} gap-2`}>
+                  <div className="flex flex-wrap gap-1.5">
                     {visibleChildren.map((child) => (
                       <button
                         key={child.id}
                         onClick={() => handleCategorize(child.id)}
                         disabled={isSaving || isCreatingCategory}
-                        className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-left transition-all ${
+                        className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-left transition-all ${
                           selectedCategory === child.id
                             ? "border-[#0070f3] bg-[#0070f3]/5 text-[#0070f3]"
                             : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
                         } disabled:opacity-50`}
                       >
-                        <Tag className="w-4 h-4 flex-shrink-0" />
-                        <span className="truncate text-sm font-medium">{translateCategory(child.name)}</span>
+                        {child.icon && <span className="text-sm flex-shrink-0">{child.icon}</span>}
+                        <span className="text-sm font-medium">{translateCategory(child.name)}</span>
                         {selectedCategory === child.id && (
-                          <Check className="w-4 h-4 ml-auto flex-shrink-0" />
+                          <Check className="w-3.5 h-3.5 flex-shrink-0" />
                         )}
                       </button>
                     ))}
@@ -526,20 +526,20 @@ export default function CategorizePage() {
             // Flat parent (no children, like "Gifts & Donations"): render as button
             if (isParentSuggested) return null;
             return (
-              <div key={parent.id} className={`grid ${gridCols} gap-2`}>
+              <div key={parent.id} className="flex flex-wrap gap-1.5">
                 <button
                   onClick={() => handleCategorize(parent.id)}
                   disabled={isSaving || isCreatingCategory}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-lg border text-left transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-left transition-all ${
                     selectedCategory === parent.id
                       ? "border-[#0070f3] bg-[#0070f3]/5 text-[#0070f3]"
                       : "border-slate-200 hover:border-slate-300 hover:bg-slate-50 text-slate-700"
                   } disabled:opacity-50`}
                 >
-                  <Tag className="w-4 h-4 flex-shrink-0" />
-                  <span className="truncate text-sm font-medium">{translateCategory(parent.name)}</span>
+                  {parent.icon && <span className="text-sm flex-shrink-0">{parent.icon}</span>}
+                  <span className="text-sm font-medium">{translateCategory(parent.name)}</span>
                   {selectedCategory === parent.id && (
-                    <Check className="w-4 h-4 ml-auto flex-shrink-0" />
+                    <Check className="w-3.5 h-3.5 flex-shrink-0" />
                   )}
                 </button>
               </div>
@@ -547,18 +547,18 @@ export default function CategorizePage() {
           })}
 
           {/* New Category button or inline form */}
-          <div className={`grid ${gridCols} gap-2`}>
+          <div className="flex flex-wrap gap-1.5">
             {!isCreatingCategory ? (
               <button
                 onClick={() => setIsCreatingCategory(true)}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-3 rounded-lg border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-[#0070f3]/5 text-slate-500 hover:text-[#0070f3] transition-all disabled:opacity-50"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-dashed border-slate-300 hover:border-[#0070f3] hover:bg-[#0070f3]/5 text-slate-500 hover:text-[#0070f3] transition-all disabled:opacity-50"
               >
-                <Plus className="w-4 h-4 flex-shrink-0" />
-                <span className="truncate text-sm font-medium">{tQuickCategory("createNew")}</span>
+                <Plus className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="text-sm font-medium">{tQuickCategory("createNew")}</span>
               </button>
             ) : (
-              <div className={`${formColSpan} p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5`}>
+              <div className="w-full p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5">
                 <div className="flex items-center gap-2 mb-2">
                   <Tag className="w-4 h-4 text-[#0070f3]" />
                   <span className="text-sm font-medium text-[#0070f3]">{tQuickCategory("title")}</span>
@@ -662,7 +662,7 @@ export default function CategorizePage() {
           <div className="flex gap-5">
             {/* Card - left side */}
             <div className="flex-1">
-              {currentExpense && renderCardContent("grid-cols-2 md:grid-cols-4", "col-span-2 md:col-span-4")}
+              {currentExpense && renderCardContent()}
             </div>
 
             {/* History sidebar - right side */}
@@ -727,15 +727,15 @@ export default function CategorizePage() {
             </div>
           </div>
         ) : (
-          <div className="max-w-3xl">
-            {currentExpense && renderCardContent("grid-cols-2 md:grid-cols-4", "col-span-2 md:col-span-4")}
+          <div className="max-w-2xl">
+            {currentExpense && renderCardContent()}
           </div>
         )}
       </div>
 
       {/* Mobile: single column layout */}
       <div className="md:hidden">
-        {currentExpense && renderCardContent("grid-cols-2", "col-span-2")}
+        {currentExpense && renderCardContent()}
       </div>
 
       {/* Navigation dots (mobile only) */}

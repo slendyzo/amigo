@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import QuickCreateCategory from "@/components/quick-create-category";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
 type Category = {
@@ -547,24 +546,16 @@ export default function RecurringTemplatesPage() {
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t("category")}</label>
-              <div className="flex gap-1">
-                <select
-                  value={formData.categoryId}
-                  onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                  className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">{t("uncategorized")}</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
-                  ))}
-                </select>
-                <QuickCreateCategory
-                  onCreated={(newCat) => {
-                    setCategories([...categories, newCat]);
-                    setFormData({ ...formData, categoryId: newCat.id });
-                  }}
-                />
-              </div>
+              <select
+                value={formData.categoryId}
+                onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="">{t("uncategorized")}</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
+                ))}
+              </select>
             </div>
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-1">{t("bankAccount")}</label>
@@ -765,24 +756,16 @@ export default function RecurringTemplatesPage() {
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">{t("category")}</label>
-                        <div className="flex gap-1">
-                          <select
-                            value={formData.categoryId}
-                            onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
-                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
-                          >
-                            <option value="">{t("uncategorized")}</option>
-                            {categories.map((cat) => (
-                              <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
-                            ))}
-                          </select>
-                          <QuickCreateCategory
-                            onCreated={(newCat) => {
-                              setCategories([...categories, newCat]);
-                              setFormData({ ...formData, categoryId: newCat.id });
-                            }}
-                          />
-                        </div>
+                        <select
+                          value={formData.categoryId}
+                          onChange={(e) => setFormData({ ...formData, categoryId: e.target.value })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">{t("uncategorized")}</option>
+                          {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
+                          ))}
+                        </select>
                       </div>
                       <div>
                         <label className="block text-xs font-medium text-slate-500 mb-1">{t("bankAccount")}</label>

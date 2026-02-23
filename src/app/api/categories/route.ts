@@ -44,6 +44,11 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
+    // Users cannot create top-level parent groups
+    if (!parentId) {
+      return NextResponse.json({ error: "A parent group is required" }, { status: 400 });
+    }
+
     // Sanitize inputs
     const sanitizedName = stripHtmlTags(name, 100);
     const sanitizedIcon = icon ? stripHtmlTags(icon, 50) : null;
