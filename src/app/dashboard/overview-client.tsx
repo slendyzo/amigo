@@ -934,11 +934,6 @@ export default function DashboardOverview({
               <div className="flex-1 min-w-0">
                 <p className="text-2xl font-bold text-slate-900">€{stats.budgetTotal.toFixed(2)}</p>
                 <p className="text-xs text-slate-500">{t("budget.ofBudget", { budget: livingBudget.toFixed(2) })}</p>
-                {isOverBudget && (
-                  <p className="text-xs font-semibold text-red-500 mt-0.5">
-                    {t("overBudget", { amount: Math.abs(budgetRemaining).toFixed(2) })}
-                  </p>
-                )}
                 <div className="flex gap-4 mt-2">
                   <div>
                     <p className="text-[10px] text-green-600 font-medium">{t("income.received")}</p>
@@ -948,6 +943,12 @@ export default function DashboardOverview({
                     <p className={`text-[10px] font-medium ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{t("income.balance")}</p>
                     <p className={`text-sm font-bold ${balance >= 0 ? "text-blue-600" : "text-red-500"}`}>
                       €{balance.toFixed(2)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className={`text-[10px] font-medium ${isOverBudget ? "text-red-600" : "text-green-600"}`}>{t("budgetRemaining")}</p>
+                    <p className={`text-sm font-bold ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
+                      {isOverBudget ? "-" : ""}€{Math.abs(budgetRemaining).toFixed(2)}
                     </p>
                   </div>
                 </div>
@@ -1273,7 +1274,7 @@ export default function DashboardOverview({
                           handleViewExpense(transaction.id);
                         }
                       }}
-                      className={`px-4 md:px-5 py-3 flex items-start md:items-center justify-between active:bg-slate-50 md:hover:bg-slate-50 transition-colors group tap-none cursor-pointer ${
+                      className={`px-4 md:px-5 py-3 flex items-center justify-between active:bg-slate-50 md:hover:bg-slate-50 transition-colors group tap-none cursor-pointer ${
                         isIncome ? "bg-green-50/30" :
                         !isIncome && transaction.status === "PENDING" ? "bg-blue-50/50 border-l-2 border-blue-400" :
                         transaction.excludeFromBudget ? "bg-slate-50/50" : ""
@@ -1288,7 +1289,7 @@ export default function DashboardOverview({
                               </svg>
                             </span>
                           )}
-                          <p className={`font-medium text-sm md:text-base truncate max-w-[180px] md:max-w-none ${
+                          <p className={`font-medium text-sm md:text-base truncate max-w-[200px] md:max-w-none ${
                             isIncome ? "text-green-700" : transaction.excludeFromBudget ? "text-slate-400" : "text-slate-900"
                           }`}>{transaction.name}</p>
                           {!isIncome && transaction.projects && transaction.projects.length > 0 && transaction.projects.map((project) => (
@@ -1379,7 +1380,7 @@ export default function DashboardOverview({
                               <div className="flex items-center gap-1">
                                 <button
                                   onClick={() => handleToggleExclude(transaction as Expense)}
-                                  className={`md:opacity-0 md:group-hover:opacity-100 p-2 rounded-lg transition-all tap-none ${
+                                  className={`hidden md:inline-flex md:opacity-0 md:group-hover:opacity-100 p-2 rounded-lg transition-all tap-none ${
                                     transaction.excludeFromBudget
                                       ? "text-slate-500 active:text-slate-700 active:bg-slate-100 md:hover:text-slate-700 md:hover:bg-slate-100"
                                       : "text-slate-400 active:text-amber-500 active:bg-amber-50 md:hover:text-amber-500 md:hover:bg-amber-50"
@@ -1398,7 +1399,7 @@ export default function DashboardOverview({
                                 <button
                                   onClick={() => handleEditExpense(transaction.id)}
                                   disabled={isLoadingExpense}
-                                  className="md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-400 active:text-blue-500 active:bg-blue-50 md:hover:text-blue-500 md:hover:bg-blue-50 rounded-lg transition-all tap-none disabled:opacity-50"
+                                  className="md:opacity-0 md:group-hover:opacity-100 p-1.5 md:p-2 text-slate-400 active:text-blue-500 active:bg-blue-50 md:hover:text-blue-500 md:hover:bg-blue-50 rounded-lg transition-all tap-none disabled:opacity-50"
                                   aria-label="Edit expense"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1407,7 +1408,7 @@ export default function DashboardOverview({
                                 </button>
                                 <button
                                   onClick={() => setConfirmDeleteId(transaction.id)}
-                                  className="md:opacity-0 md:group-hover:opacity-100 p-2 text-slate-400 active:text-red-500 active:bg-red-50 md:hover:text-red-500 md:hover:bg-red-50 rounded-lg transition-all tap-none"
+                                  className="md:opacity-0 md:group-hover:opacity-100 p-1.5 md:p-2 text-slate-400 active:text-red-500 active:bg-red-50 md:hover:text-red-500 md:hover:bg-red-50 rounded-lg transition-all tap-none"
                                   aria-label="Delete expense"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1433,11 +1434,11 @@ export default function DashboardOverview({
 
         {/* RIGHT COLUMN: Desktop Sidebar (month view only) */}
         {showBudgetInfo && (
-          <div className="hidden md:block w-[380px] flex-shrink-0">
+          <div className="hidden md:block w-[460px] flex-shrink-0">
             <div className="sticky top-4 space-y-4 max-h-[calc(100vh-100px)] overflow-y-auto scrollbar-hide">
               {/* 1. Budget Ring */}
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200 p-4">
-                <div className="flex items-center gap-4">
+              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200 p-5">
+                <div className="flex items-center gap-5">
                   <div className="relative flex-shrink-0" style={{ width: ringSize, height: ringSize }}>
                     <svg className="transform -rotate-90" width={ringSize} height={ringSize}>
                       <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="#e2e8f0" strokeWidth={ringStroke} />
@@ -1451,18 +1452,18 @@ export default function DashboardOverview({
                       />
                     </svg>
                     <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-lg font-bold text-slate-900">{budgetPercentage.toFixed(0)}%</span>
+                      <span className="text-xl font-bold text-slate-900">{budgetPercentage.toFixed(0)}%</span>
                     </div>
                   </div>
                   <div>
-                    <p className="text-xl font-bold text-slate-900">€{stats.budgetTotal.toFixed(2)}</p>
-                    <p className="text-xs text-slate-500">{t("budget.ofBudget", { budget: livingBudget.toFixed(2) })}</p>
+                    <p className="text-2xl font-bold text-slate-900">€{stats.budgetTotal.toFixed(2)}</p>
+                    <p className="text-sm text-slate-500">{t("budget.ofBudget", { budget: livingBudget.toFixed(2) })}</p>
                     {isOverBudget ? (
-                      <p className="text-[11px] font-semibold text-red-500 mt-0.5">
+                      <p className="text-xs font-semibold text-red-500 mt-0.5">
                         {t("overBudget", { amount: Math.abs(budgetRemaining).toFixed(2) })}
                       </p>
                     ) : (
-                      <p className="text-[11px] font-semibold text-green-600 mt-0.5">
+                      <p className="text-xs font-semibold text-green-600 mt-0.5">
                         {t("remainingBudget", { amount: budgetRemaining.toFixed(2) })}
                       </p>
                     )}
@@ -1472,52 +1473,52 @@ export default function DashboardOverview({
 
               {/* 2. Income / Balance */}
               <div className="grid grid-cols-2 gap-3">
-                <div className="bg-green-50 rounded-xl border border-green-200 p-3">
-                  <p className="text-[10px] text-green-600 font-medium uppercase">{t("income.received")}</p>
-                  <p className="text-lg font-bold text-green-600">€{currentMonthIncome.toFixed(2)}</p>
-                  <p className="text-[10px] text-green-500">{t("income.allSources")}</p>
+                <div className="bg-green-50 rounded-xl border border-green-200 p-4">
+                  <p className="text-xs text-green-600 font-medium uppercase">{t("income.received")}</p>
+                  <p className="text-xl font-bold text-green-600">€{currentMonthIncome.toFixed(2)}</p>
+                  <p className="text-xs text-green-500">{t("income.allSources")}</p>
                 </div>
-                <div className={`rounded-xl border p-3 ${balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
-                  <p className={`text-[10px] font-medium uppercase ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{t("income.balance")}</p>
-                  <p className={`text-lg font-bold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>€{balance.toFixed(2)}</p>
-                  <p className={`text-[10px] ${balance >= 0 ? "text-blue-500" : "text-red-500"}`}>{balance >= 0 ? t("income.surplus") : t("income.deficit")}</p>
+                <div className={`rounded-xl border p-4 ${balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
+                  <p className={`text-xs font-medium uppercase ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{t("income.balance")}</p>
+                  <p className={`text-xl font-bold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>€{balance.toFixed(2)}</p>
+                  <p className={`text-xs ${balance >= 0 ? "text-blue-500" : "text-red-500"}`}>{balance >= 0 ? t("income.surplus") : t("income.deficit")}</p>
                 </div>
               </div>
 
               {/* 3. Type Breakdown */}
-              <div className="bg-white rounded-xl border border-slate-200 p-3">
-                <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2.5">{t("typeBreakdown")}</p>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[12px]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <div className="bg-white rounded-xl border border-slate-200 p-4">
+                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">{t("typeBreakdown")}</p>
+                <div className="space-y-2.5">
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 rounded-full bg-blue-500" />
                       <span className="text-slate-700">{t("stats.living")}</span>
                     </div>
                     <span className="font-medium text-slate-900">€{stats.living.toFixed(2)}</span>
                   </div>
-                  <div className="pl-5 flex items-center justify-between text-[11px] text-slate-400">
+                  <div className="pl-6 flex items-center justify-between text-xs text-slate-400">
                     <span>{t("stats.fixed")}</span>
                     <span>€{stats.livingFixed.toFixed(2)}</span>
                   </div>
-                  <div className="pl-5 flex items-center justify-between text-[11px] text-slate-400">
+                  <div className="pl-6 flex items-center justify-between text-xs text-slate-400">
                     <span>{t("stats.variable")}</span>
                     <span>€{stats.livingVariable.toFixed(2)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[12px]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-purple-500" />
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 rounded-full bg-purple-500" />
                       <span className="text-slate-700">{t("stats.lifestyle")}</span>
                     </div>
                     <span className="font-medium text-slate-900">€{stats.lifestyle.toFixed(2)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[12px]">
-                    <div className="flex items-center gap-2">
-                      <div className="w-2.5 h-2.5 rounded-full bg-orange-500" />
+                  <div className="flex items-center justify-between text-sm">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-3 h-3 rounded-full bg-orange-500" />
                       <span className="text-slate-700">{t("stats.projects")} ({projects.length})</span>
                     </div>
                     <span className="font-medium text-slate-900">€{stats.projects.toFixed(2)}</span>
                   </div>
-                  <div className="flex items-center justify-between text-[12px] pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between text-sm pt-2.5 border-t border-slate-100">
                     <span className="font-semibold text-slate-900">{t("stats.grandTotal")}</span>
                     <span className="font-bold text-slate-900">€{stats.grandTotal.toFixed(2)}</span>
                   </div>
@@ -1526,9 +1527,9 @@ export default function DashboardOverview({
 
               {/* 4. Category Breakdown */}
               {categoryData.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-200 p-3">
-                  <p className="text-[11px] font-semibold text-slate-600 uppercase tracking-wider mb-2.5">{t("whereMoneyGoes")}</p>
-                  <div className="h-3 rounded-full overflow-hidden bg-slate-100 flex">
+                <div className="bg-white rounded-xl border border-slate-200 p-4">
+                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">{t("whereMoneyGoes")}</p>
+                  <div className="h-3.5 rounded-full overflow-hidden bg-slate-100 flex">
                     {categoryData.map((cat, i) => (
                       <div
                         key={cat.name}
@@ -1541,16 +1542,16 @@ export default function DashboardOverview({
                       />
                     ))}
                   </div>
-                  <div className="mt-2.5 space-y-1.5">
+                  <div className="mt-3 space-y-2">
                     {categoryData.map((cat) => (
-                      <div key={cat.name} className="flex items-center justify-between text-[11px]">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
+                      <div key={cat.name} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
                           <span className="text-slate-600 truncate">{cat.name}</span>
                         </div>
-                        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+                        <div className="flex items-center gap-3 flex-shrink-0 ml-2">
                           <span className="font-medium text-slate-900">€{cat.amount.toFixed(2)}</span>
-                          <span className="text-slate-400 w-10 text-right">{cat.percentage.toFixed(1)}%</span>
+                          <span className="text-slate-400 w-12 text-right">{cat.percentage.toFixed(1)}%</span>
                         </div>
                       </div>
                     ))}
@@ -1559,7 +1560,7 @@ export default function DashboardOverview({
               )}
 
               {/* 5. Burn Chart */}
-              <div className="bg-white rounded-xl border border-slate-200 p-4">
+              <div className="bg-white rounded-xl border border-slate-200 p-5">
                 <Suspense fallback={<ChartSkeleton />}>
                   <BurnChart
                     currentMonthExpenses={burnChartCurrentExpenses}
