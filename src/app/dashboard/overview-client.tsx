@@ -654,7 +654,7 @@ export default function DashboardOverview({
   const budgetPercentage = useMemo(() => {
     if (!livingBudget || livingBudget <= 0) return 0;
     if (!Number.isFinite(stats.budgetTotal)) return 0;
-    return Math.min((stats.budgetTotal / livingBudget) * 100, 100);
+    return (stats.budgetTotal / livingBudget) * 100;
   }, [stats.budgetTotal, livingBudget]);
 
   const isOverBudget = stats.budgetTotal > livingBudget && livingBudget > 0;
@@ -689,7 +689,7 @@ export default function DashboardOverview({
   const ringStroke = 6;
   const ringRadius = (ringSize - ringStroke) / 2;
   const ringCircumference = 2 * Math.PI * ringRadius;
-  const ringDashoffset = ringCircumference - (budgetPercentage / 100) * ringCircumference;
+  const ringDashoffset = ringCircumference - (Math.min(budgetPercentage, 100) / 100) * ringCircumference;
 
   const handleDelete = async (id: string) => {
     setDeletingId(id);
