@@ -185,7 +185,12 @@
     "uncategorized": "Non catégorisé",
     "tapForDetails": "Appuyez pour les détails",
     "overBudgetLabel": "Dépassement",
-    "remainingLabel": "Restant"
+    "remainingLabel": "Restant",
+    "typeBreakdown": "Répartition par type",
+    "whereMoneyGoes": "Où va votre argent",
+    "showDetails": "Voir les détails",
+    "hideDetails": "Masquer les détails",
+    "noExpenses": "Aucune dépense pour cette période"
   },
   "expenses": {
     "title": "Dépenses",

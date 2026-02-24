@@ -23,6 +23,7 @@ type BurnChartProps = {
   previousMonthExpenses: Expense[];
   currentMonthLabel: string;
   previousMonthLabel: string;
+  compact?: boolean;
 };
 
 export function BurnChart({
@@ -30,6 +31,7 @@ export function BurnChart({
   previousMonthExpenses,
   currentMonthLabel,
   previousMonthLabel,
+  compact = false,
 }: BurnChartProps) {
   const t = useTranslations("dashboard");
   const chartData = useMemo(() => {
@@ -81,6 +83,45 @@ export function BurnChart({
   const previousTotal = chartData[chartData.length - 1]?.previous || 0;
   const difference = currentTotal - previousTotal;
   const percentChange = previousTotal > 0 ? (difference / previousTotal) * 100 : 0;
+
+  if (compact) {
+    return (
+      <div className="w-full">
+        {/* Compact header */}
+        <div className="flex items-center justify-between mb-2">
+          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{t("chart.spendingVelocity")}</p>
+          <div className="text-right">
+            <span className={`text-[12px] font-bold ${difference > 0 ? "text-red-500" : "text-green-500"}`}>
+              {difference > 0 ? "+" : ""}€{difference.toFixed(2)}
+            </span>
+            <p className="text-[10px] text-slate-400">
+              {t("chart.vsLastMonth", { percent: `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}` })}
+            </p>
+          </div>
+        </div>
+        {/* Compact chart */}
+        <div className="h-24 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData} margin={{ top: 2, right: 4, left: 4, bottom: 2 }}>
+              <Line type="monotone" dataKey="previous" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="previous" />
+              <Line type="monotone" dataKey="current" stroke="#0070f3" strokeWidth={2} dot={false} name="current" />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+        {/* Compact legend */}
+        <div className="flex items-center justify-center gap-4 mt-1">
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-0.5 bg-[#0070f3] rounded" />
+            <span className="text-[10px] text-slate-500">{currentMonthLabel}: €{currentTotal.toFixed(2)}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-3 h-0.5 bg-slate-400 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg, #94a3b8, #94a3b8 3px, transparent 3px, transparent 6px)" }} />
+            <span className="text-[10px] text-slate-500">{previousMonthLabel}: €{previousTotal.toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">

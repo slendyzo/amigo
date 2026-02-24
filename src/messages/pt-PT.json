@@ -185,7 +185,12 @@
     "uncategorized": "Sem Categoria",
     "tapForDetails": "Toca para ver detalhes",
     "overBudgetLabel": "Acima do orçamento",
-    "remainingLabel": "Restante"
+    "remainingLabel": "Restante",
+    "typeBreakdown": "Repartição por tipo",
+    "whereMoneyGoes": "Onde vai o dinheiro",
+    "showDetails": "Ver detalhes",
+    "hideDetails": "Ocultar detalhes",
+    "noExpenses": "Sem despesas neste período"
   },
   "expenses": {
     "title": "Despesas",

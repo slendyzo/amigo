@@ -185,7 +185,12 @@
     "uncategorized": "Uncategorized",
     "tapForDetails": "Tap for details",
     "overBudgetLabel": "Over budget",
-    "remainingLabel": "Remaining"
+    "remainingLabel": "Remaining",
+    "typeBreakdown": "Type Breakdown",
+    "whereMoneyGoes": "Where your money goes",
+    "showDetails": "Show details",
+    "hideDetails": "Hide details",
+    "noExpenses": "No expenses this period"
   },
   "expenses": {
     "title": "Expenses",

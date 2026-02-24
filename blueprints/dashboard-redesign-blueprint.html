@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Redesign — 3 Philosophies</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: { extend: { fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] } } }
+    }
+  </script>
+  <style>
+    * { font-family: 'Inter', system-ui, sans-serif; box-sizing: border-box; }
+    .phone-frame {
+      width: 375px; height: 812px;
+      border-radius: 2.5rem; border: 8px solid #1e293b;
+      overflow: hidden; position: relative; background: #f8fafc;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); flex-shrink: 0;
+    }
+    .sim-bottom-nav {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 64px;
+      background: white; border-top: 1px solid #e2e8f0;
+      display: flex; align-items: center; justify-content: space-around; z-index: 20;
+    }
+    .sim-bottom-nav .tab {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      font-size: 10px; color: #94a3b8;
+    }
+    .sim-bottom-nav .tab.active { color: #0070f3; }
+    .sim-bottom-nav .tab svg { width: 22px; height: 22px; }
+    .sim-fab {
+      position: absolute; bottom: 80px; right: 16px; width: 52px; height: 52px;
+      border-radius: 50%; background: #0070f3; color: white;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 14px rgba(0,112,243,0.4); z-index: 20;
+    }
+    .sim-fab svg { width: 24px; height: 24px; }
+    .scroll-area {
+      position: absolute; top: 0; left: 0; right: 0; bottom: 64px;
+      overflow-y: auto; -webkit-overflow-scrolling: touch;
+    }
+    .scroll-area::-webkit-scrollbar { width: 0; }
+  </style>
+</head>
+<body class="bg-slate-100 p-6">
+<div class="max-w-[1400px] mx-auto">
+
+  <div class="mb-10">
+    <h1 class="text-2xl font-bold text-slate-900 mb-1">Dashboard Redesign — 3 Philosophies</h1>
+    <p class="text-slate-500 text-sm mb-4">Each variant answers a different question. Same data, different priorities.</p>
+    <div class="flex gap-3 flex-wrap text-sm">
+      <a href="#variant-a" class="px-3 py-1.5 rounded-lg bg-blue-500 text-white font-medium">A — Ledger</a>
+      <a href="#variant-b" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 font-medium">B — Pulse</a>
+      <a href="#variant-c" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 font-medium">C — Cockpit</a>
+      <a href="#comparison" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-700 font-medium">Compare</a>
+    </div>
+  </div>
+
+  <!-- ============================================================ -->
+  <!-- VARIANT A — THE LEDGER -->
+  <!-- "What did I spend?" — Transaction log is king.              -->
+  <!-- Budget health = thin persistent bar. No charts on main view.-->
+  <!-- Philosophy: Revolut, N26, Monzo. The feed IS the app.       -->
+  <!-- ============================================================ -->
+  <section id="variant-a" class="mb-20">
+    <div class="mb-5">
+      <h2 class="text-xl font-bold text-slate-900">A — The Ledger</h2>
+      <p class="text-slate-500 text-sm mt-1">Primary question: <strong>"What did I spend?"</strong></p>
+      <p class="text-slate-400 text-xs mt-0.5">Transaction feed is the entire page. Budget is a thin progress bar. Stats are horizontal chips you can ignore. No charts — they live in a separate Insights page. Think Revolut/Monzo.</p>
+    </div>
+
+    <div class="phone-frame">
+      <div class="sim-bottom-nav">
+        <div class="tab active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg><span>Expenses</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg><span>Projects</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg><span>More</span></div>
+      </div>
+      <div class="sim-fab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></div>
+
+      <div class="scroll-area bg-slate-50">
+        <!-- Sticky: month + budget bar -->
+        <div class="sticky top-0 z-10 bg-white border-b border-slate-100 shadow-sm">
+          <div class="flex items-center justify-between px-4 py-2">
+            <button class="p-1 text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+            <p class="text-sm font-bold text-slate-900">Fevereiro 2026</p>
+            <button class="p-1 text-slate-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+          </div>
+          <div class="px-4 pb-2">
+            <div class="flex items-center justify-between text-[11px] mb-1">
+              <span class="text-slate-400">€3,100 <span class="text-slate-300">/</span> €2,500</span>
+              <span class="font-semibold text-red-500">€600 over</span>
+            </div>
+            <div class="w-full bg-slate-100 rounded-full h-1.5">
+              <div class="bg-red-400 h-1.5 rounded-full" style="width:100%"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Stats chips — horizontal scroll, one row -->
+        <div class="flex gap-2 px-4 py-2.5 overflow-x-auto" style="-webkit-overflow-scrolling:touch">
+          <div class="flex-shrink-0 px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-green-400"></div>
+            <span class="text-[11px] text-slate-400">Recebido</span>
+            <span class="text-[11px] font-bold text-green-500">€3,675</span>
+          </div>
+          <div class="flex-shrink-0 px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div>
+            <span class="text-[11px] text-slate-400">Saldo</span>
+            <span class="text-[11px] font-bold text-blue-500">€575</span>
+          </div>
+          <div class="flex-shrink-0 px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
+            <span class="text-[11px] text-slate-400">Contas</span>
+            <span class="text-[11px] font-bold text-blue-600">€1,151</span>
+          </div>
+          <div class="flex-shrink-0 px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
+            <span class="text-[11px] text-slate-400">Gastos</span>
+            <span class="text-[11px] font-bold text-purple-500">€562</span>
+          </div>
+          <div class="flex-shrink-0 px-2.5 py-1.5 bg-white rounded-lg border border-slate-200 flex items-center gap-1.5">
+            <div class="w-1.5 h-1.5 rounded-full bg-orange-400"></div>
+            <span class="text-[11px] text-slate-400">Projetos</span>
+            <span class="text-[11px] font-bold text-orange-500">€1,387</span>
+          </div>
+        </div>
+
+        <!-- Filter pills -->
+        <div class="flex gap-1.5 px-4 pb-2 overflow-x-auto">
+          <button class="flex-shrink-0 px-2.5 py-1 text-[11px] font-semibold rounded-full bg-slate-800 text-white">Todos</button>
+          <button class="flex-shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-full border border-slate-200 bg-white text-slate-500">Contas</button>
+          <button class="flex-shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-full border border-slate-200 bg-white text-slate-500">Gastos</button>
+          <button class="flex-shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-full border border-slate-200 bg-white text-slate-500">Projetos</button>
+          <button class="flex-shrink-0 px-2.5 py-1 text-[11px] font-medium rounded-full border border-slate-200 bg-white text-slate-500">Receita</button>
+        </div>
+
+        <!-- === TRANSACTIONS: start at ~155px === -->
+        <div class="px-4 pt-1">
+          <!-- 24 Feb -->
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase">24 fev · Hoje</span>
+            <span class="text-[11px] text-slate-300 tabular-nums">€95.91</span>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2.5">
+            <div class="px-3 py-2.5 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-orange-50 border border-orange-200 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-orange-500">B</span></div>
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-1.5"><p class="text-[13px] font-medium text-slate-900 truncate">Bilhetes</p><span class="px-1.5 py-0.5 text-[9px] font-medium rounded-md bg-orange-100 text-orange-600">Marrakesh</span></div>
+                <p class="text-[11px] text-slate-400">Viagens & Férias</p>
+              </div>
+              <div class="text-right flex-shrink-0"><p class="text-[13px] font-semibold tabular-nums">€83.41</p><p class="text-[10px] text-slate-400 tabular-nums">€417.03</p></div>
+            </div>
+            <div class="px-3 py-2.5 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-purple-500">M</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">McDonald's</p><p class="text-[11px] text-slate-400">Restaurantes</p></div>
+              <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€12.50</p>
+            </div>
+          </div>
+
+          <!-- 23 Feb -->
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase">23 fev</span>
+            <span class="text-[11px] text-slate-300 tabular-nums">€50.40</span>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2.5">
+            <div class="px-3 py-2.5 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-purple-500">L</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">Leroy guitarra</p><p class="text-[11px] text-slate-400">Hobbies</p></div>
+              <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€11.97</p>
+            </div>
+            <div class="px-3 py-2.5 flex items-center gap-2.5 bg-green-50/40">
+              <div class="w-9 h-9 rounded-xl bg-green-50 border border-green-200 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m0-16l-4 4m4-4l4 4"/></svg></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-green-700">Salário</p><p class="text-[11px] text-green-500">Receita</p></div>
+              <p class="text-[13px] font-semibold text-green-600 tabular-nums flex-shrink-0">+€2,400</p>
+            </div>
+            <div class="px-3 py-2.5 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-blue-500">S</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">Spotify</p><p class="text-[11px] text-slate-400">Subscrições</p></div>
+              <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€9.99</p>
+            </div>
+            <div class="px-3 py-2.5 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-purple-500">G</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900 truncate">Guitar Upgrades</p><p class="text-[11px] text-slate-400">Hobbies</p></div>
+              <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€28.44</p>
+            </div>
+          </div>
+
+          <!-- 22 Feb -->
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase">22 fev</span>
+            <span class="text-[11px] text-slate-300 tabular-nums">€80.29</span>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2.5">
+            <div class="px-3 py-2.5 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-blue-500">E</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">EDP Luz</p><p class="text-[11px] text-slate-400">Serviços</p></div>
+              <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€45.30</p>
+            </div>
+            <div class="px-3 py-2.5 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-purple-500">Z</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">Zara</p><p class="text-[11px] text-slate-400">Compras</p></div>
+              <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€34.99</p>
+            </div>
+          </div>
+
+          <!-- 21 Feb -->
+          <div class="flex items-center justify-between py-1.5">
+            <span class="text-[11px] font-semibold text-slate-400 uppercase">21 fev</span>
+            <span class="text-[11px] text-slate-300 tabular-nums">€23.45</span>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2.5">
+            <div class="px-3 py-2.5 flex items-center gap-2.5">
+              <div class="w-9 h-9 rounded-xl bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-xs font-bold text-purple-500">P</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">Pingo Doce</p><p class="text-[11px] text-slate-400">Supermercado</p></div>
+              <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€23.45</p>
+            </div>
+          </div>
+          <div class="h-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 max-w-[375px] bg-blue-50 border border-blue-200 rounded-xl p-3">
+      <p class="text-xs font-semibold text-blue-800 mb-1">Philosophy</p>
+      <p class="text-[11px] text-blue-700">Your money app is a ledger. Open it, see what you spent. Budget bar tells you if you're over. Everything else — charts, breakdowns, trends — lives in a separate Insights page you visit weekly, not daily. First transaction visible at <strong>~155px</strong>.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- VARIANT B — THE PULSE                                        -->
+  <!-- "How am I doing?" — Budget health is the hero.               -->
+  <!-- Big visual indicator up top, then transactions below.        -->
+  <!-- Philosophy: YNAB, Goodbudget. Budget consciousness first.    -->
+  <!-- ============================================================ -->
+  <section id="variant-b" class="mb-20">
+    <div class="mb-5">
+      <h2 class="text-xl font-bold text-slate-900">B — The Pulse</h2>
+      <p class="text-slate-500 text-sm mt-1">Primary question: <strong>"Am I on track?"</strong></p>
+      <p class="text-slate-400 text-xs mt-0.5">Budget health is the hero — a big visual at the top that instantly tells you green/amber/red. Category bars show where money goes. Transactions below, but the budget story comes first. Think YNAB meets Apple Health rings.</p>
+    </div>
+
+    <div class="phone-frame">
+      <div class="sim-bottom-nav">
+        <div class="tab active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg><span>Expenses</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg><span>Projects</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg><span>More</span></div>
+      </div>
+      <div class="sim-fab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></div>
+
+      <div class="scroll-area bg-slate-50">
+        <!-- Month nav -->
+        <div class="flex items-center justify-between px-4 py-2.5">
+          <button class="p-1 text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+          <p class="text-sm font-bold text-slate-900">Fevereiro 2026</p>
+          <button class="p-1 text-slate-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+
+        <!-- === HERO CARD: collapsed state === -->
+        <div class="px-4 pb-3">
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+            <!-- Always visible: ring + key numbers -->
+            <div class="p-4 flex items-center gap-4">
+              <div class="relative flex-shrink-0" style="width:90px;height:90px">
+                <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#f1f5f9" stroke-width="3"/>
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="88 88" stroke-linecap="round"/>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span class="text-base font-bold text-red-500">124%</span>
+                  <span class="text-[9px] text-slate-400">usado</span>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-2xl font-bold text-slate-900">€3,100</p>
+                <p class="text-xs text-slate-400">gasto de €2,500</p>
+                <div class="flex gap-3 mt-2">
+                  <div><p class="text-[10px] text-green-500">Recebido</p><p class="text-sm font-bold text-green-600">€3,675</p></div>
+                  <div><p class="text-[10px] text-blue-500">Saldo</p><p class="text-sm font-bold text-blue-600">€575</p></div>
+                </div>
+              </div>
+            </div>
+            <!-- Expand button -->
+            <button class="w-full py-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] font-medium text-blue-500 active:bg-slate-50">
+              <span>Ver detalhes</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- === TRANSACTIONS === -->
+        <div class="px-4">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-semibold text-slate-700">Transações recentes</p>
+            <div class="flex gap-1">
+              <button class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-slate-800 text-white">Todos</button>
+              <button class="px-2 py-0.5 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Contas</button>
+              <button class="px-2 py-0.5 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Gastos</button>
+            </div>
+          </div>
+
+          <!-- 24 Feb -->
+          <div class="flex items-center justify-between py-1">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase">24 fev · Hoje</span>
+            <span class="text-[10px] text-slate-300 tabular-nums">€95.91</span>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2.5">
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-orange-500">B</span></div>
+              <div class="flex-1 min-w-0">
+                <p class="text-[12px] font-medium text-slate-900 truncate">Bilhetes <span class="text-[9px] px-1 py-0.5 rounded bg-orange-100 text-orange-600">Marrakesh</span></p>
+                <p class="text-[10px] text-slate-400">Viagens & Férias</p>
+              </div>
+              <div class="text-right flex-shrink-0"><p class="text-[12px] font-semibold tabular-nums">€83.41</p><p class="text-[9px] text-slate-400">€417.03</p></div>
+            </div>
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">M</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">McDonald's</p><p class="text-[10px] text-slate-400">Restaurantes</p></div>
+              <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€12.50</p>
+            </div>
+          </div>
+
+          <!-- 23 Feb -->
+          <div class="flex items-center justify-between py-1">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase">23 fev</span>
+            <span class="text-[10px] text-slate-300 tabular-nums">€50.40</span>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2.5">
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">L</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">Leroy guitarra</p><p class="text-[10px] text-slate-400">Hobbies</p></div>
+              <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€11.97</p>
+            </div>
+            <div class="px-3 py-2 flex items-center gap-2.5 bg-green-50/40">
+              <div class="w-8 h-8 rounded-lg bg-green-50 border border-green-200 flex items-center justify-center flex-shrink-0"><svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m0-16l-4 4m4-4l4 4"/></svg></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-green-700">Salário</p><p class="text-[10px] text-green-500">Receita</p></div>
+              <p class="text-[12px] font-semibold text-green-600 tabular-nums flex-shrink-0">+€2,400</p>
+            </div>
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-blue-500">S</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">Spotify</p><p class="text-[10px] text-slate-400">Subscrições</p></div>
+              <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€9.99</p>
+            </div>
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">G</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900 truncate">Guitar Upgrades</p><p class="text-[10px] text-slate-400">Hobbies</p></div>
+              <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€28.44</p>
+            </div>
+          </div>
+
+          <!-- 22 Feb -->
+          <div class="flex items-center justify-between py-1">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase">22 fev</span>
+            <span class="text-[10px] text-slate-300 tabular-nums">€80.29</span>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2.5">
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-blue-500">E</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">EDP Luz</p><p class="text-[10px] text-slate-400">Serviços</p></div>
+              <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€45.30</p>
+            </div>
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">Z</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">Zara</p><p class="text-[10px] text-slate-400">Compras</p></div>
+              <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€34.99</p>
+            </div>
+          </div>
+          <div class="h-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-xs text-slate-400 mt-2 mb-6 text-center" style="max-width:375px">↑ Collapsed — tap "Ver detalhes" to expand ↑</p>
+
+    <!-- EXPANDED STATE -->
+    <h4 class="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">Mobile — Expanded</h4>
+    <div class="phone-frame">
+      <div class="sim-bottom-nav">
+        <div class="tab active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg><span>Expenses</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg><span>Projects</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg><span>More</span></div>
+      </div>
+      <div class="sim-fab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></div>
+
+      <div class="scroll-area bg-slate-50">
+        <!-- Month nav -->
+        <div class="flex items-center justify-between px-4 py-2.5">
+          <button class="p-1 text-slate-400"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+          <p class="text-sm font-bold text-slate-900">Fevereiro 2026</p>
+          <button class="p-1 text-slate-300"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+        </div>
+
+        <!-- === HERO CARD: expanded state === -->
+        <div class="px-4 pb-3">
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <!-- Always visible: ring + key numbers -->
+            <div class="p-4 flex items-center gap-4">
+              <div class="relative flex-shrink-0" style="width:90px;height:90px">
+                <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#f1f5f9" stroke-width="3"/>
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="88 88" stroke-linecap="round"/>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span class="text-base font-bold text-red-500">124%</span>
+                  <span class="text-[9px] text-slate-400">usado</span>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-2xl font-bold text-slate-900">€3,100</p>
+                <p class="text-xs text-slate-400">gasto de €2,500</p>
+                <div class="flex gap-3 mt-2">
+                  <div><p class="text-[10px] text-green-500">Recebido</p><p class="text-sm font-bold text-green-600">€3,675</p></div>
+                  <div><p class="text-[10px] text-blue-500">Saldo</p><p class="text-sm font-bold text-blue-600">€575</p></div>
+                </div>
+              </div>
+            </div>
+
+            <!-- EXPANDED: Type breakdown -->
+            <div class="px-4 pb-3 border-t border-slate-100 pt-3">
+              <p class="text-[11px] font-semibold text-slate-500 mb-2">Repartição por tipo</p>
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-500"></div><span class="text-[11px] text-slate-600">Contas</span></div>
+                  <span class="text-[11px] font-semibold tabular-nums">€1,150.88</span>
+                </div>
+                <div class="pl-4 flex items-center justify-between text-[10px] text-slate-400">
+                  <span>Fixo €962.50</span><span>Variável €188.38</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-purple-500"></div><span class="text-[11px] text-slate-600">Gastos diários</span></div>
+                  <span class="text-[11px] font-semibold tabular-nums">€562.47</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-orange-500"></div><span class="text-[11px] text-slate-600">Projetos (6)</span></div>
+                  <span class="text-[11px] font-semibold tabular-nums">€1,387.05</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- EXPANDED: Category breakdown -->
+            <div class="px-4 pb-3 border-t border-slate-100 pt-3">
+              <p class="text-[11px] font-semibold text-slate-500 mb-2">Onde vai o dinheiro</p>
+              <div class="h-2.5 rounded-full overflow-hidden flex bg-slate-100 mb-2">
+                <div class="h-full bg-orange-400" style="width:35%"></div>
+                <div class="h-full bg-blue-400 ml-px" style="width:22%"></div>
+                <div class="h-full bg-purple-400 ml-px" style="width:18%"></div>
+                <div class="h-full bg-cyan-400 ml-px" style="width:12%"></div>
+                <div class="h-full bg-amber-400 ml-px" style="width:8%"></div>
+              </div>
+              <div class="space-y-1.5">
+                <div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-orange-400"></div><span class="text-[11px] text-slate-600">Viagens</span></div><span class="text-[11px] font-semibold tabular-nums">€890</span></div>
+                <div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-blue-400"></div><span class="text-[11px] text-slate-600">Subscrições</span></div><span class="text-[11px] font-semibold tabular-nums">€320</span></div>
+                <div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-purple-400"></div><span class="text-[11px] text-slate-600">Restaurantes</span></div><span class="text-[11px] font-semibold tabular-nums">€245</span></div>
+                <div class="flex items-center justify-between"><div class="flex items-center gap-1.5"><div class="w-2 h-2 rounded-full bg-cyan-400"></div><span class="text-[11px] text-slate-600">Serviços</span></div><span class="text-[11px] font-semibold tabular-nums">€188</span></div>
+              </div>
+            </div>
+
+            <!-- EXPANDED: Burn chart mini -->
+            <div class="px-4 pb-3 border-t border-slate-100 pt-3">
+              <div class="flex items-center justify-between mb-1.5">
+                <p class="text-[11px] font-semibold text-slate-500">Velocidade de Gastos</p>
+                <p class="text-[11px] font-bold text-red-500">-31% vs jan</p>
+              </div>
+              <div class="h-16 bg-gradient-to-t from-slate-50 to-white rounded-lg relative">
+                <svg class="absolute inset-0 w-full h-full" viewBox="0 0 200 60" preserveAspectRatio="none">
+                  <polyline points="5,50 25,47 45,42 65,37 85,32 105,28 125,25 145,23 165,21 185,20" fill="none" stroke="#0070f3" stroke-width="2" stroke-linecap="round"/>
+                  <polyline points="5,55 25,50 45,42 65,33 85,25 105,18 125,14 145,10 165,7 185,4" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <div class="flex items-center justify-center gap-3 mt-1.5">
+                <div class="flex items-center gap-1"><div class="w-2.5 h-0.5 bg-blue-500 rounded"></div><span class="text-[9px] text-slate-500">Fev: €1,713</span></div>
+                <div class="flex items-center gap-1"><div class="w-2.5 h-0.5 bg-slate-400 rounded"></div><span class="text-[9px] text-slate-400">Jan: €2,486</span></div>
+              </div>
+            </div>
+
+            <!-- Collapse button -->
+            <button class="w-full py-2 border-t border-slate-100 flex items-center justify-center gap-1.5 text-[11px] font-medium text-blue-500 active:bg-slate-50">
+              <span>Ocultar detalhes</span>
+              <svg class="w-3.5 h-3.5 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Transactions still visible below (scrolled down) -->
+        <div class="px-4">
+          <div class="flex items-center justify-between mb-2">
+            <p class="text-sm font-semibold text-slate-700">Transações recentes</p>
+            <div class="flex gap-1">
+              <button class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-slate-800 text-white">Todos</button>
+              <button class="px-2 py-0.5 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Contas</button>
+              <button class="px-2 py-0.5 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Gastos</button>
+            </div>
+          </div>
+          <div class="flex items-center justify-between py-1">
+            <span class="text-[10px] font-semibold text-slate-400 uppercase">24 fev · Hoje</span>
+            <span class="text-[10px] text-slate-300 tabular-nums">€95.91</span>
+          </div>
+          <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2.5">
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-orange-500">B</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900 truncate">Bilhetes <span class="text-[9px] px-1 py-0.5 rounded bg-orange-100 text-orange-600">Marrakesh</span></p><p class="text-[10px] text-slate-400">Viagens & Férias</p></div>
+              <div class="text-right flex-shrink-0"><p class="text-[12px] font-semibold tabular-nums">€83.41</p><p class="text-[9px] text-slate-400">€417.03</p></div>
+            </div>
+            <div class="px-3 py-2 flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">M</span></div>
+              <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">McDonald's</p><p class="text-[10px] text-slate-400">Restaurantes</p></div>
+              <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€12.50</p>
+            </div>
+          </div>
+          <div class="h-4"></div>
+        </div>
+      </div>
+    </div>
+
+    <p class="text-xs text-slate-400 mt-2 text-center" style="max-width:375px">↑ Expanded — all desktop sidebar info visible inline ↑</p>
+
+    <div class="mt-4 max-w-[800px] bg-purple-50 border border-purple-200 rounded-xl p-3">
+      <p class="text-xs font-semibold text-purple-800 mb-1">How it works</p>
+      <p class="text-[11px] text-purple-700 mb-2">The hero card has two states, toggled by the button at the bottom:</p>
+      <p class="text-[11px] text-purple-700"><strong>Collapsed (default):</strong> Ring gauge + spent/budget + income/balance. Transactions start at ~230px. You see your budget health + recent transactions at a glance.</p>
+      <p class="text-[11px] text-purple-700 mt-1"><strong>Expanded:</strong> Card grows to reveal type breakdown (Contas fix/var, Gastos, Projetos), category stacked bar, and a mini burn chart. Same content as the desktop sidebar, just stacked vertically. Transactions push down but are still scrollable below. Tap "Ocultar detalhes" to collapse back.</p>
+      <p class="text-[11px] text-purple-700 mt-1">The expand/collapse state persists (localStorage) so if you like seeing the details, it stays open.</p>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- PULSE — DESKTOP LAYOUT                                       -->
+    <!-- Where does everything from the current desktop go?           -->
+    <!-- ============================================================ -->
+    <div class="mt-10 mb-4">
+      <h3 class="text-lg font-bold text-slate-900">Pulse — Desktop</h3>
+      <p class="text-slate-400 text-xs mt-0.5">Two-column layout. Left = transactions (always visible). Right = sticky sidebar with budget health, category breakdown, burn chart, and the type split. All current info accounted for.</p>
+    </div>
+
+    <!-- Desktop frame -->
+    <div style="width:1060px;border-radius:0.75rem;border:2px solid #cbd5e1;overflow:hidden;position:relative;background:#f8fafc;box-shadow:0 25px 50px -12px rgba(0,0,0,0.15);flex-shrink:0;">
+      <!-- Browser chrome -->
+      <div style="height:32px;background:#f1f5f9;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;padding-left:12px;">
+        <span style="font-size:10px;letter-spacing:4px;color:#cbd5e1;">● ● ●</span>
+      </div>
+
+      <!-- Content area -->
+      <div style="display:flex;height:680px;">
+
+        <!-- LEFT COLUMN: Transactions (60%) -->
+        <div style="width:60%;overflow-y:auto;border-right:1px solid #e2e8f0;" class="bg-slate-50">
+
+          <!-- Top bar -->
+          <div class="sticky top-0 z-10 bg-white border-b border-slate-200 px-5 py-3 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-2">
+                <button class="text-slate-400"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+                <h1 class="text-sm font-bold text-slate-900">Fevereiro 2026</h1>
+                <button class="text-slate-300"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+              </div>
+              <div class="flex rounded-lg border border-slate-200 p-0.5">
+                <button class="px-2 py-1 text-[11px] font-medium rounded-md bg-blue-500 text-white">Mês</button>
+                <button class="px-2 py-1 text-[11px] font-medium text-slate-500">Trimestre</button>
+                <button class="px-2 py-1 text-[11px] font-medium text-slate-500">Ano</button>
+                <button class="px-2 py-1 text-[11px] font-medium text-slate-500">Todos</button>
+              </div>
+              <select class="text-[11px] border border-slate-200 rounded-lg px-2 py-1 bg-white"><option>Todos os Projetos</option></select>
+            </div>
+            <button class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-500 text-white text-[11px] font-medium rounded-lg">+ Adicionar</button>
+          </div>
+
+          <!-- Filter pills + count -->
+          <div class="flex items-center justify-between px-5 py-2.5 border-b border-slate-100">
+            <span class="text-[11px] font-semibold text-slate-500">Transações (65)</span>
+            <div class="flex gap-1.5">
+              <button class="px-2.5 py-1 text-[10px] font-semibold rounded-full bg-slate-800 text-white">Todos</button>
+              <button class="px-2.5 py-1 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Contas</button>
+              <button class="px-2.5 py-1 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Gastos</button>
+              <button class="px-2.5 py-1 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Projetos</button>
+              <button class="px-2.5 py-1 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Receita</button>
+            </div>
+          </div>
+
+          <!-- Day-grouped transactions -->
+          <div class="px-5 pt-2">
+            <!-- 24 Feb -->
+            <div class="flex items-center justify-between py-1.5">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase">24 fev · Hoje</span>
+              <span class="text-[11px] text-slate-300 tabular-nums">€95.91</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-3">
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-orange-50 border border-orange-200 flex items-center justify-center flex-shrink-0"><span class="text-[11px] font-bold text-orange-500">B</span></div>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-1.5"><p class="text-[13px] font-medium text-slate-900">Bilhetes</p><span class="px-1.5 py-0.5 text-[9px] font-medium rounded-md bg-orange-100 text-orange-600">Marrakesh 2026</span></div>
+                  <p class="text-[11px] text-slate-400">Viagens & Férias</p>
+                </div>
+                <div class="text-right flex-shrink-0"><p class="text-[13px] font-semibold tabular-nums">€83.41</p><p class="text-[10px] text-slate-400 tabular-nums">€417.03</p></div>
+              </div>
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[11px] font-bold text-purple-500">M</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">McDonald's</p><p class="text-[11px] text-slate-400">Restaurantes</p></div>
+                <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€12.50</p>
+              </div>
+            </div>
+
+            <!-- 23 Feb -->
+            <div class="flex items-center justify-between py-1.5">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase">23 fev</span>
+              <span class="text-[11px] text-slate-300 tabular-nums">€2,450.40</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-3">
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[11px] font-bold text-purple-500">L</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">Leroy guitarra</p><p class="text-[11px] text-slate-400">Hobbies</p></div>
+                <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€11.97</p>
+              </div>
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer bg-green-50/30">
+                <div class="w-8 h-8 rounded-lg bg-green-50 border border-green-200 flex items-center justify-center flex-shrink-0"><svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m0-16l-4 4m4-4l4 4"/></svg></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-green-700">Salário</p><p class="text-[11px] text-green-500">Receita</p></div>
+                <p class="text-[13px] font-semibold text-green-600 tabular-nums flex-shrink-0">+€2,400.00</p>
+              </div>
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0"><span class="text-[11px] font-bold text-blue-500">S</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">Spotify</p><p class="text-[11px] text-slate-400">Subscrições</p></div>
+                <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€9.99</p>
+              </div>
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[11px] font-bold text-purple-500">G</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900 truncate">Guitar Upgrades/tools</p><p class="text-[11px] text-slate-400">Hobbies</p></div>
+                <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€28.44</p>
+              </div>
+            </div>
+
+            <!-- 22 Feb -->
+            <div class="flex items-center justify-between py-1.5">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase">22 fev</span>
+              <span class="text-[11px] text-slate-300 tabular-nums">€80.29</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-3">
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center flex-shrink-0"><span class="text-[11px] font-bold text-blue-500">E</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">EDP Luz</p><p class="text-[11px] text-slate-400">Serviços</p></div>
+                <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€45.30</p>
+              </div>
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[11px] font-bold text-purple-500">Z</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">Zara</p><p class="text-[11px] text-slate-400">Compras</p></div>
+                <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€34.99</p>
+              </div>
+            </div>
+
+            <!-- 21 Feb -->
+            <div class="flex items-center justify-between py-1.5">
+              <span class="text-[11px] font-semibold text-slate-400 uppercase">21 fev</span>
+              <span class="text-[11px] text-slate-300 tabular-nums">€23.45</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-3">
+              <div class="px-3 py-2.5 flex items-center gap-3 hover:bg-slate-50 cursor-pointer">
+                <div class="w-8 h-8 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center flex-shrink-0"><span class="text-[11px] font-bold text-purple-500">P</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[13px] font-medium text-slate-900">Pingo Doce</p><p class="text-[11px] text-slate-400">Supermercado</p></div>
+                <p class="text-[13px] font-semibold tabular-nums flex-shrink-0">€23.45</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Sidebar (40%) — sticky, scrollable -->
+        <div style="width:40%;overflow-y:auto;" class="bg-white p-4 space-y-4">
+
+          <!-- ① BUDGET RING + KEY NUMBERS -->
+          <!-- Replaces: "Orçamento Restante" card + "Gasto" card + gauge -->
+          <div class="p-4 rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200">
+            <div class="flex items-center gap-4">
+              <div class="relative flex-shrink-0" style="width:90px;height:90px">
+                <svg viewBox="0 0 36 36" class="w-full h-full -rotate-90">
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#f1f5f9" stroke-width="3"/>
+                  <circle cx="18" cy="18" r="14" fill="none" stroke="#ef4444" stroke-width="3" stroke-dasharray="88 88" stroke-linecap="round"/>
+                </svg>
+                <div class="absolute inset-0 flex flex-col items-center justify-center">
+                  <span class="text-base font-bold text-red-500">124%</span>
+                  <span class="text-[8px] text-slate-400">usado</span>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xl font-bold text-slate-900">€3,100.40</p>
+                <p class="text-[11px] text-slate-400">gasto de €2,500.00</p>
+                <p class="text-[11px] font-semibold text-red-500 mt-0.5">€600.40 acima do orçamento</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ② INCOME / BALANCE ROW -->
+          <!-- Replaces: "Recebido" card + "Saldo" card -->
+          <div class="grid grid-cols-2 gap-3">
+            <div class="p-3 rounded-xl bg-green-50 border border-green-200">
+              <p class="text-[10px] text-green-600">Recebido</p>
+              <p class="text-lg font-bold text-green-600">€3,675.21</p>
+              <p class="text-[10px] text-green-500">Todas as fontes</p>
+            </div>
+            <div class="p-3 rounded-xl bg-blue-50 border border-blue-200">
+              <p class="text-[10px] text-blue-600">Saldo</p>
+              <p class="text-lg font-bold text-blue-600">€574.81</p>
+              <p class="text-[10px] text-blue-500">Excedente</p>
+            </div>
+          </div>
+
+          <!-- ③ TYPE BREAKDOWN -->
+          <!-- Replaces: the 5 stat cards (Total, Contas, Gastos, Projetos, Total Geral) -->
+          <div class="p-3 rounded-xl border border-slate-200">
+            <p class="text-[11px] font-semibold text-slate-600 mb-2.5">Repartição por tipo</p>
+            <div class="space-y-2">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-blue-500"></div>
+                  <span class="text-[12px] text-slate-600">Contas</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-[12px] font-semibold tabular-nums">€1,150.88</span>
+                </div>
+              </div>
+              <div class="pl-4 flex items-center justify-between text-[11px] text-slate-400">
+                <span>Fixo</span><span class="tabular-nums">€962.50</span>
+              </div>
+              <div class="pl-4 flex items-center justify-between text-[11px] text-slate-400">
+                <span>Variável</span><span class="tabular-nums">€188.38</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-purple-500"></div>
+                  <span class="text-[12px] text-slate-600">Gastos diários</span>
+                </div>
+                <span class="text-[12px] font-semibold tabular-nums">€562.47</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-orange-500"></div>
+                  <span class="text-[12px] text-slate-600">Projetos <span class="text-slate-400">(6)</span></span>
+                </div>
+                <span class="text-[12px] font-semibold tabular-nums">€1,387.05</span>
+              </div>
+              <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+                <span class="text-[12px] font-semibold text-slate-700">Total</span>
+                <span class="text-[12px] font-bold tabular-nums text-slate-900">€3,100.40</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ④ CATEGORY BREAKDOWN -->
+          <!-- Replaces: the category breakdown gauge modal content -->
+          <div class="p-3 rounded-xl border border-slate-200">
+            <p class="text-[11px] font-semibold text-slate-600 mb-2">Onde vai o dinheiro</p>
+            <div class="h-3 rounded-full overflow-hidden flex bg-slate-100 mb-2.5">
+              <div class="h-full bg-orange-400" style="width:35%"></div>
+              <div class="h-full bg-blue-400 ml-px" style="width:22%"></div>
+              <div class="h-full bg-purple-400 ml-px" style="width:18%"></div>
+              <div class="h-full bg-cyan-400 ml-px" style="width:12%"></div>
+              <div class="h-full bg-amber-400 ml-px" style="width:8%"></div>
+              <div class="h-full bg-slate-300 ml-px" style="width:5%"></div>
+            </div>
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-orange-400"></div><span class="text-[11px] text-slate-600">Viagens & Férias</span></div>
+                <span class="text-[11px] font-semibold tabular-nums">€890</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-blue-400"></div><span class="text-[11px] text-slate-600">Subscrições</span></div>
+                <span class="text-[11px] font-semibold tabular-nums">€320</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-purple-400"></div><span class="text-[11px] text-slate-600">Restaurantes</span></div>
+                <span class="text-[11px] font-semibold tabular-nums">€245</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-cyan-400"></div><span class="text-[11px] text-slate-600">Serviços</span></div>
+                <span class="text-[11px] font-semibold tabular-nums">€188</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2"><div class="w-2 h-2 rounded-full bg-amber-400"></div><span class="text-[11px] text-slate-600">Supermercado</span></div>
+                <span class="text-[11px] font-semibold tabular-nums">€142</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- ⑤ BURN CHART -->
+          <!-- Replaces: "Velocidade de Gastos" chart -->
+          <div class="p-3 rounded-xl border border-slate-200">
+            <div class="flex items-center justify-between mb-2">
+              <p class="text-[11px] font-semibold text-slate-600">Velocidade de Gastos</p>
+              <div class="text-right">
+                <p class="text-[12px] font-bold text-red-500">€-772.33</p>
+                <p class="text-[10px] text-slate-400">-31.1% vs mês passado</p>
+              </div>
+            </div>
+            <!-- Simulated chart area -->
+            <div class="h-28 bg-gradient-to-t from-slate-50 to-white rounded-lg flex items-end px-1 gap-px relative">
+              <!-- Current month line (simulated) -->
+              <svg class="absolute inset-0 w-full h-full" viewBox="0 0 200 100" preserveAspectRatio="none">
+                <polyline points="5,85 15,82 25,78 35,75 45,70 55,65 60,60 70,55 80,50 90,48 100,45 110,42 120,40 130,38 140,36 150,35 160,34 170,33 180,32 190,31" fill="none" stroke="#0070f3" stroke-width="2" stroke-linecap="round"/>
+                <polyline points="5,90 15,88 25,85 35,80 45,72 55,65 60,58 70,50 80,42 90,35 100,30 110,25 120,22 130,20 140,18 150,16 160,14 170,12 180,10 190,8" fill="none" stroke="#94a3b8" stroke-width="1.5" stroke-dasharray="4 3" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <div class="flex items-center justify-center gap-4 mt-2">
+              <div class="flex items-center gap-1.5"><div class="w-3 h-0.5 bg-blue-500 rounded"></div><span class="text-[10px] text-slate-500">Fev 2026: €1,713</span></div>
+              <div class="flex items-center gap-1.5"><div class="w-3 h-0.5 bg-slate-400 rounded border-dashed"></div><span class="text-[10px] text-slate-400">Jan 2026: €2,486</span></div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Info mapping -->
+    <div class="mt-6 max-w-[1060px]">
+      <h4 class="text-sm font-bold text-slate-700 mb-3">Where everything from the current desktop maps to:</h4>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-white rounded-xl border border-slate-200 p-3">
+          <p class="text-[11px] font-semibold text-slate-400 mb-2">CURRENT (9 cards + 2 charts)</p>
+          <div class="space-y-1.5 text-[11px]">
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-red-400"></div><span class="text-slate-500">Orçamento Restante <span class="text-slate-300">(€-600.40)</span></span></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-green-400"></div><span class="text-slate-500">Recebido <span class="text-slate-300">(€3675.21)</span></span></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div><span class="text-slate-500">Gasto <span class="text-slate-300">(€3100.40)</span></span></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-slate-500">Saldo <span class="text-slate-300">(€574.81)</span></span></div>
+            <div class="border-t border-slate-100 my-1"></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div><span class="text-slate-500">Total <span class="text-slate-300">(€1713.35)</span></span></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-slate-500">Contas <span class="text-slate-300">(€1150.88 — Fixo/Var)</span></span></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-purple-400"></div><span class="text-slate-500">Gastos <span class="text-slate-300">(€562.47)</span></span></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-orange-400"></div><span class="text-slate-500">Projetos <span class="text-slate-300">(€1387.05)</span></span></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-slate-400"></div><span class="text-slate-500">Total Geral <span class="text-slate-300">(€3100.40)</span></span></div>
+            <div class="border-t border-slate-100 my-1"></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-red-400"></div><span class="text-slate-500">Budget Gauge <span class="text-slate-300">(100% ring)</span></span></div>
+            <div class="flex items-center gap-2"><div class="w-1.5 h-1.5 rounded-full bg-blue-400"></div><span class="text-slate-500">Burn Chart <span class="text-slate-300">(velocity comparison)</span></span></div>
+          </div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-3">
+          <p class="text-[11px] font-semibold text-purple-500 mb-2">PULSE SIDEBAR (5 sections)</p>
+          <div class="space-y-2 text-[11px]">
+            <div>
+              <p class="font-semibold text-slate-700">① Budget Ring</p>
+              <p class="text-slate-400">← Orçamento Restante + Gasto + Gauge. One component, zero duplication.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-700">② Income / Balance</p>
+              <p class="text-slate-400">← Recebido + Saldo. Two cards, same data.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-700">③ Type Breakdown</p>
+              <p class="text-slate-400">← Total + Contas (w/ fixed/var split) + Gastos + Projetos + Total Geral. Collapsed into one list. "Total" row at bottom replaces the "Total" and "Total Geral" cards (which were redundant).</p>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-700">④ Category Breakdown</p>
+              <p class="text-slate-400">← The gauge modal's stacked bar + legend, now always visible.</p>
+            </div>
+            <div>
+              <p class="font-semibold text-slate-700">⑤ Burn Chart</p>
+              <p class="text-slate-400">← Velocidade de Gastos. Same chart, same data, now in the sidebar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- VARIANT C — THE COCKPIT                                      -->
+  <!-- "Give me everything." — Dense, information-rich.             -->
+  <!-- All data on one screen, no scrolling needed for overview.    -->
+  <!-- Philosophy: Bloomberg terminal for your wallet.              -->
+  <!-- ============================================================ -->
+  <section id="variant-c" class="mb-20">
+    <div class="mb-5">
+      <h2 class="text-xl font-bold text-slate-900">C — The Cockpit</h2>
+      <p class="text-slate-500 text-sm mt-1">Primary question: <strong>"Give me everything at once."</strong></p>
+      <p class="text-slate-400 text-xs mt-0.5">Dense information design. Budget, spending breakdown, AND recent transactions all visible without scrolling. Compact rows, smaller type, zero wasted space. You open the app and the entire financial picture is right there. Think Bloomberg terminal energy, but clean.</p>
+    </div>
+
+    <div class="phone-frame">
+      <div class="sim-bottom-nav">
+        <div class="tab active"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg><span>Home</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg><span>Expenses</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg><span>Projects</span></div>
+        <div class="tab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg><span>More</span></div>
+      </div>
+      <div class="sim-fab"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></div>
+
+      <div class="scroll-area bg-slate-900">
+        <!-- Dark header band -->
+        <div class="px-4 pt-3 pb-3 bg-slate-900">
+          <div class="flex items-center justify-between mb-3">
+            <div class="flex items-center gap-2">
+              <button class="text-slate-500"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg></button>
+              <p class="text-xs font-bold text-white">FEV 2026</p>
+              <button class="text-slate-600"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg></button>
+            </div>
+          </div>
+
+          <!-- Numbers grid: 2x3, ultra compact -->
+          <div class="grid grid-cols-3 gap-x-4 gap-y-2 mb-3">
+            <div>
+              <p class="text-[9px] text-slate-500 uppercase tracking-wider">Gasto</p>
+              <p class="text-base font-bold text-white tabular-nums">€3,100</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-500 uppercase tracking-wider">Recebido</p>
+              <p class="text-base font-bold text-green-400 tabular-nums">€3,675</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-500 uppercase tracking-wider">Saldo</p>
+              <p class="text-base font-bold text-blue-400 tabular-nums">€575</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-500 uppercase tracking-wider">Contas</p>
+              <p class="text-sm font-semibold text-slate-300 tabular-nums">€1,151</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-500 uppercase tracking-wider">Gastos</p>
+              <p class="text-sm font-semibold text-purple-400 tabular-nums">€562</p>
+            </div>
+            <div>
+              <p class="text-[9px] text-slate-500 uppercase tracking-wider">Projetos</p>
+              <p class="text-sm font-semibold text-orange-400 tabular-nums">€1,387</p>
+            </div>
+          </div>
+
+          <!-- Budget bar — inline -->
+          <div class="flex items-center gap-2">
+            <div class="flex-1 bg-slate-700 rounded-full h-1.5">
+              <div class="bg-red-400 h-1.5 rounded-full" style="width:100%"></div>
+            </div>
+            <span class="text-[10px] text-red-400 font-semibold flex-shrink-0">+€600</span>
+          </div>
+        </div>
+
+        <!-- Category mini-bars — horizontal, ultra compact -->
+        <div class="bg-slate-800 px-4 py-2.5 flex gap-3 overflow-x-auto border-b border-slate-700" style="-webkit-overflow-scrolling:touch">
+          <div class="flex-shrink-0 flex items-center gap-1.5">
+            <div class="w-1.5 h-8 rounded-full bg-orange-400"></div>
+            <div><p class="text-[9px] text-slate-400">Viagens</p><p class="text-[11px] font-semibold text-slate-200 tabular-nums">€890</p></div>
+          </div>
+          <div class="flex-shrink-0 flex items-center gap-1.5">
+            <div class="w-1.5 h-6 rounded-full bg-blue-400"></div>
+            <div><p class="text-[9px] text-slate-400">Subscrições</p><p class="text-[11px] font-semibold text-slate-200 tabular-nums">€320</p></div>
+          </div>
+          <div class="flex-shrink-0 flex items-center gap-1.5">
+            <div class="w-1.5 h-5 rounded-full bg-purple-400"></div>
+            <div><p class="text-[9px] text-slate-400">Restaurantes</p><p class="text-[11px] font-semibold text-slate-200 tabular-nums">€245</p></div>
+          </div>
+          <div class="flex-shrink-0 flex items-center gap-1.5">
+            <div class="w-1.5 h-4 rounded-full bg-cyan-400"></div>
+            <div><p class="text-[9px] text-slate-400">Serviços</p><p class="text-[11px] font-semibold text-slate-200 tabular-nums">€188</p></div>
+          </div>
+          <div class="flex-shrink-0 flex items-center gap-1.5">
+            <div class="w-1.5 h-3 rounded-full bg-pink-400"></div>
+            <div><p class="text-[9px] text-slate-400">Compras</p><p class="text-[11px] font-semibold text-slate-200 tabular-nums">€142</p></div>
+          </div>
+        </div>
+
+        <!-- === TRANSACTIONS — white zone, starts at ~210px === -->
+        <div class="bg-slate-50 min-h-full">
+          <!-- Sticky filter row -->
+          <div class="sticky top-0 z-10 flex items-center justify-between px-4 py-2 bg-slate-50 border-b border-slate-200">
+            <span class="text-[11px] font-semibold text-slate-500">65 transações</span>
+            <div class="flex gap-1">
+              <button class="px-2 py-0.5 text-[10px] font-semibold rounded-full bg-slate-800 text-white">Todos</button>
+              <button class="px-2 py-0.5 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Contas</button>
+              <button class="px-2 py-0.5 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Gastos</button>
+              <button class="px-2 py-0.5 text-[10px] font-medium rounded-full border border-slate-200 text-slate-400">Projetos</button>
+            </div>
+          </div>
+
+          <div class="px-4 pt-1">
+            <!-- 24 Feb -->
+            <div class="flex items-center justify-between py-1">
+              <span class="text-[10px] font-semibold text-slate-400 uppercase">24 fev</span>
+              <span class="text-[10px] text-slate-300 tabular-nums">€95.91</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2">
+              <div class="px-3 py-2 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-orange-50 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-orange-500">B</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900 truncate">Bilhetes <span class="text-[8px] px-1 rounded bg-orange-100 text-orange-600">Marrakesh</span></p></div>
+                <div class="text-right flex-shrink-0"><p class="text-[12px] font-semibold tabular-nums">€83.41</p><p class="text-[9px] text-slate-400">€417.03</p></div>
+              </div>
+              <div class="px-3 py-2 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">M</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">McDonald's</p></div>
+                <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€12.50</p>
+              </div>
+            </div>
+
+            <!-- 23 Feb -->
+            <div class="flex items-center justify-between py-1">
+              <span class="text-[10px] font-semibold text-slate-400 uppercase">23 fev</span>
+              <span class="text-[10px] text-slate-300 tabular-nums">€50.40</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2">
+              <div class="px-3 py-2 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">L</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">Leroy guitarra</p></div>
+                <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€11.97</p>
+              </div>
+              <div class="px-3 py-2 flex items-center gap-2 bg-green-50/40">
+                <div class="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0"><svg class="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m0-16l-4 4m4-4l4 4"/></svg></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-green-700">Salário</p></div>
+                <p class="text-[12px] font-semibold text-green-600 tabular-nums flex-shrink-0">+€2,400</p>
+              </div>
+              <div class="px-3 py-2 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-blue-500">S</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">Spotify</p></div>
+                <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€9.99</p>
+              </div>
+              <div class="px-3 py-2 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">G</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900 truncate">Guitar Upgrades</p></div>
+                <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€28.44</p>
+              </div>
+            </div>
+
+            <!-- 22 Feb -->
+            <div class="flex items-center justify-between py-1">
+              <span class="text-[10px] font-semibold text-slate-400 uppercase">22 fev</span>
+              <span class="text-[10px] text-slate-300 tabular-nums">€80.29</span>
+            </div>
+            <div class="bg-white rounded-xl border border-slate-200 divide-y divide-slate-100 mb-2">
+              <div class="px-3 py-2 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-blue-500">E</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">EDP Luz</p></div>
+                <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€45.30</p>
+              </div>
+              <div class="px-3 py-2 flex items-center gap-2">
+                <div class="w-7 h-7 rounded-lg bg-purple-50 flex items-center justify-center flex-shrink-0"><span class="text-[10px] font-bold text-purple-500">Z</span></div>
+                <div class="flex-1 min-w-0"><p class="text-[12px] font-medium text-slate-900">Zara</p></div>
+                <p class="text-[12px] font-semibold tabular-nums flex-shrink-0">€34.99</p>
+              </div>
+            </div>
+            <div class="h-4"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-4 max-w-[375px] bg-slate-800 border border-slate-700 rounded-xl p-3">
+      <p class="text-xs font-semibold text-slate-200 mb-1">Philosophy</p>
+      <p class="text-[11px] text-slate-400">Your money app is a command center. Dark header = numbers. Category bars = spending shape. Light section = transaction detail. Everything visible on first load — budget, income, balance, category breakdown, AND 5+ transactions. No scrolling needed for a complete picture. First transaction at <strong>~210px</strong>. Trades warmth for density.</p>
+    </div>
+  </section>
+
+  <!-- ============================================================ -->
+  <!-- COMPARISON -->
+  <!-- ============================================================ -->
+  <section id="comparison" class="mb-16">
+    <h2 class="text-xl font-bold text-slate-900 mb-4">Comparison</h2>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border-collapse bg-white rounded-xl overflow-hidden border border-slate-200">
+        <thead>
+          <tr class="bg-slate-50">
+            <th class="text-left p-3 font-semibold text-slate-700 border-b border-slate-200 w-40"></th>
+            <th class="text-left p-3 font-semibold text-blue-600 border-b border-slate-200">A — Ledger</th>
+            <th class="text-left p-3 font-semibold text-purple-600 border-b border-slate-200">B — Pulse</th>
+            <th class="text-left p-3 font-semibold text-slate-600 border-b border-slate-200">C — Cockpit</th>
+          </tr>
+        </thead>
+        <tbody class="text-xs">
+          <tr>
+            <td class="p-3 border-b border-slate-100 font-medium text-slate-500">Answers</td>
+            <td class="p-3 border-b border-slate-100">"What did I spend?"</td>
+            <td class="p-3 border-b border-slate-100">"Am I on track?"</td>
+            <td class="p-3 border-b border-slate-100">"Show me everything"</td>
+          </tr>
+          <tr>
+            <td class="p-3 border-b border-slate-100 font-medium text-slate-500">1st transaction at</td>
+            <td class="p-3 border-b border-slate-100 text-green-600 font-semibold">~155px</td>
+            <td class="p-3 border-b border-slate-100 text-amber-600 font-semibold">~400px</td>
+            <td class="p-3 border-b border-slate-100 text-green-600 font-semibold">~210px</td>
+          </tr>
+          <tr>
+            <td class="p-3 border-b border-slate-100 font-medium text-slate-500">Budget visibility</td>
+            <td class="p-3 border-b border-slate-100">Thin bar in sticky header — always visible but minimal</td>
+            <td class="p-3 border-b border-slate-100 font-semibold">Hero ring gauge — impossible to miss</td>
+            <td class="p-3 border-b border-slate-100">Numbers + bar in dark header — prominent but compact</td>
+          </tr>
+          <tr>
+            <td class="p-3 border-b border-slate-100 font-medium text-slate-500">Category breakdown</td>
+            <td class="p-3 border-b border-slate-100">None (separate Insights page)</td>
+            <td class="p-3 border-b border-slate-100">Stacked bar + legend — prominent</td>
+            <td class="p-3 border-b border-slate-100">Horizontal mini-bars with proportional height</td>
+          </tr>
+          <tr>
+            <td class="p-3 border-b border-slate-100 font-medium text-slate-500">Stats (income/balance/etc)</td>
+            <td class="p-3 border-b border-slate-100">Horizontal scroll chips</td>
+            <td class="p-3 border-b border-slate-100">Beside the ring gauge</td>
+            <td class="p-3 border-b border-slate-100">3x2 grid in dark header</td>
+          </tr>
+          <tr>
+            <td class="p-3 border-b border-slate-100 font-medium text-slate-500">Visual personality</td>
+            <td class="p-3 border-b border-slate-100">Clean, light, airy — banking app</td>
+            <td class="p-3 border-b border-slate-100">Warm, visual — health dashboard</td>
+            <td class="p-3 border-b border-slate-100">Dense, dark/light split — power tool</td>
+          </tr>
+          <tr>
+            <td class="p-3 border-b border-slate-100 font-medium text-slate-500">Transaction rows</td>
+            <td class="p-3 border-b border-slate-100">Day-grouped cards, standard size, with category</td>
+            <td class="p-3 border-b border-slate-100">Flat list, compact, relative dates ("Hoje", "Ontem")</td>
+            <td class="p-3 border-b border-slate-100">Day-grouped, tight rows, minimal info per row</td>
+          </tr>
+          <tr>
+            <td class="p-3 border-b border-slate-100 font-medium text-slate-500">Month navigation</td>
+            <td class="p-3 border-b border-slate-100">Sticky header arrows + swipe</td>
+            <td class="p-3 border-b border-slate-100">Top arrows (scrolls away) + swipe</td>
+            <td class="p-3 border-b border-slate-100">Compact arrows in dark header</td>
+          </tr>
+          <tr>
+            <td class="p-3 font-medium text-slate-500">Best for</td>
+            <td class="p-3 text-blue-600">Daily check-ins, quick logging</td>
+            <td class="p-3 text-purple-600">Budget-conscious users, monthly review</td>
+            <td class="p-3 text-slate-600">Data nerds, glanceable overview</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+</body>
+</html>
