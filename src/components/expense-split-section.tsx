@@ -18,6 +18,7 @@ type ExpenseSplitSectionProps = {
   onSplitCountChange: (count: number) => void;
   splitPeople: SplitPerson[] | null;
   onSplitPeopleChange: (people: SplitPerson[] | null) => void;
+  hideToggle?: boolean;
 };
 
 export default function ExpenseSplitSection({
@@ -29,6 +30,7 @@ export default function ExpenseSplitSection({
   onSplitCountChange,
   splitPeople,
   onSplitPeopleChange,
+  hideToggle = false,
 }: ExpenseSplitSectionProps) {
   const t = useTranslations("modals.split");
   const meLabel = t("meLabel");
@@ -131,6 +133,150 @@ export default function ExpenseSplitSection({
 
   if (amount <= 0) return null;
 
+  const splitContent = splitEnabled ? (
+    <div className="space-y-3">
+      {/* People count stepper */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-indigo-700">
+          {t("numberOfPeople")}
+        </span>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => handleCountChange(splitCount - 1)}
+            disabled={splitCount <= 2}
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-indigo-300 bg-white text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+          >
+            −
+          </button>
+          <span className="w-8 text-center text-sm font-semibold text-indigo-800">
+            {splitCount}
+          </span>
+          <button
+            type="button"
+            onClick={() => handleCountChange(splitCount + 1)}
+            disabled={splitCount >= 20}
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-indigo-300 bg-white text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+          >
+            +
+          </button>
+        </div>
+      </div>
+
+      {/* Per-person summary */}
+      <div className="text-sm text-indigo-600 font-medium">
+        {splitPeople && splitPeople[0] ? (
+          <>
+            {t("yourShare")}: {formatCurrency(splitPeople[0].amount, currency)}
+            <span className="text-indigo-400 ml-1">
+              ({formatCurrency(perPerson, currency)}/{t("perPersonUnit")} × {splitCount})
+            </span>
+          </>
+        ) : (
+          <>
+            {formatCurrency(perPerson, currency)}/{t("perPersonUnit")}{" "}
+            <span className="text-indigo-400">× {splitCount}</span>
+          </>
+        )}
+      </div>
+
+      {/* Customize toggle */}
+      <button
+        type="button"
+        onClick={() => setShowCustomize(!showCustomize)}
+        className="flex items-center gap-1.5 text-xs text-indigo-500 hover:text-indigo-700 transition-colors"
+      >
+        <svg
+          className={`w-3.5 h-3.5 transition-transform ${
+            showCustomize ? "rotate-90" : ""
+          }`}
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M9 5l7 7-7 7"
+          />
+        </svg>
+        {showCustomize ? t("hideSplit") : t("customizeSplit")}
+      </button>
+
+      {/* Custom per-person breakdown */}
+      {showCustomize && splitPeople && (
+        <div className="space-y-2">
+          {splitPeople.map((person, i) => (
+            <div key={i} className="flex items-center gap-2">
+              {/* Label */}
+              {i === 0 ? (
+                <div className="flex-1 min-w-0 rounded-md border border-indigo-300 bg-indigo-50 px-2.5 py-1.5 text-xs text-indigo-700 font-medium">
+                  {person.label}
+                </div>
+              ) : (
+                <input
+                  type="text"
+                  value={person.label}
+                  onChange={(e) => handleLabelChange(i, e.target.value)}
+                  className="flex-1 min-w-0 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                />
+              )}
+              {/* Amount */}
+              <div className="relative w-24">
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={person.amount.toFixed(2)}
+                  onChange={(e) => handleAmountChange(i, e.target.value)}
+                  className={`w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent ${
+                    person.locked
+                      ? "border-indigo-400 bg-indigo-50/50"
+                      : "border-slate-300 bg-white"
+                  }`}
+                />
+              </div>
+              {/* Lock toggle */}
+              <button
+                type="button"
+                onClick={() => handleToggleLock(i)}
+                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
+                  person.locked
+                    ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
+                    : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                }`}
+                title={person.locked ? t("unlockAmount") : t("lockAmount")}
+              >
+                {person.locked ? (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0110 0v4" />
+                  </svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 019.9-1" />
+                  </svg>
+                )}
+              </button>
+            </div>
+          ))}
+
+          {/* Error */}
+          {error && (
+            <p className="text-xs text-red-500 font-medium">{error}</p>
+          )}
+        </div>
+      )}
+    </div>
+  ) : null;
+
+  // When hideToggle is true, render just the split content (parent handles the card wrapper)
+  if (hideToggle) {
+    return splitContent;
+  }
+
   return (
     <div>
       {/* Toggle */}
@@ -162,170 +308,7 @@ export default function ExpenseSplitSection({
           </div>
         </label>
 
-        {splitEnabled && (
-          <div className="mt-3 space-y-3">
-            {/* People count stepper */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-indigo-700">
-                {t("numberOfPeople")}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleCountChange(splitCount - 1)}
-                  disabled={splitCount <= 2}
-                  className="w-7 h-7 flex items-center justify-center rounded-md border border-indigo-300 bg-white text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
-                >
-                  −
-                </button>
-                <span className="w-8 text-center text-sm font-semibold text-indigo-800">
-                  {splitCount}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => handleCountChange(splitCount + 1)}
-                  disabled={splitCount >= 20}
-                  className="w-7 h-7 flex items-center justify-center rounded-md border border-indigo-300 bg-white text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
-                >
-                  +
-                </button>
-              </div>
-            </div>
-
-            {/* Per-person summary */}
-            <div className="text-sm text-indigo-600 font-medium">
-              {splitPeople && splitPeople[0] ? (
-                <>
-                  {t("yourShare")}: {formatCurrency(splitPeople[0].amount, currency)}
-                  <span className="text-indigo-400 ml-1">
-                    ({formatCurrency(perPerson, currency)}/{t("perPersonUnit")} × {splitCount})
-                  </span>
-                </>
-              ) : (
-                <>
-                  {formatCurrency(perPerson, currency)}/{t("perPersonUnit")}{" "}
-                  <span className="text-indigo-400">× {splitCount}</span>
-                </>
-              )}
-            </div>
-
-            {/* Customize toggle */}
-            <button
-              type="button"
-              onClick={() => setShowCustomize(!showCustomize)}
-              className="flex items-center gap-1.5 text-xs text-indigo-500 hover:text-indigo-700 transition-colors"
-            >
-              <svg
-                className={`w-3.5 h-3.5 transition-transform ${
-                  showCustomize ? "rotate-90" : ""
-                }`}
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-              {showCustomize ? t("hideSplit") : t("customizeSplit")}
-            </button>
-
-            {/* Custom per-person breakdown */}
-            {showCustomize && splitPeople && (
-              <div className="space-y-2">
-                {splitPeople.map((person, i) => (
-                  <div key={i} className="flex items-center gap-2">
-                    {/* Label */}
-                    {i === 0 ? (
-                      <div className="flex-1 min-w-0 rounded-md border border-indigo-300 bg-indigo-50 px-2.5 py-1.5 text-xs text-indigo-700 font-medium">
-                        {person.label}
-                      </div>
-                    ) : (
-                      <input
-                        type="text"
-                        value={person.label}
-                        onChange={(e) => handleLabelChange(i, e.target.value)}
-                        className="flex-1 min-w-0 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
-                      />
-                    )}
-                    {/* Amount */}
-                    <div className="relative w-24">
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={person.amount.toFixed(2)}
-                        onChange={(e) => handleAmountChange(i, e.target.value)}
-                        className={`w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent ${
-                          person.locked
-                            ? "border-indigo-400 bg-indigo-50/50"
-                            : "border-slate-300 bg-white"
-                        }`}
-                      />
-                    </div>
-                    {/* Lock toggle */}
-                    <button
-                      type="button"
-                      onClick={() => handleToggleLock(i)}
-                      className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
-                        person.locked
-                          ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
-                          : "bg-slate-100 text-slate-400 hover:bg-slate-200"
-                      }`}
-                      title={person.locked ? t("unlockAmount") : t("lockAmount")}
-                    >
-                      {person.locked ? (
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <rect
-                            x="3"
-                            y="11"
-                            width="18"
-                            height="11"
-                            rx="2"
-                            ry="2"
-                          />
-                          <path d="M7 11V7a5 5 0 0110 0v4" />
-                        </svg>
-                      ) : (
-                        <svg
-                          className="w-3.5 h-3.5"
-                          fill="none"
-                          viewBox="0 0 24 24"
-                          stroke="currentColor"
-                          strokeWidth={2}
-                        >
-                          <rect
-                            x="3"
-                            y="11"
-                            width="18"
-                            height="11"
-                            rx="2"
-                            ry="2"
-                          />
-                          <path d="M7 11V7a5 5 0 019.9-1" />
-                        </svg>
-                      )}
-                    </button>
-                  </div>
-                ))}
-
-                {/* Error */}
-                {error && (
-                  <p className="text-xs text-red-500 font-medium">{error}</p>
-                )}
-              </div>
-            )}
-          </div>
-        )}
+        {splitEnabled && <div className="mt-3">{splitContent}</div>}
       </div>
     </div>
   );

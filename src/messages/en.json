@@ -7,6 +7,7 @@
     "add": "Add",
     "create": "Create",
     "close": "Close",
+    "details": "Details",
     "selectType": "Select what you want to add",
     "expense": "Expense",
     "expenseDescription": "Record money you spent",

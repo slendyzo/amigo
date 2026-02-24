@@ -10,12 +10,14 @@ type ExpenseImageUploadProps = {
   imageUrls: string[];
   onChange: (urls: string[]) => void;
   disabled?: boolean;
+  fileInputId?: string;
 };
 
 export default function ExpenseImageUpload({
   imageUrls,
   onChange,
   disabled = false,
+  fileInputId,
 }: ExpenseImageUploadProps) {
   const t = useTranslations("modals");
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -100,6 +102,7 @@ export default function ExpenseImageUpload({
 
       <input
         ref={fileInputRef}
+        id={fileInputId}
         type="file"
         accept="image/*"
         capture="environment"
