@@ -75,6 +75,7 @@ export async function GET(request: Request) {
           recurringTemplateId: true,
           excludeFromBudget: true,
           imageUrls: true,
+          splitCount: true,
           category: { include: { parent: true } },
           bankAccount: true,
           projects: true,
@@ -102,7 +103,7 @@ export async function POST(request: Request) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { quickAdd, name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls } = body;
+    const { quickAdd, name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToConnect: string[] = projectIds || (projectId ? [projectId] : []);
@@ -267,6 +268,8 @@ export async function POST(request: Request) {
         bankAccountId: expenseData.bankAccountId,
         excludeFromBudget: excludeFromBudget || false,
         imageUrls: imageUrls || null,
+        splitCount: splitCount || null,
+        splitData: splitData || null,
         projects: projectIdsToConnect.length > 0
           ? { connect: projectIdsToConnect.map(id => ({ id })) }
           : undefined,

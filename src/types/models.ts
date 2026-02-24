@@ -50,6 +50,8 @@ export type Expense = {
   dueDate?: string;
   paidAt?: string;
   imageUrls?: string | null;
+  splitCount?: number | null;
+  splitData?: string | null;
   importLogId?: string;
   createdAt?: string;
   updatedAt?: string;

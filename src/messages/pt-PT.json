@@ -269,7 +269,10 @@
     "paid": "Pago",
     "scheduled": "Agendado",
     "imported": "Importado",
-    "rateFrom": "Taxa de {date}"
+    "rateFrom": "Taxa de {date}",
+    "splitSummary": "Dividido por {count}",
+    "perPersonUnit": "pessoa",
+    "fixed": "fixo"
   },
   "incomes": {
     "title": "Receitas",
@@ -985,7 +988,19 @@
     "addPhoto": "Adicionar foto do recibo",
     "addMorePhotos": "Adicionar mais fotos",
     "uploading": "A carregar...",
-    "photos": "Fotos"
+    "photos": "Fotos",
+    "split": {
+      "splitExpense": "Dividir esta despesa",
+      "splitHint": "Dividir o total entre várias pessoas",
+      "numberOfPeople": "Número de pessoas",
+      "perPersonUnit": "pessoa",
+      "customizeSplit": "Personalizar divisão",
+      "hideSplit": "Esconder detalhes",
+      "personLabel": "Pessoa {number}",
+      "lockAmount": "Fixar valor",
+      "unlockAmount": "Desbloquear valor",
+      "lockedExceedsTotal": "Os valores fixados excedem o total"
+    }
   },
   "install": {
     "title": "Instalar Amigo",

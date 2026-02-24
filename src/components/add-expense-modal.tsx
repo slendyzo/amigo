@@ -15,6 +15,8 @@ import { EXPENSE_TYPE_VALUES, getExpenseTypeButtonClass } from "@/lib/expense-ty
 import { parseAmount, getTodayDateString } from "@/lib/utils";
 import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
 import ExpenseImageUpload from "./expense-image-upload";
+import ExpenseSplitSection from "./expense-split-section";
+import { type SplitPerson } from "@/lib/split-utils";
 import type { Category, BankAccount, Project, ExpenseType } from "@/types/models";
 
 type AddExpenseModalProps = {
@@ -99,6 +101,9 @@ export default function AddExpenseModal({
   const [excludeFromBudget, setExcludeFromBudget] = useState(false);
   const [isScheduled, setIsScheduled] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [splitEnabled, setSplitEnabled] = useState(false);
+  const [splitCount, setSplitCount] = useState(2);
+  const [splitPeople, setSplitPeople] = useState<SplitPerson[] | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -139,6 +144,9 @@ export default function AddExpenseModal({
       setExcludeFromBudget(defaultExcludeFromBudget);
       setIsScheduled(false);
       setImageUrls([]);
+      setSplitEnabled(false);
+      setSplitCount(2);
+      setSplitPeople(null);
       setShowAdvanced(false);
       setError("");
       hasSetInitialDefaults.current = false;
@@ -197,6 +205,9 @@ export default function AddExpenseModal({
         // Scheduled expense fields
         status: (isScheduled ? "PENDING" : "PAID") as "PAID" | "PENDING",
         dueDate: isScheduled ? date : undefined,
+        // Split expense fields
+        splitCount: splitEnabled ? splitCount : undefined,
+        splitData: splitEnabled && splitPeople ? JSON.stringify(splitPeople) : undefined,
       };
 
       // Try to submit online first
@@ -333,6 +344,20 @@ export default function AddExpenseModal({
               </select>
             </div>
           </div>
+
+          {/* Split Expense */}
+          {parseAmount(amount) > 0 && (
+            <ExpenseSplitSection
+              amount={parseAmount(amount)}
+              currency={currency}
+              splitEnabled={splitEnabled}
+              onSplitEnabledChange={setSplitEnabled}
+              splitCount={splitCount}
+              onSplitCountChange={setSplitCount}
+              splitPeople={splitPeople}
+              onSplitPeopleChange={setSplitPeople}
+            />
+          )}
 
           {/* Date - defaults to today, expandable */}
           <div>

@@ -6,6 +6,7 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { useModalBodyClass } from "@/hooks/use-modal-body-class";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
 import { EXPENSE_TYPE_BADGE_CLASSES } from "@/lib/expense-types";
+import { parseSplitData } from "@/lib/split-utils";
 import type { Expense } from "@/types/models";
 
 type ExpenseDetailModalProps = {
@@ -263,6 +264,42 @@ export default function ExpenseDetailModal({
               <p className="text-[10px] text-slate-400 mt-1.5 text-center">
                 {t("rateFrom", { date: formatShortDate(e.date) })}
               </p>
+            </div>
+          )}
+
+          {/* Split info */}
+          {e.splitCount && e.splitCount > 1 && (
+            <div className="px-4 py-2.5 md:px-5 bg-indigo-50/60 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <svg className="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-indigo-800">
+                    {t("splitSummary", { count: e.splitCount })}
+                  </p>
+                  <p className="text-xs text-indigo-600">
+                    {formatCurrency(Math.abs(amount) / e.splitCount, e.currency || "EUR")}/{t("perPersonUnit")} × {e.splitCount}
+                  </p>
+                </div>
+              </div>
+              {(() => {
+                const people = parseSplitData(e.splitData);
+                if (!people) return null;
+                return (
+                  <div className="mt-2 space-y-1">
+                    {people.map((p, i) => (
+                      <div key={i} className="flex justify-between text-xs">
+                        <span className="text-slate-600">{p.label}</span>
+                        <span className={`font-medium ${p.locked ? "text-indigo-600" : "text-slate-700"}`}>
+                          {formatCurrency(p.amount, e.currency || "EUR")}
+                          {p.locked && ` (${t("fixed")})`}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })()}
             </div>
           )}
 

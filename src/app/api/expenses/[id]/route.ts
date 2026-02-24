@@ -102,7 +102,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, imageUrls, categorizedAt } = body;
+    const { name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, imageUrls, categorizedAt, splitCount, splitData } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToSet: string[] | undefined = projectIds !== undefined
@@ -135,6 +135,8 @@ export async function PUT(
       paidAt?: Date | null;
       imageUrls?: string | null;
       categorizedAt?: Date | null;
+      splitCount?: number | null;
+      splitData?: string | null;
     };
 
     const updateData: UpdateData = {};
@@ -150,6 +152,8 @@ export async function PUT(
     if (excludeFromBudget !== undefined) updateData.excludeFromBudget = excludeFromBudget;
     if (imageUrls !== undefined) updateData.imageUrls = imageUrls || null;
     if (categorizedAt !== undefined) updateData.categorizedAt = categorizedAt ? new Date(categorizedAt) : null;
+    if (splitCount !== undefined) updateData.splitCount = splitCount || null;
+    if (splitData !== undefined) updateData.splitData = splitData || null;
     if (status !== undefined) {
       updateData.status = status;
       // Set paidAt when marking as paid

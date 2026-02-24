@@ -269,7 +269,10 @@
     "paid": "Payé",
     "scheduled": "Programmé",
     "imported": "Importé",
-    "rateFrom": "Taux du {date}"
+    "rateFrom": "Taux du {date}",
+    "splitSummary": "Partagé en {count}",
+    "perPersonUnit": "personne",
+    "fixed": "fixe"
   },
   "incomes": {
     "title": "Revenus",
@@ -999,7 +1002,19 @@
     "addPhoto": "Ajouter une photo du reçu",
     "addMorePhotos": "Ajouter plus de photos",
     "uploading": "Téléchargement...",
-    "photos": "Photos"
+    "photos": "Photos",
+    "split": {
+      "splitExpense": "Partager cette dépense",
+      "splitHint": "Répartir le total entre plusieurs personnes",
+      "numberOfPeople": "Nombre de personnes",
+      "perPersonUnit": "personne",
+      "customizeSplit": "Personnaliser le partage",
+      "hideSplit": "Masquer les détails",
+      "personLabel": "Personne {number}",
+      "lockAmount": "Verrouiller le montant",
+      "unlockAmount": "Déverrouiller le montant",
+      "lockedExceedsTotal": "Les montants verrouillés dépassent le total"
+    }
   },
   "install": {
     "title": "Installer Amigo",

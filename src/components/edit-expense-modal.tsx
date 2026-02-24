@@ -13,6 +13,8 @@ import { EXPENSE_TYPE_VALUES, getExpenseTypeButtonClass } from "@/lib/expense-ty
 import { parseAmount, getTodayDateString } from "@/lib/utils";
 import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
 import ExpenseImageUpload from "./expense-image-upload";
+import ExpenseSplitSection from "./expense-split-section";
+import { type SplitPerson, parseSplitData } from "@/lib/split-utils";
 import type { Category, BankAccount, Project, Expense, ExpenseType } from "@/types/models";
 
 type EditExpenseModalProps = {
@@ -57,6 +59,9 @@ export default function EditExpenseModal({
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
   const [excludeFromBudget, setExcludeFromBudget] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
+  const [splitEnabled, setSplitEnabled] = useState(false);
+  const [splitCount, setSplitCount] = useState(2);
+  const [splitPeople, setSplitPeople] = useState<SplitPerson[] | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
@@ -121,6 +126,9 @@ export default function EditExpenseModal({
       setExcludeFromBudget(expense.excludeFromBudget || false);
       setStatus(expense.status || "PAID");
       setImageUrls(expense.imageUrls ? JSON.parse(expense.imageUrls) : []);
+      setSplitEnabled(!!expense.splitCount);
+      setSplitCount(expense.splitCount || 2);
+      setSplitPeople(parseSplitData(expense.splitData));
       setShowDatePicker(false);
       setShowAdvanced(false);
       setError("");
@@ -163,6 +171,8 @@ export default function EditExpenseModal({
           excludeFromBudget,
           imageUrls: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null,
           status,
+          splitCount: splitEnabled ? splitCount : null,
+          splitData: splitEnabled && splitPeople ? JSON.stringify(splitPeople) : null,
         }),
       });
 
@@ -260,6 +270,20 @@ export default function EditExpenseModal({
               </select>
             </div>
           </div>
+
+          {/* Split Expense */}
+          {parseAmount(amount) > 0 && (
+            <ExpenseSplitSection
+              amount={parseAmount(amount)}
+              currency={currency}
+              splitEnabled={splitEnabled}
+              onSplitEnabledChange={setSplitEnabled}
+              splitCount={splitCount}
+              onSplitCountChange={setSplitCount}
+              splitPeople={splitPeople}
+              onSplitPeopleChange={setSplitPeople}
+            />
+          )}
 
           {/* Date - Collapsible like add modal */}
           <div>

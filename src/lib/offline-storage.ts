@@ -18,6 +18,8 @@ export type OfflineExpense = {
   excludeFromBudget?: boolean;
   status?: "PAID" | "PENDING";
   dueDate?: string;
+  splitCount?: number;
+  splitData?: string;
   createdAt: number;
   syncAttempts: number;
 };
