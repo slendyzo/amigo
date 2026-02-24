@@ -3,7 +3,11 @@
  * Centralizes all currency-related code to avoid duplication across components.
  */
 
-export const CURRENCIES = ["EUR", "USD", "GBP", "BRL", "PLN", "CAD"] as const;
+export const CURRENCIES = [
+  "EUR", "USD", "GBP", "BRL", "PLN", "CAD",
+  "MAD", "JPY", "CHF", "AUD", "INR", "MXN",
+  "TRY", "SEK", "KRW", "CNY",
+] as const;
 
 export type Currency = (typeof CURRENCIES)[number];
 
@@ -14,11 +18,22 @@ export const CURRENCY_SYMBOLS: Record<Currency, string> = {
   BRL: "R$",
   PLN: "zł",
   CAD: "C$",
+  MAD: "د.م.",
+  JPY: "¥",
+  CHF: "CHF",
+  AUD: "A$",
+  INR: "₹",
+  MXN: "MX$",
+  TRY: "₺",
+  SEK: "kr",
+  KRW: "₩",
+  CNY: "¥",
 };
 
 /**
  * Reverse mapping from symbol to currency code.
  * Used for OCR parsing to detect currency from receipt text.
+ * Note: ¥ maps to JPY by default (more common in receipts than CNY).
  */
 export const SYMBOL_TO_CURRENCY: Record<string, Currency> = {
   "€": "EUR",
@@ -27,6 +42,14 @@ export const SYMBOL_TO_CURRENCY: Record<string, Currency> = {
   "R$": "BRL",
   "zł": "PLN",
   "C$": "CAD",
+  "د.م.": "MAD",
+  "¥": "JPY",
+  "A$": "AUD",
+  "₹": "INR",
+  "MX$": "MXN",
+  "₺": "TRY",
+  "kr": "SEK",
+  "₩": "KRW",
 };
 
 /**

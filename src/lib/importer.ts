@@ -1819,15 +1819,24 @@ export function parseEmailTransaction(
     if (!amountMatch) continue;
 
     let amountStr = amountMatch[1];
-    // Detect currency
+    // Detect currency (check multi-char symbols before single-char ones)
     let currency = "EUR";
-    if (amountStr.includes("C$")) currency = "CAD";
+    if (amountStr.includes("MX$")) currency = "MXN";
+    else if (amountStr.includes("C$")) currency = "CAD";
+    else if (amountStr.includes("A$")) currency = "AUD";
     else if (amountStr.includes("R$")) currency = "BRL";
+    else if (amountStr.includes("د.م.")) currency = "MAD";
     else if (amountStr.includes("$")) currency = "USD";
     else if (amountStr.includes("£")) currency = "GBP";
+    else if (amountStr.includes("¥")) currency = "JPY";
+    else if (amountStr.includes("₹")) currency = "INR";
+    else if (amountStr.includes("₺")) currency = "TRY";
+    else if (amountStr.includes("₩")) currency = "KRW";
+    else if (amountStr.includes("kr")) currency = "SEK";
+    else if (amountStr.includes("CHF")) currency = "CHF";
 
     // Clean amount
-    amountStr = amountStr.replace(/[€$£RC\s]/g, "");
+    amountStr = amountStr.replace(/[€$£₹₺₩¥RC\s]|د\.م\.|MX|kr|CHF/g, "");
     // Handle European format (1.234,56) vs US format (1,234.56)
     if (amountStr.includes(",") && amountStr.includes(".")) {
       // If comma comes after dot, it's European

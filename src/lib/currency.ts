@@ -10,6 +10,16 @@ const STATIC_RATES: Record<string, number> = {
   BRL: 0.16,  // 1 BRL ≈ 0.16 EUR
   PLN: 0.24,  // 1 PLN ≈ 0.24 EUR
   CAD: 0.62,  // 1 CAD ≈ 0.62 EUR
+  MAD: 0.092, // 1 MAD ≈ 0.092 EUR
+  JPY: 0.0063, // 1 JPY ≈ 0.0063 EUR
+  CHF: 1.06,  // 1 CHF ≈ 1.06 EUR
+  AUD: 0.60,  // 1 AUD ≈ 0.60 EUR
+  INR: 0.011, // 1 INR ≈ 0.011 EUR
+  MXN: 0.048, // 1 MXN ≈ 0.048 EUR
+  TRY: 0.026, // 1 TRY ≈ 0.026 EUR
+  SEK: 0.088, // 1 SEK ≈ 0.088 EUR
+  KRW: 0.00065, // 1 KRW ≈ 0.00065 EUR
+  CNY: 0.13,  // 1 CNY ≈ 0.13 EUR
 };
 
 // Cache for exchange rates (refreshed every hour for more current rates)
@@ -83,6 +93,16 @@ export function formatCurrency(
     BRL: "R$",
     PLN: "z\u0142",
     CAD: "C$",
+    MAD: "\u062f.\u0645.",
+    JPY: "\u00a5",
+    CHF: "CHF",
+    AUD: "A$",
+    INR: "\u20b9",
+    MXN: "MX$",
+    TRY: "\u20ba",
+    SEK: "kr",
+    KRW: "\u20a9",
+    CNY: "\u00a5",
   };
 
   const symbol = symbols[currency] || currency;

@@ -21,6 +21,16 @@ const CURRENCIES = [
   { code: "BRL", symbol: "R$", name: "Brazilian Real" },
   { code: "PLN", symbol: "zł", name: "Polish Zloty" },
   { code: "CAD", symbol: "C$", name: "Canadian Dollar" },
+  { code: "MAD", symbol: "د.م.", name: "Moroccan Dirham" },
+  { code: "JPY", symbol: "¥", name: "Japanese Yen" },
+  { code: "CHF", symbol: "CHF", name: "Swiss Franc" },
+  { code: "AUD", symbol: "A$", name: "Australian Dollar" },
+  { code: "INR", symbol: "₹", name: "Indian Rupee" },
+  { code: "MXN", symbol: "MX$", name: "Mexican Peso" },
+  { code: "TRY", symbol: "₺", name: "Turkish Lira" },
+  { code: "SEK", symbol: "kr", name: "Swedish Krona" },
+  { code: "KRW", symbol: "₩", name: "South Korean Won" },
+  { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
 ];
 
 export default function OnboardingModal({
