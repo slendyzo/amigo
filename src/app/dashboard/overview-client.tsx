@@ -49,6 +49,7 @@ type Expense = {
   projects: { id: string; name: string }[];
   excludeFromBudget?: boolean;
   status?: "PAID" | "PENDING";
+  splitCount?: number | null;
   createdAt: string;
 };
 
@@ -168,6 +169,8 @@ export default function DashboardOverview({
     projects: { id: string; name: string }[];
     excludeFromBudget?: boolean;
     status?: "PAID" | "PENDING";
+    splitCount?: number | null;
+    splitData?: string | null;
   } | null>(null);
   const [isLoadingExpense, setIsLoadingExpense] = useState(false);
   const [viewingExpense, setViewingExpense] = useState<FullExpense | null>(null);
@@ -368,6 +371,7 @@ export default function DashboardOverview({
           projects?: { id: string; name: string }[];
           excludeFromBudget?: boolean;
           status?: "PAID" | "PENDING";
+          splitCount?: number | null;
           createdAt?: string;
         }) => ({
           id: e.id,
@@ -382,6 +386,7 @@ export default function DashboardOverview({
           projects: e.projects || [],
           excludeFromBudget: e.excludeFromBudget ?? false,
           status: e.status || "PAID",
+          splitCount: e.splitCount || null,
           createdAt: e.createdAt || e.date,
         })));
       }
@@ -482,6 +487,7 @@ export default function DashboardOverview({
         projects?: { id: string; name: string }[];
         excludeFromBudget?: boolean;
         status?: "PAID" | "PENDING";
+        splitCount?: number | null;
         createdAt?: string;
       }) => ({
         id: e.id,
@@ -496,6 +502,7 @@ export default function DashboardOverview({
         projects: e.projects || [],
         excludeFromBudget: e.excludeFromBudget ?? false,
         status: e.status || "PAID",
+        splitCount: e.splitCount || null,
         createdAt: e.createdAt || e.date,
       });
 
@@ -583,6 +590,12 @@ export default function DashboardOverview({
     return incomes.reduce((sum, i) => sum + i.amountEur, 0);
   }, [incomes]);
 
+  // Get effective EUR amount for an expense (user's share if split)
+  const effectiveEur = (e: Expense) => {
+    if (e.splitCount && e.splitCount > 1) return e.amountEur / e.splitCount;
+    return e.amountEur;
+  };
+
   // Calculate stats (excluding projects from living/lifestyle totals unless viewing project)
   const stats = useMemo(() => {
     const hasProjects = (e: Expense) => e.projects && e.projects.length > 0;
@@ -594,9 +607,9 @@ export default function DashboardOverview({
     );
     const projectExpenses = expenses.filter((e) => e.type === "PROJECT" || hasProjects(e));
 
-    const livingTotal = livingExpenses.reduce((sum, e) => sum + e.amountEur, 0);
-    const lifestyleTotal = lifestyleExpenses.reduce((sum, e) => sum + e.amountEur, 0);
-    const projectTotal = projectExpenses.reduce((sum, e) => sum + e.amountEur, 0);
+    const livingTotal = livingExpenses.reduce((sum, e) => sum + effectiveEur(e), 0);
+    const lifestyleTotal = lifestyleExpenses.reduce((sum, e) => sum + effectiveEur(e), 0);
+    const projectTotal = projectExpenses.reduce((sum, e) => sum + effectiveEur(e), 0);
     const totalExcludingProjects = livingTotal + lifestyleTotal;
     const grandTotal = livingTotal + lifestyleTotal + projectTotal;
 
@@ -604,18 +617,19 @@ export default function DashboardOverview({
     // PENDING (scheduled) expenses still count towards budget since they're planned spending
     const budgetTotal = expenses
       .filter((e) => !e.excludeFromBudget)
-      .reduce((sum, e) => sum + e.amountEur, 0);
+      .reduce((sum, e) => sum + effectiveEur(e), 0);
 
     return {
       total: totalExcludingProjects,
       living: livingTotal,
-      livingFixed: livingExpenses.filter((e) => e.type === "SURVIVAL_FIXED").reduce((sum, e) => sum + e.amountEur, 0),
-      livingVariable: livingExpenses.filter((e) => e.type === "SURVIVAL_VARIABLE").reduce((sum, e) => sum + e.amountEur, 0),
+      livingFixed: livingExpenses.filter((e) => e.type === "SURVIVAL_FIXED").reduce((sum, e) => sum + effectiveEur(e), 0),
+      livingVariable: livingExpenses.filter((e) => e.type === "SURVIVAL_VARIABLE").reduce((sum, e) => sum + effectiveEur(e), 0),
       lifestyle: lifestyleTotal,
       projects: projectTotal,
       grandTotal,
       budgetTotal, // For the gauge - excludes "offshore" expenses
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expenses]);
 
   const handleDelete = async (id: string) => {
@@ -681,6 +695,8 @@ export default function DashboardOverview({
           projects: exp.projects || [],
           excludeFromBudget: exp.excludeFromBudget || false,
           status: exp.status || "PAID",
+          splitCount: exp.splitCount || null,
+          splitData: exp.splitData || null,
         });
       }
     } catch (error) {
@@ -723,23 +739,30 @@ export default function DashboardOverview({
     const original = transaction.amount;
     const cur = transaction.currency || "EUR";
     const isSameCurrency = cur === "EUR";
+    const splitCount = !isIncome && (transaction as Expense).splitCount;
+    const isSplit = splitCount && splitCount > 1;
+    const splitEur = isSplit ? eur / splitCount : eur;
+    const splitOriginal = isSplit ? original / splitCount : original;
 
     if (currencyDisplayMode === "converted" || isSameCurrency) {
       if (isIncome) return { text: `+€${eur.toFixed(2)}` };
-      if (eur < 0) return { text: `(€${Math.abs(eur).toFixed(2)})` };
-      return { text: `€${eur.toFixed(2)}` };
+      if (splitEur < 0) return { text: `(€${Math.abs(splitEur).toFixed(2)})`, secondary: isSplit ? `${formatCurrency(original, cur)}` : undefined };
+      return { text: `€${splitEur.toFixed(2)}`, secondary: isSplit ? `${formatCurrency(original, cur)}` : undefined };
     }
 
     const mainText = isIncome
       ? `+${formatCurrency(original, cur)}`
-      : formatCurrency(original, cur);
+      : formatCurrency(splitOriginal, cur);
 
     if (currencyDisplayMode === "original") {
-      return { text: mainText, secondary: `≈€${Math.abs(eur).toFixed(2)}` };
+      const secondaryParts: string[] = [];
+      if (isSplit) secondaryParts.push(formatCurrency(original, cur));
+      secondaryParts.push(`≈€${Math.abs(splitEur).toFixed(2)}`);
+      return { text: mainText, secondary: secondaryParts.join(" · ") };
     }
 
     // original_only
-    return { text: mainText };
+    return { text: mainText, secondary: isSplit ? formatCurrency(original, cur) : undefined };
   };
 
   // Generate year options (last 5 years) and current date for navigation limits
@@ -1102,7 +1125,7 @@ export default function DashboardOverview({
               expenses={expenses
                 .filter((e) => !e.excludeFromBudget)
                 .map((e) => ({
-                  amountEur: e.amountEur,
+                  amountEur: effectiveEur(e),
                   categoryName: e.categoryName,
                   parentCategoryName: e.parentCategoryName,
                 }))}
@@ -1116,10 +1139,10 @@ export default function DashboardOverview({
               <BurnChart
                 currentMonthExpenses={expenses
                   .filter((e) => !e.excludeFromBudget && e.status !== "PENDING" && (!e.projects || e.projects.length === 0))
-                  .map((e) => ({ date: e.date, amountEur: e.amountEur }))}
+                  .map((e) => ({ date: e.date, amountEur: effectiveEur(e) }))}
                 previousMonthExpenses={previousMonthExpenses
                   .filter((e) => !e.excludeFromBudget && e.status !== "PENDING" && (!e.projects || e.projects.length === 0))
-                  .map((e) => ({ date: e.date, amountEur: e.amountEur }))}
+                  .map((e) => ({ date: e.date, amountEur: effectiveEur(e) }))}
                 currentMonthLabel={`${tTime(`months.${MONTH_KEYS[selectedMonth]}`)} ${selectedYear}`}
                 previousMonthLabel={`${tTime(`months.${MONTH_KEYS[selectedMonth === 0 ? 11 : selectedMonth - 1]}`)} ${selectedMonth === 0 ? selectedYear - 1 : selectedYear}`}
               />
@@ -1363,6 +1386,8 @@ export default function DashboardOverview({
                 projects: exp.projects || [],
                 excludeFromBudget: exp.excludeFromBudget || false,
                 status: exp.status || "PAID",
+                splitCount: exp.splitCount || null,
+                splitData: exp.splitData || null,
               });
             }}
             onDelete={() => {

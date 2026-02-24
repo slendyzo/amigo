@@ -6,7 +6,7 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { useModalBodyClass } from "@/hooks/use-modal-body-class";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
 import { EXPENSE_TYPE_BADGE_CLASSES } from "@/lib/expense-types";
-import { parseSplitData } from "@/lib/split-utils";
+import { parseSplitData, getUserShare } from "@/lib/split-utils";
 import type { Expense } from "@/types/models";
 
 type ExpenseDetailModalProps = {
@@ -77,6 +77,8 @@ export default function ExpenseDetailModal({
   const exchangeRate = e.exchangeRate != null ? Number(e.exchangeRate) : null;
   const isNonEur = e.currency && e.currency !== "EUR" && amountEur != null;
   const isRefund = amount < 0;
+  const userShare = getUserShare(e.splitCount, e.splitData);
+  const displayAmount = userShare !== null ? userShare : amount;
 
   const typeLabels: Record<string, string> = {
     SURVIVAL_FIXED: t("types.fixed"),
@@ -217,9 +219,16 @@ export default function ExpenseDetailModal({
               )}
             </div>
             {/* Amount */}
-            <p className={`text-3xl font-extrabold tracking-tight leading-none mb-1 md:mb-0 flex-shrink-0 ${isRefund ? "text-green-600" : "text-slate-900"}`}>
-              {formatCurrency(amount, e.currency)}
-            </p>
+            <div className="flex-shrink-0 text-right mb-1 md:mb-0">
+              <p className={`text-3xl font-extrabold tracking-tight leading-none ${isRefund ? "text-green-600" : "text-slate-900"}`}>
+                {formatCurrency(displayAmount, e.currency)}
+              </p>
+              {userShare !== null && (
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {formatCurrency(amount, e.currency)}
+                </p>
+              )}
+            </div>
           </div>
 
           {/* Forex subtitle (mobile only, below amount) */}
@@ -279,7 +288,8 @@ export default function ExpenseDetailModal({
                     {t("splitSummary", { count: e.splitCount })}
                   </p>
                   <p className="text-xs text-indigo-600">
-                    {formatCurrency(Math.abs(amount) / e.splitCount, e.currency || "EUR")}/{t("perPersonUnit")} × {e.splitCount}
+                    {t("yourShare")}: {formatCurrency(displayAmount, e.currency || "EUR")}
+                    <span className="text-indigo-400 ml-1">({formatCurrency(Math.abs(amount) / e.splitCount, e.currency || "EUR")}/{t("perPersonUnit")} × {e.splitCount})</span>
                   </p>
                 </div>
               </div>

@@ -343,6 +343,9 @@ export default function AddExpenseModal({
                 ))}
               </select>
             </div>
+            {parseAmount(amount) <= 0 && (
+              <p className="text-xs text-slate-400 mt-1">{t("splitAmountHint")}</p>
+            )}
           </div>
 
           {/* Split Expense */}

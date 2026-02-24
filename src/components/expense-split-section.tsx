@@ -31,6 +31,7 @@ export default function ExpenseSplitSection({
   onSplitPeopleChange,
 }: ExpenseSplitSectionProps) {
   const t = useTranslations("modals.split");
+  const meLabel = t("meLabel");
   const [showCustomize, setShowCustomize] = useState(false);
   const [error, setError] = useState("");
 
@@ -49,14 +50,14 @@ export default function ExpenseSplitSection({
         onSplitPeopleChange(adjusted);
       } else if (splitPeople.length !== splitCount) {
         // Count changed — reinitialize
-        onSplitPeopleChange(initializeSplit(amount, splitCount));
+        onSplitPeopleChange(initializeSplit(amount, splitCount, meLabel));
         setError("");
       } else {
         setError(t("lockedExceedsTotal"));
       }
     } else {
       // No locked amounts — equal split
-      onSplitPeopleChange(initializeSplit(amount, splitCount));
+      onSplitPeopleChange(initializeSplit(amount, splitCount, meLabel));
       setError("");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -65,7 +66,7 @@ export default function ExpenseSplitSection({
   const handleToggle = (enabled: boolean) => {
     onSplitEnabledChange(enabled);
     if (enabled && amount > 0) {
-      onSplitPeopleChange(initializeSplit(amount, splitCount));
+      onSplitPeopleChange(initializeSplit(amount, splitCount, meLabel));
       setError("");
     } else if (!enabled) {
       onSplitPeopleChange(null);
@@ -193,8 +194,19 @@ export default function ExpenseSplitSection({
 
             {/* Per-person summary */}
             <div className="text-sm text-indigo-600 font-medium">
-              {formatCurrency(perPerson, currency)}/{t("perPersonUnit")}{" "}
-              <span className="text-indigo-400">× {splitCount}</span>
+              {splitPeople && splitPeople[0] ? (
+                <>
+                  {t("yourShare")}: {formatCurrency(splitPeople[0].amount, currency)}
+                  <span className="text-indigo-400 ml-1">
+                    ({formatCurrency(perPerson, currency)}/{t("perPersonUnit")} × {splitCount})
+                  </span>
+                </>
+              ) : (
+                <>
+                  {formatCurrency(perPerson, currency)}/{t("perPersonUnit")}{" "}
+                  <span className="text-indigo-400">× {splitCount}</span>
+                </>
+              )}
             </div>
 
             {/* Customize toggle */}
@@ -227,12 +239,18 @@ export default function ExpenseSplitSection({
                 {splitPeople.map((person, i) => (
                   <div key={i} className="flex items-center gap-2">
                     {/* Label */}
-                    <input
-                      type="text"
-                      value={person.label}
-                      onChange={(e) => handleLabelChange(i, e.target.value)}
-                      className="flex-1 min-w-0 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
-                    />
+                    {i === 0 ? (
+                      <div className="flex-1 min-w-0 rounded-md border border-indigo-300 bg-indigo-50 px-2.5 py-1.5 text-xs text-indigo-700 font-medium">
+                        {person.label}
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={person.label}
+                        onChange={(e) => handleLabelChange(i, e.target.value)}
+                        className="flex-1 min-w-0 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                      />
+                    )}
                     {/* Amount */}
                     <div className="relative w-24">
                       <input

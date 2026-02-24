@@ -8,6 +8,7 @@ import EditExpenseModal from "@/components/edit-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
+import { getUserShare } from "@/lib/split-utils";
 
 type Expense = {
   id: string;
@@ -24,6 +25,7 @@ type Expense = {
   projects: { id: string; name: string }[];
   imageUrls?: string | null;
   splitCount?: number | null;
+  splitData?: string | null;
   createdAt: string;
 };
 
@@ -756,8 +758,25 @@ export default function ExpensesPage() {
                       <td className="px-4 py-3 text-sm text-slate-600">
                         {expense.category ? translateCategory(expense.category.name) : "-"}
                       </td>
-                      <td className={`px-4 py-3 text-sm font-medium text-right ${Number(expense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
-                        {formatCurrency(Number(expense.amount), expense.currency)}
+                      <td className="px-4 py-3 text-right">
+                        {(() => {
+                          const amt = Number(expense.amount);
+                          const share = getUserShare(expense.splitCount, expense.splitData);
+                          const displayAmt = share !== null ? share : amt;
+                          const colorClass = amt < 0 ? 'text-green-600' : 'text-slate-900';
+                          return (
+                            <div>
+                              <span className={`text-sm font-medium ${colorClass}`}>
+                                {formatCurrency(displayAmt, expense.currency)}
+                              </span>
+                              {share !== null && (
+                                <p className="text-[10px] text-slate-400 tabular-nums">
+                                  {formatCurrency(amt, expense.currency)}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex justify-end gap-1">
@@ -867,9 +886,24 @@ export default function ExpensesPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-2 flex-shrink-0">
-                      <p className={`font-semibold text-sm tabular-nums ${Number(expense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
-                        {formatCurrency(Number(expense.amount), expense.currency)}
-                      </p>
+                      {(() => {
+                        const amt = Number(expense.amount);
+                        const share = getUserShare(expense.splitCount, expense.splitData);
+                        const displayAmt = share !== null ? share : amt;
+                        const colorClass = amt < 0 ? 'text-green-600' : 'text-slate-900';
+                        return (
+                          <div className="text-right">
+                            <p className={`font-semibold text-sm tabular-nums ${colorClass}`}>
+                              {formatCurrency(displayAmt, expense.currency)}
+                            </p>
+                            {share !== null && (
+                              <p className="text-[10px] text-slate-400 tabular-nums">
+                                {formatCurrency(amt, expense.currency)}
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })()}
                       {!isSelectionMode && (
                         <>
                           <button

@@ -272,7 +272,8 @@
     "rateFrom": "Taxa de {date}",
     "splitSummary": "Dividido por {count}",
     "perPersonUnit": "pessoa",
-    "fixed": "fixo"
+    "fixed": "fixo",
+    "yourShare": "A tua parte"
   },
   "incomes": {
     "title": "Receitas",
@@ -942,6 +943,7 @@
     "whatDidYouBuy": "O que compraste?",
     "whatDidYouBuyPlaceholder": "ex: Supermercado, Café, Netflix",
     "howMuch": "Quanto custou?",
+    "splitAmountHint": "Insere um valor para dividir a despesa",
     "date": "Data",
     "today": "Hoje",
     "change": "(alterar)",
@@ -999,7 +1001,9 @@
       "personLabel": "Pessoa {number}",
       "lockAmount": "Fixar valor",
       "unlockAmount": "Desbloquear valor",
-      "lockedExceedsTotal": "Os valores fixados excedem o total"
+      "lockedExceedsTotal": "Os valores fixados excedem o total",
+      "meLabel": "Eu",
+      "yourShare": "A tua parte"
     }
   },
   "install": {

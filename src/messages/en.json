@@ -272,7 +272,8 @@
     "rateFrom": "Rate from {date}",
     "splitSummary": "Split {count} ways",
     "perPersonUnit": "person",
-    "fixed": "fixed"
+    "fixed": "fixed",
+    "yourShare": "Your share"
   },
   "incomes": {
     "title": "Incomes",
@@ -956,6 +957,7 @@
     "whatDidYouBuy": "What did you buy?",
     "whatDidYouBuyPlaceholder": "e.g., Groceries, Coffee, Netflix",
     "howMuch": "How much?",
+    "splitAmountHint": "Enter an amount to enable bill splitting",
     "date": "Date",
     "today": "Today",
     "change": "(change)",
@@ -1013,7 +1015,9 @@
       "personLabel": "Person {number}",
       "lockAmount": "Lock amount",
       "unlockAmount": "Unlock amount",
-      "lockedExceedsTotal": "Locked amounts exceed the total"
+      "lockedExceedsTotal": "Locked amounts exceed the total",
+      "meLabel": "Me",
+      "yourShare": "Your share"
     }
   },
   "install": {

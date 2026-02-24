@@ -18,11 +18,12 @@ export function calculateEqualSplit(total: number, count: number): number[] {
 
 /**
  * Initialize a people array from count and total with equal split.
+ * First person is always "Me" (the current user).
  */
-export function initializeSplit(total: number, count: number): SplitPerson[] {
+export function initializeSplit(total: number, count: number, meLabel: string = "Me"): SplitPerson[] {
   const amounts = calculateEqualSplit(total, count);
   return amounts.map((amt, i) => ({
-    label: `Person ${i + 1}`,
+    label: i === 0 ? meLabel : `Person ${i + 1}`,
     amount: amt,
     locked: false,
   }));
@@ -80,4 +81,19 @@ export function parseSplitData(json: string | null | undefined): SplitPerson[] |
   } catch {
     return null;
   }
+}
+
+/**
+ * Get the user's share from a split expense.
+ * The user is always the first person (index 0).
+ * Returns null if not a split expense or data is missing.
+ */
+export function getUserShare(splitCount: number | null | undefined, splitData: string | null | undefined): number | null {
+  if (!splitCount || splitCount <= 1) return null;
+  const people = parseSplitData(splitData);
+  if (people && people.length > 0) {
+    return people[0].amount;
+  }
+  // Fallback: if no splitData, assume equal split (shouldn't happen normally)
+  return null;
 }

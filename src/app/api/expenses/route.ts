@@ -76,6 +76,7 @@ export async function GET(request: Request) {
           excludeFromBudget: true,
           imageUrls: true,
           splitCount: true,
+          splitData: true,
           category: { include: { parent: true } },
           bankAccount: true,
           projects: true,
