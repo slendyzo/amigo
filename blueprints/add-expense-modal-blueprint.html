@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Add Expense Modal - Design Options</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .phone-frame {
+      width: 375px;
+      height: 780px;
+      border-radius: 2rem;
+      border: 8px solid #1e293b;
+      overflow: hidden;
+      background: rgba(0,0,0,0.4);
+      position: relative;
+      flex-shrink: 0;
+    }
+    .phone-frame .modal-content {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 1rem 1rem 0 0;
+      max-height: 92%;
+      display: flex;
+      flex-direction: column;
+    }
+    .phone-frame .modal-body { overflow-y: auto; flex: 1; }
+    .tag-pill {
+      display: inline-flex; align-items: center; padding: 6px 14px;
+      border-radius: 9999px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .tag-pill.inactive { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+    .tag-pill.active { background: #fff7ed; color: #ea580c; border: 1px solid #fed7aa; }
+    .section-label { font-size: 13px; font-weight: 600; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; }
+    .input-field {
+      width: 100%; border-radius: 10px; border: 1px solid #e2e8f0; background: white;
+      padding: 12px 16px; font-size: 15px; color: #1e293b; outline: none;
+    }
+    .input-field:focus { border-color: #0070f3; box-shadow: 0 0 0 3px rgba(0,112,243,0.1); }
+    .input-field::placeholder { color: #94a3b8; }
+    .btn-primary {
+      background: #0070f3; color: white; font-weight: 600; padding: 14px;
+      border-radius: 12px; font-size: 15px; width: 100%; border: none; cursor: pointer;
+    }
+    .btn-secondary {
+      background: white; color: #475569; font-weight: 500; padding: 14px;
+      border-radius: 12px; font-size: 15px; width: 100%; border: 1px solid #e2e8f0; cursor: pointer;
+    }
+    .chip {
+      display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px;
+      border-radius: 10px; font-size: 13px; font-weight: 500;
+      background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; cursor: pointer;
+    }
+    .chip.selected { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+    .nav-dot { width: 8px; height: 8px; border-radius: 50%; background: #cbd5e1; }
+    .nav-dot.active { background: #0070f3; width: 24px; border-radius: 4px; }
+    .toggle-track {
+      width: 44px; height: 24px; border-radius: 12px; background: #e2e8f0;
+      position: relative; cursor: pointer; transition: background 0.2s;
+    }
+    .toggle-track.on { background: #0070f3; }
+    .toggle-knob {
+      width: 20px; height: 20px; border-radius: 50%; background: white;
+      position: absolute; top: 2px; left: 2px; transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-track.on .toggle-knob { transform: translateX(20px); }
+    .amount-hero { font-size: 48px; font-weight: 700; color: #1e293b; text-align: center; letter-spacing: -1px; }
+    .amount-hero .currency { font-size: 28px; color: #94a3b8; font-weight: 500; }
+    .expandable-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 0; border-bottom: 1px solid #f1f5f9; cursor: pointer;
+    }
+    .expandable-row:last-child { border-bottom: none; }
+    .icon-circle {
+      width: 36px; height: 36px; border-radius: 10px; display: flex;
+      align-items: center; justify-content: center; font-size: 16px;
+    }
+    .step-indicator {
+      display: flex; gap: 4px; justify-content: center; padding: 12px;
+    }
+    .step-bar { height: 3px; border-radius: 2px; flex: 1; max-width: 60px; background: #e2e8f0; }
+    .step-bar.done { background: #0070f3; }
+    .step-bar.current { background: #0070f3; opacity: 0.5; }
+    .quick-action {
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+      padding: 12px 8px; border-radius: 12px; cursor: pointer; flex: 1;
+      background: #f8fafc; border: 1px solid #e2e8f0;
+    }
+    .quick-action:hover { background: #f1f5f9; }
+    .quick-action .icon { font-size: 20px; }
+    .quick-action .label { font-size: 11px; color: #64748b; font-weight: 500; }
+    .detail-row {
+      display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+      background: #f8fafc; border-radius: 12px; margin-bottom: 8px; cursor: pointer;
+    }
+    .detail-row .icon { font-size: 18px; width: 24px; text-align: center; }
+    .detail-row .label { flex: 1; font-size: 14px; color: #475569; }
+    .detail-row .value { font-size: 14px; color: #1e293b; font-weight: 500; }
+    .detail-row .chevron { color: #cbd5e1; font-size: 14px; }
+  </style>
+</head>
+<body class="p-6">
+
+  <!-- Header -->
+  <div class="max-w-5xl mx-auto mb-8">
+    <h1 class="text-3xl font-bold text-slate-900">Add Expense Modal Redesign</h1>
+    <p class="text-slate-500 mt-2">3 variants to reduce clutter and improve the mobile flow</p>
+    <div class="mt-4 p-4 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
+      <strong>Current pain points:</strong> Too many visible fields at once (name, amount, split, date, tags, type, category, bank account, photos, exclude toggle). The modal feels like a form, not a quick-add.
+    </div>
+  </div>
+
+  <!-- ==================== OPTION A ==================== -->
+  <div class="max-w-5xl mx-auto mb-16">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-slate-900">Option A: "Hero Amount" with Smart Rows</h2>
+      <p class="text-slate-500 mt-1">Amount front-and-center. All other options are tappable rows with inline values. Feels like Apple Wallet / Revolut.</p>
+    </div>
+
+    <div class="flex gap-8 items-start">
+      <!-- Phone mockup -->
+      <div class="phone-frame">
+        <div class="modal-content" style="max-height: 88%;">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+            <button class="text-sm text-slate-400 font-medium">Cancel</button>
+            <h3 class="text-base font-semibold text-slate-900">New Expense</h3>
+            <div class="w-14"></div>
+          </div>
+
+          <div class="modal-body px-5 py-4">
+            <!-- Hero amount section -->
+            <div class="text-center py-4 mb-4">
+              <input type="text" value="417.03" class="amount-hero bg-transparent text-center w-full outline-none" style="caret-color: #0070f3;" />
+              <div class="flex items-center justify-center gap-2 mt-1">
+                <span class="text-sm text-slate-400">EUR</span>
+                <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+
+            <!-- Name input -->
+            <input type="text" value="Bilhetes" placeholder="What did you buy?" class="input-field mb-4" />
+
+            <!-- Tappable rows -->
+            <div class="bg-slate-50/80 rounded-2xl px-4 divide-y divide-slate-100">
+              <!-- Date -->
+              <div class="expandable-row">
+                <div class="flex items-center gap-3">
+                  <div class="icon-circle bg-blue-100 text-blue-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  </div>
+                  <span class="text-sm text-slate-700">Date</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium text-slate-900">Today</span>
+                  <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+              </div>
+
+              <!-- Category -->
+              <div class="expandable-row">
+                <div class="flex items-center gap-3">
+                  <div class="icon-circle bg-emerald-100 text-emerald-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>
+                  </div>
+                  <span class="text-sm text-slate-700">Category</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium text-slate-900">Auto</span>
+                  <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+              </div>
+
+              <!-- Bank Account -->
+              <div class="expandable-row">
+                <div class="flex items-center gap-3">
+                  <div class="icon-circle bg-violet-100 text-violet-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+                  </div>
+                  <span class="text-sm text-slate-700">Account</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium text-slate-900">FMRM</span>
+                  <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+              </div>
+
+              <!-- Split -->
+              <div class="expandable-row">
+                <div class="flex items-center gap-3">
+                  <div class="icon-circle bg-indigo-100 text-indigo-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  </div>
+                  <span class="text-sm text-slate-700">Split</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm font-medium text-indigo-600">5 people</span>
+                  <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+              </div>
+
+              <!-- Photo -->
+              <div class="expandable-row">
+                <div class="flex items-center gap-3">
+                  <div class="icon-circle bg-amber-100 text-amber-600">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  </div>
+                  <span class="text-sm text-slate-700">Receipt</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-sm text-slate-400">None</span>
+                  <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- Tags -->
+            <div class="mt-4">
+              <div class="flex gap-2 overflow-x-auto pb-1">
+                <span class="tag-pill active">Marrakesh 2026</span>
+                <span class="tag-pill inactive">Aliexpress</span>
+                <span class="tag-pill inactive">Carro</span>
+                <span class="tag-pill inactive">+ New</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-5 py-3 border-t border-slate-100 bg-white">
+            <button class="btn-primary">Add Expense</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="flex-1 space-y-4">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <h3 class="font-semibold text-slate-900 mb-3">Key Design Decisions</h3>
+          <ul class="space-y-2 text-sm text-slate-600">
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Giant amount = the most important field gets the spotlight</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Settings-style rows keep everything visible but compact</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Each row taps to expand inline (no nested modals)</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Tags as horizontal pills at the bottom, always scannable</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Split is just another row, not a whole section</li>
+            <li class="flex gap-2"><span class="text-rose-500">&minus;</span> Requires inline expansion logic for each row</li>
+            <li class="flex gap-2"><span class="text-rose-500">&minus;</span> Expense type selector hidden (needs "more" option)</li>
+          </ul>
+        </div>
+        <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+          <h3 class="font-semibold text-blue-900 mb-2">Inspiration</h3>
+          <p class="text-sm text-blue-700">Apple Wallet transaction details, Revolut payment flow, iOS Settings rows</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== OPTION B ==================== -->
+  <div class="max-w-5xl mx-auto mb-16">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-slate-900">Option B: "Two-Zone" (Essential + More)</h2>
+      <p class="text-slate-500 mt-1">Top zone: only what you need 90% of the time. Bottom zone: everything else behind a single "More options" expand. No scrolling for quick adds.</p>
+    </div>
+
+    <div class="flex gap-8 items-start">
+      <!-- Phone mockup -->
+      <div class="phone-frame">
+        <div class="modal-content" style="max-height: 88%;">
+          <!-- Drag handle -->
+          <div class="flex justify-center pt-3 pb-1">
+            <div class="w-10 h-1 rounded-full bg-slate-300"></div>
+          </div>
+
+          <!-- Header - minimal -->
+          <div class="px-5 py-2">
+            <h3 class="text-lg font-bold text-slate-900">New Expense</h3>
+          </div>
+
+          <div class="modal-body px-5">
+            <!-- ESSENTIAL ZONE -->
+            <div class="space-y-3 pb-4">
+              <!-- Name -->
+              <input type="text" value="Bilhetes" placeholder="What did you buy?" class="input-field" style="font-size: 17px; padding: 14px 16px;" />
+
+              <!-- Amount row - combined with currency -->
+              <div class="flex gap-2">
+                <div class="flex-1 relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg font-medium">&euro;</span>
+                  <input type="text" value="417.03" class="input-field pl-10" style="font-size: 20px; font-weight: 600; padding: 14px 16px;" />
+                </div>
+                <div class="flex items-center gap-1 px-3 bg-slate-100 rounded-xl text-sm font-medium text-slate-600">
+                  EUR <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+
+              <!-- Quick action row -->
+              <div class="flex gap-2">
+                <div class="quick-action" style="background: #eff6ff; border-color: #93c5fd;">
+                  <span class="icon">&#128197;</span>
+                  <span class="label" style="color: #1d4ed8;">Today</span>
+                </div>
+                <div class="quick-action">
+                  <span class="icon">&#127991;</span>
+                  <span class="label">Auto cat.</span>
+                </div>
+                <div class="quick-action">
+                  <span class="icon">&#128179;</span>
+                  <span class="label">FMRM</span>
+                </div>
+                <div class="quick-action" style="background: #eef2ff; border-color: #a5b4fc;">
+                  <span class="icon">&#128101;</span>
+                  <span class="label" style="color: #4338ca;">&divide; 5</span>
+                </div>
+              </div>
+
+              <!-- Tags inline -->
+              <div class="flex gap-2 overflow-x-auto pb-1">
+                <span class="tag-pill active">Marrakesh 2026</span>
+                <span class="tag-pill inactive">Aliexpress</span>
+                <span class="tag-pill inactive">Carro</span>
+                <span class="tag-pill inactive">Casa</span>
+                <span class="tag-pill inactive" style="background: white;">+ New</span>
+              </div>
+            </div>
+
+            <!-- DIVIDER -->
+            <div class="border-t border-dashed border-slate-200 my-2"></div>
+
+            <!-- MORE OPTIONS ZONE (expanded state) -->
+            <div class="py-3 space-y-3">
+              <button class="flex items-center gap-2 text-sm text-slate-400 font-medium w-full">
+                <svg class="w-4 h-4 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                More options
+              </button>
+
+              <!-- Category picker -->
+              <div class="detail-row">
+                <span class="icon">&#127991;</span>
+                <span class="label">Category</span>
+                <span class="value">Viagens & Ferias</span>
+                <span class="chevron">&rsaquo;</span>
+              </div>
+
+              <!-- Bank account -->
+              <div class="detail-row">
+                <span class="icon">&#128179;</span>
+                <span class="label">Account</span>
+                <span class="value">Credito</span>
+                <span class="chevron">&rsaquo;</span>
+              </div>
+
+              <!-- Expense type -->
+              <div class="detail-row">
+                <span class="icon">&#128200;</span>
+                <span class="label">Type</span>
+                <span class="value">Lifestyle</span>
+                <span class="chevron">&rsaquo;</span>
+              </div>
+
+              <!-- Receipt -->
+              <div class="detail-row">
+                <span class="icon">&#128247;</span>
+                <span class="label">Receipt photo</span>
+                <span class="value" style="color: #94a3b8;">None</span>
+                <span class="chevron">&rsaquo;</span>
+              </div>
+
+              <!-- Exclude from budget -->
+              <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 flex items-center gap-3">
+                <input type="checkbox" class="w-4 h-4 rounded accent-amber-500" />
+                <div>
+                  <span class="text-sm font-medium text-amber-800">Project only</span>
+                  <p class="text-xs text-amber-600">Exclude from monthly budget</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-5 py-3 border-t border-slate-100 bg-white flex gap-3">
+            <button class="btn-secondary flex-1">Cancel</button>
+            <button class="btn-primary flex-1">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="flex-1 space-y-4">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <h3 class="font-semibold text-slate-900 mb-3">Key Design Decisions</h3>
+          <ul class="space-y-2 text-sm text-slate-600">
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Quick-add flow: name + amount + tap Add. Zero scrolling.</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Quick action tiles show current values at a glance (date, category, account, split)</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> "More options" hides everything you rarely change</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Tags always visible since they're used frequently</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Dashed divider visually separates "quick" from "detailed"</li>
+            <li class="flex gap-2"><span class="text-rose-500">&minus;</span> Quick action tiles need tap-to-expand sub-modals or inline pickers</li>
+            <li class="flex gap-2"><span class="text-rose-500">&minus;</span> Two "modes" may feel inconsistent</li>
+          </ul>
+        </div>
+        <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+          <h3 class="font-semibold text-blue-900 mb-2">Inspiration</h3>
+          <p class="text-sm text-blue-700">Splitwise add expense, Notion quick-create, Linear issue creator</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== OPTION C ==================== -->
+  <div class="max-w-5xl mx-auto mb-16">
+    <div class="mb-6">
+      <h2 class="text-2xl font-bold text-slate-900">Option C: "Stacked Cards"</h2>
+      <p class="text-slate-500 mt-1">Each concern is a self-contained card. Cards that aren't relevant stay collapsed to a single line. Active cards expand. Clean visual hierarchy.</p>
+    </div>
+
+    <div class="flex gap-8 items-start">
+      <!-- Phone mockup -->
+      <div class="phone-frame">
+        <div class="modal-content" style="max-height: 92%;">
+          <!-- Header -->
+          <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+            <h3 class="text-base font-semibold text-slate-900">New Expense</h3>
+            <button class="p-1">
+              <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+
+          <div class="modal-body px-4 py-4 space-y-3">
+            <!-- CARD 1: What & How Much (always expanded) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 space-y-3">
+              <input type="text" value="Bilhetes" placeholder="What did you buy?" class="w-full text-lg font-medium text-slate-900 placeholder-slate-300 outline-none bg-transparent" />
+              <div class="flex items-center gap-3">
+                <div class="flex-1 flex items-baseline gap-1">
+                  <span class="text-slate-400 text-2xl">&euro;</span>
+                  <input type="text" value="417.03" class="text-3xl font-bold text-slate-900 w-full outline-none bg-transparent" />
+                </div>
+                <div class="px-3 py-1.5 bg-slate-100 rounded-lg text-sm font-medium text-slate-600">EUR</div>
+              </div>
+              <div class="flex items-center gap-2 text-sm text-slate-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>Today</span>
+                <span class="text-slate-300">|</span>
+                <span class="text-[#0070f3]">change</span>
+              </div>
+            </div>
+
+            <!-- CARD 2: Split (expanded because active) -->
+            <div class="bg-indigo-50 rounded-2xl border border-indigo-200 p-4">
+              <div class="flex items-center justify-between mb-3">
+                <div class="flex items-center gap-2">
+                  <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <span class="text-sm font-semibold text-indigo-800">Split between 5</span>
+                </div>
+                <div class="toggle-track on">
+                  <div class="toggle-knob"></div>
+                </div>
+              </div>
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <button class="w-8 h-8 rounded-lg bg-white border border-indigo-200 text-indigo-600 font-bold text-lg flex items-center justify-center">&minus;</button>
+                  <span class="text-lg font-bold text-indigo-900 w-8 text-center">5</span>
+                  <button class="w-8 h-8 rounded-lg bg-white border border-indigo-200 text-indigo-600 font-bold text-lg flex items-center justify-center">+</button>
+                </div>
+                <div class="text-right">
+                  <p class="text-lg font-bold text-indigo-900">&euro;83.41</p>
+                  <p class="text-xs text-indigo-600">per person</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- CARD 3: Tags (collapsed but showing selection) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4">
+              <div class="flex gap-2 flex-wrap">
+                <span class="tag-pill active">Marrakesh 2026</span>
+                <span class="tag-pill inactive">Aliexpress</span>
+                <span class="tag-pill inactive">Carro</span>
+                <span class="tag-pill inactive">Karting</span>
+                <span class="tag-pill inactive">Casa</span>
+                <span class="tag-pill inactive" style="background: white;">+</span>
+              </div>
+            </div>
+
+            <!-- CARD 4: Details (collapsed - single row) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm px-4 py-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                  <span class="text-slate-400 text-sm font-medium">Details</span>
+                  <div class="flex gap-1.5">
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700">Auto cat.</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-violet-100 text-violet-700">FMRM</span>
+                    <span class="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">Lifestyle</span>
+                  </div>
+                </div>
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+              </div>
+            </div>
+
+            <!-- CARD 5: Receipt (collapsed) -->
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm px-4 py-3">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                  <span class="text-sm text-slate-400">Add receipt photo</span>
+                </div>
+                <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              </div>
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="px-4 py-3 border-t border-slate-100 bg-white flex gap-3">
+            <button class="btn-secondary flex-1">Cancel</button>
+            <button class="btn-primary flex-1">Add</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="flex-1 space-y-4">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-200">
+          <h3 class="font-semibold text-slate-900 mb-3">Key Design Decisions</h3>
+          <ul class="space-y-2 text-sm text-slate-600">
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Each card is a self-contained concern with its own visual weight</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Active features (split) get colored cards that stand out</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Collapsed "Details" card shows values as tiny badges - visible but not noisy</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Receipt is a single collapsed line until you need it</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Amount + name + date live together as one "essential" card</li>
+            <li class="flex gap-2"><span class="text-emerald-500">+</span> Tags always visible (used frequently enough)</li>
+            <li class="flex gap-2"><span class="text-rose-500">&minus;</span> Cards add vertical space with borders/padding</li>
+            <li class="flex gap-2"><span class="text-rose-500">&minus;</span> Might still need scrolling when split + details both expanded</li>
+          </ul>
+        </div>
+        <div class="bg-blue-50 rounded-2xl p-6 border border-blue-200">
+          <h3 class="font-semibold text-blue-900 mb-2">Inspiration</h3>
+          <p class="text-sm text-blue-700">Wise transfer flow, Apple Card transactions, Monzo payment details</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== COMPARISON TABLE ==================== -->
+  <div class="max-w-5xl mx-auto mb-16">
+    <h2 class="text-2xl font-bold text-slate-900 mb-6">Comparison</h2>
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-slate-50 border-b border-slate-200">
+            <th class="text-left py-3 px-5 font-semibold text-slate-700">Criteria</th>
+            <th class="text-left py-3 px-5 font-semibold text-slate-700">A: Hero Amount</th>
+            <th class="text-left py-3 px-5 font-semibold text-slate-700">B: Two-Zone</th>
+            <th class="text-left py-3 px-5 font-semibold text-slate-700">C: Stacked Cards</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          <tr>
+            <td class="py-3 px-5 font-medium text-slate-700">Quick-add speed</td>
+            <td class="py-3 px-5 text-slate-600">Medium - must scroll past rows</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">Fast</strong> - name + amount + Add, no scroll</td>
+            <td class="py-3 px-5 text-slate-600">Medium - cards take vertical space</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-5 font-medium text-slate-700">Visual clutter</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">Low</strong> - uniform rows, clean</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">Low</strong> - hidden by default</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">Low</strong> - collapsed cards</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-5 font-medium text-slate-700">Info density</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">High</strong> - all visible as row values</td>
+            <td class="py-3 px-5 text-slate-600">Medium - tiles show some, rest hidden</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">High</strong> - badge summaries in collapsed cards</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-5 font-medium text-slate-700">Split UX</td>
+            <td class="py-3 px-5 text-slate-600">Row tap &rarr; inline expand</td>
+            <td class="py-3 px-5 text-slate-600">Tile tap &rarr; sub-modal / expand</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">Dedicated card</strong> - best for customization</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-5 font-medium text-slate-700">Implementation effort</td>
+            <td class="py-3 px-5 text-slate-600">Medium - inline expand per row</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">Low</strong> - mostly re-ordering existing fields</td>
+            <td class="py-3 px-5 text-slate-600">Medium - card components + collapse logic</td>
+          </tr>
+          <tr>
+            <td class="py-3 px-5 font-medium text-slate-700">Mobile friendliness</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">Excellent</strong> - iOS settings feel</td>
+            <td class="py-3 px-5 text-slate-600"><strong class="text-emerald-600">Excellent</strong> - minimal scrolling</td>
+            <td class="py-3 px-5 text-slate-600">Good - cards may cause scroll</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</body>
+</html>

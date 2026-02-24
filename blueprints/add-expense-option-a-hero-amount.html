@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option A: Hero Amount - Comprehensive Blueprint</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { background: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+
+    .phone-frame {
+      width: 375px; height: 780px; border-radius: 2rem; border: 8px solid #1e293b;
+      overflow: hidden; background: rgba(0,0,0,0.4); position: relative; flex-shrink: 0;
+    }
+    .phone-frame .modal-wrap {
+      position: absolute; bottom: 0; left: 0; right: 0;
+      background: white; border-radius: 1rem 1rem 0 0;
+      max-height: 92%; display: flex; flex-direction: column;
+    }
+    .phone-frame .modal-body { overflow-y: auto; flex: 1; }
+
+    .desktop-frame {
+      width: 560px; height: 660px; border-radius: 1rem; border: 1px solid #e2e8f0;
+      background: rgba(0,0,0,0.4); overflow: hidden; flex-shrink: 0;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+    }
+    .desktop-frame .modal-wrap {
+      background: white; border-radius: 1rem; max-height: 600px;
+      display: flex; flex-direction: column; margin: 30px auto;
+      width: 440px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .desktop-frame .modal-body { overflow-y: auto; flex: 1; }
+
+    .amount-hero {
+      font-size: 48px; font-weight: 700; color: #1e293b; text-align: center;
+      letter-spacing: -1px; background: transparent; border: none; outline: none; width: 100%;
+    }
+    .amount-hero::placeholder { color: #cbd5e1; }
+
+    .row-group {
+      background: #f8fafc; border-radius: 1rem; overflow: hidden;
+    }
+    .settings-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; border-bottom: 1px solid #f1f5f9; cursor: pointer;
+    }
+    .settings-row:last-child { border-bottom: none; }
+    .settings-row:hover { background: #f1f5f9; }
+    .settings-row .left { display: flex; align-items: center; gap: 12px; }
+    .settings-row .right { display: flex; align-items: center; gap: 8px; }
+    .settings-row .icon-box {
+      width: 32px; height: 32px; border-radius: 8px; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .settings-row .label { font-size: 14px; color: #334155; }
+    .settings-row .value { font-size: 14px; color: #1e293b; font-weight: 500; }
+    .settings-row .value.muted { color: #94a3b8; font-weight: 400; }
+    .settings-row .chevron { color: #cbd5e1; }
+
+    .input-field {
+      width: 100%; border-radius: 10px; border: 1px solid #e2e8f0; background: white;
+      padding: 12px 16px; font-size: 15px; color: #1e293b; outline: none;
+    }
+    .input-field:focus { border-color: #0070f3; box-shadow: 0 0 0 3px rgba(0,112,243,0.1); }
+
+    .tag-pill {
+      display: inline-flex; align-items: center; padding: 6px 14px;
+      border-radius: 9999px; font-size: 13px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+    }
+    .tag-pill.off { background: #fef3c7; color: #b45309; border: 1px solid #fde68a; }
+    .tag-pill.on { background: #f59e0b; color: white; border: 1px solid #f59e0b; }
+    .tag-pill.none-off { background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0; }
+    .tag-pill.none-on { background: #1e293b; color: white; border: 1px solid #1e293b; }
+    .tag-pill.new { background: #f8fafc; color: #94a3b8; border: 1px solid #e2e8f0; }
+
+    .badge {
+      display: inline-flex; align-items: center; padding: 2px 8px;
+      border-radius: 6px; font-size: 11px; font-weight: 500;
+    }
+
+    .btn-primary {
+      background: #0070f3; color: white; font-weight: 600; padding: 14px;
+      border-radius: 12px; font-size: 15px; width: 100%; border: none; cursor: pointer;
+    }
+    .btn-secondary {
+      background: white; color: #475569; font-weight: 500; padding: 14px;
+      border-radius: 12px; font-size: 15px; width: 100%; border: 1px solid #e2e8f0; cursor: pointer;
+    }
+
+    .toggle-track {
+      width: 44px; height: 24px; border-radius: 12px; position: relative;
+      cursor: pointer; transition: background 0.2s; flex-shrink: 0;
+    }
+    .toggle-track.off { background: #e2e8f0; }
+    .toggle-track.on { background: #6366f1; }
+    .toggle-knob {
+      width: 20px; height: 20px; border-radius: 50%; background: white;
+      position: absolute; top: 2px; transition: transform 0.2s;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    }
+    .toggle-track.off .toggle-knob { left: 2px; }
+    .toggle-track.on .toggle-knob { left: 22px; }
+
+    .section-title { font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 4px; }
+    .section-sub { font-size: 14px; color: #64748b; margin-bottom: 24px; }
+
+    /* Inline expand panels */
+    .inline-expand {
+      background: white; border-top: 1px solid #e2e8f0;
+      padding: 12px 16px;
+    }
+  </style>
+</head>
+<body class="p-8">
+
+  <div class="max-w-[1400px] mx-auto">
+    <h1 class="text-3xl font-bold text-slate-900 mb-1">Option A: Hero Amount with Smart Rows</h1>
+    <p class="text-slate-500 mb-8">Comprehensive blueprint - iOS Settings-style rows, Revolut/Apple Wallet inspired</p>
+
+    <!-- ============================================ -->
+    <!-- SECTION 1: MOBILE - EMPTY STATE             -->
+    <!-- ============================================ -->
+    <div class="mb-16">
+      <div class="section-title">1. Mobile - Empty State</div>
+      <div class="section-sub">Fresh modal. Amount is the hero. Name input below. All rows show defaults.</div>
+
+      <div class="flex gap-8 items-start">
+        <div class="phone-frame">
+          <div class="modal-wrap" style="max-height: 88%;">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+              <button class="text-sm text-slate-400 font-medium">Cancel</button>
+              <h3 class="text-base font-semibold text-slate-900">New Expense</h3>
+              <div class="w-14"></div>
+            </div>
+
+            <div class="modal-body">
+              <!-- Hero amount -->
+              <div class="text-center pt-6 pb-2 px-5">
+                <input type="text" placeholder="0.00" class="amount-hero" />
+                <div class="flex items-center justify-center gap-1.5 mt-1 cursor-pointer">
+                  <span class="text-sm text-slate-400 font-medium">EUR</span>
+                  <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+
+              <!-- Name input -->
+              <div class="px-5 py-3">
+                <input type="text" placeholder="What did you buy?" class="input-field" />
+              </div>
+
+              <!-- Settings rows -->
+              <div class="px-4 pb-3">
+                <div class="row-group">
+                  <!-- Date -->
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-blue-100"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                      <span class="label">Date</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">Today</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+
+                  <!-- Category -->
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-emerald-100"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg></div>
+                      <span class="label">Category</span>
+                    </div>
+                    <div class="right">
+                      <span class="value muted">Auto</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+
+                  <!-- Account -->
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-violet-100"><svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+                      <span class="label">Account</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">FMRM</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+
+                  <!-- Split -->
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-indigo-100"><svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label">Split</span>
+                    </div>
+                    <div class="right">
+                      <span class="value muted">Off</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+
+                  <!-- Type -->
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-cyan-100"><svg class="w-4 h-4 text-cyan-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg></div>
+                      <span class="label">Type</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">Lifestyle</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+
+                  <!-- Receipt -->
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-amber-100"><svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label">Receipt</span>
+                    </div>
+                    <div class="right">
+                      <span class="value muted">None</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Tags -->
+              <div class="px-5 pb-3">
+                <div class="flex gap-2 overflow-x-auto pb-1">
+                  <span class="tag-pill none-on">No tags</span>
+                  <span class="tag-pill off">Marrakesh 2026</span>
+                  <span class="tag-pill off">Aliexpress</span>
+                  <span class="tag-pill off">Carro</span>
+                  <span class="tag-pill off">Karting</span>
+                  <span class="tag-pill off">Casa</span>
+                  <span class="tag-pill new">+ New</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="px-5 py-3 border-t border-slate-100">
+              <button class="btn-primary" style="opacity: 0.5;">Add Expense</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1 space-y-3">
+          <div class="bg-white rounded-xl p-5 border border-slate-200">
+            <h4 class="font-semibold text-sm text-slate-800 mb-2">Design principles</h4>
+            <ul class="text-sm text-slate-600 space-y-1">
+              <li>- <strong>Amount is king</strong> - 48px hero input at the top</li>
+              <li>- Currency below amount (tap to change)</li>
+              <li>- Name input clean, single field</li>
+              <li>- All options in iOS Settings-style grouped rows</li>
+              <li>- Each row shows current value on the right</li>
+              <li>- Chevron indicates tappable/expandable</li>
+              <li>- Tags as horizontal pills below rows (always visible)</li>
+              <li>- Single CTA button at bottom</li>
+            </ul>
+          </div>
+          <div class="bg-blue-50 rounded-xl p-5 border border-blue-200">
+            <h4 class="font-semibold text-sm text-blue-800 mb-1">Layout</h4>
+            <p class="text-sm text-blue-700">Header (Cancel/Title) &rarr; Hero Amount &rarr; Name &rarr; Grouped Rows &rarr; Tags &rarr; CTA</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SECTION 2: MOBILE - FILLED COMMON CASE      -->
+    <!-- ============================================ -->
+    <div class="mb-16">
+      <div class="section-title">2. Mobile - Filled (common quick add)</div>
+      <div class="section-sub">Amount + name typed, a tag selected, all rows untouched. Ready to submit.</div>
+
+      <div class="flex gap-8 items-start">
+        <div class="phone-frame">
+          <div class="modal-wrap" style="max-height: 88%;">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+              <button class="text-sm text-slate-400 font-medium">Cancel</button>
+              <h3 class="text-base font-semibold text-slate-900">New Expense</h3>
+              <div class="w-14"></div>
+            </div>
+
+            <div class="modal-body">
+              <div class="text-center pt-6 pb-2 px-5">
+                <input type="text" value="47.82" class="amount-hero" />
+                <div class="flex items-center justify-center gap-1.5 mt-1">
+                  <span class="text-sm text-slate-400 font-medium">EUR</span>
+                  <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+
+              <div class="px-5 py-3">
+                <input type="text" value="Supermercado" class="input-field" />
+              </div>
+
+              <div class="px-4 pb-3">
+                <div class="row-group">
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-blue-100"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                      <span class="label">Date</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">Today</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-emerald-100"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg></div>
+                      <span class="label">Category</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">Groceries</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-violet-100"><svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+                      <span class="label">Account</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">FMRM</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-indigo-100"><svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label">Split</span>
+                    </div>
+                    <div class="right">
+                      <span class="value muted">Off</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-amber-100"><svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label">Receipt</span>
+                    </div>
+                    <div class="right">
+                      <span class="value muted">None</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-5 pb-3">
+                <div class="flex gap-2 overflow-x-auto pb-1">
+                  <span class="tag-pill none-off">No tags</span>
+                  <span class="tag-pill on">Marrakesh 2026</span>
+                  <span class="tag-pill off">Aliexpress</span>
+                  <span class="tag-pill off">Carro</span>
+                  <span class="tag-pill new">+ New</span>
+                </div>
+                <p class="text-xs text-amber-600 mt-2">Tagged to 1 project(s)</p>
+              </div>
+            </div>
+
+            <div class="px-5 py-3 border-t border-slate-100">
+              <button class="btn-primary">Add Expense</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1 space-y-3">
+          <div class="bg-white rounded-xl p-5 border border-slate-200">
+            <h4 class="font-semibold text-sm text-slate-800 mb-2">What changed</h4>
+            <ul class="text-sm text-slate-600 space-y-1">
+              <li>- Amount filled: "47.82" in hero</li>
+              <li>- Name: "Supermercado"</li>
+              <li>- Category auto-detected: "Groceries"</li>
+              <li>- Tag selected: "Marrakesh 2026"</li>
+              <li>- Type row removed (simplified - type rarely changed)</li>
+              <li>- Button is now active</li>
+              <li>- <strong>User can tap Add now</strong> - zero scrolling</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SECTION 3: MOBILE - DATE ROW EXPANDED       -->
+    <!-- ============================================ -->
+    <div class="mb-16">
+      <div class="section-title">3. Mobile - Date Row Expanded (inline)</div>
+      <div class="section-sub">User tapped the Date row. A date picker expands inline within the row group.</div>
+
+      <div class="flex gap-8 items-start">
+        <div class="phone-frame">
+          <div class="modal-wrap" style="max-height: 88%;">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+              <button class="text-sm text-slate-400 font-medium">Cancel</button>
+              <h3 class="text-base font-semibold text-slate-900">New Expense</h3>
+              <div class="w-14"></div>
+            </div>
+
+            <div class="modal-body">
+              <div class="text-center pt-4 pb-2 px-5">
+                <input type="text" value="189.00" class="amount-hero" />
+                <div class="flex items-center justify-center gap-1.5 mt-1">
+                  <span class="text-sm text-slate-400 font-medium">EUR</span>
+                </div>
+              </div>
+              <div class="px-5 py-3">
+                <input type="text" value="Car Insurance" class="input-field" />
+              </div>
+
+              <div class="px-4 pb-3">
+                <div class="row-group">
+                  <!-- Date row EXPANDED -->
+                  <div>
+                    <div class="settings-row" style="background: #eff6ff; border-bottom: none;">
+                      <div class="left">
+                        <div class="icon-box bg-blue-100"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                        <span class="label" style="color: #1e40af; font-weight: 600;">Date</span>
+                      </div>
+                      <div class="right">
+                        <span class="value" style="color: #1e40af;">15 Mar 2026</span>
+                        <svg class="w-4 h-4 text-blue-400 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                      </div>
+                    </div>
+                    <!-- Inline date picker -->
+                    <div class="px-4 pb-3 pt-0" style="background: #eff6ff;">
+                      <input type="date" value="2026-03-15" class="input-field text-sm" style="border-color: #93c5fd;" />
+                      <!-- Schedule toggle -->
+                      <div class="mt-3 p-3 rounded-xl bg-blue-100/70 border border-blue-200">
+                        <label class="flex items-center gap-3 cursor-pointer">
+                          <input type="checkbox" checked class="w-4 h-4 rounded accent-blue-500" />
+                          <div>
+                            <span class="text-sm font-medium text-blue-800">Schedule for later</span>
+                            <p class="text-xs text-blue-600 mt-0.5">Will appear in March 2026 as pending</p>
+                          </div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Other rows -->
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-emerald-100"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg></div>
+                      <span class="label">Category</span>
+                    </div>
+                    <div class="right">
+                      <span class="value muted">Auto</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-violet-100"><svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+                      <span class="label">Account</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">FMRM</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-indigo-100"><svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label">Split</span>
+                    </div>
+                    <div class="right">
+                      <span class="value muted">Off</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="px-5 py-3 border-t border-slate-100">
+              <button class="btn-primary">Schedule</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1 space-y-3">
+          <div class="bg-white rounded-xl p-5 border border-slate-200">
+            <h4 class="font-semibold text-sm text-slate-800 mb-2">Inline expansion pattern</h4>
+            <ul class="text-sm text-slate-600 space-y-1">
+              <li>- Row gets <strong>blue background</strong> when expanded</li>
+              <li>- Chevron rotates 90&deg; to indicate open</li>
+              <li>- Date picker + schedule toggle appear inline</li>
+              <li>- Other rows shift down naturally</li>
+              <li>- CTA changes to "Schedule" for future dates</li>
+              <li>- <strong>Same pattern for Category</strong> (shows select inline)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SECTION 4: MOBILE - SPLIT ROW EXPANDED      -->
+    <!-- ============================================ -->
+    <div class="mb-16">
+      <div class="section-title">4. Mobile - Split Row Expanded</div>
+      <div class="section-sub">User tapped the Split row. Toggle + stepper + per-person expand inline.</div>
+
+      <div class="flex gap-8 items-start">
+        <div class="phone-frame">
+          <div class="modal-wrap" style="max-height: 92%;">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+              <button class="text-sm text-slate-400 font-medium">Cancel</button>
+              <h3 class="text-base font-semibold text-slate-900">New Expense</h3>
+              <div class="w-14"></div>
+            </div>
+
+            <div class="modal-body">
+              <div class="text-center pt-4 pb-1 px-5">
+                <input type="text" value="417.03" class="amount-hero" style="font-size: 40px;" />
+                <div class="flex items-center justify-center gap-1.5 mt-1">
+                  <span class="text-sm text-slate-400 font-medium">EUR</span>
+                </div>
+              </div>
+              <div class="px-5 py-2">
+                <input type="text" value="Bilhetes" class="input-field" />
+              </div>
+
+              <div class="px-4 pb-3">
+                <div class="row-group">
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-blue-100"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                      <span class="label">Date</span>
+                    </div>
+                    <div class="right"><span class="value">Today</span></div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-emerald-100"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg></div>
+                      <span class="label">Category</span>
+                    </div>
+                    <div class="right"><span class="value">Viagens</span></div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-violet-100"><svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+                      <span class="label">Account</span>
+                    </div>
+                    <div class="right"><span class="value">Credito</span></div>
+                  </div>
+
+                  <!-- SPLIT ROW EXPANDED -->
+                  <div>
+                    <div class="settings-row" style="background: #eef2ff; border-bottom: none;">
+                      <div class="left">
+                        <div class="icon-box bg-indigo-200"><svg class="w-4 h-4 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                        <span class="label" style="color: #312e81; font-weight: 600;">Split</span>
+                      </div>
+                      <div class="right">
+                        <div class="toggle-track on"><div class="toggle-knob"></div></div>
+                      </div>
+                    </div>
+
+                    <!-- Inline split content -->
+                    <div class="px-4 pb-4 pt-1 space-y-3" style="background: #eef2ff;">
+                      <!-- Stepper -->
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm text-indigo-700">People</span>
+                        <div class="flex items-center gap-2">
+                          <button class="w-7 h-7 rounded-lg bg-white border border-indigo-200 text-indigo-600 font-bold text-sm flex items-center justify-center">&minus;</button>
+                          <span class="text-base font-bold text-indigo-900 w-6 text-center">5</span>
+                          <button class="w-7 h-7 rounded-lg bg-white border border-indigo-200 text-indigo-600 font-bold text-sm flex items-center justify-center">+</button>
+                        </div>
+                      </div>
+
+                      <!-- Summary -->
+                      <div class="text-sm text-indigo-600">
+                        Your share: <strong>&euro;83.41</strong>
+                        <span class="text-indigo-400">(&euro;83.41/person &times; 5)</span>
+                      </div>
+
+                      <!-- Customize link -->
+                      <button class="text-xs text-indigo-500 flex items-center gap-1">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                        Customize per-person amounts
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-amber-100"><svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label">Receipt</span>
+                    </div>
+                    <div class="right"><span class="value muted">None</span></div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-5 pb-3">
+                <div class="flex gap-2 overflow-x-auto pb-1">
+                  <span class="tag-pill on">Marrakesh 2026</span>
+                  <span class="tag-pill off">Carro</span>
+                  <span class="tag-pill off">Casa</span>
+                  <span class="tag-pill new">+ New</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="px-5 py-3 border-t border-slate-100">
+              <button class="btn-primary">Add Expense</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1 space-y-3">
+          <div class="bg-white rounded-xl p-5 border border-slate-200">
+            <h4 class="font-semibold text-sm text-slate-800 mb-2">Split inline expansion</h4>
+            <ul class="text-sm text-slate-600 space-y-1">
+              <li>- Row background turns indigo when expanded</li>
+              <li>- Toggle replaces the chevron + "Off" text</li>
+              <li>- Stepper + summary + customize link appear inline</li>
+              <li>- Stays within the row group (no card break)</li>
+              <li>- "Customize" link opens per-person rows (same content as current)</li>
+              <li>- Chevrons hidden on non-expanded rows (cleaner)</li>
+            </ul>
+          </div>
+          <div class="bg-indigo-50 rounded-xl p-5 border border-indigo-200">
+            <h4 class="font-semibold text-sm text-indigo-800 mb-1">Collapsed state (when active)</h4>
+            <p class="text-sm text-indigo-700">When collapsed but split is ON, the row shows: Split &rarr; <strong>&divide; 5 &middot; &euro;83.41/person</strong> in indigo text</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SECTION 5: MOBILE - CATEGORY EXPANDED       -->
+    <!-- ============================================ -->
+    <div class="mb-16">
+      <div class="section-title">5. Mobile - Category Row Expanded</div>
+      <div class="section-sub">User tapped Category row. Inline select dropdown with grouped options.</div>
+
+      <div class="flex gap-8 items-start">
+        <div class="phone-frame">
+          <div class="modal-wrap" style="max-height: 75%;">
+            <div class="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+              <button class="text-sm text-slate-400 font-medium">Cancel</button>
+              <h3 class="text-base font-semibold text-slate-900">New Expense</h3>
+              <div class="w-14"></div>
+            </div>
+
+            <div class="modal-body">
+              <div class="text-center pt-4 pb-1 px-5">
+                <input type="text" value="47.82" class="amount-hero" style="font-size: 40px;" />
+              </div>
+              <div class="px-5 py-2">
+                <input type="text" value="Supermercado" class="input-field" />
+              </div>
+
+              <div class="px-4 pb-3">
+                <div class="row-group">
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-blue-100"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                      <span class="label">Date</span>
+                    </div>
+                    <div class="right"><span class="value">Today</span></div>
+                  </div>
+
+                  <!-- CATEGORY ROW EXPANDED -->
+                  <div>
+                    <div class="settings-row" style="background: #ecfdf5; border-bottom: none;">
+                      <div class="left">
+                        <div class="icon-box bg-emerald-200"><svg class="w-4 h-4 text-emerald-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg></div>
+                        <span class="label" style="color: #065f46; font-weight: 600;">Category</span>
+                      </div>
+                      <div class="right">
+                        <svg class="w-4 h-4 text-emerald-400 rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                      </div>
+                    </div>
+                    <div class="px-4 pb-3 pt-0" style="background: #ecfdf5;">
+                      <select class="input-field text-sm" style="border-color: #6ee7b7;">
+                        <option>Auto</option>
+                        <optgroup label="Essentials">
+                          <option>Groceries</option>
+                          <option>Rent</option>
+                          <option>Utilities</option>
+                        </optgroup>
+                        <optgroup label="Lifestyle">
+                          <option>Dining Out</option>
+                          <option selected>Viagens & Ferias</option>
+                          <option>Entertainment</option>
+                        </optgroup>
+                        <optgroup label="Transport">
+                          <option>Fuel</option>
+                          <option>Public Transport</option>
+                        </optgroup>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-violet-100"><svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+                      <span class="label">Account</span>
+                    </div>
+                    <div class="right"><span class="value">FMRM</span></div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-indigo-100"><svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label">Split</span>
+                    </div>
+                    <div class="right"><span class="value muted">Off</span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="px-5 py-3 border-t border-slate-100">
+              <button class="btn-primary">Add Expense</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1">
+          <div class="bg-white rounded-xl p-5 border border-slate-200">
+            <h4 class="font-semibold text-sm text-slate-800 mb-2">Pattern</h4>
+            <ul class="text-sm text-slate-600 space-y-1">
+              <li>- Same inline expand pattern with <strong>emerald</strong> tint</li>
+              <li>- Native select element (fast, accessible, OS-native picker on mobile)</li>
+              <li>- Each row uses its own accent color when expanded</li>
+              <li>- Account row would expand the same way (violet tint)</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <!-- SECTION 6: DESKTOP VIEW                     -->
+    <!-- ============================================ -->
+    <div class="mb-16">
+      <div class="section-title">6. Desktop - Centered Modal</div>
+      <div class="section-sub">On desktop, modal is centered. Same structure, more breathing room, hover states.</div>
+
+      <div class="flex gap-8 items-start">
+        <div class="desktop-frame" style="width: 560px; height: 680px;">
+          <div class="modal-wrap" style="max-height: 620px; width: 460px;">
+            <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+              <h3 class="text-lg font-semibold text-slate-900">New Expense</h3>
+              <button class="p-1"><svg class="w-5 h-5 text-slate-400 hover:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg></button>
+            </div>
+
+            <div class="modal-body">
+              <div class="text-center pt-6 pb-2 px-6">
+                <input type="text" value="417.03" class="amount-hero" style="font-size: 44px;" />
+                <div class="flex items-center justify-center gap-1.5 mt-1 cursor-pointer">
+                  <span class="text-sm text-slate-400 font-medium">EUR</span>
+                  <svg class="w-3 h-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+
+              <div class="px-6 py-3">
+                <input type="text" value="Bilhetes" class="input-field" />
+              </div>
+
+              <div class="px-5 pb-3">
+                <div class="row-group">
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-blue-100"><svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>
+                      <span class="label">Date</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">Today</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-emerald-100"><svg class="w-4 h-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg></div>
+                      <span class="label">Category</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">Viagens & Ferias</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-violet-100"><svg class="w-4 h-4 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg></div>
+                      <span class="label">Account</span>
+                    </div>
+                    <div class="right">
+                      <span class="value">Credito</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+
+                  <!-- Split row showing active summary -->
+                  <div class="settings-row" style="background: #eef2ff;">
+                    <div class="left">
+                      <div class="icon-box bg-indigo-200"><svg class="w-4 h-4 text-indigo-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label" style="color: #312e81; font-weight: 600;">Split</span>
+                    </div>
+                    <div class="right">
+                      <span class="value" style="color: #4338ca;">&divide; 5 &middot; &euro;83.41/person</span>
+                      <svg class="w-4 h-4 text-indigo-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+
+                  <div class="settings-row">
+                    <div class="left">
+                      <div class="icon-box bg-amber-100"><svg class="w-4 h-4 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg></div>
+                      <span class="label">Receipt</span>
+                    </div>
+                    <div class="right">
+                      <span class="value muted">None</span>
+                      <svg class="w-4 h-4 chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-6 pb-3">
+                <div class="flex gap-2 flex-wrap">
+                  <span class="tag-pill none-off">No tags</span>
+                  <span class="tag-pill on">Marrakesh 2026</span>
+                  <span class="tag-pill off">Aliexpress</span>
+                  <span class="tag-pill off">Carro</span>
+                  <span class="tag-pill off">Karting</span>
+                  <span class="tag-pill off">Casa</span>
+                  <span class="tag-pill new">+ New</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-slate-100 flex gap-3" style="border-radius: 0 0 1rem 1rem;">
+              <button class="btn-secondary flex-1" style="padding: 12px;">Cancel</button>
+              <button class="btn-primary flex-1" style="padding: 12px;">Add Expense</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex-1 space-y-3">
+          <div class="bg-white rounded-xl p-5 border border-slate-200">
+            <h4 class="font-semibold text-sm text-slate-800 mb-2">Desktop specifics</h4>
+            <ul class="text-sm text-slate-600 space-y-1">
+              <li>- Centered modal with shadow (not bottom sheet)</li>
+              <li>- X close button in header</li>
+              <li>- Hover states on rows (bg-slate-50)</li>
+              <li>- Split row shows <strong>collapsed active state</strong> with indigo tint + summary text</li>
+              <li>- Tags wrap instead of horizontal scroll</li>
+              <li>- Cancel + Add buttons in footer</li>
+              <li>- Identical structure to mobile, just more padding</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>
