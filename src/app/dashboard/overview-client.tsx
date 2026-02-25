@@ -7,6 +7,7 @@ import { useSwipe } from "@/hooks/use-swipe";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import type { Expense as FullExpense } from "@/types/models";
+import { getUserShare } from "@/lib/split-utils";
 
 // Lazy load heavy modals and charts to reduce initial bundle size
 const AddTypeSelector = lazy(() => import("@/components/add-type-selector"));
@@ -49,6 +50,7 @@ type Expense = {
   excludeFromBudget?: boolean;
   status?: "PAID" | "PENDING";
   splitCount?: number | null;
+  splitData?: string | null;
   createdAt: string;
 };
 
@@ -390,6 +392,7 @@ export default function DashboardOverview({
           excludeFromBudget?: boolean;
           status?: "PAID" | "PENDING";
           splitCount?: number | null;
+          splitData?: string | null;
           createdAt?: string;
         }) => ({
           id: e.id,
@@ -405,6 +408,7 @@ export default function DashboardOverview({
           excludeFromBudget: e.excludeFromBudget ?? false,
           status: e.status || "PAID",
           splitCount: e.splitCount || null,
+          splitData: e.splitData || null,
           createdAt: e.createdAt || e.date,
         })));
       }
@@ -506,6 +510,7 @@ export default function DashboardOverview({
         excludeFromBudget?: boolean;
         status?: "PAID" | "PENDING";
         splitCount?: number | null;
+        splitData?: string | null;
         createdAt?: string;
       }) => ({
         id: e.id,
@@ -521,6 +526,7 @@ export default function DashboardOverview({
         excludeFromBudget: e.excludeFromBudget ?? false,
         status: e.status || "PAID",
         splitCount: e.splitCount || null,
+        splitData: e.splitData || null,
         createdAt: e.createdAt || e.date,
       });
 
@@ -610,7 +616,14 @@ export default function DashboardOverview({
 
   // Get effective EUR amount for an expense (user's share if split)
   const effectiveEur = (e: Expense) => {
-    if (e.splitCount && e.splitCount > 1) return e.amountEur / e.splitCount;
+    if (e.splitCount && e.splitCount > 1) {
+      const share = getUserShare(e.splitCount, e.splitData);
+      if (share !== null && e.amount !== 0) {
+        // Proportional EUR: user's share in original currency → scale EUR by same ratio
+        return e.amountEur * (share / e.amount);
+      }
+      return e.amountEur / e.splitCount;
+    }
     return e.amountEur;
   };
 
@@ -798,10 +811,12 @@ export default function DashboardOverview({
     const original = transaction.amount;
     const cur = transaction.currency || "EUR";
     const isSameCurrency = cur === "EUR";
-    const splitCount = !isIncome && (transaction as Expense).splitCount;
+    const expense = !isIncome ? (transaction as Expense) : null;
+    const splitCount = expense?.splitCount;
     const isSplit = splitCount && splitCount > 1;
-    const splitEur = isSplit ? eur / splitCount : eur;
-    const splitOriginal = isSplit ? original / splitCount : original;
+    const share = isSplit ? getUserShare(splitCount, expense?.splitData) : null;
+    const splitOriginal = share !== null ? share : (isSplit ? original / splitCount : original);
+    const splitEur = share !== null && original !== 0 ? eur * (share / original) : (isSplit ? eur / splitCount : eur);
 
     if (currencyDisplayMode === "converted" || isSameCurrency) {
       if (isIncome) return { text: `+€${eur.toFixed(2)}` };
