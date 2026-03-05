@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getActiveWorkspace } from "@/lib/workspace";
-import { normalizeKeyword, levenshteinDistance, maxFuzzyDistance } from "@/lib/fuzzy";
+import { normalizeKeyword, levenshteinDistance, maxFuzzyDistance, findContainedKeyword } from "@/lib/fuzzy";
 
 // POST - Auto-categorize uncategorized expenses using keyword mappings
 export async function POST() {
@@ -54,6 +54,17 @@ export async function POST() {
       if (exactMatch?.categoryId) {
         updates.push({ id: expense.id, categoryId: exactMatch.categoryId });
         continue;
+      }
+
+      // Substring match: expense name contains a known keyword
+      const mappingKeywords = mappings.map((m) => m.keyword);
+      const containedKw = findContainedKeyword(normalized, mappingKeywords);
+      if (containedKw) {
+        const containsMatch = mappings.find((m) => m.keyword === containedKw);
+        if (containsMatch?.categoryId) {
+          updates.push({ id: expense.id, categoryId: containsMatch.categoryId });
+          continue;
+        }
       }
 
       // Fuzzy match (only high-confidence: distance <= 1)

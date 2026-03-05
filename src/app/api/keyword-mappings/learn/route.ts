@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { normalizeKeyword, levenshteinDistance, maxFuzzyDistance } from "@/lib/fuzzy";
+import { normalizeKeyword, levenshteinDistance, maxFuzzyDistance, findContainedKeyword } from "@/lib/fuzzy";
 
 const LEARNING_THRESHOLD = 3; // Number of times before auto-creating mapping
 
@@ -226,14 +226,34 @@ export async function GET(request: Request) {
       });
     }
 
+    // Try substring matching: does the expense name contain a known keyword?
+    // e.g., "burger king lisboa" contains "burger king" mapping
+    const allMappings = await prisma.keywordMapping.findMany({
+      where: { workspaceId: workspace.id },
+      include: { category: true },
+    });
+
+    const containedKw = findContainedKeyword(
+      keyword,
+      allMappings.map((m) => m.keyword)
+    );
+    if (containedKw) {
+      const containsMatch = allMappings.find((m) => m.keyword === containedKw);
+      if (containsMatch?.category && containsMatch.category.name !== "Uncategorized") {
+        return NextResponse.json({
+          suggestion: {
+            categoryId: containsMatch.categoryId,
+            categoryName: containsMatch.category.name,
+            confidence: "high",
+            source: "mapping",
+          },
+        });
+      }
+    }
+
     // Try fuzzy matching against existing keyword mappings (handles typos like "aleixpress" ≈ "aliexpress")
     const maxDist = maxFuzzyDistance(keyword);
     if (maxDist > 0) {
-      const allMappings = await prisma.keywordMapping.findMany({
-        where: { workspaceId: workspace.id },
-        include: { category: true },
-      });
-
       let bestMatch: (typeof allMappings)[0] | null = null;
       let bestDistance = Infinity;
 
@@ -260,13 +280,18 @@ export async function GET(request: Request) {
     // No mapping exists - check historical categorizations using normalized name matching.
     // This groups expenses by categoryId where the normalized name matches,
     // so "gás", "gas", "Gás" and "mcdonald's", "mcdonalds" all count together.
+    // Also try substring matching: if "burger king lisboa" has no exact history,
+    // check if there's history for expenses whose names contain the same words.
     const categorizations = await prisma.$queryRawUnsafe<
       { categoryId: string; cnt: bigint }[]
     >(
       `SELECT "categoryId", COUNT(*) as cnt FROM expenses
        WHERE "workspaceId" = $1
          AND "categoryId" IS NOT NULL
-         AND LOWER(REGEXP_REPLACE(UNACCENT(name), '[''\\x60]', '', 'g')) = $2
+         AND (
+           LOWER(REGEXP_REPLACE(UNACCENT(name), '[''\\x60]', '', 'g')) = $2
+           OR LOWER(REGEXP_REPLACE(UNACCENT(name), '[''\\x60]', '', 'g')) LIKE '%' || $2 || '%'
+         )
        GROUP BY "categoryId"
        ORDER BY cnt DESC
        LIMIT 1`,

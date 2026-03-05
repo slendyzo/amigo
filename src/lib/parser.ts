@@ -85,6 +85,22 @@ export const KEYWORD_MAP: Record<string, { merchant: string; category: string }>
   medico: { merchant: "Médico", category: "Medical & Pharmacy" },
   hospital: { merchant: "Hospital", category: "Medical & Pharmacy" },
   dentista: { merchant: "Dentista", category: "Medical & Pharmacy" },
+  consulta: { merchant: "Consulta Médica", category: "Medical & Pharmacy" },
+  consultas: { merchant: "Consultas", category: "Medical & Pharmacy" },
+  clinica: { merchant: "Clínica", category: "Medical & Pharmacy" },
+  oftalmologista: { merchant: "Oftalmologista", category: "Medical & Pharmacy" },
+  dermatologista: { merchant: "Dermatologista", category: "Medical & Pharmacy" },
+  fisioterapia: { merchant: "Fisioterapia", category: "Medical & Pharmacy" },
+  pediatra: { merchant: "Pediatra", category: "Medical & Pharmacy" },
+  psicologo: { merchant: "Psicólogo", category: "Medical & Pharmacy" },
+  psiquiatra: { merchant: "Psiquiatra", category: "Medical & Pharmacy" },
+  veterinario: { merchant: "Veterinário", category: "Medical & Pharmacy" },
+  analises: { merchant: "Análises", category: "Medical & Pharmacy" },
+  ecografia: { merchant: "Ecografia", category: "Medical & Pharmacy" },
+  urgencias: { merchant: "Urgências", category: "Medical & Pharmacy" },
+  ginecologista: { merchant: "Ginecologista", category: "Medical & Pharmacy" },
+  radiologia: { merchant: "Radiologia", category: "Medical & Pharmacy" },
+  exame: { merchant: "Exame Médico", category: "Medical & Pharmacy" },
 };
 
 /**
