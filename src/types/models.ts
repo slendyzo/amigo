@@ -32,6 +32,7 @@ export type Expense = {
   name: string;
   amount: number;
   currency?: string;
+  amountExpression?: string | null;
   amountEur?: number;
   exchangeRate?: number;
   type: ExpenseType;

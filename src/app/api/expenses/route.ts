@@ -65,6 +65,7 @@ export async function GET(request: Request) {
           amount: true,
           currency: true,
           amountEur: true,
+          amountExpression: true,
           exchangeRate: true,
           type: true,
           date: true,
@@ -104,7 +105,7 @@ export async function POST(request: Request) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { quickAdd, name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData } = body;
+    const { quickAdd, name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToConnect: string[] = projectIds || (projectId ? [projectId] : []);
@@ -260,6 +261,7 @@ export async function POST(request: Request) {
         type: expenseData.type,
         status: expenseStatus,
         amount: expenseData.amount,
+        amountExpression: amountExpression || null,
         currency: expenseCurrency,
         amountEur,
         exchangeRate,

@@ -6,6 +6,7 @@ import { getCurrencySymbol } from "@/lib/currencies";
 type AmountInputProps = {
   value: string;
   onChange: (value: string) => void;
+  onExpressionChange?: (expression: string | null) => void;
   currency: string;
   placeholder?: string;
   required?: boolean;
@@ -79,6 +80,7 @@ function evaluateExpression(expr: string): number | null {
 export function AmountInput({
   value,
   onChange,
+  onExpressionChange,
   currency,
   placeholder = "0.00",
   required = false,
@@ -99,8 +101,13 @@ export function AmountInput({
     // Try to evaluate the expression on blur
     const result = evaluateExpression(value);
     if (result !== null) {
+      // Store the original expression before replacing with result
+      onExpressionChange?.(value);
       onChange(result.toString());
       setShowCalculated(true);
+    } else {
+      // Plain number — no expression to store
+      onExpressionChange?.(null);
     }
   };
 

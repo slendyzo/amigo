@@ -92,6 +92,7 @@ export default function AddExpenseModal({
   // Form state
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
+  const [amountExpression, setAmountExpression] = useState<string | null>(null);
   const [currency, setCurrency] = useState("EUR");
   const [date, setDate] = useState(getTodayDateString());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -133,6 +134,7 @@ export default function AddExpenseModal({
     if (isOpen && !prevIsOpenRef.current) {
       setName("");
       setAmount("");
+      setAmountExpression(null);
       setCurrency(defaultCurrency);
       setDate(getTodayDateString());
       setShowDatePicker(false);
@@ -194,6 +196,7 @@ export default function AddExpenseModal({
       const expenseData = {
         name,
         amount: parsedAmount,
+        amountExpression: amountExpression || undefined,
         currency,
         type: expenseType as ExpenseType,
         categoryId: categoryId || undefined,
@@ -335,6 +338,7 @@ export default function AddExpenseModal({
                 <AmountInput
                   value={amount}
                   onChange={setAmount}
+                  onExpressionChange={setAmountExpression}
                   currency={currency}
                   required
                   hideCurrencySymbol

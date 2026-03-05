@@ -102,7 +102,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, amount, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, imageUrls, categorizedAt, splitCount, splitData } = body;
+    const { name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, imageUrls, categorizedAt, splitCount, splitData } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToSet: string[] | undefined = projectIds !== undefined
@@ -122,6 +122,7 @@ export async function PUT(
     type UpdateData = {
       name?: string;
       amount?: number;
+      amountExpression?: string | null;
       amountEur?: number;
       exchangeRate?: number;
       type?: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
@@ -142,6 +143,7 @@ export async function PUT(
     const updateData: UpdateData = {};
 
     if (name !== undefined) updateData.name = name;
+    if (amountExpression !== undefined) updateData.amountExpression = amountExpression || null;
     if (type !== undefined) updateData.type = type;
     if (categoryId !== undefined) updateData.categoryId = categoryId || null;
     if (bankAccountId !== undefined) updateData.bankAccountId = bankAccountId || null;

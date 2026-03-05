@@ -47,6 +47,7 @@ export default function EditExpenseModal({
 
   const [name, setName] = useState("");
   const [amount, setAmount] = useState("");
+  const [amountExpression, setAmountExpression] = useState<string | null>(null);
   const [currency, setCurrency] = useState("EUR");
   const [categoryId, setCategoryId] = useState("");
   const [bankAccountId, setBankAccountId] = useState("");
@@ -116,7 +117,9 @@ export default function EditExpenseModal({
   useEffect(() => {
     if (expense) {
       setName(expense.name);
-      setAmount(Number(expense.amount).toString());
+      // Restore the original expression if one was stored, otherwise show computed amount
+      setAmount(expense.amountExpression || Number(expense.amount).toString());
+      setAmountExpression(expense.amountExpression || null);
       setCurrency(expense.currency || "EUR");
       setCategoryId(expense.category?.id || "");
       setBankAccountId(expense.bankAccount?.id || "");
@@ -162,6 +165,7 @@ export default function EditExpenseModal({
         body: JSON.stringify({
           name,
           amount: parsedAmount,
+          amountExpression,
           currency,
           type: expenseType,
           categoryId: categoryId || null,
@@ -261,6 +265,7 @@ export default function EditExpenseModal({
                 <AmountInput
                   value={amount}
                   onChange={setAmount}
+                  onExpressionChange={setAmountExpression}
                   currency={currency}
                   required
                   hideCurrencySymbol

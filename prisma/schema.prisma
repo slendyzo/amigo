@@ -312,10 +312,11 @@ model Expense {
   status        ExpenseStatus @default(PAID)
 
   // Amount handling with currency conversion
-  amount        Decimal       @db.Decimal(12, 2) // Original value
-  currency      String        @default("EUR") @db.VarChar(3) // Original currency
-  amountEur     Decimal       @db.Decimal(12, 2) // Converted to EUR at entry time
-  exchangeRate  Decimal?      @db.Decimal(12, 6) // Rate used for conversion
+  amount            Decimal       @db.Decimal(12, 2) // Original value
+  amountExpression  String?       @db.VarChar(255) // Original math expression (e.g. "50+30")
+  currency          String        @default("EUR") @db.VarChar(3) // Original currency
+  amountEur         Decimal       @db.Decimal(12, 2) // Converted to EUR at entry time
+  exchangeRate      Decimal?      @db.Decimal(12, 6) // Rate used for conversion
 
   // Date fields
   date          DateTime      // Transaction date
