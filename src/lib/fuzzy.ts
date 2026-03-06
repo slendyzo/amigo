@@ -58,23 +58,33 @@ export function maxFuzzyDistance(keyword: string): number {
 /**
  * Check if a normalized expense name contains a keyword as a whole word or word-prefix.
  * Uses word boundary matching to avoid false positives (e.g., "gas" shouldn't match "gastronomia").
+ * Prioritizes keywords that appear earliest in the name (first word dictates category).
+ * When two keywords start at the same position, the longer (more specific) one wins.
  * Returns the matched keyword or null.
  */
 export function findContainedKeyword(
   normalizedName: string,
   keywords: string[]
 ): string | null {
-  // Sort keywords longest-first so we match the most specific keyword
-  const sorted = [...keywords].sort((a, b) => b.length - a.length);
-  for (const kw of sorted) {
+  let bestKw: string | null = null;
+  let bestPos = Infinity;
+  let bestLen = 0;
+
+  for (const kw of keywords) {
     if (kw.length < 2) continue;
-    // Match keyword as a whole word (surrounded by word boundaries)
     const regex = new RegExp(`(?:^|\\s|-)${escapeRegex(kw)}(?:\\s|-|$)`, "i");
-    if (regex.test(normalizedName)) {
-      return kw;
+    const match = regex.exec(normalizedName);
+    if (match) {
+      // Adjust position to the actual keyword start (skip the boundary char)
+      const pos = match[0].startsWith(kw.charAt(0)) ? match.index : match.index + 1;
+      if (pos < bestPos || (pos === bestPos && kw.length > bestLen)) {
+        bestKw = kw;
+        bestPos = pos;
+        bestLen = kw.length;
+      }
     }
   }
-  return null;
+  return bestKw;
 }
 
 function escapeRegex(str: string): string {
