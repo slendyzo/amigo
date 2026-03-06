@@ -764,6 +764,13 @@
     "deleteMappingHint": "Les dépenses existantes ne seront pas affectées.",
     "selectCategoryOrType": "Veuillez sélectionner une catégorie ou un type de dépense",
     "saving": "Enregistrement...",
+    "yourMappings": "Vos Mappages",
+    "yourMappingsHint": "Règles personnalisées qui remplacent les mots-clés prédéfinis",
+    "builtinKeywords": "Mots-clés Prédéfinis",
+    "builtinHint": "{count} mots-clés prédéfinis — remplacez n'importe lequel pour changer sa catégorie",
+    "overridden": "Remplacé",
+    "override": "Remplacer",
+    "mapsTo": "Correspond à",
     "types": {
       "fixed": "Factures (Fixes)",
       "variable": "Factures (Variables)",

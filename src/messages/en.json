@@ -764,6 +764,13 @@
     "deleteMappingHint": "This will not affect existing expenses.",
     "selectCategoryOrType": "Please select a category or expense type",
     "saving": "Saving...",
+    "yourMappings": "Your Mappings",
+    "yourMappingsHint": "Custom rules that override built-in keywords",
+    "builtinKeywords": "Built-in Keywords",
+    "builtinHint": "{count} predefined keywords — override any to change its category",
+    "overridden": "Overridden",
+    "override": "Override",
+    "mapsTo": "Maps To",
     "types": {
       "fixed": "Bills (Fixed)",
       "variable": "Bills (Variable)",

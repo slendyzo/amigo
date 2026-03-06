@@ -654,6 +654,13 @@
     "deleteMappingHint": "As despesas existentes não serão afetadas.",
     "selectCategoryOrType": "Por favor seleciona uma categoria ou tipo de despesa",
     "saving": "A guardar...",
+    "yourMappings": "Os Teus Mapeamentos",
+    "yourMappingsHint": "Regras personalizadas que substituem as palavras-chave predefinidas",
+    "builtinKeywords": "Palavras-chave Predefinidas",
+    "builtinHint": "{count} palavras-chave predefinidas — substitui qualquer uma para mudar a categoria",
+    "overridden": "Substituído",
+    "override": "Substituir",
+    "mapsTo": "Mapeia Para",
     "types": {
       "fixed": "Contas (Fixas)",
       "variable": "Contas (Variáveis)",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 
@@ -17,6 +17,12 @@ type KeywordMapping = {
   category: Category | null;
 };
 
+type BuiltinKeyword = {
+  keyword: string;
+  merchant: string;
+  category: string;
+};
+
 export default function KeywordMappingsPage() {
   const t = useTranslations("mappings");
   const tCommon = useTranslations("common");
@@ -24,10 +30,12 @@ export default function KeywordMappingsPage() {
 
   const [mappings, setMappings] = useState<KeywordMapping[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [builtins, setBuiltins] = useState<BuiltinKeyword[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingMapping, setEditingMapping] = useState<KeywordMapping | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showBuiltins, setShowBuiltins] = useState(false);
 
   // Form state
   const [keyword, setKeyword] = useState("");
@@ -43,6 +51,12 @@ export default function KeywordMappingsPage() {
     { value: "PROJECT", label: t("types.project") },
   ];
 
+  // Set of custom mapping keywords (lowercase) to detect overrides
+  const customKeywordSet = useMemo(
+    () => new Set(mappings.map((m) => m.keyword.toLowerCase())),
+    [mappings]
+  );
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -50,9 +64,10 @@ export default function KeywordMappingsPage() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [mappingsRes, categoriesRes] = await Promise.all([
+      const [mappingsRes, categoriesRes, builtinsRes] = await Promise.all([
         fetch("/api/keyword-mappings"),
         fetch("/api/categories"),
+        fetch("/api/keyword-mappings/builtins"),
       ]);
 
       if (mappingsRes.ok) {
@@ -62,6 +77,10 @@ export default function KeywordMappingsPage() {
       if (categoriesRes.ok) {
         const data = await categoriesRes.json();
         setCategories(data.categories || []);
+      }
+      if (builtinsRes.ok) {
+        const data = await builtinsRes.json();
+        setBuiltins(data.builtins || []);
       }
     } catch (error) {
       console.error("Failed to fetch data:", error);
@@ -86,6 +105,17 @@ export default function KeywordMappingsPage() {
       setExpenseType(mapping.expenseType || "");
     } else {
       resetForm();
+    }
+    setIsModalOpen(true);
+  };
+
+  const openOverrideModal = (builtin: BuiltinKeyword) => {
+    resetForm();
+    setKeyword(builtin.keyword);
+    // Try to pre-select the category that matches the builtin's category name
+    const matchingCat = categories.find((c) => c.name === builtin.category);
+    if (matchingCat) {
+      setCategoryId(matchingCat.id);
     }
     setIsModalOpen(true);
   };
@@ -187,8 +217,12 @@ export default function KeywordMappingsPage() {
         </div>
       </div>
 
-      {/* Mappings Table */}
+      {/* Custom Mappings Table */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
+          <h2 className="text-sm font-semibold text-slate-700">{t("yourMappings")}</h2>
+          <p className="text-xs text-slate-500 mt-0.5">{t("yourMappingsHint")}</p>
+        </div>
         {isLoading ? (
           <div className="p-8 text-center text-slate-500">{tCommon("loading")}</div>
         ) : mappings.length === 0 ? (
@@ -253,6 +287,78 @@ export default function KeywordMappingsPage() {
                   </td>
                 </tr>
               ))}
+            </tbody>
+          </table>
+        )}
+      </div>
+
+      {/* Built-in Keywords Section */}
+      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <button
+          onClick={() => setShowBuiltins(!showBuiltins)}
+          className="w-full px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
+        >
+          <div className="text-left">
+            <h2 className="text-sm font-semibold text-slate-700">{t("builtinKeywords")}</h2>
+            <p className="text-xs text-slate-500 mt-0.5">
+              {t("builtinHint", { count: builtins.length })}
+            </p>
+          </div>
+          <svg
+            className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${showBuiltins ? "rotate-180" : ""}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+        {showBuiltins && (
+          <table className="w-full">
+            <thead className="bg-slate-50 border-b border-slate-200">
+              <tr>
+                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("keyword")}</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("mapsTo")}</th>
+                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("category")}</th>
+                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">{t("actions")}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {builtins.map((builtin) => {
+                const isOverridden = customKeywordSet.has(builtin.keyword.toLowerCase());
+                return (
+                  <tr key={builtin.keyword} className={`hover:bg-slate-50 ${isOverridden ? "opacity-50" : ""}`}>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2">
+                        <code className={`text-sm px-2 py-1 rounded ${isOverridden ? "bg-slate-50 text-slate-400 line-through" : "bg-slate-100 text-slate-800"}`}>
+                          {builtin.keyword}
+                        </code>
+                        {isOverridden && (
+                          <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
+                            {t("overridden")}
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {builtin.merchant}
+                    </td>
+                    <td className="px-4 py-3 text-sm text-slate-600">
+                      {translateCategory(builtin.category)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      {!isOverridden && (
+                        <button
+                          onClick={() => openOverrideModal(builtin)}
+                          className="text-[#0070f3] hover:text-[#0060df] text-sm font-medium"
+                        >
+                          {t("override")}
+                        </button>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}

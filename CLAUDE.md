@@ -2,6 +2,18 @@
 
 This file provides all context needed to start a new Claude Code session and continue development.
 
+## CRITICAL: Use Plane for ALL Tasks
+
+**NEVER skip Plane.** Every task, bug fix, and feature must be tracked in Plane. Before starting any work:
+
+1. **Check Plane** for existing issues related to the work
+2. **Create an issue** in Plane if one doesn't exist
+3. **Move to In Progress** when you start working
+4. **Comment on the issue** with what was done, files changed
+5. **Move to Done** when complete
+
+This applies to ALL work — bug fixes, features, refactors, infrastructure changes. No exceptions. Plane is the source of truth. See global CLAUDE.md for full Plane integration details.
+
 ## Quick Reference
 
 | Item | Value |
