@@ -366,7 +366,8 @@
     "systemCategory": "Catégorie système",
     "unmatchedTitle": "Certaines catégories n'ont pas pu être reconnues",
     "unmatchedDescription": "Ces catégories ne correspondent à aucun groupe standard. Vous pouvez les attribuer manuellement à un groupe parent via le bouton modifier.",
-    "unmatchedHint": "Astuce : Modifiez une catégorie et choisissez un groupe parent pour l'organiser."
+    "unmatchedHint": "Astuce : Modifiez une catégorie et choisissez un groupe parent pour l'organiser.",
+    "viewExpenses": "Voir les dépenses de cette catégorie"
   },
   "accounts": {
     "title": "Comptes Bancaires",

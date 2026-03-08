@@ -366,7 +366,8 @@
     "systemCategory": "System category",
     "unmatchedTitle": "Some categories couldn't be matched",
     "unmatchedDescription": "These categories didn't match any standard group. You can manually assign them to a parent using the edit button, or leave them as they are.",
-    "unmatchedHint": "Tip: Edit a category and pick a parent group to organize it."
+    "unmatchedHint": "Tip: Edit a category and pick a parent group to organize it.",
+    "viewExpenses": "View expenses in this category"
   },
   "accounts": {
     "title": "Bank Accounts",

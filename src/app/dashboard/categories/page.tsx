@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { Sparkles, ChevronDown, ChevronRight, FolderTree, AlertTriangle } from "lucide-react";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
@@ -27,6 +28,7 @@ export default function CategoriesPage() {
   const tCommon = useTranslations("common");
   const tExpenses = useTranslations("expenses");
   const locale = useLocale();
+  const router = useRouter();
   const { translateCategory } = useCategoryTranslation();
 
   const [categories, setCategories] = useState<Category[]>([]);
@@ -384,6 +386,7 @@ export default function CategoriesPage() {
                   onToggle={toggleParent}
                   onEdit={openModal}
                   onDelete={setDeleteId}
+                  onViewExpenses={(categoryId) => router.push(`/dashboard/expenses?category=${categoryId}`)}
                   translateCategory={translateCategory}
                   t={t}
                 />
@@ -493,6 +496,7 @@ function CategoryRow({
   onToggle,
   onEdit,
   onDelete,
+  onViewExpenses,
   translateCategory,
   t,
 }: {
@@ -502,6 +506,7 @@ function CategoryRow({
   onToggle: (id: string) => void;
   onEdit: (category: { id: string; name: string; parentId: string | null; icon?: string | null; color?: string | null; isSystem: boolean; _count?: { expenses: number } }) => void;
   onDelete: (id: string) => void;
+  onViewExpenses: (categoryId: string) => void;
   translateCategory: (name: string) => string;
   t: (key: string) => string;
 }) {
@@ -542,8 +547,18 @@ function CategoryRow({
             )}
           </div>
         </td>
-        <td className="px-4 py-3 text-sm text-slate-600 text-right">
-          {totalExpenses}
+        <td className="px-4 py-3 text-sm text-right">
+          {totalExpenses > 0 ? (
+            <button
+              onClick={() => onViewExpenses(node.id)}
+              className="text-[#0070f3] hover:underline font-medium tabular-nums"
+              title={t("viewExpenses")}
+            >
+              {totalExpenses}
+            </button>
+          ) : (
+            <span className="text-slate-400 tabular-nums">0</span>
+          )}
         </td>
         <td className="px-4 py-3 text-right">
           {!node.isSystem && (
@@ -585,6 +600,7 @@ function CategoryRow({
           onToggle={onToggle}
           onEdit={onEdit}
           onDelete={onDelete}
+          onViewExpenses={onViewExpenses}
           translateCategory={translateCategory}
           t={t}
         />

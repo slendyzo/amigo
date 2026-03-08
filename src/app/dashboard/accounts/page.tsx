@@ -6,8 +6,6 @@ import { useTranslations } from "next-intl";
 type BankAccount = {
   id: string;
   name: string;
-  bankName: string | null;
-  accountType: string;
   currency: string;
   _count?: { expenses: number };
 };
@@ -17,14 +15,6 @@ export default function BankAccountsPage() {
   const tCommon = useTranslations("common");
   const tExpenses = useTranslations("expenses");
 
-  const ACCOUNT_TYPES = [
-    { value: "CHECKING", label: t("types.checking") },
-    { value: "SAVINGS", label: t("types.savings") },
-    { value: "CREDIT", label: t("types.credit") },
-    { value: "CASH", label: t("types.cash") },
-    { value: "INVESTMENT", label: t("types.investment") },
-  ];
-
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,8 +23,6 @@ export default function BankAccountsPage() {
 
   // Form state
   const [name, setName] = useState("");
-  const [bankName, setBankName] = useState("");
-  const [accountType, setAccountType] = useState("CHECKING");
   const [currency, setCurrency] = useState("EUR");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -60,8 +48,6 @@ export default function BankAccountsPage() {
 
   const resetForm = () => {
     setName("");
-    setBankName("");
-    setAccountType("CHECKING");
     setCurrency("EUR");
     setEditingAccount(null);
     setError("");
@@ -71,8 +57,6 @@ export default function BankAccountsPage() {
     if (account) {
       setEditingAccount(account);
       setName(account.name);
-      setBankName(account.bankName || "");
-      setAccountType(account.accountType);
       setCurrency(account.currency);
     } else {
       resetForm();
@@ -88,8 +72,6 @@ export default function BankAccountsPage() {
     try {
       const body = {
         name,
-        bankName: bankName || null,
-        accountType,
         currency,
       };
 
@@ -130,10 +112,6 @@ export default function BankAccountsPage() {
       console.error("Failed to delete account:", error);
     }
     setDeleteId(null);
-  };
-
-  const getTypeLabel = (type: string) => {
-    return ACCOUNT_TYPES.find((t) => t.value === type)?.label || type;
   };
 
   return (
@@ -186,14 +164,9 @@ export default function BankAccountsPage() {
               className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow"
             >
               <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-slate-900">{account.name}</h3>
-                  {account.bankName && (
-                    <p className="text-sm text-slate-500">{account.bankName}</p>
-                  )}
-                </div>
+                <h3 className="font-semibold text-slate-900">{account.name}</h3>
                 <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                  {getTypeLabel(account.accountType)}
+                  {account.currency}
                 </span>
               </div>
               <div className="space-y-2 text-sm">
@@ -253,40 +226,16 @@ export default function BankAccountsPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("bankName")}</label>
-                <input
-                  type="text"
-                  value={bankName}
-                  onChange={(e) => setBankName(e.target.value)}
-                  placeholder={t("bankNamePlaceholder")}
+                <label className="block text-sm font-medium text-slate-700 mb-1">{t("currency")}</label>
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
                   className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("type")}</label>
-                  <select
-                    value={accountType}
-                    onChange={(e) => setAccountType(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-                  >
-                    {ACCOUNT_TYPES.map((type) => (
-                      <option key={type.value} value={type.value}>{type.label}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">{t("currency")}</label>
-                  <select
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-                  >
-                    <option value="EUR">EUR</option>
-                    <option value="USD">USD</option>
-                    <option value="GBP">GBP</option>
-                  </select>
-                </div>
+                >
+                  <option value="EUR">EUR</option>
+                  <option value="USD">USD</option>
+                  <option value="GBP">GBP</option>
+                </select>
               </div>
               <div className="flex gap-3 pt-2">
                 <button

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
@@ -53,6 +53,7 @@ type GroupedExpenses = {
 
 export default function ExpensesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const t = useTranslations("expenses");
   const tTime = useTranslations("time");
   const tCommon = useTranslations("common");
@@ -91,7 +92,7 @@ export default function ExpensesPage() {
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>("");
-  const [categoryFilter, setCategoryFilter] = useState<string>("");
+  const [categoryFilter, setCategoryFilter] = useState<string>(searchParams.get("category") || "");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<"date" | "amount" | "name" | "category">("date");
   const [sortOrder, setSortOrder] = useState<"desc" | "asc">("desc");
@@ -105,7 +106,7 @@ export default function ExpensesPage() {
   const currentYear = currentDate.getFullYear();
   const currentMonth = currentDate.getMonth();
   const [selectedMonthFilter, setSelectedMonthFilter] = useState<string>(
-    `${currentYear}-${String(currentMonth).padStart(2, "0")}`
+    searchParams.get("category") ? "all" : `${currentYear}-${String(currentMonth).padStart(2, "0")}`
   );
   const [selectedYear, setSelectedYear] = useState<number>(currentYear);
 
