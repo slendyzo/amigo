@@ -8,13 +8,31 @@ const AddExpenseModal = lazy(() => import("./add-expense-modal"));
 const AddIncomeModal = lazy(() => import("./add-income-modal"));
 const ReceiptScannerModal = lazy(() => import("./receipt-scanner-modal"));
 
+type CreatedExpense = {
+  id: string;
+  name: string;
+  date: string;
+  type: string;
+  amount: number;
+  currency: string;
+  amountEur: number;
+  categoryName: string;
+  projects: { id: string; name: string }[];
+  excludeFromBudget: boolean;
+  splitCount: number | null;
+  splitData: string | null;
+  status: string;
+  createdAt: string;
+};
+
 type AddTypeSelectorProps = {
   isOpen: boolean;
   onClose: () => void;
   onSuccess?: () => void;
+  onExpenseCreated?: (expense: CreatedExpense) => void;
 };
 
-export default function AddTypeSelector({ isOpen, onClose }: AddTypeSelectorProps) {
+export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: AddTypeSelectorProps) {
   const t = useTranslations("common");
   const tScanner = useTranslations("receiptScanner");
   const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -154,6 +172,7 @@ export default function AddTypeSelector({ isOpen, onClose }: AddTypeSelectorProp
           <AddExpenseModal
             isOpen={showExpenseModal}
             onClose={handleModalClose}
+            onExpenseCreated={onExpenseCreated}
           />
         </Suspense>
       )}

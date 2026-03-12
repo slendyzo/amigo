@@ -19,9 +19,27 @@ import ExpenseSplitSection from "./expense-split-section";
 import { type SplitPerson } from "@/lib/split-utils";
 import type { Category, BankAccount, Project, ExpenseType } from "@/types/models";
 
+type CreatedExpense = {
+  id: string;
+  name: string;
+  date: string;
+  type: string;
+  amount: number;
+  currency: string;
+  amountEur: number;
+  categoryName: string;
+  projects: { id: string; name: string }[];
+  excludeFromBudget: boolean;
+  splitCount: number | null;
+  splitData: string | null;
+  status: string;
+  createdAt: string;
+};
+
 type AddExpenseModalProps = {
   isOpen: boolean;
   onClose: () => void;
+  onExpenseCreated?: (expense: CreatedExpense) => void;
   categories?: Category[];
   bankAccounts?: BankAccount[];
   projects?: Project[];
@@ -33,6 +51,7 @@ type AddExpenseModalProps = {
 export default function AddExpenseModal({
   isOpen,
   onClose,
+  onExpenseCreated,
   categories: propCategories,
   bankAccounts: propBankAccounts,
   projects: propProjects,
@@ -224,6 +243,28 @@ export default function AddExpenseModal({
         if (!response.ok) {
           const data = await response.json();
           throw new Error(data.error || "Failed to add expense");
+        }
+
+        // Parse response to get the created expense for optimistic UI
+        const data = await response.json();
+        if (onExpenseCreated && data.expense) {
+          const exp = data.expense;
+          onExpenseCreated({
+            id: exp.id,
+            name: exp.name,
+            date: typeof exp.date === "string" ? exp.date : new Date(exp.date).toISOString(),
+            type: exp.type,
+            amount: Number(exp.amount),
+            currency: exp.currency || "EUR",
+            amountEur: Number(exp.amountEur),
+            categoryName: exp.category?.name || "Uncategorized",
+            projects: (exp.projects || []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })),
+            excludeFromBudget: exp.excludeFromBudget || false,
+            splitCount: exp.splitCount || null,
+            splitData: exp.splitData || null,
+            status: exp.status || "PAID",
+            createdAt: typeof exp.createdAt === "string" ? exp.createdAt : new Date(exp.createdAt).toISOString(),
+          });
         }
 
         router.refresh();

@@ -44,6 +44,7 @@ type Expense = {
   amount: number;
   currency: string;
   amountEur: number;
+  amountExpression?: string | null;
   categoryName: string;
   parentCategoryName?: string;
   projects: { id: string; name: string }[];
@@ -505,6 +506,7 @@ export default function DashboardOverview({
         amountEur?: number;
         amount?: number;
         currency?: string;
+        amountExpression?: string | null;
         category?: { name: string; parent?: { name: string } | null } | null;
         projects?: { id: string; name: string }[];
         excludeFromBudget?: boolean;
@@ -520,6 +522,7 @@ export default function DashboardOverview({
         amount: Number(e.amount ?? 0),
         currency: e.currency || "EUR",
         amountEur: Number(e.amountEur ?? e.amount ?? 0),
+        amountExpression: e.amountExpression || null,
         categoryName: e.category?.name || "Uncategorized",
         parentCategoryName: e.category?.parent?.name || e.category?.name || "Uncategorized",
         projects: e.projects || [],
@@ -747,6 +750,44 @@ export default function DashboardOverview({
     }
   };
 
+  // Optimistically add a newly created expense to local state
+  const handleExpenseCreated = useCallback((expense: {
+    id: string;
+    name: string;
+    date: string;
+    type: string;
+    amount: number;
+    currency: string;
+    amountEur: number;
+    categoryName: string;
+    projects: { id: string; name: string }[];
+    excludeFromBudget: boolean;
+    splitCount: number | null;
+    splitData: string | null;
+    status: string;
+    createdAt: string;
+  }) => {
+    setExpenses((prev) => [
+      {
+        id: expense.id,
+        name: expense.name,
+        date: expense.date,
+        type: expense.type,
+        amount: expense.amount,
+        currency: expense.currency,
+        amountEur: expense.amountEur,
+        categoryName: expense.categoryName,
+        projects: expense.projects,
+        excludeFromBudget: expense.excludeFromBudget,
+        splitCount: expense.splitCount,
+        splitData: expense.splitData,
+        status: expense.status as "PAID" | "PENDING",
+        createdAt: expense.createdAt,
+      },
+      ...prev,
+    ]);
+  }, []);
+
   // Fetch full expense data for editing
   const handleEditExpense = async (expenseId: string) => {
     setIsLoadingExpense(true);
@@ -947,22 +988,22 @@ export default function DashboardOverview({
 
               {/* Key numbers */}
               <div className="flex-1 min-w-0">
-                <p className="text-2xl font-bold text-slate-900">€{stats.budgetTotal.toFixed(2)}</p>
-                <p className="text-xs text-slate-500">{t("budget.ofBudget", { budget: livingBudget.toFixed(2) })}</p>
-                <div className="flex gap-4 mt-2">
-                  <div>
-                    <p className="text-[10px] text-green-600 font-medium">{t("income.received")}</p>
-                    <p className="text-sm font-bold text-green-600">€{currentMonthIncome.toFixed(2)}</p>
+                <p className="text-2xl font-bold text-slate-900 tabular-nums truncate">€{stats.budgetTotal.toFixed(2)}</p>
+                <p className="text-xs text-slate-500 truncate">{t("budget.ofBudget", { budget: livingBudget.toFixed(2) })}</p>
+                <div className="flex gap-3 mt-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] text-green-600 font-medium whitespace-nowrap">{t("income.received")}</p>
+                    <p className="text-sm font-bold text-green-600 tabular-nums truncate">€{currentMonthIncome.toFixed(2)}</p>
                   </div>
-                  <div>
-                    <p className={`text-[10px] font-medium ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{t("income.balance")}</p>
-                    <p className={`text-sm font-bold ${balance >= 0 ? "text-blue-600" : "text-red-500"}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-[10px] font-medium whitespace-nowrap ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{t("income.balance")}</p>
+                    <p className={`text-sm font-bold tabular-nums truncate ${balance >= 0 ? "text-blue-600" : "text-red-500"}`}>
                       €{balance.toFixed(2)}
                     </p>
                   </div>
-                  <div>
-                    <p className={`text-[10px] font-medium ${isOverBudget ? "text-red-600" : "text-green-600"}`}>{t("budgetRemaining")}</p>
-                    <p className={`text-sm font-bold ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
+                  <div className="min-w-0 flex-1">
+                    <p className={`text-[10px] font-medium whitespace-nowrap ${isOverBudget ? "text-red-600" : "text-green-600"}`}>{t("budgetRemaining")}</p>
+                    <p className={`text-sm font-bold tabular-nums truncate ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
                       {isOverBudget ? "-" : ""}€{Math.abs(budgetRemaining).toFixed(2)}
                     </p>
                   </div>
@@ -1307,6 +1348,11 @@ export default function DashboardOverview({
                           <p className={`font-medium text-sm md:text-base truncate max-w-[200px] md:max-w-none ${
                             isIncome ? "text-green-700" : transaction.excludeFromBudget ? "text-slate-400" : "text-slate-900"
                           }`}>{transaction.name}</p>
+                          {!isIncome && (transaction as Expense).amountExpression && (
+                            <span className="px-1.5 py-0.5 text-[10px] rounded-md bg-amber-50 text-amber-600 font-mono whitespace-nowrap" title={(transaction as Expense).amountExpression!}>
+                              {(transaction as Expense).amountExpression}
+                            </span>
+                          )}
                           {!isIncome && transaction.projects && transaction.projects.length > 0 && transaction.projects.map((project) => (
                             <span key={project.id} className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-orange-100 text-orange-700">
                               {project.name}
@@ -1359,7 +1405,7 @@ export default function DashboardOverview({
                             transaction.excludeFromBudget ? "text-slate-400 line-through" :
                             transaction.amountEur < 0 ? "text-green-600" : "text-slate-900";
                           return amt.secondary ? (
-                            <div className="text-right">
+                            <div className="text-right whitespace-nowrap">
                               <p className={`font-semibold tabular-nums text-sm md:text-base ${colorClass}`}>
                                 {amt.text}
                               </p>
@@ -1368,7 +1414,7 @@ export default function DashboardOverview({
                               </p>
                             </div>
                           ) : (
-                            <p className={`font-semibold tabular-nums text-sm md:text-base ${colorClass}`}>
+                            <p className={`font-semibold tabular-nums text-sm md:text-base whitespace-nowrap ${colorClass}`}>
                               {amt.text}
                             </p>
                           );
@@ -1596,6 +1642,7 @@ export default function DashboardOverview({
           <AddTypeSelector
             isOpen={isSelectorOpen}
             onClose={() => setIsSelectorOpen(false)}
+            onExpenseCreated={handleExpenseCreated}
           />
         </Suspense>
       )}
