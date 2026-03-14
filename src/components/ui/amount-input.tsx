@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { getCurrencySymbol } from "@/lib/currencies";
 
 type AmountInputProps = {
@@ -76,6 +76,9 @@ function evaluateExpression(expr: string): number | null {
  * Reusable amount input component with currency symbol prefix.
  * Handles decimal input with comma/dot support.
  * Supports simple math expressions (e.g., "50+30" or "120*2").
+ *
+ * Uses internal state while focused to prevent parent re-renders
+ * from clobbering the expression mid-typing.
  */
 export function AmountInput({
   value,
@@ -89,20 +92,42 @@ export function AmountInput({
   hideCurrencySymbol = false,
 }: AmountInputProps) {
   const [showCalculated, setShowCalculated] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [localValue, setLocalValue] = useState(value);
+  const isFocusedRef = useRef(false);
+
+  // Sync local value from prop only when NOT focused
+  useEffect(() => {
+    if (!isFocusedRef.current) {
+      setLocalValue(value);
+    }
+  }, [value]);
+
+  const displayValue = isFocused ? localValue : value;
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     // Allow digits, comma, dot, minus (for refunds), and math operators (+, *, /)
     const sanitized = e.target.value.replace(/[^0-9.,+\-*/\s]/g, "");
+    setLocalValue(sanitized);
     onChange(sanitized);
     setShowCalculated(false);
   };
 
+  const handleFocus = () => {
+    setIsFocused(true);
+    isFocusedRef.current = true;
+    setLocalValue(value);
+  };
+
   const handleBlur = () => {
+    setIsFocused(false);
+    isFocusedRef.current = false;
+
     // Try to evaluate the expression on blur
-    const result = evaluateExpression(value);
+    const result = evaluateExpression(localValue);
     if (result !== null) {
       // Store the original expression before replacing with result
-      onExpressionChange?.(value);
+      onExpressionChange?.(localValue);
       onChange(result.toString());
       setShowCalculated(true);
     } else {
@@ -112,7 +137,10 @@ export function AmountInput({
   };
 
   // Check if current value looks like a math expression
-  const isExpression = /[+*/]/.test(value) || /\d-\d/.test(value);
+  const isExpression = /[+*/]/.test(displayValue) || /\d-\d/.test(displayValue);
+
+  // Show a live preview of the result while typing an expression
+  const previewResult = isExpression ? evaluateExpression(displayValue) : null;
 
   return (
     <div className={`relative ${className}`}>
@@ -124,8 +152,9 @@ export function AmountInput({
       <input
         type="text"
         inputMode="text"
-        value={value}
+        value={displayValue}
         onChange={handleChange}
+        onFocus={handleFocus}
         onBlur={handleBlur}
         placeholder={placeholder}
         required={required}
@@ -133,7 +162,7 @@ export function AmountInput({
       />
       {isExpression && !showCalculated && (
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
-          = ?
+          = {previewResult !== null ? previewResult : "?"}
         </span>
       )}
     </div>

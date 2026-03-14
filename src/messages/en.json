@@ -1015,6 +1015,8 @@
     "statusPaid": "Paid",
     "statusScheduled": "Scheduled",
     "attachPhotos": "Photos",
+    "addNote": "Add a note",
+    "notesPlaceholder": "Additional details...",
     "addPhoto": "Add receipt photo",
     "addMorePhotos": "Add more photos",
     "uploading": "Uploading...",

@@ -1015,6 +1015,8 @@
     "statusPaid": "Payé",
     "statusScheduled": "Programmé",
     "attachPhotos": "Photos",
+    "addNote": "Ajouter une note",
+    "notesPlaceholder": "Détails supplémentaires...",
     "addPhoto": "Ajouter une photo du reçu",
     "addMorePhotos": "Ajouter plus de photos",
     "uploading": "Téléchargement...",

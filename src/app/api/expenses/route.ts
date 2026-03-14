@@ -78,6 +78,7 @@ export async function GET(request: Request) {
           imageUrls: true,
           splitCount: true,
           splitData: true,
+          description: true,
           category: { include: { parent: true } },
           bankAccount: true,
           projects: true,
@@ -105,7 +106,7 @@ export async function POST(request: Request) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { quickAdd, name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData } = body;
+    const { quickAdd, name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData, description } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToConnect: string[] = projectIds || (projectId ? [projectId] : []);
@@ -273,6 +274,7 @@ export async function POST(request: Request) {
         imageUrls: imageUrls || null,
         splitCount: splitCount || null,
         splitData: splitData || null,
+        description: description || null,
         projects: projectIdsToConnect.length > 0
           ? { connect: projectIdsToConnect.map(id => ({ id })) }
           : undefined,

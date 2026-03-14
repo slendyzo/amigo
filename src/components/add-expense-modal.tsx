@@ -125,9 +125,12 @@ export default function AddExpenseModal({
   const [splitCount, setSplitCount] = useState(2);
   const [splitPeople, setSplitPeople] = useState<SplitPerson[] | null>(null);
 
+  const [description, setDescription] = useState("");
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [showDetails, setShowDetails] = useState(false);
+  const [showNotes, setShowNotes] = useState(false);
 
   // Check if selected date is in the future
   const isFutureDate = new Date(date) > new Date(getTodayDateString());
@@ -168,7 +171,9 @@ export default function AddExpenseModal({
       setSplitEnabled(false);
       setSplitCount(2);
       setSplitPeople(null);
+      setDescription("");
       setShowDetails(false);
+      setShowNotes(false);
       setError("");
       hasSetInitialDefaults.current = false;
     }
@@ -223,6 +228,7 @@ export default function AddExpenseModal({
         projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
         date,
         excludeFromBudget,
+        description: description || undefined,
         imageUrls: imageUrls.length > 0 ? JSON.stringify(imageUrls) : undefined,
         // Scheduled expense fields
         status: (isScheduled ? "PENDING" : "PAID") as "PAID" | "PENDING",
@@ -676,6 +682,56 @@ export default function AddExpenseModal({
                 fileInputId="add-expense-file-input"
               />
             </div>
+          )}
+
+          {/* ── CARD 6: Notes ── */}
+          {showNotes ? (
+            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span className="text-xs font-medium text-slate-500">{t("addNote")}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => { setDescription(""); setShowNotes(false); }}
+                  className="p-1 text-slate-400 hover:text-slate-600"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <textarea
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder={t("notesPlaceholder")}
+                rows={2}
+                maxLength={1000}
+                autoFocus
+                className="w-full text-sm text-slate-900 placeholder-slate-400 bg-slate-50 rounded-lg p-2.5 border border-slate-200 outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent resize-none"
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowNotes(true)}
+              className="w-full bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm text-left"
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                  <span className="text-sm text-slate-400">{t("addNote")}</span>
+                </div>
+                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+              </div>
+            </button>
           )}
 
           {/* ── Exclude from budget (shown when project selected) ── */}

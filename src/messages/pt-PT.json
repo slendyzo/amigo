@@ -1001,6 +1001,8 @@
     "statusPaid": "Pago",
     "statusScheduled": "Agendado",
     "attachPhotos": "Fotos",
+    "addNote": "Adicionar nota",
+    "notesPlaceholder": "Detalhes adicionais...",
     "addPhoto": "Adicionar foto do recibo",
     "addMorePhotos": "Adicionar mais fotos",
     "uploading": "A carregar...",
