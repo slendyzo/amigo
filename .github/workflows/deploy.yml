@@ -49,7 +49,9 @@ jobs:
             # Stop container and free up ALL disk space before building
             echo "=== Cleaning up Docker ==="
             docker compose down || true
-            docker system prune -af
+            docker image prune -af
+            docker container prune -f
+            docker builder prune -af
             echo "Disk usage: $(df -h / | tail -1 | awk '{print $5}')"
 
             # Build the Docker image
