@@ -10,7 +10,7 @@ import { useModalBodyClass } from "@/hooks/use-modal-body-class";
 import { useProjectTags } from "@/hooks/use-project-tags";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { EXPENSE_TYPE_VALUES, getExpenseTypeButtonClass } from "@/lib/expense-types";
-import { parseAmount, getTodayDateString } from "@/lib/utils";
+import { parseAmount, evaluateExpression, getTodayDateString } from "@/lib/utils";
 import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
 import ExpenseImageUpload from "./expense-image-upload";
 import ExpenseSplitSection from "./expense-split-section";
@@ -155,7 +155,15 @@ export default function EditExpenseModal({
     setError("");
 
     try {
-      const parsedAmount = parseAmount(amount);
+      // If amount contains a math expression that wasn't evaluated on blur, handle it now
+      let finalExpression = amountExpression;
+      let finalAmount = amount;
+      if (!finalExpression && evaluateExpression(amount) !== null) {
+        finalExpression = amount;
+        finalAmount = evaluateExpression(amount)!.toString();
+      }
+
+      const parsedAmount = parseAmount(finalAmount);
 
       if (isNaN(parsedAmount)) {
         setError("Invalid amount");
@@ -169,7 +177,7 @@ export default function EditExpenseModal({
         body: JSON.stringify({
           name,
           amount: parsedAmount,
-          amountExpression,
+          amountExpression: finalExpression,
           currency,
           type: expenseType,
           categoryId: categoryId || null,

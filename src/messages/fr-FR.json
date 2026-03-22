@@ -321,7 +321,14 @@
     "notesPlaceholder": "Détails supplémentaires...",
     "deleteIncomeConfirm": "Supprimer ce revenu ?",
     "saving": "Enregistrement...",
-    "update": "Mettre à jour"
+    "update": "Mettre à jour",
+    "whatDidYouReceive": "Qu'avez-vous reçu ?",
+    "whatDidYouReceivePlaceholder": "ex: Salaire, Projet Freelance",
+    "today": "Aujourd'hui",
+    "change": "(modifier)",
+    "addNote": "Ajouter une note",
+    "adding": "Ajout...",
+    "none": "Aucun"
   },
   "categories": {
     "title": "Catégories",

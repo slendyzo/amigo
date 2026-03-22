@@ -6,13 +6,59 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 /**
+ * Safely evaluate a simple math expression.
+ * Supports: +, -, *, / with numbers (including decimals with comma or dot).
+ * Returns null if the expression is invalid or not a math expression (plain number).
+ */
+export function evaluateExpression(expr: string): number | null {
+  if (!expr || expr.trim() === "") return null;
+
+  const normalized = expr.replace(/,/g, ".");
+  const hasMathOps = /[+\-*/]/.test(normalized.replace(/^-/, ""));
+  if (!hasMathOps) return null;
+  if (!/^[\d.+\-*/\s]+$/.test(normalized)) return null;
+
+  try {
+    const tokens = normalized.split(/([+\-*/])/).filter((t) => t.trim() !== "");
+    let result = 0;
+    let currentOp = "+";
+
+    for (const token of tokens) {
+      const trimmed = token.trim();
+      if (["+", "-", "*", "/"].includes(trimmed)) {
+        currentOp = trimmed;
+      } else {
+        const num = parseFloat(trimmed);
+        if (isNaN(num)) return null;
+        switch (currentOp) {
+          case "+": result += num; break;
+          case "-": result -= num; break;
+          case "*": result *= num; break;
+          case "/": if (num === 0) return null; result /= num; break;
+        }
+      }
+    }
+
+    return Math.round(result * 100) / 100;
+  } catch {
+    return null;
+  }
+}
+
+/**
  * Parses an amount string that may use comma or dot as decimal separator.
- * @param amountStr - The amount string (e.g., "12,50" or "12.50")
+ * Also handles simple math expressions (e.g., "5+5" → 10).
+ * @param amountStr - The amount string (e.g., "12,50", "12.50", or "5+5")
  * @returns The parsed number or NaN if invalid
  */
 export function parseAmount(amountStr: string): number {
   if (!amountStr || typeof amountStr !== "string") return NaN;
   const normalized = amountStr.trim().replace(",", ".");
+
+  // Try evaluating as a math expression first
+  const exprResult = evaluateExpression(normalized);
+  if (exprResult !== null) return exprResult;
+
   return parseFloat(normalized);
 }
 

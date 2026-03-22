@@ -321,7 +321,14 @@
     "notesPlaceholder": "Additional details...",
     "deleteIncomeConfirm": "Delete this income?",
     "saving": "Saving...",
-    "update": "Update"
+    "update": "Update",
+    "whatDidYouReceive": "What did you receive?",
+    "whatDidYouReceivePlaceholder": "e.g., Salary, Freelance Project",
+    "today": "Today",
+    "change": "(change)",
+    "addNote": "Add a note",
+    "adding": "Adding...",
+    "none": "None"
   },
   "categories": {
     "title": "Categories",

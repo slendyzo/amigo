@@ -1350,11 +1350,6 @@ export default function DashboardOverview({
                           <p className={`font-medium text-sm md:text-base truncate max-w-[200px] md:max-w-none ${
                             isIncome ? "text-green-700" : transaction.excludeFromBudget ? "text-slate-400" : "text-slate-900"
                           }`}>{transaction.name}</p>
-                          {!isIncome && (transaction as Expense).amountExpression && (
-                            <span className="px-1.5 py-0.5 text-[10px] rounded-md bg-amber-50 text-amber-600 font-mono whitespace-nowrap" title={(transaction as Expense).amountExpression!}>
-                              {(transaction as Expense).amountExpression}
-                            </span>
-                          )}
                           {!isIncome && transaction.projects && transaction.projects.length > 0 && transaction.projects.map((project) => (
                             <span key={project.id} className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-orange-100 text-orange-700">
                               {project.name}

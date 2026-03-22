@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { getCurrencySymbol } from "@/lib/currencies";
+import { evaluateExpression } from "@/lib/utils";
 
 type AmountInputProps = {
   value: string;
@@ -14,63 +15,6 @@ type AmountInputProps = {
   inputClassName?: string;
   hideCurrencySymbol?: boolean;
 };
-
-/**
- * Safely evaluate a simple math expression.
- * Supports: +, -, *, / with numbers (including decimals with comma or dot)
- * Returns null if the expression is invalid or not a math expression.
- */
-function evaluateExpression(expr: string): number | null {
-  if (!expr || expr.trim() === "") return null;
-
-  // Normalize: replace commas with dots for decimal
-  const normalized = expr.replace(/,/g, ".");
-
-  // Check if it contains any math operators (not just a plain number)
-  const hasMathOps = /[+\-*/]/.test(normalized.replace(/^-/, "")); // Ignore leading minus
-  if (!hasMathOps) return null;
-
-  // Only allow safe characters: digits, dots, and math operators
-  if (!/^[\d.+\-*/\s]+$/.test(normalized)) return null;
-
-  try {
-    // Split into tokens and validate each
-    const tokens = normalized.split(/([+\-*/])/).filter((t) => t.trim() !== "");
-    let result = 0;
-    let currentOp = "+";
-
-    for (const token of tokens) {
-      const trimmed = token.trim();
-      if (["+", "-", "*", "/"].includes(trimmed)) {
-        currentOp = trimmed;
-      } else {
-        const num = parseFloat(trimmed);
-        if (isNaN(num)) return null;
-
-        switch (currentOp) {
-          case "+":
-            result += num;
-            break;
-          case "-":
-            result -= num;
-            break;
-          case "*":
-            result *= num;
-            break;
-          case "/":
-            if (num === 0) return null; // Avoid division by zero
-            result /= num;
-            break;
-        }
-      }
-    }
-
-    // Round to 2 decimal places to avoid floating point issues
-    return Math.round(result * 100) / 100;
-  } catch {
-    return null;
-  }
-}
 
 /**
  * Reusable amount input component with currency symbol prefix.

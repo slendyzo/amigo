@@ -321,7 +321,14 @@
     "notesPlaceholder": "Detalhes adicionais...",
     "deleteIncomeConfirm": "Eliminar esta receita?",
     "saving": "A guardar...",
-    "update": "Atualizar"
+    "update": "Atualizar",
+    "whatDidYouReceive": "O que recebeste?",
+    "whatDidYouReceivePlaceholder": "ex: Salário, Projeto Freelance",
+    "today": "Hoje",
+    "change": "(alterar)",
+    "addNote": "Adicionar nota",
+    "adding": "A adicionar...",
+    "none": "Nenhuma"
   },
   "categories": {
     "title": "Categorias",
