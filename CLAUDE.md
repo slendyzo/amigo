@@ -22,13 +22,14 @@ This applies to ALL work — bug fixes, features, refactors, infrastructure chan
 | **Type** | Personal finance management app |
 | **Live URL** | https://amigo.slendyzo.pt |
 | **Repo** | https://github.com/slendyzo/amigo |
-| **Neon Project ID** | `super-fog-13274723` |
-| **Database** | Neon PostgreSQL (EU West 2 - London) |
+| **Database** | Self-hosted PostgreSQL 17 (Docker on Proxmox CT 104) |
+| **DB Container** | `amigo-db` (postgres:17-alpine) |
+| **App Container** | `amigo` (CT 104 / vibecode) |
 
 ## Tech Stack
 
 - **Framework:** Next.js 15 (App Router + Turbopack)
-- **Database:** Prisma 7 + PostgreSQL (Neon)
+- **Database:** Prisma 7 + PostgreSQL 17 (self-hosted Docker)
 - **Auth:** NextAuth v5 (credentials + OAuth)
 - **Styling:** Tailwind CSS 4
 - **UI Components:** Shadcn UI (Electric Blue theme)
@@ -279,7 +280,12 @@ WHERE f."isResolved" = false
 ORDER BY f."createdAt" DESC
 ```
 
-Use Neon MCP tool with project ID: `super-fog-13274723`
+SSH into Proxmox and query the self-hosted database:
+
+```bash
+ssh -i /c/Users/kikom/.ssh/homeassistant root@100.127.19.92 \
+  'pct exec 104 -- docker exec amigo-db psql -U amigo -d amigo -c "<SQL>"'
+```
 
 ### 2. Investigate & Fix
 
@@ -298,7 +304,7 @@ UPDATE feedback SET "isResolved" = true WHERE id = '<feedback-id>'
 
 ```env
 # Database
-DATABASE_URL="postgresql://..."      # Neon connection string
+DATABASE_URL="postgresql://amigo:<password>@db:5432/amigo"  # Self-hosted Postgres (Docker internal)
 
 # Auth
 AUTH_SECRET="..."                    # npx auth secret
@@ -324,16 +330,15 @@ npx prisma studio     # Open database GUI
 ## Deployment
 
 - **Hosting:** Docker on Proxmox server (self-hosted)
-- **Database:** Neon PostgreSQL (EU West 2 - London)
+- **Database:** Self-hosted PostgreSQL 17 (Docker, same compose stack)
 - **Email:** Resend
 - **Domain:** amigo.slendyzo.pt (via Cloudflare)
 
 ## Known Quirks
 
-- Prisma 7 requires adapter pattern (`@prisma/adapter-pg`)
 - React 19: Use `ReactNode` instead of `JSX.Element`
 - Node 22 + ExcelJS: Buffer type mismatch (use `@ts-expect-error`)
-- Image uploads use base64 data URLs (serverless constraint)
+- Image uploads use base64 data URLs stored in DB (no external storage)
 - Middleware uses cookie check (not importing auth for Edge runtime)
 - Resend client uses lazy init (avoids build-time API key errors)
 - Auth.js cookie names vary by protocol: `__Secure-authjs.session-token` (HTTPS) vs `authjs.session-token` (HTTP)

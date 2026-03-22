@@ -173,6 +173,7 @@ export default function DashboardOverview({
     status?: "PAID" | "PENDING";
     splitCount?: number | null;
     splitData?: string | null;
+    description?: string;
   } | null>(null);
   const [isLoadingExpense, setIsLoadingExpense] = useState(false);
   const [viewingExpense, setViewingExpense] = useState<FullExpense | null>(null);
@@ -810,6 +811,7 @@ export default function DashboardOverview({
           status: exp.status || "PAID",
           splitCount: exp.splitCount || null,
           splitData: exp.splitData || null,
+          description: exp.description || undefined,
         });
       }
     } catch (error) {
@@ -1686,6 +1688,7 @@ export default function DashboardOverview({
                 status: exp.status || "PAID",
                 splitCount: exp.splitCount || null,
                 splitData: exp.splitData || null,
+                description: exp.description || undefined,
               });
             }}
             onDelete={() => {

@@ -43,7 +43,6 @@ export type Expense = {
   bankAccount: BankAccount | null;
   projects: Project[];
   excludeFromBudget?: boolean;
-  notes?: string;
   description?: string;
   rawInput?: string;
   merchant?: string;

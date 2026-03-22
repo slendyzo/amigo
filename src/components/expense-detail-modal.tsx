@@ -444,13 +444,13 @@ export default function ExpenseDetailModal({
             </div>
 
             {/* Notes */}
-            {(e.notes || e.description) && (
+            {e.description && (
               <>
                 <div className="h-px bg-slate-100" />
                 <div>
                   <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-1.5">{t("notes")}</p>
                   <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg p-2.5 border-l-[3px] border-slate-200">
-                    {e.notes || e.description}
+                    {e.description}
                   </div>
                 </div>
               </>

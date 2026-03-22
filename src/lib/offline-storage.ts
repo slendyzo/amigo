@@ -14,7 +14,7 @@ export type OfflineExpense = {
   categoryId?: string;
   bankAccountId?: string;
   projectIds?: string[];
-  notes?: string;
+  description?: string;
   excludeFromBudget?: boolean;
   status?: "PAID" | "PENDING";
   dueDate?: string;
@@ -166,7 +166,7 @@ export async function syncPendingExpenses(): Promise<{ synced: number; failed: n
           categoryId: expense.categoryId || null,
           bankAccountId: expense.bankAccountId || null,
           projectIds: expense.projectIds || [],
-          notes: expense.notes || "",
+          description: expense.description || "",
           excludeFromBudget: expense.excludeFromBudget || false,
           status: expense.status || "PAID",
           dueDate: expense.dueDate,
