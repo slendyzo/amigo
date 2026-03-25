@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import ExcelJS from "exceljs";
+import { generatePDF } from "@/lib/export-pdf";
+import { generateMarkdown } from "@/lib/export-markdown";
 
 // GET /api/export - Export expenses data
 export async function GET(request: NextRequest) {
@@ -23,30 +25,32 @@ export async function GET(request: NextRequest) {
     }
 
     const workspaceId = membership.workspaceId;
+    const workspaceName = membership.workspace.name || "Personal";
 
     // Get query params
     const searchParams = request.nextUrl.searchParams;
-    const format = searchParams.get("format") || "csv"; // csv, xlsx
+    const format = searchParams.get("format") || "csv"; // csv, xlsx, pdf, md
     const type = searchParams.get("type"); // expense type filter
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const categoryId = searchParams.get("categoryId");
 
-    // Build query
+    // Build expense query
     const where: Record<string, unknown> = { workspaceId };
 
     if (type) {
       where.type = type;
     }
 
-    if (startDate || endDate) {
-      where.date = {};
-      if (startDate) {
-        (where.date as Record<string, Date>).gte = new Date(startDate);
-      }
-      if (endDate) {
-        (where.date as Record<string, Date>).lte = new Date(endDate);
-      }
+    const dateFilter: Record<string, Date> = {};
+    if (startDate) {
+      dateFilter.gte = new Date(startDate);
+    }
+    if (endDate) {
+      dateFilter.lte = new Date(endDate);
+    }
+    if (Object.keys(dateFilter).length > 0) {
+      where.date = dateFilter;
     }
 
     if (categoryId) {
@@ -64,12 +68,81 @@ export async function GET(request: NextRequest) {
       orderBy: { date: "desc" },
     });
 
-    // Fetch incomes too
+    // Fetch incomes with same date filters
+    const incomeWhere: Record<string, unknown> = { workspaceId };
+    if (Object.keys(dateFilter).length > 0) {
+      incomeWhere.date = dateFilter;
+    }
+
     const incomes = await prisma.income.findMany({
-      where: { workspaceId },
+      where: incomeWhere,
       orderBy: { date: "desc" },
     });
 
+    // Build date range for generators
+    const dateRange =
+      startDate || endDate
+        ? {
+            start: startDate ? new Date(startDate) : undefined,
+            end: endDate ? new Date(endDate) : undefined,
+          }
+        : null;
+
+    // --- PDF format ---
+    if (format === "pdf") {
+      const buffer = await generatePDF(
+        expenses.map((e) => ({
+          ...e,
+          date: new Date(e.date),
+          amountEur: Number(e.amountEur),
+        })),
+        incomes.map((i) => ({
+          ...i,
+          date: new Date(i.date),
+          amountEur: Number(i.amountEur),
+        })),
+        dateRange,
+        workspaceName
+      );
+
+      const filename = `amigo-statement-${new Date().toISOString().split("T")[0]}.pdf`;
+
+      return new NextResponse(new Uint8Array(buffer), {
+        headers: {
+          "Content-Type": "application/pdf",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
+    // --- Markdown format ---
+    if (format === "md") {
+      const markdown = generateMarkdown(
+        expenses.map((e) => ({
+          ...e,
+          date: new Date(e.date),
+          amountEur: Number(e.amountEur),
+        })),
+        incomes.map((i) => ({
+          ...i,
+          date: new Date(i.date),
+          amountEur: Number(i.amountEur),
+        })),
+        dateRange,
+        workspaceName
+      );
+
+      const filename = `amigo-report-${new Date().toISOString().split("T")[0]}.md`;
+
+      return new NextResponse(markdown, {
+        headers: {
+          "Content-Type": "text/markdown; charset=utf-8",
+          "Content-Disposition": `attachment; filename="${filename}"`,
+        },
+      });
+    }
+
+    // --- Excel format ---
     if (format === "xlsx") {
       // Create Excel workbook
       const workbook = new ExcelJS.Workbook();
@@ -244,7 +317,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // CSV format (default)
+    // --- CSV format (default) ---
     const csvRows: string[] = [];
 
     // Header

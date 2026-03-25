@@ -1377,5 +1377,26 @@
       "dismiss": "Peut-être Plus Tard",
       "explore": "Aller aux Catégories"
     }
+  },
+  "exportModal": {
+    "title": "Exporter les Données",
+    "formatLabel": "Format",
+    "csv": "CSV",
+    "csvDesc": "Texte brut, universel",
+    "excel": "Excel",
+    "excelDesc": "Classeur multi-feuilles",
+    "pdf": "PDF",
+    "pdfDesc": "Style relevé bancaire",
+    "markdown": "Markdown",
+    "markdownDesc": "Pour analyse par IA",
+    "rangeLabel": "Période",
+    "allData": "Toutes les données",
+    "allDataDesc": "Exporter l'historique complet",
+    "last3Months": "3 derniers mois",
+    "lastMonth": "Mois dernier",
+    "currentView": "Vue actuelle",
+    "cancel": "Annuler",
+    "exportBtn": "Exporter",
+    "exporting": "Exportation..."
   }
 }

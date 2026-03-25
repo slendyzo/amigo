@@ -1406,5 +1406,26 @@
       "dismiss": "Maybe Later",
       "explore": "Go to Categories"
     }
+  },
+  "exportModal": {
+    "title": "Export Data",
+    "formatLabel": "Format",
+    "csv": "CSV",
+    "csvDesc": "Plain text, universal",
+    "excel": "Excel",
+    "excelDesc": "Multi-sheet workbook",
+    "pdf": "PDF",
+    "pdfDesc": "Bank statement style",
+    "markdown": "Markdown",
+    "markdownDesc": "For AI analysis",
+    "rangeLabel": "Time Range",
+    "allData": "All data",
+    "allDataDesc": "Export your complete history",
+    "last3Months": "Last 3 months",
+    "lastMonth": "Last month",
+    "currentView": "Current view",
+    "cancel": "Cancel",
+    "exportBtn": "Export",
+    "exporting": "Exporting..."
   }
 }
