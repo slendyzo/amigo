@@ -48,7 +48,7 @@ jobs:
 
             # Build new image (keeps cache for fast rebuilds)
             echo "=== Building Docker image ==="
-            DOCKER_BUILDKIT=1 docker compose build \
+            docker compose build \
               --build-arg NEXT_PUBLIC_BUILD_ID="$BUILD_ID" \
               --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE"
 
