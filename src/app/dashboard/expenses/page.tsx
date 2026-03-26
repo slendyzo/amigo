@@ -511,54 +511,56 @@ export default function ExpensesPage() {
             />
           </div>
           {/* Filter row */}
-          <div className="flex gap-2 overflow-x-auto scrollbar-hide">
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-            >
-              <option value="">{t("filterByType")}</option>
-              <option value="SURVIVAL_FIXED">{t("types.fixed")}</option>
-              <option value="SURVIVAL_VARIABLE">{t("types.variable")}</option>
-              <option value="LIFESTYLE">{t("types.lifestyle")}</option>
-              <option value="PROJECT">{t("types.project")}</option>
-            </select>
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-            >
-              <option value="">{t("filterByCategory")}</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
-              ))}
-            </select>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value as "date" | "amount" | "name" | "category")}
-              className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-            >
-              <option value="date">{t("sortByDate")}</option>
-              <option value="amount">{t("sortByAmount")}</option>
-              <option value="name">{t("sortByName")}</option>
-              <option value="category">{t("sortByCategory")}</option>
-            </select>
-            <button
-              onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
-              className="flex-shrink-0 p-2 rounded-lg border border-slate-300 active:bg-slate-50 md:hover:bg-slate-50 tap-none"
-              title={sortOrder === "desc" ? t("descending") : t("ascending")}
-            >
-              {sortOrder === "desc" ? (
-                <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
-                </svg>
-              ) : (
-                <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
-                </svg>
-              )}
-            </button>
-            {/* Export button */}
+          <div className="flex gap-2 items-center">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide flex-1 min-w-0">
+              <select
+                value={typeFilter}
+                onChange={(e) => setTypeFilter(e.target.value)}
+                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+              >
+                <option value="">{t("filterByType")}</option>
+                <option value="SURVIVAL_FIXED">{t("types.fixed")}</option>
+                <option value="SURVIVAL_VARIABLE">{t("types.variable")}</option>
+                <option value="LIFESTYLE">{t("types.lifestyle")}</option>
+                <option value="PROJECT">{t("types.project")}</option>
+              </select>
+              <select
+                value={categoryFilter}
+                onChange={(e) => setCategoryFilter(e.target.value)}
+                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+              >
+                <option value="">{t("filterByCategory")}</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
+                ))}
+              </select>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as "date" | "amount" | "name" | "category")}
+                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+              >
+                <option value="date">{t("sortByDate")}</option>
+                <option value="amount">{t("sortByAmount")}</option>
+                <option value="name">{t("sortByName")}</option>
+                <option value="category">{t("sortByCategory")}</option>
+              </select>
+              <button
+                onClick={() => setSortOrder(sortOrder === "desc" ? "asc" : "desc")}
+                className="flex-shrink-0 p-2 rounded-lg border border-slate-300 active:bg-slate-50 md:hover:bg-slate-50 tap-none"
+                title={sortOrder === "desc" ? t("descending") : t("ascending")}
+              >
+                {sortOrder === "desc" ? (
+                  <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
+                  </svg>
+                )}
+              </button>
+            </div>
+            {/* Export button — always visible, outside scrollable area */}
             <button
               onClick={() => setShowExportModal(true)}
               className="flex-shrink-0 p-2 rounded-lg border border-slate-300 active:bg-slate-50 md:hover:bg-slate-50 tap-none"
