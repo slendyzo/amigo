@@ -158,7 +158,7 @@ export async function generatePDF(
 ): Promise<Buffer> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    const doc = new PDFDocument({ size: "A4", margin: MARGIN });
+    const doc = new PDFDocument({ size: "A4", margin: MARGIN, bufferPages: true });
 
     doc.on("data", (chunk: Buffer) => chunks.push(chunk));
     doc.on("end", () => resolve(Buffer.concat(chunks)));
