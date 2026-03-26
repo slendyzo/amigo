@@ -1,28 +1,34 @@
-# syntax=docker/dockerfile:1
 # Amigo Production Dockerfile
-# Optimized build with BuildKit cache mounts for fast deploys
+# Optimized multi-stage build for Next.js 15 with Prisma
 
-# Single-stage build — cache mounts eliminate the need for a separate deps stage
-FROM node:22-alpine AS builder
+# Stage 1: Dependencies (cached unless package.json changes)
+FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Copy package files + prisma schema
+# Copy only package files first (better cache hit rate)
 COPY package.json package-lock.json* ./
 COPY prisma ./prisma/
 
-# Install deps with BuildKit cache mount — survives across builds
-# npm cache + node_modules are persisted, so only new/changed packages install
-RUN --mount=type=cache,target=/root/.npm \
-    npm ci
+RUN npm ci
+
+# Stage 2: Builder
+FROM node:22-alpine AS builder
+WORKDIR /app
+
+# Copy deps from previous stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy prisma schema first (changes less often)
+COPY prisma ./prisma/
 
 # Generate Prisma client
 RUN npx prisma generate
 
-# Copy source files
+# Copy source files (this layer invalidates on code changes)
 COPY . .
 
-# Build the application with cached .next/cache for faster rebuilds
+# Build the application
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
@@ -31,8 +37,7 @@ ARG NEXT_PUBLIC_BUILD_DATE=unknown
 ENV NEXT_PUBLIC_BUILD_ID=$NEXT_PUBLIC_BUILD_ID
 ENV NEXT_PUBLIC_BUILD_DATE=$NEXT_PUBLIC_BUILD_DATE
 
-RUN --mount=type=cache,target=/app/.next/cache \
-    npm run build
+RUN npm run build
 
 # Stage 3: Production Runner
 FROM node:22-alpine AS runner
