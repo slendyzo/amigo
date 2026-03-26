@@ -8,6 +8,8 @@ const nextConfig: NextConfig = {
   reactStrictMode: true,
   // Output standalone build for Docker deployment
   output: "standalone",
+  // Keep pdfkit as external — it needs .afm font data files at runtime
+  serverExternalPackages: ["pdfkit"],
 };
 
 export default withNextIntl(nextConfig);

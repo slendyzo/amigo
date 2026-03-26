@@ -66,6 +66,14 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
 
+# Copy pdfkit + deps (external package — needs .afm font data files at runtime)
+COPY --from=builder /app/node_modules/pdfkit ./node_modules/pdfkit
+COPY --from=builder /app/node_modules/fontkit ./node_modules/fontkit
+COPY --from=builder /app/node_modules/linebreak ./node_modules/linebreak
+COPY --from=builder /app/node_modules/png-js ./node_modules/png-js
+COPY --from=builder /app/node_modules/js-md5 ./node_modules/js-md5
+COPY --from=builder /app/node_modules/@noble ./node_modules/@noble
+
 # Copy warmup script (pg is already in standalone node_modules)
 COPY --from=builder /app/scripts/warmup-db.mjs ./warmup-db.mjs
 

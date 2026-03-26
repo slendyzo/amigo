@@ -276,7 +276,7 @@ export default function ExportModal({
           <div className="mt-2 grid grid-cols-2 gap-3">
             {FORMAT_OPTIONS.map((opt) => {
               const isSelected = format === opt.key;
-              const labelKey = opt.key === "xlsx" ? "excel" : opt.key;
+              const labelKey = opt.key === "xlsx" ? "excel" : opt.key === "md" ? "markdown" : opt.key;
               const descKey =
                 opt.key === "xlsx"
                   ? "excelDesc"
