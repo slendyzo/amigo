@@ -46,23 +46,20 @@ jobs:
             echo "Build ID: $BUILD_ID"
             echo "Build Date: $BUILD_DATE"
 
-            # Stop container and free up ALL disk space before building
-            echo "=== Cleaning up Docker ==="
-            docker compose down || true
-            docker image prune -af
-            docker container prune -f
-            docker builder prune -af
-            echo "Disk usage: $(df -h / | tail -1 | awk '{print $5}')"
-
-            # Build the Docker image
+            # Build new image (keeps cache for fast rebuilds)
             echo "=== Building Docker image ==="
-            docker compose build \
+            DOCKER_BUILDKIT=1 docker compose build \
               --build-arg NEXT_PUBLIC_BUILD_ID="$BUILD_ID" \
               --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE"
 
-            # Start container
+            # Restart with new image
             echo "=== Starting container ==="
             docker compose up -d
+
+            # Clean up old/dangling images (keeps current + cache)
+            echo "=== Cleaning up old images ==="
+            docker image prune -f
+            echo "Disk usage: $(df -h / | tail -1 | awk '{print $5}')"
 
             # Wait for container to be healthy
             echo "=== Waiting for container to start ==="
