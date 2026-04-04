@@ -276,14 +276,19 @@ SELECT f.id, f.type, f.message, f."pageUrl", f."isResolved", f."createdAt",
        f."imageUrl", u.email, u.name
 FROM feedback f
 LEFT JOIN users u ON f."userId" = u.id
-WHERE f."isResolved" = false
+WHERE f."isRead" = false AND f."isResolved" = false
 ORDER BY f."createdAt" DESC
 ```
 
-SSH into Proxmox and query the self-hosted database:
+SSH into the vibecode LXC and query the self-hosted database:
 
 ```bash
-ssh -i /c/Users/kikom/.ssh/homeassistant root@100.127.19.92 \
+# Mac:
+ssh -i ~/.ssh/id_ed25519 root@100.110.224.38 \
+  'docker exec amigo-db psql -U amigo -d amigo -c "<SQL>"'
+
+# Windows (via Proxmox host):
+ssh -i C:\Users\kikom\.ssh\homeassistant root@100.127.19.92 \
   'pct exec 104 -- docker exec amigo-db psql -U amigo -d amigo -c "<SQL>"'
 ```
 

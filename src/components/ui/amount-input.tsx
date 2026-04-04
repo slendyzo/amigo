@@ -80,8 +80,9 @@ export function AmountInput({
     }
   };
 
-  // Check if current value looks like a math expression
-  const isExpression = /[+*/]/.test(displayValue) || /\d-\d/.test(displayValue);
+  // Check if current value looks like a math expression (not a plain negative number)
+  const isExpression =
+    /[+*/]/.test(displayValue) || /\d-\d/.test(displayValue);
 
   // Show a live preview of the result while typing an expression
   const previewResult = isExpression ? evaluateExpression(displayValue) : null;

@@ -1655,6 +1655,7 @@ export default function DashboardOverview({
             projects={projects}
             onSave={() => {
               setEditingExpense(null);
+              router.refresh();
             }}
           />
         </Suspense>
