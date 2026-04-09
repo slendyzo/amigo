@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Option C - Responsive Breakpoints</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #0f172a; color: #1e293b; padding: 40px; }
+
+  h1 { color: white; font-size: 28px; margin-bottom: 8px; }
+  .subtitle { color: #94a3b8; font-size: 14px; margin-bottom: 40px; }
+
+  /* Breakpoint frame */
+  .breakpoint {
+    margin-bottom: 60px;
+  }
+  .bp-label {
+    background: linear-gradient(135deg, #1e293b, #334155);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 10px 10px 0 0;
+    font-size: 15px;
+    font-weight: 700;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .bp-label span { font-size: 12px; font-weight: 400; color: #94a3b8; }
+  .bp-frame {
+    background: #f1f5f9;
+    border: 2px solid #334155;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+  }
+
+  /* ==================== */
+  /* Shared styles        */
+  /* ==================== */
+  .page { display: flex; min-height: 600px; }
+  .sidebar { background: #fff; border-right: 1px solid #e2e8f0; padding: 16px 10px; flex-shrink: 0; }
+  .sidebar h2 { font-size: 16px; font-weight: 700; margin-bottom: 16px; padding-left: 6px; }
+  .nav-group { margin-bottom: 12px; }
+  .nav-group-label { font-size: 9px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; padding: 0 6px; margin-bottom: 4px; }
+  .nav-item { display: flex; align-items: center; gap: 6px; padding: 7px 6px; border-radius: 6px; font-size: 12px; color: #475569; }
+  .nav-item.active { background: #2563eb; color: white; font-weight: 600; }
+
+  .main { flex: 1; padding: 20px; overflow: hidden; }
+  .card { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; margin-bottom: 12px; }
+  .card-title { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #94a3b8; margin-bottom: 10px; }
+
+  /* Column headers */
+  .column-header {
+    background: #fff;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .col-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .portfolio-header .col-label { color: #6366f1; }
+  .expenses-header .col-label { color: #f59e0b; }
+  .col-value { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+  .col-sub { font-size: 11px; color: #64748b; margin-top: 2px; }
+  .col-stats { display: flex; gap: 16px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #f1f5f9; }
+  .stat-item { display: flex; flex-direction: column; }
+  .stat-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; font-weight: 600; }
+  .stat-value { font-size: 13px; font-weight: 700; margin-top: 1px; }
+
+  .badge-green { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 600; padding: 2px 8px; border-radius: 20px; background: #dcfce7; color: #16a34a; margin-left: 6px; vertical-align: middle; }
+
+  /* Donut */
+  .donut-mock { width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#2563eb 0% 42%, #7c3aed 42% 68%, #06b6d4 68% 82%, #f59e0b 82% 94%, #e2e8f0 94% 100%); position: relative; flex-shrink: 0; }
+  .donut-mock::after { content: '€11,203'; position: absolute; inset: 20px; background: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; }
+  .treemap-mock { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; min-height: 100px; }
+  .treemap-mock div { border-radius: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; font-weight: 600; font-size: 10px; }
+  .treemap-mock div span { font-size: 9px; opacity: 0.8; }
+
+  /* Holdings */
+  .holding-row { display: flex; align-items: center; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+  .holding-row:last-child { border-bottom: none; }
+  .holding-icon { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: white; margin-right: 8px; flex-shrink: 0; }
+  .holding-info { flex: 1; }
+  .holding-name { font-size: 12px; font-weight: 600; }
+  .holding-type { font-size: 9px; padding: 1px 4px; border-radius: 3px; font-weight: 600; margin-left: 4px; }
+  .holding-detail { font-size: 10px; color: #94a3b8; }
+  .holding-amount { font-size: 12px; font-weight: 600; text-align: right; }
+  .holding-pnl { font-size: 10px; text-align: right; }
+  .pnl-up { color: #16a34a; }
+
+  /* Spending split */
+  .split-row { margin-bottom: 10px; }
+  .split-header { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 3px; }
+  .split-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+  .split-name { font-size: 12px; font-weight: 500; }
+  .split-amount { font-size: 12px; font-weight: 600; }
+  .split-pct { font-size: 11px; color: #94a3b8; margin-left: 3px; }
+  .split-bar { height: 3px; border-radius: 2px; background: #f1f5f9; }
+  .split-bar-fill { height: 100%; border-radius: 2px; }
+  .split-detail { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+  .split-total { display: flex; justify-content: space-between; font-weight: 700; font-size: 13px; padding-top: 8px; border-top: 1px solid #f1f5f9; margin-top: 6px; }
+
+  /* Category bar */
+  .cat-bar { display: flex; height: 8px; border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
+  .cat-bar div { height: 100%; }
+  .cat-row { display: flex; align-items: center; padding: 3px 0; font-size: 12px; }
+  .cat-dot { width: 7px; height: 7px; border-radius: 50%; margin-right: 6px; flex-shrink: 0; }
+  .cat-name { flex: 1; }
+  .cat-amount { font-weight: 600; margin-right: 6px; }
+  .cat-pct { color: #94a3b8; font-size: 11px; width: 32px; text-align: right; }
+
+  /* Income cards */
+  .income-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .income-card { border-radius: 8px; padding: 12px; }
+  .income-card.green { background: #f0fdf4; }
+  .income-card.blue { background: #eff6ff; }
+  .income-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+  .income-card.green .income-label { color: #16a34a; }
+  .income-card.blue .income-label { color: #2563eb; }
+  .income-value { font-size: 18px; font-weight: 800; margin-top: 2px; }
+  .income-card.green .income-value { color: #16a34a; }
+  .income-card.blue .income-value { color: #2563eb; }
+  .income-sub { font-size: 10px; color: #64748b; margin-top: 1px; }
+
+  /* Expenses */
+  .expense-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f1f5f9; }
+  .expense-row:last-child { border-bottom: none; }
+  .expense-name { font-size: 13px; font-weight: 500; }
+  .expense-date { font-size: 10px; color: #94a3b8; }
+  .expense-amount { font-size: 13px; font-weight: 600; }
+
+  .view-all { text-align: center; margin-top: 8px; }
+  .view-all a { color: #2563eb; font-size: 12px; font-weight: 600; text-decoration: none; }
+
+  /* Burn chart placeholder */
+  .burn-placeholder { background: #fff; border-radius: 12px; border: 1px solid #e2e8f0; padding: 16px; height: 120px; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 12px; }
+
+  /* FAB */
+  .fab { position: absolute; bottom: 16px; right: 16px; width: 48px; height: 48px; border-radius: 50%; background: #2563eb; color: white; border: none; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(37,99,235,0.3); cursor: pointer; }
+
+  /* Mobile bottom nav */
+  .mobile-nav { display: flex; justify-content: space-around; background: white; border-top: 1px solid #e2e8f0; padding: 8px 0 4px; }
+  .mobile-nav-item { display: flex; flex-direction: column; align-items: center; font-size: 9px; color: #94a3b8; gap: 2px; }
+  .mobile-nav-item.active { color: #2563eb; }
+  .mobile-nav-icon { width: 20px; height: 20px; background: currentColor; border-radius: 4px; opacity: 0.3; }
+  .mobile-nav-item.active .mobile-nav-icon { opacity: 1; }
+
+  /* Mobile header */
+  .mobile-header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: white; border-bottom: 1px solid #e2e8f0; }
+  .mobile-header h3 { font-size: 16px; font-weight: 700; }
+  .mobile-header .workspace { font-size: 12px; color: #64748b; }
+</style>
+</head>
+<body>
+
+<h1>Option C: No Top Hero — All Breakpoints</h1>
+<p class="subtitle">Each column owns its header. No shared hero. Clean separation at every size.</p>
+
+<!-- ================================== -->
+<!-- DESKTOP: 1440px                    -->
+<!-- ================================== -->
+<div class="breakpoint">
+  <div class="bp-label">Desktop <span>1440 x 900 &mdash; md: breakpoint and above</span></div>
+  <div class="bp-frame" style="width: 1440px;">
+    <div class="page">
+      <aside class="sidebar" style="width: 190px;">
+        <h2>Amigo</h2>
+        <div class="nav-group"><div class="nav-item active">Dashboard</div></div>
+        <div class="nav-group">
+          <div class="nav-group-label">Portfolio</div>
+          <div class="nav-item">Holdings</div>
+          <div class="nav-item">Exchanges</div>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-label">Finances</div>
+          <div class="nav-item">Expenses</div>
+          <div class="nav-item">Incomes</div>
+          <div class="nav-item">Recurring</div>
+        </div>
+        <div class="nav-group">
+          <div class="nav-group-label">Tools</div>
+          <div class="nav-item">Import</div>
+          <div class="nav-item">Categories</div>
+          <div class="nav-item">Tidy Up</div>
+          <div class="nav-item">Bank Accounts</div>
+          <div class="nav-item">Mappings</div>
+          <div class="nav-item">Projects</div>
+        </div>
+        <div class="nav-group" style="margin-top: 20px;">
+          <div class="nav-item">Settings</div>
+          <div class="nav-item" style="color: #2563eb;">What's New</div>
+        </div>
+      </aside>
+      <main class="main" style="position: relative;">
+        <!-- Column headers -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <div class="column-header portfolio-header">
+            <div class="col-label">Portfolio</div>
+            <div class="col-value">€11,203.00 <span class="badge-green">&#9650; 3.9%</span></div>
+            <div class="col-sub">Total across 2 exchanges</div>
+            <div class="col-stats">
+              <div class="stat-item"><span class="stat-label">Invested</span><span class="stat-value">€10,720</span></div>
+              <div class="stat-item"><span class="stat-label">P&L</span><span class="stat-value" style="color: #16a34a;">+€483</span></div>
+              <div class="stat-item"><span class="stat-label">Free Cash</span><span class="stat-value">€400</span></div>
+            </div>
+          </div>
+          <div class="column-header expenses-header">
+            <div class="col-label">This Month</div>
+            <div class="col-value">€2,370.28 <span style="font-size: 14px; font-weight: 500; color: #94a3b8;">/ €2,500</span></div>
+            <div class="col-sub">95% of budget used</div>
+            <div class="col-stats">
+              <div class="stat-item"><span class="stat-label">Income</span><span class="stat-value" style="color: #16a34a;">€3,675</span></div>
+              <div class="stat-item"><span class="stat-label">Balance</span><span class="stat-value" style="color: #2563eb;">€1,305</span></div>
+              <div class="stat-item"><span class="stat-label">Remaining</span><span class="stat-value" style="color: #f59e0b;">€129.72</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hub grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+          <!-- Left: Portfolio -->
+          <div>
+            <div class="card">
+              <div class="card-title">Allocation</div>
+              <div style="display: flex; gap: 12px; align-items: stretch;">
+                <div class="donut-mock"></div>
+                <div class="treemap-mock">
+                  <div style="background: #2563eb;"><b>BTC</b><span>42%</span></div>
+                  <div style="background: #7c3aed;"><b>SOL</b><span>26%</span></div>
+                  <div style="background: #06b6d4;"><b>CSPX</b><span>14%</span></div>
+                  <div style="background: #f59e0b;"><b>XDWL</b><span>12%</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Top Holdings</div>
+              <div class="holding-row">
+                <div class="holding-icon" style="background: #f59e0b;">B</div>
+                <div class="holding-info"><div class="holding-name">BTC <span class="holding-type" style="background: #dbeafe; color: #2563eb;">CRYPTO</span></div><div class="holding-detail">Bitcoin</div></div>
+                <div><div class="holding-amount">€4,712.40</div><div class="holding-pnl pnl-up">&#9650; 18.2%</div></div>
+              </div>
+              <div class="holding-row">
+                <div class="holding-icon" style="background: #7c3aed;">S</div>
+                <div class="holding-info"><div class="holding-name">SOL <span class="holding-type" style="background: #dbeafe; color: #2563eb;">CRYPTO</span></div><div class="holding-detail">Solana</div></div>
+                <div><div class="holding-amount">€2,914.80</div><div class="holding-pnl pnl-up">&#9650; 8.5%</div></div>
+              </div>
+              <div class="holding-row">
+                <div class="holding-icon" style="background: #06b6d4;">C</div>
+                <div class="holding-info"><div class="holding-name">CSPX <span class="holding-type" style="background: #fef3c7; color: #d97706;">ETF</span></div><div class="holding-detail">iShares Core S&P 500</div></div>
+                <div><div class="holding-amount">€1,568.22</div><div class="holding-pnl pnl-up">&#9650; 5.1%</div></div>
+              </div>
+              <div class="view-all"><a href="#">View all &rarr;</a></div>
+            </div>
+          </div>
+          <!-- Right: Expenses -->
+          <div>
+            <div class="card">
+              <div class="card-title">Spending Split</div>
+              <div class="split-row">
+                <div class="split-header"><span><span class="split-dot" style="background: #2563eb;"></span><span class="split-name">Living</span></span><span><span class="split-amount">€1,436.70</span><span class="split-pct">61%</span></span></div>
+                <div class="split-bar"><div class="split-bar-fill" style="width: 61%; background: #2563eb;"></div></div>
+                <div class="split-detail">Fixed €1,338.48 &middot; Variable €98.22</div>
+              </div>
+              <div class="split-row">
+                <div class="split-header"><span><span class="split-dot" style="background: #a855f7;"></span><span class="split-name">Lifestyle</span></span><span><span class="split-amount">€915.48</span><span class="split-pct">39%</span></span></div>
+                <div class="split-bar"><div class="split-bar-fill" style="width: 39%; background: #a855f7;"></div></div>
+              </div>
+              <div class="split-row">
+                <div class="split-header"><span><span class="split-dot" style="background: #f59e0b;"></span><span class="split-name">Projects</span></span><span><span class="split-amount">€18.10</span><span class="split-pct">1%</span></span></div>
+                <div class="split-bar"><div class="split-bar-fill" style="width: 1%; background: #f59e0b;"></div></div>
+              </div>
+              <div class="split-total"><span>Total</span><span>€2,370.28</span></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Where Money Goes</div>
+              <div class="cat-bar">
+                <div style="width: 28%; background: #2563eb;"></div>
+                <div style="width: 22%; background: #a855f7;"></div>
+                <div style="width: 18%; background: #10b981;"></div>
+                <div style="width: 15%; background: #f59e0b;"></div>
+                <div style="width: 10%; background: #ef4444;"></div>
+                <div style="width: 7%; background: #06b6d4;"></div>
+              </div>
+              <div class="cat-row"><div class="cat-dot" style="background: #2563eb;"></div><div class="cat-name">Housing</div><div class="cat-amount">€242.00</div><div class="cat-pct">28.0%</div></div>
+              <div class="cat-row"><div class="cat-dot" style="background: #a855f7;"></div><div class="cat-name">Food & Dining</div><div class="cat-amount">€190.10</div><div class="cat-pct">22.0%</div></div>
+              <div class="cat-row"><div class="cat-dot" style="background: #10b981;"></div><div class="cat-name">Transport</div><div class="cat-amount">€155.50</div><div class="cat-pct">18.0%</div></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Recent Expenses</div>
+              <div class="expense-row"><div><div class="expense-name">Mercadona</div><div class="expense-date">9/04</div></div><div class="expense-amount">-€44.96</div></div>
+              <div class="expense-row"><div><div class="expense-name">Spotify Premium</div><div class="expense-date">8/04</div></div><div class="expense-amount">-€10.99</div></div>
+              <div class="expense-row"><div><div class="expense-name">Uber</div><div class="expense-date">7/04</div></div><div class="expense-amount">-€8.50</div></div>
+              <div class="view-all"><a href="#">View all &rarr;</a></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Full-width burn chart -->
+        <div class="burn-placeholder">Spending Velocity Chart</div>
+
+        <button class="fab">+</button>
+      </main>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================================== -->
+<!-- TABLET: 768px                      -->
+<!-- ================================== -->
+<div class="breakpoint">
+  <div class="bp-label">Tablet <span>768 x 1024 &mdash; between sm: and md:</span></div>
+  <div class="bp-frame" style="width: 768px;">
+    <div class="page">
+      <aside class="sidebar" style="width: 56px; padding: 12px 6px;">
+        <div style="width: 32px; height: 32px; background: #2563eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: white; font-weight: 800; font-size: 14px; margin: 0 auto 16px;">A</div>
+        <div style="display: flex; flex-direction: column; align-items: center; gap: 6px;">
+          <div style="width: 32px; height: 32px; background: #2563eb; border-radius: 6px; opacity: 0.15;"></div>
+          <div style="width: 32px; height: 32px; background: #94a3b8; border-radius: 6px; opacity: 0.15;"></div>
+          <div style="width: 32px; height: 32px; background: #94a3b8; border-radius: 6px; opacity: 0.15;"></div>
+          <div style="width: 32px; height: 32px; background: #94a3b8; border-radius: 6px; opacity: 0.15;"></div>
+          <div style="width: 32px; height: 32px; background: #94a3b8; border-radius: 6px; opacity: 0.15;"></div>
+        </div>
+      </aside>
+      <main class="main" style="position: relative;">
+        <!-- Column headers — still side by side on tablet -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="column-header portfolio-header">
+            <div class="col-label">Portfolio</div>
+            <div class="col-value" style="font-size: 22px;">€11,203 <span class="badge-green" style="font-size: 11px;">&#9650; 3.9%</span></div>
+            <div class="col-stats" style="gap: 10px;">
+              <div class="stat-item"><span class="stat-label">Invested</span><span class="stat-value" style="font-size: 12px;">€10,720</span></div>
+              <div class="stat-item"><span class="stat-label">P&L</span><span class="stat-value" style="font-size: 12px; color: #16a34a;">+€483</span></div>
+              <div class="stat-item"><span class="stat-label">Cash</span><span class="stat-value" style="font-size: 12px;">€400</span></div>
+            </div>
+          </div>
+          <div class="column-header expenses-header">
+            <div class="col-label">This Month</div>
+            <div class="col-value" style="font-size: 22px;">€2,370 <span style="font-size: 13px; font-weight: 500; color: #94a3b8;">/ €2,500</span></div>
+            <div class="col-stats" style="gap: 10px;">
+              <div class="stat-item"><span class="stat-label">Income</span><span class="stat-value" style="font-size: 12px; color: #16a34a;">€3,675</span></div>
+              <div class="stat-item"><span class="stat-label">Balance</span><span class="stat-value" style="font-size: 12px; color: #2563eb;">€1,305</span></div>
+              <div class="stat-item"><span class="stat-label">Left</span><span class="stat-value" style="font-size: 12px; color: #f59e0b;">€129</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hub grid — still 2 columns but tighter -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <div class="card">
+              <div class="card-title">Allocation</div>
+              <div style="display: flex; gap: 10px; align-items: stretch;">
+                <div class="donut-mock" style="width: 80px; height: 80px;"><style>.bp-frame:nth-child(2) .donut-mock::after { inset: 16px; font-size: 10px; }</style></div>
+                <div class="treemap-mock" style="min-height: 80px;">
+                  <div style="background: #2563eb;"><b>BTC</b><span>42%</span></div>
+                  <div style="background: #7c3aed;"><b>SOL</b><span>26%</span></div>
+                  <div style="background: #06b6d4;"><b>CSPX</b><span>14%</span></div>
+                  <div style="background: #f59e0b;"><b>XDWL</b><span>12%</span></div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="card-title">Top Holdings</div>
+              <div class="holding-row">
+                <div class="holding-icon" style="background: #f59e0b;">B</div>
+                <div class="holding-info"><div class="holding-name">BTC <span class="holding-type" style="background: #dbeafe; color: #2563eb;">CRYPTO</span></div></div>
+                <div><div class="holding-amount">€4,712</div><div class="holding-pnl pnl-up">&#9650; 18.2%</div></div>
+              </div>
+              <div class="holding-row">
+                <div class="holding-icon" style="background: #7c3aed;">S</div>
+                <div class="holding-info"><div class="holding-name">SOL <span class="holding-type" style="background: #dbeafe; color: #2563eb;">CRYPTO</span></div></div>
+                <div><div class="holding-amount">€2,915</div><div class="holding-pnl pnl-up">&#9650; 8.5%</div></div>
+              </div>
+              <div class="holding-row">
+                <div class="holding-icon" style="background: #06b6d4;">C</div>
+                <div class="holding-info"><div class="holding-name">CSPX <span class="holding-type" style="background: #fef3c7; color: #d97706;">ETF</span></div></div>
+                <div><div class="holding-amount">€1,568</div><div class="holding-pnl pnl-up">&#9650; 5.1%</div></div>
+              </div>
+              <div class="view-all"><a href="#">View all &rarr;</a></div>
+            </div>
+          </div>
+          <div>
+            <div class="card">
+              <div class="card-title">Spending Split</div>
+              <div class="split-row">
+                <div class="split-header"><span><span class="split-dot" style="background: #2563eb;"></span><span class="split-name">Living</span></span><span><span class="split-amount">€1,437</span><span class="split-pct">61%</span></span></div>
+                <div class="split-bar"><div class="split-bar-fill" style="width: 61%; background: #2563eb;"></div></div>
+              </div>
+              <div class="split-row">
+                <div class="split-header"><span><span class="split-dot" style="background: #a855f7;"></span><span class="split-name">Lifestyle</span></span><span><span class="split-amount">€915</span><span class="split-pct">39%</span></span></div>
+                <div class="split-bar"><div class="split-bar-fill" style="width: 39%; background: #a855f7;"></div></div>
+              </div>
+              <div class="split-total"><span>Total</span><span>€2,370</span></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Where Money Goes</div>
+              <div class="cat-bar">
+                <div style="width: 28%; background: #2563eb;"></div>
+                <div style="width: 22%; background: #a855f7;"></div>
+                <div style="width: 18%; background: #10b981;"></div>
+                <div style="width: 15%; background: #f59e0b;"></div>
+                <div style="width: 17%; background: #ef4444;"></div>
+              </div>
+              <div class="cat-row"><div class="cat-dot" style="background: #2563eb;"></div><div class="cat-name">Housing</div><div class="cat-amount">€242</div><div class="cat-pct">28%</div></div>
+              <div class="cat-row"><div class="cat-dot" style="background: #a855f7;"></div><div class="cat-name">Food</div><div class="cat-amount">€190</div><div class="cat-pct">22%</div></div>
+              <div class="cat-row"><div class="cat-dot" style="background: #10b981;"></div><div class="cat-name">Transport</div><div class="cat-amount">€156</div><div class="cat-pct">18%</div></div>
+            </div>
+            <div class="card">
+              <div class="card-title">Recent Expenses</div>
+              <div class="expense-row"><div><div class="expense-name">Mercadona</div><div class="expense-date">9/04</div></div><div class="expense-amount">-€44.96</div></div>
+              <div class="expense-row"><div><div class="expense-name">Spotify</div><div class="expense-date">8/04</div></div><div class="expense-amount">-€10.99</div></div>
+              <div class="view-all"><a href="#">View all &rarr;</a></div>
+            </div>
+          </div>
+        </div>
+        <div class="burn-placeholder">Spending Velocity Chart</div>
+        <button class="fab">+</button>
+      </main>
+    </div>
+  </div>
+</div>
+
+
+<!-- ================================== -->
+<!-- MOBILE: 390px (iPhone 14/15)       -->
+<!-- ================================== -->
+<div class="breakpoint">
+  <div class="bp-label">Mobile <span>390 x 844 &mdash; default (no prefix), below sm:</span></div>
+  <div class="bp-frame" style="width: 390px;">
+    <div style="display: flex; flex-direction: column; min-height: 844px; position: relative;">
+      <!-- Mobile header -->
+      <div class="mobile-header">
+        <div>
+          <h3>Dashboard</h3>
+          <div class="workspace">Personal</div>
+        </div>
+        <div style="font-size: 11px; color: #64748b;">kikoman200@gmail.com</div>
+      </div>
+
+      <!-- Scrollable content -->
+      <div style="flex: 1; padding: 12px; overflow-y: auto; background: #f1f5f9;">
+
+        <!-- Stacked column headers -->
+        <div class="column-header portfolio-header" style="margin-bottom: 8px;">
+          <div class="col-label">Portfolio</div>
+          <div class="col-value" style="font-size: 26px;">€11,203 <span class="badge-green" style="font-size: 11px;">&#9650; 3.9%</span></div>
+          <div class="col-stats" style="gap: 12px;">
+            <div class="stat-item"><span class="stat-label">Invested</span><span class="stat-value">€10,720</span></div>
+            <div class="stat-item"><span class="stat-label">P&L</span><span class="stat-value" style="color: #16a34a;">+€483</span></div>
+            <div class="stat-item"><span class="stat-label">Cash</span><span class="stat-value">€400</span></div>
+          </div>
+        </div>
+
+        <div class="column-header expenses-header" style="margin-bottom: 12px;">
+          <div class="col-label">This Month</div>
+          <div class="col-value" style="font-size: 26px;">€2,370 <span style="font-size: 14px; font-weight: 500; color: #94a3b8;">/ €2,500</span></div>
+          <div class="col-sub">95% of budget used</div>
+          <div class="col-stats" style="gap: 12px;">
+            <div class="stat-item"><span class="stat-label">Income</span><span class="stat-value" style="color: #16a34a;">€3,675</span></div>
+            <div class="stat-item"><span class="stat-label">Balance</span><span class="stat-value" style="color: #2563eb;">€1,305</span></div>
+            <div class="stat-item"><span class="stat-label">Remaining</span><span class="stat-value" style="color: #f59e0b;">€129.72</span></div>
+          </div>
+        </div>
+
+        <!-- All cards stacked single column -->
+        <div class="card">
+          <div class="card-title">Allocation</div>
+          <div style="display: flex; gap: 12px; align-items: stretch;">
+            <div class="donut-mock" style="width: 90px; height: 90px;"></div>
+            <div class="treemap-mock" style="min-height: 90px;">
+              <div style="background: #2563eb;"><b>BTC</b><span>42%</span></div>
+              <div style="background: #7c3aed;"><b>SOL</b><span>26%</span></div>
+              <div style="background: #06b6d4;"><b>CSPX</b><span>14%</span></div>
+              <div style="background: #f59e0b;"><b>XDWL</b><span>12%</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Top Holdings</div>
+          <div class="holding-row">
+            <div class="holding-icon" style="background: #f59e0b;">B</div>
+            <div class="holding-info"><div class="holding-name">BTC <span class="holding-type" style="background: #dbeafe; color: #2563eb;">CRYPTO</span></div><div class="holding-detail">Bitcoin</div></div>
+            <div><div class="holding-amount">€4,712</div><div class="holding-pnl pnl-up">&#9650; 18.2%</div></div>
+          </div>
+          <div class="holding-row">
+            <div class="holding-icon" style="background: #7c3aed;">S</div>
+            <div class="holding-info"><div class="holding-name">SOL <span class="holding-type" style="background: #dbeafe; color: #2563eb;">CRYPTO</span></div><div class="holding-detail">Solana</div></div>
+            <div><div class="holding-amount">€2,915</div><div class="holding-pnl pnl-up">&#9650; 8.5%</div></div>
+          </div>
+          <div class="holding-row">
+            <div class="holding-icon" style="background: #06b6d4;">C</div>
+            <div class="holding-info"><div class="holding-name">CSPX <span class="holding-type" style="background: #fef3c7; color: #d97706;">ETF</span></div><div class="holding-detail">iShares S&P 500</div></div>
+            <div><div class="holding-amount">€1,568</div><div class="holding-pnl pnl-up">&#9650; 5.1%</div></div>
+          </div>
+          <div class="view-all"><a href="#">View all &rarr;</a></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Spending Split</div>
+          <div class="split-row">
+            <div class="split-header"><span><span class="split-dot" style="background: #2563eb;"></span><span class="split-name">Living</span></span><span><span class="split-amount">€1,437</span><span class="split-pct">61%</span></span></div>
+            <div class="split-bar"><div class="split-bar-fill" style="width: 61%; background: #2563eb;"></div></div>
+            <div class="split-detail">Fixed €1,338 &middot; Variable €98</div>
+          </div>
+          <div class="split-row">
+            <div class="split-header"><span><span class="split-dot" style="background: #a855f7;"></span><span class="split-name">Lifestyle</span></span><span><span class="split-amount">€915</span><span class="split-pct">39%</span></span></div>
+            <div class="split-bar"><div class="split-bar-fill" style="width: 39%; background: #a855f7;"></div></div>
+          </div>
+          <div class="split-row">
+            <div class="split-header"><span><span class="split-dot" style="background: #f59e0b;"></span><span class="split-name">Projects</span></span><span><span class="split-amount">€18</span><span class="split-pct">1%</span></span></div>
+            <div class="split-bar"><div class="split-bar-fill" style="width: 1%; background: #f59e0b;"></div></div>
+          </div>
+          <div class="split-total"><span>Total</span><span>€2,370</span></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Where Money Goes</div>
+          <div class="cat-bar">
+            <div style="width: 28%; background: #2563eb;"></div>
+            <div style="width: 22%; background: #a855f7;"></div>
+            <div style="width: 18%; background: #10b981;"></div>
+            <div style="width: 15%; background: #f59e0b;"></div>
+            <div style="width: 10%; background: #ef4444;"></div>
+            <div style="width: 7%; background: #06b6d4;"></div>
+          </div>
+          <div class="cat-row"><div class="cat-dot" style="background: #2563eb;"></div><div class="cat-name">Housing</div><div class="cat-amount">€242</div><div class="cat-pct">28%</div></div>
+          <div class="cat-row"><div class="cat-dot" style="background: #a855f7;"></div><div class="cat-name">Food & Dining</div><div class="cat-amount">€190</div><div class="cat-pct">22%</div></div>
+          <div class="cat-row"><div class="cat-dot" style="background: #10b981;"></div><div class="cat-name">Transport</div><div class="cat-amount">€156</div><div class="cat-pct">18%</div></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Recent Expenses</div>
+          <div class="expense-row"><div><div class="expense-name">Mercadona</div><div class="expense-date">9/04</div></div><div class="expense-amount">-€44.96</div></div>
+          <div class="expense-row"><div><div class="expense-name">Spotify Premium</div><div class="expense-date">8/04</div></div><div class="expense-amount">-€10.99</div></div>
+          <div class="expense-row"><div><div class="expense-name">Uber</div><div class="expense-date">7/04</div></div><div class="expense-amount">-€8.50</div></div>
+          <div class="view-all"><a href="#">View all &rarr;</a></div>
+        </div>
+
+        <div class="burn-placeholder" style="height: 100px;">Spending Velocity Chart</div>
+
+        <!-- Spacer for bottom nav -->
+        <div style="height: 70px;"></div>
+      </div>
+
+      <!-- FAB -->
+      <button class="fab" style="position: absolute; bottom: 72px; right: 16px; z-index: 10;">+</button>
+
+      <!-- Bottom nav -->
+      <div class="mobile-nav">
+        <div class="mobile-nav-item active"><div class="mobile-nav-icon"></div>Dashboard</div>
+        <div class="mobile-nav-item"><div class="mobile-nav-icon"></div>Portfolio</div>
+        <div class="mobile-nav-item"><div class="mobile-nav-icon"></div>Expenses</div>
+        <div class="mobile-nav-item"><div class="mobile-nav-icon"></div>More</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
