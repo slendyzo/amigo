@@ -249,7 +249,7 @@ export class Trading212Client implements ExchangeClient {
     try {
       const raw = await this.request<T212Position[]>("/equity/positions");
 
-      return raw.map((pos) => {
+      return raw.filter((pos) => pos.ticker && pos.quantity > 0).map((pos) => {
         const assetType = isEtfTicker(pos.ticker) ? "ETF" : "STOCK";
         const totalCost = pos.quantity * pos.averagePrice;
         const currentValue = pos.quantity * pos.currentPrice;

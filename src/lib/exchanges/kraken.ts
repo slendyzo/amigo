@@ -32,6 +32,7 @@ function normaliseAsset(raw: string): string {
 }
 
 const FIAT_CODES = new Set(["EUR", "USD", "GBP", "ZEUR", "ZUSD", "ZGBP"]);
+const CASH_CODES = new Set([...FIAT_CODES, "USDC", "USDT", "DAI"]);
 
 // ---------------------------------------------------------------------------
 // Rate limiter — Starter tier: max 15, decay 0.33/sec, ledger/trade cost 2
@@ -73,6 +74,7 @@ export class KrakenClient implements ExchangeClient {
   private readonly apiSecret: string;
   private readonly rateLimiter = new RateLimiter();
   private lastNonce = 0;
+  private requestQueue: Promise<unknown> = Promise.resolve();
 
   constructor(apiKey: string, apiSecret: string) {
     this.apiKey = apiKey;
@@ -103,10 +105,23 @@ export class KrakenClient implements ExchangeClient {
   // -------------------------------------------------------------------------
   // Private POST request
   // -------------------------------------------------------------------------
-  private async privatePost(
+  private privatePost(
     path: string,
     params: Record<string, string | number> = {},
     cost = 1
+  ): Promise<Record<string, unknown>> {
+    // Serialize all private requests so nonces arrive at Kraken in order
+    const task = this.requestQueue.then(() =>
+      this.doPrivatePost(path, params, cost)
+    );
+    this.requestQueue = task.catch(() => {}); // keep chain alive on errors
+    return task;
+  }
+
+  private async doPrivatePost(
+    path: string,
+    params: Record<string, string | number>,
+    cost: number
   ): Promise<Record<string, unknown>> {
     await this.rateLimiter.consume(cost);
 
@@ -198,7 +213,7 @@ export class KrakenClient implements ExchangeClient {
     const cryptoAssets = Object.entries(balances)
       .filter(([rawCode, qty]) => {
         const normalised = normaliseAsset(rawCode);
-        return !FIAT_CODES.has(rawCode) && !FIAT_CODES.has(normalised) && Number(qty) > 0;
+        return !CASH_CODES.has(rawCode) && !CASH_CODES.has(normalised) && Number(qty) > 0;
       })
       .map(([rawCode, qty]) => ({
         rawCode,
@@ -303,12 +318,11 @@ export class KrakenClient implements ExchangeClient {
     const unrealizedPnl = Number(tradeBalance.n ?? 0); // unrealized P&L
     const realizedPnl = Number(tradeBalance.rp ?? 0);  // realized P&L
 
-    // Fiat cash = sum of EUR/USD/GBP balances converted naively to EUR
-    // (for a simple implementation we just sum EUR-denominated fiat)
+    // Cash = fiat + stablecoins (USDC, USDT, DAI treated as cash equivalents)
     const balances = await this.privatePost("/0/private/Balance");
     let freeCash = 0;
     for (const [rawCode, qty] of Object.entries(balances)) {
-      if (FIAT_CODES.has(rawCode) || FIAT_CODES.has(normaliseAsset(rawCode))) {
+      if (CASH_CODES.has(rawCode) || CASH_CODES.has(normaliseAsset(rawCode))) {
         freeCash += Number(qty);
       }
     }
