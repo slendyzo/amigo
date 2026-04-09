@@ -39,6 +39,12 @@
     "required": "Obrigatório"
   },
   "nav": {
+    "dashboard": "Painel",
+    "holdings": "Ativos",
+    "exchanges": "Corretoras",
+    "sectionPortfolio": "Portfolio",
+    "sectionFinances": "Finanças",
+    "sectionTools": "Ferramentas",
     "overview": "Resumo",
     "expenses": "Despesas",
     "incomes": "Receitas",
@@ -95,7 +101,7 @@
     "budgetRemaining": "Orçamento Restante",
     "budgetUsed": "do orçamento usado",
     "recentExpenses": "Despesas Recentes",
-    "viewAll": "Ver Tudo",
+    "viewAll": "Ver tudo",
     "noExpensesYet": "Ainda sem despesas",
     "addFirstExpense": "Adiciona a tua primeira despesa",
     "thisMonth": "Este Mês",
@@ -156,7 +162,8 @@
       "projects": "Projetos",
       "projectCount": "{count} projeto(s)",
       "grandTotal": "Total Geral",
-      "includingProjects": "Incluindo projetos"
+      "includingProjects": "Incluindo projetos",
+      "spent": "Gasto"
     },
     "expenses": {
       "title": "Despesas",
@@ -191,7 +198,17 @@
     "whereMoneyGoes": "Onde vai o dinheiro",
     "showDetails": "Ver detalhes",
     "hideDetails": "Ocultar detalhes",
-    "noExpenses": "Sem despesas neste período"
+    "noExpenses": "Sem despesas neste período",
+    "portfolio": {
+      "allocation": "Alocação",
+      "noExchanges": "Nenhuma corretora ligada",
+      "connectPrompt": "Liga a Kraken ou Trading212 para ver o teu portfolio aqui",
+      "addExchange": "Adicionar Corretora →",
+      "topHoldings": "Principais Ativos",
+      "noHoldings": "Liga uma corretora para ver os ativos",
+      "recentTrades": "Transações Recentes",
+      "noTrades": "Sem transações ainda"
+    }
   },
   "expenses": {
     "title": "Despesas",

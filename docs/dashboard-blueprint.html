@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Amigo — Dashboard Redesign Blueprint</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #f8fafc; --surface: #fff; --surface-alt: #f1f5f9; --border: #e2e8f0;
+    --text: #0f172a; --text-muted: #64748b; --text-faint: #94a3b8;
+    --accent: #0070f3; --accent-hover: #0060df;
+    --green: #16a34a; --green-bg: #f0fdf4; --green-border: #bbf7d0;
+    --red: #dc2626; --red-bg: #fef2f2; --red-border: #fecaca;
+    --blue-bg: #eff6ff; --blue-border: #bfdbfe; --blue: #2563eb;
+    --orange: #f97316; --purple: #8b5cf6; --cyan: #06b6d4;
+    --radius: 14px; --radius-sm: 10px;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 15px; color: var(--text); background: var(--bg);
+  }
+  .dark {
+    --bg: #0f172a; --surface: #1e293b; --surface-alt: #334155; --border: #334155;
+    --text: #f1f5f9; --text-muted: #94a3b8; --text-faint: #64748b;
+    --green-bg: rgba(22,163,74,0.1); --green-border: rgba(22,163,74,0.3);
+    --red-bg: rgba(220,38,38,0.1); --red-border: rgba(220,38,38,0.3);
+    --blue-bg: rgba(37,99,235,0.1); --blue-border: rgba(37,99,235,0.3);
+  }
+  #theme-toggle {
+    position: fixed; top: 12px; right: 12px; z-index: 100;
+    padding: 6px 14px; border-radius: 20px; border: 1px solid var(--border);
+    background: var(--surface); color: var(--text-muted); cursor: pointer; font-size: 13px; font-weight: 500;
+  }
+
+  /* ── Shell ─────────────────────────────────────────────── */
+  .shell { display: flex; min-height: 100vh; }
+  .sidebar { width: 240px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; overflow-y: auto; }
+  .sidebar-logo { padding: 20px 20px 16px; font-size: 20px; font-weight: 700; border-bottom: 1px solid var(--border); }
+  .sidebar-nav { flex: 1; padding: 8px 12px; }
+  .sidebar-footer { padding: 12px 16px; border-top: 1px solid var(--border); font-size: 11px; color: var(--text-faint); }
+  .main { flex: 1; min-width: 0; }
+  .topbar { height: 56px; background: var(--surface); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 24px; }
+  .content { padding: 24px; }
+
+  /* ── Nav ────────────────────────────────────────────────── */
+  .nav-section { margin-top: 16px; } .nav-section:first-child { margin-top: 0; }
+  .nav-label { font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--text-faint); padding: 4px 12px; margin-bottom: 2px; }
+  .nav-divider { height: 1px; background: var(--border); margin: 12px 0; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13.5px; font-weight: 500; color: var(--text-muted); text-decoration: none; transition: all 0.15s; }
+  .nav-item:hover { background: rgba(0,0,0,0.04); color: var(--text); }
+  .dark .nav-item:hover { background: rgba(255,255,255,0.05); }
+  .nav-item.active { background: var(--accent); color: #fff; }
+  .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+  /* ── Card ───────────────────────────────────────────────── */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+  .card-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; color: var(--text-faint); margin-bottom: 12px; }
+
+  /* ── Net Worth Hero ────────────────────────────────────── */
+  .hero { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin-bottom: 20px; }
+  .hero-value { font-size: 38px; font-weight: 700; letter-spacing: -0.5px; }
+  .hero-change { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 600; margin-left: 14px; padding: 3px 10px; border-radius: 20px; background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .hero-breakdown { margin-top: 8px; font-size: 13px; color: var(--text-muted); display: flex; gap: 8px; flex-wrap: wrap; }
+  .hero-breakdown span + span::before { content: "·"; margin-right: 8px; }
+
+  /* ── Hub Grid — columns aligned at top ─────────────────── */
+  .hub-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; align-items: start; }
+  @media (max-width: 900px) { .hub-grid { grid-template-columns: 1fr; } }
+
+  /* ── Donut — big, centered ─────────────────────────────── */
+  .donut-wrap { display: flex; flex-direction: column; align-items: center; margin-bottom: 20px; }
+  .donut { width: 200px; height: 200px; border-radius: 50%; background: conic-gradient(#f97316 0% 42%, #3b82f6 42% 68%, #8b5cf6 68% 82%, #06b6d4 82% 94%, #64748b 94% 100%); display: flex; align-items: center; justify-content: center; }
+  .donut-hole { width: 120px; height: 120px; border-radius: 50%; background: var(--surface); display: flex; align-items: center; justify-content: center; flex-direction: column; }
+  .donut-hole-value { font-size: 18px; font-weight: 700; }
+  .donut-hole-label { font-size: 11px; color: var(--text-faint); }
+  .donut-legend { display: flex; flex-wrap: wrap; gap: 4px 16px; justify-content: center; margin-top: 12px; font-size: 12.5px; color: var(--text-muted); }
+  .legend-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 4px; vertical-align: middle; }
+
+  /* ── Holdings ───────────────────────────────────────────── */
+  .holding-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .holding-row:last-child { border-bottom: none; }
+  .holding-left { display: flex; align-items: center; gap: 10px; }
+  .holding-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: #fff; flex-shrink: 0; }
+  .holding-symbol { font-weight: 600; font-size: 14px; }
+  .holding-name { font-size: 11.5px; color: var(--text-faint); }
+  .holding-badge { font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; margin-left: 6px; }
+  .badge-crypto { background: #fef3c7; color: #b45309; } .badge-etf { background: #dbeafe; color: #1d4ed8; }
+  .holding-value { font-size: 14px; font-weight: 600; text-align: right; }
+  .holding-pnl { font-size: 12px; text-align: right; }
+  .pnl-pos { color: var(--green); } .pnl-neg { color: var(--red); }
+  .view-all { display: block; text-align: center; padding: 10px; font-size: 13px; color: var(--accent); text-decoration: none; font-weight: 500; }
+
+  /* ── Budget Ring ────────────────────────────────────────── */
+  .budget-ring-card { background: linear-gradient(135deg, var(--surface-alt), var(--surface)); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; display: flex; align-items: center; gap: 20px; }
+  .ring-wrap { position: relative; width: 90px; height: 90px; flex-shrink: 0; }
+  .ring-center { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700; }
+
+  /* ── Stat grid ──────────────────────────────────────────── */
+  .stat-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .stat-card { border-radius: var(--radius); border: 1px solid; padding: 16px; }
+  .stat-card-green { background: var(--green-bg); border-color: var(--green-border); }
+  .stat-card-blue { background: var(--blue-bg); border-color: var(--blue-border); }
+
+  /* ── Type breakdown ─────────────────────────────────────── */
+  .type-row { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; font-size: 13.5px; }
+  .type-dot { width: 10px; height: 10px; border-radius: 50%; margin-right: 8px; display: inline-block; flex-shrink: 0; }
+  .type-label { color: var(--text-muted); display: flex; align-items: center; }
+  .type-value { font-weight: 600; }
+  .type-sub { padding-left: 24px; font-size: 12px; color: var(--text-faint); display: flex; justify-content: space-between; padding-top: 1px; padding-bottom: 1px; }
+  .type-total { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 4px; display: flex; justify-content: space-between; font-weight: 700; font-size: 14px; }
+
+  /* ── Category bar ───────────────────────────────────────── */
+  .cat-bar { height: 12px; border-radius: 6px; overflow: hidden; background: var(--surface-alt); display: flex; margin-bottom: 10px; }
+  .cat-bar-segment { height: 100%; }
+  .cat-row { display: flex; align-items: center; justify-content: space-between; padding: 3px 0; font-size: 12.5px; }
+  .cat-name { display: flex; align-items: center; gap: 6px; color: var(--text-muted); }
+  .cat-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Expense rows ───────────────────────────────────────── */
+  .expense-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .expense-row:last-child { border-bottom: none; }
+
+  /* ── Chart placeholder ──────────────────────────────────── */
+  /* ── Allocation split layout ─────────────────────────── */
+  .alloc-split { display: flex; gap: 20px; align-items: stretch; }
+  .alloc-half { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .alloc-half-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-bottom: 8px; text-align: center; }
+  @media (max-width: 600px) { .alloc-split { flex-direction: column; } }
+
+  /* ── Treemap ────────────────────────────────────────── */
+  .treemap { display: grid; grid-template-columns: 42fr 26fr 32fr; grid-template-rows: 1fr 1fr; gap: 3px; height: 180px; border-radius: 10px; overflow: hidden; }
+  .treemap-cell { display: flex; flex-direction: column; align-items: center; justify-content: center; color: #fff; position: relative; overflow: hidden; transition: opacity 0.15s; cursor: default; }
+  .treemap-cell:hover { opacity: 0.88; }
+  .treemap-symbol { font-size: 16px; font-weight: 700; }
+  .treemap-pct { font-size: 12px; font-weight: 600; opacity: 0.85; }
+  .treemap-val { font-size: 11px; opacity: 0.7; margin-top: 2px; }
+  .treemap-cell.btc { grid-row: 1 / 3; background: #f97316; }
+  .treemap-cell.sol { grid-row: 1 / 3; background: #3b82f6; }
+  .treemap-cell.cspx { background: #8b5cf6; }
+  .treemap-cell.xdwl { background: #06b6d4; }
+  .treemap-cell.other { background: #64748b; }
+  /* Adjust last column to split into 2 rows proportionally */
+  .treemap { grid-template-columns: 42fr 26fr 14fr 12fr 6fr; grid-template-rows: 1fr 1fr; }
+  .treemap-cell.btc { grid-column: 1; grid-row: 1 / 3; }
+  .treemap-cell.sol { grid-column: 2; grid-row: 1 / 3; }
+  .treemap-cell.cspx { grid-column: 3 / 5; grid-row: 1; }
+  .treemap-cell.xdwl { grid-column: 3 / 5; grid-row: 2; }
+  .treemap-cell.other { grid-column: 5; grid-row: 1 / 3; }
+
+  /* ── Trade history ───────────────────────────────────── */
+  .trade-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid var(--border); }
+  .trade-row:last-child { border-bottom: none; }
+  .trade-side { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; flex-shrink: 0; width: 36px; text-align: center; }
+  .trade-buy { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+  .trade-sell { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+  .trade-info { flex: 1; min-width: 0; }
+  .trade-asset { font-size: 13.5px; font-weight: 600; }
+  .trade-detail { font-size: 11px; color: var(--text-faint); }
+  .trade-right { text-align: right; flex-shrink: 0; }
+  .trade-amount { font-size: 13.5px; font-weight: 600; }
+  .trade-date { font-size: 11px; color: var(--text-faint); }
+
+  .chart-placeholder { height: 200px; border-radius: var(--radius-sm); background: linear-gradient(135deg, rgba(0,112,243,0.06) 0%, rgba(0,112,243,0.02) 100%); display: flex; align-items: center; justify-content: center; color: var(--text-faint); font-size: 13px; font-weight: 500; position: relative; overflow: hidden; }
+  .chart-placeholder::after { content: ""; position: absolute; bottom: 0; left: 0; right: 0; height: 60%; background: linear-gradient(to top, rgba(0,112,243,0.08) 0%, rgba(0,112,243,0.04) 40%, transparent 100%); clip-path: polygon(0 60%, 5% 45%, 12% 50%, 20% 35%, 30% 40%, 40% 25%, 50% 30%, 60% 15%, 70% 20%, 80% 10%, 90% 18%, 100% 5%, 100% 100%, 0 100%); }
+  .time-selector { display: flex; gap: 4px; margin-bottom: 12px; }
+  .time-btn { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; border: 1px solid var(--border); background: transparent; color: var(--text-muted); cursor: pointer; }
+  .time-btn.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+  /* ── Mobile ─────────────────────────────────────────────── */
+  .mobile-bar { display: none; position: fixed; bottom: 0; left: 0; right: 0; background: var(--surface); border-top: 1px solid var(--border); height: 64px; z-index: 50; }
+  .mobile-bar-inner { display: flex; align-items: center; justify-content: space-around; height: 100%; }
+  .mobile-tab { display: flex; flex-direction: column; align-items: center; gap: 2px; font-size: 10.5px; font-weight: 500; color: var(--text-muted); text-decoration: none; padding: 4px 12px; }
+  .mobile-tab.active { color: var(--accent); }
+  .mobile-tab svg { width: 22px; height: 22px; }
+  .mobile-fab { position: fixed; right: 16px; z-index: 51; width: 52px; height: 52px; border-radius: 50%; background: var(--accent); color: #fff; border: none; display: none; align-items: center; justify-content: center; box-shadow: 0 4px 12px rgba(0,112,243,0.35); cursor: pointer; }
+  .mobile-header { display: none; height: 52px; background: var(--surface); border-bottom: 1px solid var(--border); align-items: center; justify-content: center; position: sticky; top: 0; z-index: 40; font-size: 17px; font-weight: 600; }
+  @media (max-width: 900px) {
+    .sidebar, .topbar { display: none !important; }
+    .content { padding: 16px; padding-bottom: 100px; }
+    .mobile-bar, .mobile-fab { display: flex; }
+    .mobile-fab { bottom: 80px; }
+    .mobile-header { display: flex; }
+    .hero-value { font-size: 28px; }
+    .donut { width: 160px; height: 160px; }
+    .donut-hole { width: 96px; height: 96px; }
+  }
+</style>
+</head>
+<body>
+<button id="theme-toggle" onclick="document.documentElement.classList.toggle('dark'); this.textContent = document.documentElement.classList.contains('dark') ? '☀ Light' : '● Dark'">● Dark</button>
+
+<div class="shell">
+  <!-- ═══ SIDEBAR ═══ -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">Amigo</div>
+    <nav class="sidebar-nav">
+      <div class="nav-section"><a class="nav-item active" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zm10-3a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>Dashboard</a></div>
+      <div class="nav-section"><div class="nav-label">Portfolio</div>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>Holdings</a>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>Exchanges</a>
+      </div>
+      <div class="nav-section"><div class="nav-label">Finances</div>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>Expenses</a>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Incomes</a>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>Recurring</a>
+      </div>
+      <div class="nav-section"><div class="nav-label">Tools</div>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Import</a>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/></svg>Categories</a>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>Tidy Up</a>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>Accounts</a>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>Mappings</a>
+        <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>Projects</a>
+      </div>
+      <div class="nav-divider"></div>
+      <a class="nav-item" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>Settings</a>
+    </nav>
+    <div class="sidebar-footer">Amigo v0.4.0<br/>Build: dev · 09/04/2026</div>
+  </aside>
+
+  <!-- ═══ MAIN ═══ -->
+  <div class="main">
+    <div class="topbar">
+      <div style="font-size:13px;color:var(--text-muted);font-weight:500">Kiko's Finances</div>
+      <div style="font-size:13px;color:var(--text-muted);display:flex;align-items:center;gap:12px"><span>kikoman200@gmail.com</span><span style="cursor:pointer;color:var(--text-faint)">Sign Out</span></div>
+    </div>
+    <div class="mobile-header">Amigo</div>
+
+    <div class="content">
+
+      <!-- ── NET WORTH HERO ──────────────────────────────── -->
+      <div class="hero">
+        <div style="display:flex;align-items:baseline;flex-wrap:wrap;">
+          <span class="hero-value">€12,847.32</span>
+          <span class="hero-change">▲ €482.15 (3.9%)</span>
+        </div>
+        <div class="hero-breakdown">
+          <span>Portfolio: €11,203</span><span>Cash: €1,244</span><span>Free: €400</span>
+        </div>
+      </div>
+
+      <!-- ── 60/40 GRID (aligned at top) ─────────────────── -->
+      <div class="hub-grid">
+
+        <!-- LEFT: Portfolio -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <!-- Allocation — donut + treemap side by side -->
+          <div class="card" id="alloc-card">
+            <div class="card-title">Allocation</div>
+            <div class="alloc-split">
+              <!-- Donut half -->
+              <div class="alloc-half">
+                <div class="donut-wrap">
+                  <div class="donut" style="width:160px;height:160px">
+                    <div class="donut-hole" style="width:96px;height:96px">
+                      <span class="donut-hole-value" style="font-size:15px">€11,203</span>
+                      <span class="donut-hole-label">Total</span>
+                    </div>
+                  </div>
+                  <div class="donut-legend" style="font-size:11px;gap:3px 12px;margin-top:10px">
+                    <span><span class="legend-dot" style="background:#f97316"></span>BTC 42%</span>
+                    <span><span class="legend-dot" style="background:#3b82f6"></span>SOL 26%</span>
+                    <span><span class="legend-dot" style="background:#8b5cf6"></span>CSPX 14%</span>
+                    <span><span class="legend-dot" style="background:#06b6d4"></span>XDWL 12%</span>
+                    <span><span class="legend-dot" style="background:#64748b"></span>Other 6%</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Treemap half -->
+              <div class="alloc-half">
+                <div class="treemap" style="flex:1;height:auto;min-height:180px">
+                  <div class="treemap-cell btc"><span class="treemap-symbol">BTC</span><span class="treemap-pct">42%</span><span class="treemap-val">€4,712</span></div>
+                  <div class="treemap-cell sol"><span class="treemap-symbol">SOL</span><span class="treemap-pct">26%</span><span class="treemap-val">€2,915</span></div>
+                  <div class="treemap-cell cspx"><span class="treemap-symbol">CSPX</span><span class="treemap-pct">14%</span><span class="treemap-val">€1,568</span></div>
+                  <div class="treemap-cell xdwl"><span class="treemap-symbol">XDWL</span><span class="treemap-pct">12%</span><span class="treemap-val">€1,344</span></div>
+                  <div class="treemap-cell other"><span class="treemap-symbol" style="font-size:12px">ETH</span><span class="treemap-pct" style="font-size:10px">6%</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Top Holdings — with colored avatar circles -->
+          <div class="card">
+            <div class="card-title">Top Holdings</div>
+            <div class="holding-row">
+              <div class="holding-left">
+                <div class="holding-icon" style="background:#f97316">B</div>
+                <div><div class="holding-symbol">BTC <span class="holding-badge badge-crypto">Crypto</span></div><div class="holding-name">Bitcoin</div></div>
+              </div>
+              <div><div class="holding-value">€4,712.40</div><div class="holding-pnl pnl-pos">▲ 18.2%</div></div>
+            </div>
+            <div class="holding-row">
+              <div class="holding-left">
+                <div class="holding-icon" style="background:#3b82f6">S</div>
+                <div><div class="holding-symbol">SOL <span class="holding-badge badge-crypto">Crypto</span></div><div class="holding-name">Solana</div></div>
+              </div>
+              <div><div class="holding-value">€2,914.80</div><div class="holding-pnl pnl-pos">▲ 8.5%</div></div>
+            </div>
+            <div class="holding-row">
+              <div class="holding-left">
+                <div class="holding-icon" style="background:#8b5cf6">C</div>
+                <div><div class="holding-symbol">CSPX <span class="holding-badge badge-etf">ETF</span></div><div class="holding-name">iShares Core S&P 500</div></div>
+              </div>
+              <div><div class="holding-value">€1,568.22</div><div class="holding-pnl pnl-pos">▲ 5.1%</div></div>
+            </div>
+            <div class="holding-row">
+              <div class="holding-left">
+                <div class="holding-icon" style="background:#06b6d4">X</div>
+                <div><div class="holding-symbol">XDWL <span class="holding-badge badge-etf">ETF</span></div><div class="holding-name">Xtrackers MSCI World</div></div>
+              </div>
+              <div><div class="holding-value">€1,344.10</div><div class="holding-pnl pnl-neg">▼ 1.3%</div></div>
+            </div>
+            <div class="holding-row">
+              <div class="holding-left">
+                <div class="holding-icon" style="background:#64748b">E</div>
+                <div><div class="holding-symbol">ETH <span class="holding-badge badge-crypto">Crypto</span></div><div class="holding-name">Ethereum</div></div>
+              </div>
+              <div><div class="holding-value">€663.48</div><div class="holding-pnl pnl-neg">▼ 4.7%</div></div>
+            </div>
+            <a class="view-all" href="#">View all →</a>
+          </div>
+
+          <!-- Trade History -->
+          <div class="card">
+            <div class="card-title">Recent Trades</div>
+            <div class="trade-row">
+              <span class="trade-side trade-buy">Buy</span>
+              <div class="trade-info"><div class="trade-asset">BTC</div><div class="trade-detail">0.00042 @ €82,410.00 · Kraken</div></div>
+              <div class="trade-right"><div class="trade-amount">€34.61</div><div class="trade-date">Today</div></div>
+            </div>
+            <div class="trade-row">
+              <span class="trade-side trade-buy">Buy</span>
+              <div class="trade-info"><div class="trade-asset">CSPX</div><div class="trade-detail">0.18 shares @ €612.40 · Trading212</div></div>
+              <div class="trade-right"><div class="trade-amount">€110.23</div><div class="trade-date">Today</div></div>
+            </div>
+            <div class="trade-row">
+              <span class="trade-side trade-buy">Buy</span>
+              <div class="trade-info"><div class="trade-asset">XDWL</div><div class="trade-detail">1.05 shares @ €98.12 · Trading212</div></div>
+              <div class="trade-right"><div class="trade-amount">€103.03</div><div class="trade-date">Today</div></div>
+            </div>
+            <div class="trade-row">
+              <span class="trade-side trade-buy">Buy</span>
+              <div class="trade-info"><div class="trade-asset">BTC</div><div class="trade-detail">0.00041 @ €81,920.00 · Kraken</div></div>
+              <div class="trade-right"><div class="trade-amount">€33.59</div><div class="trade-date">Yesterday</div></div>
+            </div>
+            <div class="trade-row">
+              <span class="trade-side trade-sell">Sell</span>
+              <div class="trade-info"><div class="trade-asset">ETH</div><div class="trade-detail">0.15 @ €1,842.00 · Kraken</div></div>
+              <div class="trade-right"><div class="trade-amount">€276.30</div><div class="trade-date">3 Apr</div></div>
+            </div>
+            <div class="trade-row">
+              <span class="trade-side trade-buy">Buy</span>
+              <div class="trade-info"><div class="trade-asset">SOL</div><div class="trade-detail">2.1 @ €124.50 · Kraken</div></div>
+              <div class="trade-right"><div class="trade-amount">€261.45</div><div class="trade-date">2 Apr</div></div>
+            </div>
+            <div class="trade-row">
+              <span class="trade-side trade-buy">Buy</span>
+              <div class="trade-info"><div class="trade-asset">BTC</div><div class="trade-detail">0.00040 @ €80,100.00 · Kraken</div></div>
+              <div class="trade-right"><div class="trade-amount">€32.04</div><div class="trade-date">1 Apr</div></div>
+            </div>
+            <a class="view-all" href="#">View all trades →</a>
+          </div>
+        </div>
+
+        <!-- RIGHT: Budget & Expenses -->
+        <div style="display:flex;flex-direction:column;gap:16px">
+
+          <!-- Budget Ring — standalone module -->
+          <div class="card" style="display:flex;align-items:center;gap:20px;padding:20px">
+            <div class="ring-wrap" style="width:100px;height:100px;flex-shrink:0">
+              <svg viewBox="0 0 100 100" style="transform:rotate(-90deg)" width="100" height="100">
+                <circle cx="50" cy="50" r="46" fill="none" stroke="#e2e8f0" stroke-width="7"/>
+                <circle cx="50" cy="50" r="46" fill="none" stroke="#0070f3" stroke-width="7" stroke-linecap="round" stroke-dasharray="289.0" stroke-dashoffset="80.9"/>
+              </svg>
+              <div class="ring-center" style="font-size:24px">72%</div>
+            </div>
+            <div>
+              <p style="font-size:24px;font-weight:700">€864.20</p>
+              <p style="font-size:13px;color:var(--text-muted)">of €1,200 budget</p>
+              <p style="font-size:12px;font-weight:600;color:var(--green);margin-top:2px">€335.80 remaining</p>
+            </div>
+          </div>
+
+          <!-- Spending Split — standalone module -->
+          <div class="card">
+            <div class="card-title">Spending Split</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--text-muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--accent);margin-right:6px;vertical-align:middle"></span>Living</span><span style="font-weight:600">€483.95 <span style="color:var(--text-faint);font-weight:500;font-size:11.5px">56%</span></span></div>
+                <div style="height:5px;border-radius:3px;background:var(--surface-alt)"><div style="width:56%;height:100%;border-radius:3px;background:var(--accent)"></div></div>
+                <div style="font-size:10.5px;color:var(--text-faint);margin-top:2px">Fixed €312.00 · Variable €171.95</div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--text-muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--purple);margin-right:6px;vertical-align:middle"></span>Lifestyle</span><span style="font-weight:600">€285.19 <span style="color:var(--text-faint);font-weight:500;font-size:11.5px">33%</span></span></div>
+                <div style="height:5px;border-radius:3px;background:var(--surface-alt)"><div style="width:33%;height:100%;border-radius:3px;background:var(--purple)"></div></div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px"><span style="color:var(--text-muted)"><span style="display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--orange);margin-right:6px;vertical-align:middle"></span>Projects</span><span style="font-weight:600">€95.06 <span style="color:var(--text-faint);font-weight:500;font-size:11.5px">11%</span></span></div>
+                <div style="height:5px;border-radius:3px;background:var(--surface-alt)"><div style="width:11%;height:100%;border-radius:3px;background:var(--orange)"></div></div>
+              </div>
+            </div>
+            <div style="border-top:1px solid var(--border);margin-top:14px;padding-top:10px;display:flex;justify-content:space-between;font-size:13.5px;font-weight:700">
+              <span>Total</span><span>€864.20</span>
+            </div>
+          </div>
+
+          <!-- Income / Balance -->
+          <div class="stat-grid">
+            <div class="stat-card stat-card-green">
+              <p style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--green)">Income</p>
+              <p style="font-size:22px;font-weight:700;color:var(--green);margin-top:2px">€2,400.00</p>
+              <p style="font-size:11px;color:var(--green);opacity:0.7;margin-top:2px">All sources</p>
+            </div>
+            <div class="stat-card stat-card-blue">
+              <p style="font-size:11px;font-weight:600;text-transform:uppercase;color:var(--blue)">Balance</p>
+              <p style="font-size:22px;font-weight:700;color:var(--blue);margin-top:2px">€1,535.80</p>
+              <p style="font-size:11px;color:var(--blue);opacity:0.7;margin-top:2px">Surplus</p>
+            </div>
+          </div>
+
+          <!-- Category Breakdown -->
+          <div class="card">
+            <div class="card-title">Where money goes</div>
+            <div class="cat-bar">
+              <div class="cat-bar-segment" style="width:28%;background:var(--accent)"></div>
+              <div class="cat-bar-segment" style="width:22%;background:var(--purple);margin-left:1px"></div>
+              <div class="cat-bar-segment" style="width:18%;background:var(--green);margin-left:1px"></div>
+              <div class="cat-bar-segment" style="width:15%;background:var(--orange);margin-left:1px"></div>
+              <div class="cat-bar-segment" style="width:10%;background:var(--red);margin-left:1px"></div>
+              <div class="cat-bar-segment" style="width:7%;background:var(--cyan);margin-left:1px"></div>
+            </div>
+            <div class="cat-row"><span class="cat-name"><span class="cat-dot" style="background:var(--accent)"></span>Housing</span><div style="display:flex;gap:8px"><span style="font-weight:600">€242.00</span><span style="color:var(--text-faint);font-size:11px;width:40px;text-align:right">28.0%</span></div></div>
+            <div class="cat-row"><span class="cat-name"><span class="cat-dot" style="background:var(--purple)"></span>Food & Dining</span><div style="display:flex;gap:8px"><span style="font-weight:600">€190.10</span><span style="color:var(--text-faint);font-size:11px;width:40px;text-align:right">22.0%</span></div></div>
+            <div class="cat-row"><span class="cat-name"><span class="cat-dot" style="background:var(--green)"></span>Transport</span><div style="display:flex;gap:8px"><span style="font-weight:600">€155.50</span><span style="color:var(--text-faint);font-size:11px;width:40px;text-align:right">18.0%</span></div></div>
+            <div class="cat-row"><span class="cat-name"><span class="cat-dot" style="background:var(--orange)"></span>Subscriptions</span><div style="display:flex;gap:8px"><span style="font-weight:600">€129.60</span><span style="color:var(--text-faint);font-size:11px;width:40px;text-align:right">15.0%</span></div></div>
+            <div class="cat-row"><span class="cat-name"><span class="cat-dot" style="background:var(--red)"></span>Shopping</span><div style="display:flex;gap:8px"><span style="font-weight:600">€86.40</span><span style="color:var(--text-faint);font-size:11px;width:40px;text-align:right">10.0%</span></div></div>
+          </div>
+
+          <!-- Recent Expenses -->
+          <div class="card">
+            <div class="card-title">Recent Expenses</div>
+            <div class="expense-row"><div><div style="font-size:13.5px;font-weight:500">McDonald's</div><div style="font-size:11px;color:var(--text-faint)">2 hours ago</div></div><div style="font-size:13.5px;font-weight:600">-€12.00</div></div>
+            <div class="expense-row"><div><div style="font-size:13.5px;font-weight:500">Spotify Premium</div><div style="font-size:11px;color:var(--text-faint)">Yesterday</div></div><div style="font-size:13.5px;font-weight:600">-€10.99</div></div>
+            <div class="expense-row"><div><div style="font-size:13.5px;font-weight:500">Uber</div><div style="font-size:11px;color:var(--text-faint)">2 days ago</div></div><div style="font-size:13.5px;font-weight:600">-€8.50</div></div>
+            <div class="expense-row"><div><div style="font-size:13.5px;font-weight:500">Continente</div><div style="font-size:11px;color:var(--text-faint)">3 days ago</div></div><div style="font-size:13.5px;font-weight:600">-€47.82</div></div>
+            <div class="expense-row"><div><div style="font-size:13.5px;font-weight:500">EDP Luz</div><div style="font-size:11px;color:var(--text-faint)">5 days ago</div></div><div style="font-size:13.5px;font-weight:600">-€62.30</div></div>
+            <a class="view-all" href="#">View all →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── PERFORMANCE CHART ───────────────────────────── -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-title">Performance</div>
+        <div class="time-selector">
+          <button class="time-btn">1W</button><button class="time-btn active">1M</button><button class="time-btn">3M</button><button class="time-btn">6M</button><button class="time-btn">1Y</button><button class="time-btn">All</button>
+        </div>
+        <div class="chart-placeholder">Portfolio value vs cost basis</div>
+      </div>
+
+      <!-- ── BURN CHART ──────────────────────────────────── -->
+      <div class="card">
+        <div class="card-title">Monthly Comparison</div>
+        <div class="chart-placeholder" style="height:180px">Current month vs previous month burn rate</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Mobile Bottom Bar -->
+<nav class="mobile-bar"><div class="mobile-bar-inner">
+  <a class="mobile-tab active" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zm10-3a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>Dashboard</a>
+  <a class="mobile-tab" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>Portfolio</a>
+  <a class="mobile-tab" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 10h16M4 14h16M4 18h16"/></svg>Expenses</a>
+  <a class="mobile-tab" href="#"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>More</a>
+</div></nav>
+<button class="mobile-fab"><svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg></button>
+</body>
+</html>

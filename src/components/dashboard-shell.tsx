@@ -38,36 +38,36 @@ type NavGroup = {
 const navigationGroups: NavGroup[] = [
   {
     items: [
-      { key: "overview", href: "/dashboard", icon: "home" },
-      { key: "expenses", href: "/dashboard/expenses", icon: "list" },
+      { key: "dashboard", href: "/dashboard", icon: "layout" },
     ],
   },
   {
-    label: "sectionMoney",
+    label: "sectionPortfolio",
     collapsible: true,
     items: [
+      { key: "holdings", href: "/dashboard/portfolio", icon: "trending-up" },
+      { key: "exchanges", href: "/dashboard/portfolio/exchanges", icon: "link" },
+    ],
+  },
+  {
+    label: "sectionFinances",
+    collapsible: true,
+    items: [
+      { key: "expenses", href: "/dashboard/expenses", icon: "list" },
       { key: "incomes", href: "/dashboard/incomes", icon: "dollar" },
       { key: "recurring", href: "/dashboard/recurring", icon: "repeat" },
-      { key: "portfolio", href: "/dashboard/portfolio", icon: "trending-up" },
     ],
   },
   {
-    label: "sectionOrganize",
-    collapsible: true,
-    items: [
-      { key: "projects", href: "/dashboard/projects", icon: "folder" },
-      { key: "categories", href: "/dashboard/categories", icon: "tag" },
-      { key: "tidyUp", href: "/dashboard/tidy-up", icon: "wand", badgeKey: "uncategorizedCount" },
-      { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
-    ],
-  },
-  {
-    label: "sectionData",
+    label: "sectionTools",
     collapsible: true,
     items: [
       { key: "import", href: "/dashboard/import", icon: "upload" },
-      { key: "importHistory", href: "/dashboard/imports", icon: "history" },
+      { key: "categories", href: "/dashboard/categories", icon: "tag" },
+      { key: "tidyUp", href: "/dashboard/tidy-up", icon: "wand", badgeKey: "uncategorizedCount" },
+      { key: "accounts", href: "/dashboard/accounts", icon: "credit-card" },
       { key: "mappings", href: "/dashboard/mappings", icon: "key" },
+      { key: "projects", href: "/dashboard/projects", icon: "folder" },
     ],
   },
   {
@@ -86,6 +86,16 @@ const icons: Record<string, ReactNode> = {
   home: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+    </svg>
+  ),
+  layout: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zm10-3a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/>
+    </svg>
+  ),
+  link: (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/>
     </svg>
   ),
   list: (

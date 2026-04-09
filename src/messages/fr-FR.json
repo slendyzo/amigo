@@ -39,6 +39,12 @@
     "required": "Obligatoire"
   },
   "nav": {
+    "dashboard": "Tableau de Bord",
+    "holdings": "Avoirs",
+    "exchanges": "Plateformes",
+    "sectionPortfolio": "Portefeuille",
+    "sectionFinances": "Finances",
+    "sectionTools": "Outils",
     "overview": "Aperçu",
     "expenses": "Dépenses",
     "incomes": "Revenus",
@@ -95,7 +101,7 @@
     "budgetRemaining": "Budget Restant",
     "budgetUsed": "du budget utilisé",
     "recentExpenses": "Dépenses Récentes",
-    "viewAll": "Voir Tout",
+    "viewAll": "Voir tout",
     "noExpensesYet": "Pas encore de dépenses",
     "addFirstExpense": "Ajoutez votre première dépense",
     "thisMonth": "Ce Mois",
@@ -156,7 +162,8 @@
       "projects": "Projets",
       "projectCount": "{count} projet(s)",
       "grandTotal": "Total Général",
-      "includingProjects": "Projets inclus"
+      "includingProjects": "Projets inclus",
+      "spent": "Dépensé"
     },
     "expenses": {
       "title": "Dépenses",
@@ -191,7 +198,17 @@
     "whereMoneyGoes": "Où va votre argent",
     "showDetails": "Voir les détails",
     "hideDetails": "Masquer les détails",
-    "noExpenses": "Aucune dépense pour cette période"
+    "noExpenses": "Aucune dépense pour cette période",
+    "portfolio": {
+      "allocation": "Allocation",
+      "noExchanges": "Aucune plateforme connectée",
+      "connectPrompt": "Connectez Kraken ou Trading212 pour voir votre portefeuille ici",
+      "addExchange": "Ajouter une Plateforme →",
+      "topHoldings": "Principaux Avoirs",
+      "noHoldings": "Connectez une plateforme pour voir les avoirs",
+      "recentTrades": "Transactions Récentes",
+      "noTrades": "Pas encore de transactions"
+    }
   },
   "expenses": {
     "title": "Dépenses",

@@ -39,6 +39,12 @@
     "required": "Required"
   },
   "nav": {
+    "dashboard": "Dashboard",
+    "holdings": "Holdings",
+    "exchanges": "Exchanges",
+    "sectionPortfolio": "Portfolio",
+    "sectionFinances": "Finances",
+    "sectionTools": "Tools",
     "overview": "Overview",
     "expenses": "Expenses",
     "incomes": "Incomes",
@@ -95,7 +101,7 @@
     "budgetRemaining": "Budget Remaining",
     "budgetUsed": "of budget used",
     "recentExpenses": "Recent Expenses",
-    "viewAll": "View All",
+    "viewAll": "View all",
     "noExpensesYet": "No expenses yet",
     "addFirstExpense": "Add your first expense",
     "thisMonth": "This Month",
@@ -156,7 +162,8 @@
       "projects": "Projects",
       "projectCount": "{count} project(s)",
       "grandTotal": "Grand Total",
-      "includingProjects": "Including projects"
+      "includingProjects": "Including projects",
+      "spent": "Spent"
     },
     "expenses": {
       "title": "Expenses",
@@ -191,7 +198,17 @@
     "whereMoneyGoes": "Where your money goes",
     "showDetails": "Show details",
     "hideDetails": "Hide details",
-    "noExpenses": "No expenses this period"
+    "noExpenses": "No expenses this period",
+    "portfolio": {
+      "allocation": "Allocation",
+      "noExchanges": "No exchanges connected",
+      "connectPrompt": "Connect Kraken or Trading212 to see your portfolio here",
+      "addExchange": "Add Exchange →",
+      "topHoldings": "Top Holdings",
+      "noHoldings": "Connect an exchange to see holdings",
+      "recentTrades": "Recent Trades",
+      "noTrades": "No trades yet"
+    }
   },
   "expenses": {
     "title": "Expenses",

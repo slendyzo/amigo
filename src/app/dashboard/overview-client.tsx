@@ -1116,27 +1116,223 @@ export default function DashboardOverview({
         )}
       </div>
 
-      {/* ==================== DESKTOP-ONLY HEADER ==================== */}
-      <div className="hidden md:flex items-center justify-between mb-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t("welcome", { name: userName })}</h1>
-          <p className="text-slate-500 text-sm">{t("financialOverview")}</p>
+      {/* ==================== DESKTOP HUB LAYOUT ==================== */}
+      <div className="hidden md:block space-y-5">
+        {/* Net Worth Hero */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 flex items-center justify-between">
+          <div>
+            <div className="flex items-baseline flex-wrap gap-3">
+              <span className="text-4xl font-bold text-slate-900 tabular-nums">€{(currentMonthIncome + stats.grandTotal > 0 ? currentMonthIncome : 0).toFixed(2)}</span>
+              {balance >= 0 ? (
+                <span className="inline-flex items-center gap-1 text-sm font-semibold px-2.5 py-0.5 rounded-full bg-green-50 text-green-600 border border-green-200">
+                  ▲ €{balance.toFixed(2)}
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 text-sm font-semibold px-2.5 py-0.5 rounded-full bg-red-50 text-red-600 border border-red-200">
+                  ▼ €{Math.abs(balance).toFixed(2)}
+                </span>
+              )}
+            </div>
+            <div className="mt-1.5 flex gap-2 text-sm text-slate-500">
+              <span>{t("income.received")}: €{currentMonthIncome.toFixed(2)}</span>
+              <span>·</span>
+              <span>{t("stats.spent")}: €{stats.grandTotal.toFixed(2)}</span>
+              <span>·</span>
+              <span>{t("budgetRemaining")}: €{Math.abs(budgetRemaining).toFixed(2)}</span>
+            </div>
+          </div>
+          <button
+            onClick={() => setIsSelectorOpen(true)}
+            className="flex items-center gap-2 rounded-lg bg-[#0070f3] px-4 py-2.5 text-white font-medium hover:bg-[#0060df] transition-colors flex-shrink-0"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            {t("addExpense")}
+          </button>
         </div>
-        <button
-          onClick={() => setIsSelectorOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-[#0070f3] px-4 py-2.5 text-white font-medium hover:bg-[#0060df] transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {t("addExpense")}
-        </button>
+
+        {/* 1:1 Hub Grid */}
+        <div className="grid grid-cols-2 gap-5 items-start">
+          {/* LEFT: Portfolio */}
+          <div className="space-y-4">
+            {/* Portfolio Empty State */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">{t("portfolio.allocation")}</p>
+              <div className="flex flex-col items-center py-8 text-center">
+                <div className="w-14 h-14 rounded-full bg-slate-100 flex items-center justify-center mb-3">
+                  <svg className="w-7 h-7 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                  </svg>
+                </div>
+                <p className="text-sm font-medium text-slate-700">{t("portfolio.noExchanges")}</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-[240px]">{t("portfolio.connectPrompt")}</p>
+                <a href="/dashboard/portfolio/exchanges" className="mt-3 text-sm font-medium text-[#0070f3] hover:underline">{t("portfolio.addExchange")}</a>
+              </div>
+            </div>
+
+            {/* Holdings Empty State */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("portfolio.topHoldings")}</p>
+              <div className="py-6 text-center">
+                <p className="text-sm text-slate-400">{t("portfolio.noHoldings")}</p>
+              </div>
+            </div>
+
+            {/* Recent Trades Empty State */}
+            <div className="bg-white rounded-xl border border-slate-200 p-6">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("portfolio.recentTrades")}</p>
+              <div className="py-6 text-center">
+                <p className="text-sm text-slate-400">{t("portfolio.noTrades")}</p>
+              </div>
+            </div>
+          </div>
+
+          {/* RIGHT: Budget & Expenses */}
+          <div className="space-y-4">
+            {/* Budget Ring */}
+            <div className="bg-white rounded-xl border border-slate-200 p-5 flex items-center gap-5">
+              <div className="relative flex-shrink-0" style={{ width: ringSize, height: ringSize }}>
+                <svg className="transform -rotate-90" width={ringSize} height={ringSize}>
+                  <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="#e2e8f0" strokeWidth={ringStroke} />
+                  <circle
+                    cx={ringSize / 2} cy={ringSize / 2} r={ringRadius}
+                    fill="none" stroke={ringColor} strokeWidth={ringStroke}
+                    strokeLinecap="round"
+                    strokeDasharray={ringCircumference}
+                    strokeDashoffset={ringDashoffset}
+                    className="transition-all duration-700 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-xl font-bold text-slate-900">{budgetPercentage.toFixed(0)}%</span>
+                </div>
+              </div>
+              <div>
+                <p className="text-2xl font-bold text-slate-900">€{stats.budgetTotal.toFixed(2)}</p>
+                <p className="text-sm text-slate-500">{t("budget.ofBudget", { budget: livingBudget.toFixed(2) })}</p>
+                {isOverBudget ? (
+                  <p className="text-xs font-semibold text-red-500 mt-0.5">{t("overBudget", { amount: Math.abs(budgetRemaining).toFixed(2) })}</p>
+                ) : (
+                  <p className="text-xs font-semibold text-green-600 mt-0.5">{t("remainingBudget", { amount: budgetRemaining.toFixed(2) })}</p>
+                )}
+              </div>
+            </div>
+
+            {/* Spending Split */}
+            <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("typeBreakdown")}</p>
+              <div className="space-y-3">
+                {/* Living */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-600 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />{t("stats.living")}</span>
+                    <span className="font-semibold">€{stats.living.toFixed(2)} <span className="text-slate-400 font-normal text-xs">{stats.grandTotal > 0 ? ((stats.living / stats.grandTotal) * 100).toFixed(0) : 0}%</span></span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-slate-100"><div className="h-full rounded-full bg-blue-500 transition-all duration-500" style={{ width: `${stats.grandTotal > 0 ? (stats.living / stats.grandTotal) * 100 : 0}%` }} /></div>
+                  <p className="text-[10.5px] text-slate-400 mt-1">{t("stats.fixed")} €{stats.livingFixed.toFixed(2)} · {t("stats.variable")} €{stats.livingVariable.toFixed(2)}</p>
+                </div>
+                {/* Lifestyle */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-600 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />{t("stats.lifestyle")}</span>
+                    <span className="font-semibold">€{stats.lifestyle.toFixed(2)} <span className="text-slate-400 font-normal text-xs">{stats.grandTotal > 0 ? ((stats.lifestyle / stats.grandTotal) * 100).toFixed(0) : 0}%</span></span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-slate-100"><div className="h-full rounded-full bg-purple-500 transition-all duration-500" style={{ width: `${stats.grandTotal > 0 ? (stats.lifestyle / stats.grandTotal) * 100 : 0}%` }} /></div>
+                </div>
+                {/* Projects */}
+                <div>
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-slate-600 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500 inline-block" />{t("stats.projects")}</span>
+                    <span className="font-semibold">€{stats.projects.toFixed(2)} <span className="text-slate-400 font-normal text-xs">{stats.grandTotal > 0 ? ((stats.projects / stats.grandTotal) * 100).toFixed(0) : 0}%</span></span>
+                  </div>
+                  <div className="h-1.5 rounded-full bg-slate-100"><div className="h-full rounded-full bg-orange-500 transition-all duration-500" style={{ width: `${stats.grandTotal > 0 ? (stats.projects / stats.grandTotal) * 100 : 0}%` }} /></div>
+                </div>
+                {/* Total */}
+                <div className="border-t border-slate-100 pt-2.5 flex justify-between text-sm font-bold text-slate-900">
+                  <span>{t("stats.grandTotal")}</span>
+                  <span>€{stats.grandTotal.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Income / Balance */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-green-50 rounded-xl border border-green-200 p-4">
+                <p className="text-xs text-green-600 font-semibold uppercase">{t("income.received")}</p>
+                <p className="text-xl font-bold text-green-600 mt-0.5">€{currentMonthIncome.toFixed(2)}</p>
+                <p className="text-xs text-green-500">{t("income.allSources")}</p>
+              </div>
+              <div className={`rounded-xl border p-4 ${balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
+                <p className={`text-xs font-semibold uppercase ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{t("income.balance")}</p>
+                <p className={`text-xl font-bold mt-0.5 ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>€{balance.toFixed(2)}</p>
+                <p className={`text-xs ${balance >= 0 ? "text-blue-500" : "text-red-500"}`}>{balance >= 0 ? t("income.surplus") : t("income.deficit")}</p>
+              </div>
+            </div>
+
+            {/* Where Money Goes */}
+            {categoryData.length > 0 && (
+              <div className="bg-white rounded-xl border border-slate-200 p-5">
+                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("whereMoneyGoes")}</p>
+                <div className="h-3 rounded-full overflow-hidden bg-slate-100 flex mb-3">
+                  {categoryData.map((cat, i) => (
+                    <div key={cat.name} className="h-full" style={{ width: `${cat.percentage}%`, backgroundColor: cat.color, marginLeft: i > 0 ? "1px" : 0 }} />
+                  ))}
+                </div>
+                <div className="space-y-1.5">
+                  {categoryData.slice(0, 5).map((cat) => (
+                    <div key={cat.name} className="flex items-center justify-between text-sm">
+                      <div className="flex items-center gap-2 min-w-0"><div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} /><span className="text-slate-600 truncate">{cat.name}</span></div>
+                      <div className="flex gap-2 flex-shrink-0 ml-2"><span className="font-medium text-slate-900">€{cat.amount.toFixed(2)}</span><span className="text-slate-400 text-xs w-10 text-right">{cat.percentage.toFixed(1)}%</span></div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Recent Expenses */}
+            <div className="bg-white rounded-xl border border-slate-200 p-5">
+              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("recentExpenses")}</p>
+              {expenses.length > 0 ? (
+                <div className="divide-y divide-slate-100">
+                  {expenses.slice(0, 5).map((e) => (
+                    <div key={e.id} className="flex justify-between items-center py-2.5 cursor-pointer hover:bg-slate-50 -mx-2 px-2 rounded-lg transition-colors" onClick={() => handleViewExpense(e.id)}>
+                      <div>
+                        <p className="text-sm font-medium text-slate-900">{e.name}</p>
+                        <p className="text-xs text-slate-400">{new Date(e.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short", timeZone: "UTC" })}</p>
+                      </div>
+                      <p className={`text-sm font-semibold tabular-nums ${e.amountEur < 0 ? "text-green-600" : "text-slate-900"}`}>
+                        {e.amountEur < 0 ? `(€${Math.abs(e.amountEur).toFixed(2)})` : `-€${e.amountEur.toFixed(2)}`}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-slate-400 text-center py-4">{t("transactions.noTransactions")}</p>
+              )}
+              <a href="/dashboard/expenses" className="block text-center pt-2.5 text-sm font-medium text-[#0070f3] hover:underline">{t("viewAll")} →</a>
+            </div>
+          </div>
+        </div>
+
+        {/* Burn Chart (full width) */}
+        {showBudgetInfo && (
+          <div className="bg-white rounded-xl border border-slate-200 p-5">
+            <Suspense fallback={<ChartSkeleton />}>
+              <BurnChart
+                currentMonthExpenses={burnChartCurrentExpenses}
+                previousMonthExpenses={burnChartPreviousExpenses}
+                currentMonthLabel={currentMonthLabel}
+                previousMonthLabel={previousMonthLabel}
+              />
+            </Suspense>
+          </div>
+        )}
       </div>
 
-      {/* ==================== SHARED LAYOUT ==================== */}
-      <div className="mt-3 md:mt-0 md:flex md:gap-6">
-        {/* LEFT COLUMN: Filters + Transactions */}
-        <div className="flex-1 min-w-0 space-y-3 md:space-y-4">
+      {/* ==================== MOBILE-ONLY LAYOUT ==================== */}
+      <div className="mt-3 md:hidden">
+        <div className="space-y-3">
           {/* Mobile Filters */}
           <div className="md:hidden bg-white rounded-xl border border-slate-200 overflow-hidden">
             <div className="flex overflow-x-auto scrollbar-hide p-2 gap-2">
@@ -1177,135 +1373,6 @@ export default function DashboardOverview({
                   <option key={p.id} value={p.id}>{p.name}</option>
                 ))}
               </select>
-            </div>
-          </div>
-
-          {/* Desktop Filters Bar */}
-          <div className="hidden md:block bg-white rounded-xl border border-slate-200 p-4">
-            <div className="flex flex-wrap items-center gap-4">
-              {/* View Mode Tabs */}
-              <div className="flex rounded-lg border border-slate-200 p-1">
-                {(["month", "quarter", "year", "all"] as ViewMode[]).map((mode) => (
-                  <button
-                    key={mode}
-                    onClick={() => handleFilterChange(setViewMode, mode)}
-                    className={`px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                      viewMode === mode
-                        ? "bg-[#0070f3] text-white"
-                        : "text-slate-600 hover:bg-slate-100"
-                    }`}
-                  >
-                    {t(`viewModes.${mode}`)}
-                  </button>
-                ))}
-              </div>
-
-              {/* Date Selectors */}
-              {viewMode === "month" && (
-                <>
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => handleFilterChange(setSelectedMonth, parseInt(e.target.value))}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
-                  >
-                    {MONTH_KEYS.map((monthKey, i) => {
-                      const isFutureMonth = selectedYear === currentYear && i > currentMonth;
-                      return (
-                        <option key={i} value={i} disabled={isFutureMonth}>
-                          {tTime(`months.${monthKey}`)}
-                        </option>
-                      );
-                    })}
-                  </select>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => handleFilterChange(setSelectedYear, parseInt(e.target.value))}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
-                  >
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </>
-              )}
-
-              {viewMode === "quarter" && (
-                <>
-                  <select
-                    value={selectedQuarter}
-                    onChange={(e) => handleFilterChange(setSelectedQuarter, parseInt(e.target.value))}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
-                  >
-                    {[1, 2, 3, 4].map((q) => {
-                      const currentQuarter = Math.floor(currentMonth / 3) + 1;
-                      const isFutureQuarter = selectedYear === currentYear && q > currentQuarter;
-                      return (
-                        <option key={q} value={q} disabled={isFutureQuarter}>Q{q}</option>
-                      );
-                    })}
-                  </select>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => handleFilterChange(setSelectedYear, parseInt(e.target.value))}
-                    className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
-                  >
-                    {yearOptions.map((year) => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </select>
-                </>
-              )}
-
-              {viewMode === "year" && (
-                <select
-                  value={selectedYear}
-                  onChange={(e) => handleFilterChange(setSelectedYear, parseInt(e.target.value))}
-                  className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
-                >
-                  {yearOptions.map((year) => (
-                    <option key={year} value={year}>{year}</option>
-                  ))}
-                </select>
-              )}
-
-              {/* Divider */}
-              <div className="h-8 w-px bg-slate-200" />
-
-              {/* Project Filter */}
-              <select
-                value={selectedProjectId || ""}
-                onChange={(e) => handleFilterChange(setSelectedProjectId, e.target.value || null)}
-                className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
-              >
-                <option value="">{t("filters.allProjects")}</option>
-                <option value="__none__">{t("filters.noProject")}</option>
-                {projects.map((p) => (
-                  <option key={p.id} value={p.id}>{p.name}</option>
-                ))}
-              </select>
-
-              {/* Type Filter */}
-              <select
-                value={typeFilter}
-                onChange={(e) => setTypeFilter(e.target.value as TypeFilter)}
-                className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
-              >
-                <option value="all">{t("filters.allTypes")}</option>
-                <option value="income">{t("filters.incomeOnly")}</option>
-                <option value="living">{t("filters.livingOnly")}</option>
-                <option value="lifestyle">{t("filters.lifestyleOnly")}</option>
-                <option value="project">{t("filters.projectsOnly")}</option>
-              </select>
-
-              {/* Loading indicator */}
-              {isLoading && (
-                <div className="ml-auto">
-                  <svg className="w-5 h-5 animate-spin text-[#0070f3]" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                  </svg>
-                </div>
-              )}
             </div>
           </div>
 
@@ -1489,148 +1556,6 @@ export default function DashboardOverview({
             )}
           </div>
         </div>
-
-        {/* RIGHT COLUMN: Desktop Sidebar (month view only) */}
-        {showBudgetInfo && (
-          <div className="hidden md:block w-[460px] flex-shrink-0">
-            <div className="sticky top-4 space-y-4 max-h-[calc(100vh-100px)] overflow-y-auto scrollbar-hide">
-              {/* 1. Budget Ring */}
-              <div className="bg-gradient-to-br from-slate-50 to-slate-100 rounded-2xl border border-slate-200 p-5">
-                <div className="flex items-center gap-5">
-                  <div className="relative flex-shrink-0" style={{ width: ringSize, height: ringSize }}>
-                    <svg className="transform -rotate-90" width={ringSize} height={ringSize}>
-                      <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="#e2e8f0" strokeWidth={ringStroke} />
-                      <circle
-                        cx={ringSize / 2} cy={ringSize / 2} r={ringRadius}
-                        fill="none" stroke={ringColor} strokeWidth={ringStroke}
-                        strokeLinecap="round"
-                        strokeDasharray={ringCircumference}
-                        strokeDashoffset={ringDashoffset}
-                        className="transition-all duration-700 ease-out"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      <span className="text-xl font-bold text-slate-900">{budgetPercentage.toFixed(0)}%</span>
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold text-slate-900">€{stats.budgetTotal.toFixed(2)}</p>
-                    <p className="text-sm text-slate-500">{t("budget.ofBudget", { budget: livingBudget.toFixed(2) })}</p>
-                    {isOverBudget ? (
-                      <p className="text-xs font-semibold text-red-500 mt-0.5">
-                        {t("overBudget", { amount: Math.abs(budgetRemaining).toFixed(2) })}
-                      </p>
-                    ) : (
-                      <p className="text-xs font-semibold text-green-600 mt-0.5">
-                        {t("remainingBudget", { amount: budgetRemaining.toFixed(2) })}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {/* 2. Income / Balance */}
-              <div className="grid grid-cols-2 gap-3">
-                <div className="bg-green-50 rounded-xl border border-green-200 p-4">
-                  <p className="text-xs text-green-600 font-medium uppercase">{t("income.received")}</p>
-                  <p className="text-xl font-bold text-green-600">€{currentMonthIncome.toFixed(2)}</p>
-                  <p className="text-xs text-green-500">{t("income.allSources")}</p>
-                </div>
-                <div className={`rounded-xl border p-4 ${balance >= 0 ? "bg-blue-50 border-blue-200" : "bg-red-50 border-red-200"}`}>
-                  <p className={`text-xs font-medium uppercase ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>{t("income.balance")}</p>
-                  <p className={`text-xl font-bold ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>€{balance.toFixed(2)}</p>
-                  <p className={`text-xs ${balance >= 0 ? "text-blue-500" : "text-red-500"}`}>{balance >= 0 ? t("income.surplus") : t("income.deficit")}</p>
-                </div>
-              </div>
-
-              {/* 3. Type Breakdown */}
-              <div className="bg-white rounded-xl border border-slate-200 p-4">
-                <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">{t("typeBreakdown")}</p>
-                <div className="space-y-2.5">
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 rounded-full bg-blue-500" />
-                      <span className="text-slate-700">{t("stats.living")}</span>
-                    </div>
-                    <span className="font-medium text-slate-900">€{stats.living.toFixed(2)}</span>
-                  </div>
-                  <div className="pl-6 flex items-center justify-between text-xs text-slate-400">
-                    <span>{t("stats.fixed")}</span>
-                    <span>€{stats.livingFixed.toFixed(2)}</span>
-                  </div>
-                  <div className="pl-6 flex items-center justify-between text-xs text-slate-400">
-                    <span>{t("stats.variable")}</span>
-                    <span>€{stats.livingVariable.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 rounded-full bg-purple-500" />
-                      <span className="text-slate-700">{t("stats.lifestyle")}</span>
-                    </div>
-                    <span className="font-medium text-slate-900">€{stats.lifestyle.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-3 h-3 rounded-full bg-orange-500" />
-                      <span className="text-slate-700">{t("stats.projects")} ({projects.length})</span>
-                    </div>
-                    <span className="font-medium text-slate-900">€{stats.projects.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center justify-between text-sm pt-2.5 border-t border-slate-100">
-                    <span className="font-semibold text-slate-900">{t("stats.grandTotal")}</span>
-                    <span className="font-bold text-slate-900">€{stats.grandTotal.toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* 4. Category Breakdown */}
-              {categoryData.length > 0 && (
-                <div className="bg-white rounded-xl border border-slate-200 p-4">
-                  <p className="text-xs font-semibold text-slate-600 uppercase tracking-wider mb-3">{t("whereMoneyGoes")}</p>
-                  <div className="h-3.5 rounded-full overflow-hidden bg-slate-100 flex">
-                    {categoryData.map((cat, i) => (
-                      <div
-                        key={cat.name}
-                        className="h-full"
-                        style={{
-                          width: `${cat.percentage}%`,
-                          backgroundColor: cat.color,
-                          marginLeft: i > 0 ? "1px" : 0,
-                        }}
-                      />
-                    ))}
-                  </div>
-                  <div className="mt-3 space-y-2">
-                    {categoryData.map((cat) => (
-                      <div key={cat.name} className="flex items-center justify-between text-sm">
-                        <div className="flex items-center gap-2.5 min-w-0">
-                          <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} />
-                          <span className="text-slate-600 truncate">{cat.name}</span>
-                        </div>
-                        <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                          <span className="font-medium text-slate-900">€{cat.amount.toFixed(2)}</span>
-                          <span className="text-slate-400 w-12 text-right">{cat.percentage.toFixed(1)}%</span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* 5. Burn Chart */}
-              <div className="bg-white rounded-xl border border-slate-200 p-5">
-                <Suspense fallback={<ChartSkeleton />}>
-                  <BurnChart
-                    currentMonthExpenses={burnChartCurrentExpenses}
-                    previousMonthExpenses={burnChartPreviousExpenses}
-                    currentMonthLabel={currentMonthLabel}
-                    previousMonthLabel={previousMonthLabel}
-                  />
-                </Suspense>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
 
       {/* ==================== MODALS ==================== */}
