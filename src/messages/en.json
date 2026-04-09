@@ -141,7 +141,8 @@
       "remaining": "Budget Left",
       "spent": "Spent",
       "thisMonth": "This month",
-      "ofBudget": "of €{budget} budget"
+      "ofBudget": "of €{budget} budget",
+      "used": "of budget used"
     },
     "income": {
       "expected": "Expected",
@@ -200,6 +201,7 @@
     "hideDetails": "Hide details",
     "noExpenses": "No expenses this period",
     "portfolio": {
+      "title": "Portfolio",
       "allocation": "Allocation",
       "noExchanges": "No exchanges connected",
       "connectPrompt": "Connect Kraken or Trading212 to see your portfolio here",
@@ -207,7 +209,11 @@
       "topHoldings": "Top Holdings",
       "noHoldings": "Connect an exchange to see holdings",
       "recentTrades": "Recent Trades",
-      "noTrades": "No trades yet"
+      "noTrades": "No trades yet",
+      "acrossExchanges": "Total across {count} exchanges",
+      "invested": "Invested",
+      "pnl": "P&L",
+      "freeCash": "Free Cash"
     }
   },
   "expenses": {

@@ -86,6 +86,8 @@ export default async function DashboardPage({
     previousMonthExpenses,
     monthlyIncomes,
     recurringIncomes,
+    exchangeConnections,
+    portfolioAssets,
   ] = await Promise.all([
     // Projects for filter dropdown
     prisma.project.findMany({
@@ -189,6 +191,43 @@ export default async function DashboardPage({
         createdAt: true,
       },
     }),
+    // Exchange connections (for portfolio conditional display)
+    prisma.exchangeConnection.findMany({
+      where: { workspaceId: workspace.id, isActive: true },
+      select: {
+        id: true,
+        provider: true,
+        label: true,
+        freeCash: true,
+        freeCashCurrency: true,
+        _count: { select: { assets: true } },
+      },
+    }),
+    // Portfolio assets (top 5 by value for dashboard)
+    prisma.portfolioAsset.findMany({
+      where: {
+        exchangeConnection: { workspaceId: workspace.id, isActive: true },
+      },
+      orderBy: { currentValueEur: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        symbol: true,
+        name: true,
+        assetType: true,
+        quantity: true,
+        averageBuyPriceEur: true,
+        currentPriceEur: true,
+        currentValueEur: true,
+        totalCostEur: true,
+        unrealizedPnlEur: true,
+        unrealizedPnlPct: true,
+        currency: true,
+        exchangeConnection: {
+          select: { provider: true, label: true },
+        },
+      },
+    }),
   ]);
 
   const tQueries = performance.now();
@@ -270,6 +309,35 @@ export default async function DashboardPage({
     createdAt: i.createdAt.toISOString(),
   });
 
+  // Transform portfolio data for client (Decimal → number)
+  const connectionsForDashboard = exchangeConnections.map((c) => ({
+    id: c.id,
+    provider: c.provider,
+    label: c.label,
+    freeCash: c.freeCash !== null ? Number(c.freeCash) : 0,
+    freeCashCurrency: c.freeCashCurrency ?? "EUR",
+    assetCount: c._count.assets,
+  }));
+
+  const assetsForDashboard = portfolioAssets.map((a) => ({
+    id: a.id,
+    symbol: a.symbol,
+    name: a.name,
+    assetType: a.assetType,
+    quantity: Number(a.quantity),
+    averageBuyPriceEur: Number(a.averageBuyPriceEur),
+    currentPriceEur: Number(a.currentPriceEur),
+    currentValueEur: Number(a.currentValueEur),
+    totalCostEur: Number(a.totalCostEur),
+    unrealizedPnlEur: Number(a.unrealizedPnlEur),
+    unrealizedPnlPct: Number(a.unrealizedPnlPct),
+    currency: a.currency,
+    exchange: {
+      provider: a.exchangeConnection.provider,
+      label: a.exchangeConnection.label,
+    },
+  }));
+
   // Use username (nickname) if set, otherwise fall back to name or "User"
   const displayName = user?.username || user?.name || session.user.name || "User";
 
@@ -293,6 +361,8 @@ export default async function DashboardPage({
       seenAnnouncements={user?.seenAnnouncements || []}
       currencyDisplayMode={workspace.currencyDisplayMode ?? "converted"}
       defaultCurrency={workspace.defaultCurrency ?? "EUR"}
+      exchangeConnections={connectionsForDashboard}
+      portfolioAssets={assetsForDashboard}
     />
   );
 }

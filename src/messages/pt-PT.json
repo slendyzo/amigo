@@ -141,7 +141,8 @@
       "remaining": "Orçamento Restante",
       "spent": "Gasto",
       "thisMonth": "Este mês",
-      "ofBudget": "de €{budget} orçamento"
+      "ofBudget": "de €{budget} orçamento",
+      "used": "do orçamento gasto"
     },
     "income": {
       "expected": "Previsto",
@@ -200,6 +201,7 @@
     "hideDetails": "Ocultar detalhes",
     "noExpenses": "Sem despesas neste período",
     "portfolio": {
+      "title": "Portfolio",
       "allocation": "Alocação",
       "noExchanges": "Nenhuma corretora ligada",
       "connectPrompt": "Liga a Kraken ou Trading212 para ver o teu portfolio aqui",
@@ -207,7 +209,11 @@
       "topHoldings": "Principais Ativos",
       "noHoldings": "Liga uma corretora para ver os ativos",
       "recentTrades": "Transações Recentes",
-      "noTrades": "Sem transações ainda"
+      "noTrades": "Sem transações ainda",
+      "acrossExchanges": "Total em {count} corretoras",
+      "invested": "Investido",
+      "pnl": "L/P",
+      "freeCash": "Saldo Livre"
     }
   },
   "expenses": {
