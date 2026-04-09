@@ -133,44 +133,6 @@ export default function PortfolioClient({
     }
   };
 
-  const handleLogInvestment = async (deposit: Deposit) => {
-    try {
-      // Find "Investimentos" category (auto-created or user-made)
-      const catRes = await fetch("/api/categories");
-      const categories = catRes.ok ? await catRes.json() : [];
-      const investmentCat = categories.find(
-        (c: { name: string }) => c.name.toLowerCase().includes("investimento") || c.name.toLowerCase().includes("investment")
-      );
-
-      const res = await fetch("/api/expenses", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: `${deposit.exchange.label} Deposit`,
-          amount: deposit.amountEur,
-          currency: "EUR",
-          type: "INVESTMENT",
-          date: deposit.date,
-          excludeFromBudget: true,
-          ...(investmentCat?.id && { categoryId: investmentCat.id }),
-        }),
-      });
-      if (!res.ok) throw new Error("Failed to create expense");
-      const expense = await res.json();
-      // Link deposit to expense
-      await fetch(`/api/portfolio/deposits/${deposit.id}/link`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ expenseId: expense.id }),
-      });
-      // Optimistically hide the deposit
-      setDismissedDeposits((prev) => new Set(prev).add(deposit.id));
-      router.refresh();
-    } catch (err) {
-      console.error("Failed to log investment:", err);
-    }
-  };
-
   const visibleDeposits = deposits.filter((d) => !dismissedDeposits.has(d.id));
 
   // ── Empty state: no connections ───────────────────────────────────────────
@@ -347,14 +309,7 @@ export default function PortfolioClient({
                     {deposit.exchange.label} · {deposit.exchange.provider}
                   </p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0 mt-2 sm:mt-0">
-                  <Button
-                    size="sm"
-                    className="bg-[#0070f3] hover:bg-[#0060df] text-white text-xs h-7"
-                    onClick={() => handleLogInvestment(deposit)}
-                  >
-                    {t("logAsInvestment")}
-                  </Button>
+                <div className="shrink-0 mt-2 sm:mt-0">
                   <Button
                     size="sm"
                     variant="ghost"
