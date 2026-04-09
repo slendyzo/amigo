@@ -44,7 +44,10 @@ export async function syncExchange(connectionId: string): Promise<void> {
 
     const [positions, summary, rawDeposits] = await Promise.all([
       client.getPositions(),
-      client.getAccountSummary(),
+      client.getAccountSummary().catch((err) => {
+        console.warn(`[Sync] Account summary failed (non-fatal):`, err);
+        return null;
+      }),
       client.getDeposits(sinceCutoff).catch((err) => {
         console.warn(`[Sync] Deposit fetch failed (non-fatal):`, err);
         return [];
@@ -168,19 +171,22 @@ export async function syncExchange(connectionId: string): Promise<void> {
     }
     console.log(`[Sync] Processed ${newDepositCount} deposit record(s)`);
 
-    // 9. Update freeCash on the connection
-    const { amountEur: freeCashEur } = await convertToEur(
-      summary.freeCash,
-      summary.currency
-    );
+    // 9. Update freeCash on the connection (skip if summary failed)
+    let freeCashEur = 0;
+    if (summary) {
+      ({ amountEur: freeCashEur } = await convertToEur(
+        summary.freeCash,
+        summary.currency
+      ));
 
-    await prisma.exchangeConnection.update({
-      where: { id: connectionId },
-      data: {
-        freeCash: summary.freeCash,
-        freeCashCurrency: summary.currency,
-      },
-    });
+      await prisma.exchangeConnection.update({
+        where: { id: connectionId },
+        data: {
+          freeCash: summary.freeCash,
+          freeCashCurrency: summary.currency,
+        },
+      });
+    }
 
     // 10. Build today's snapshot
     const now = new Date();

@@ -135,6 +135,21 @@ export default function PortfolioClient({
 
   const handleLogInvestment = async (deposit: Deposit) => {
     try {
+      // Find or create "Investimentos" category
+      const catRes = await fetch("/api/categories");
+      const categories = catRes.ok ? await catRes.json() : [];
+      let investmentCat = categories.find(
+        (c: { name: string }) => c.name.toLowerCase().includes("investimento") || c.name.toLowerCase().includes("investment")
+      );
+      if (!investmentCat) {
+        const createRes = await fetch("/api/categories", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name: "Investimentos", group: "FINANÇAS & IMPOSTOS" }),
+        });
+        if (createRes.ok) investmentCat = await createRes.json();
+      }
+
       const res = await fetch("/api/expenses", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -145,6 +160,7 @@ export default function PortfolioClient({
           type: "INVESTMENT",
           date: deposit.date,
           excludeFromBudget: true,
+          ...(investmentCat?.id && { categoryId: investmentCat.id }),
         }),
       });
       if (!res.ok) throw new Error("Failed to create expense");

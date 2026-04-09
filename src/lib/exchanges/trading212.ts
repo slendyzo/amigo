@@ -192,7 +192,8 @@ export class Trading212Client implements ExchangeClient {
 
   private async request<T>(
     path: string,
-    limiter: RateLimiter = this.generalLimiter
+    limiter: RateLimiter = this.generalLimiter,
+    retries = 2
   ): Promise<T> {
     await limiter.throttle();
 
@@ -207,6 +208,17 @@ export class Trading212Client implements ExchangeClient {
         "Content-Type": "application/json",
       },
     });
+
+    // Retry on 429 (rate limit) with backoff
+    if (res.status === 429 && retries > 0) {
+      const resetHeader = res.headers.get("x-ratelimit-reset");
+      const waitMs = resetHeader
+        ? Math.max(0, Number(resetHeader) * 1000 - Date.now()) + 500
+        : 6000;
+      console.warn(`[Trading212] 429 on ${path}, retrying in ${waitMs}ms`);
+      await new Promise((r) => setTimeout(r, waitMs));
+      return this.request<T>(path, limiter, retries - 1);
+    }
 
     if (!res.ok) {
       const body = await res.text().catch(() => "");
