@@ -45,7 +45,10 @@ export async function syncExchange(connectionId: string): Promise<void> {
     const [positions, summary, rawDeposits] = await Promise.all([
       client.getPositions(),
       client.getAccountSummary(),
-      client.getDeposits(sinceCutoff),
+      client.getDeposits(sinceCutoff).catch((err) => {
+        console.warn(`[Sync] Deposit fetch failed (non-fatal):`, err);
+        return [];
+      }),
     ]);
 
     console.log(
