@@ -309,7 +309,7 @@ export class Trading212Client implements ExchangeClient {
 
     try {
       const all = await this.fetchAllPages<T212Transaction>(
-        "/history/transactions",
+        "/equity/history/transactions",
         this.generalLimiter,
         (page) => page.items,
         sinceMs

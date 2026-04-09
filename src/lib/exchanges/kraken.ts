@@ -72,10 +72,17 @@ export class KrakenClient implements ExchangeClient {
   private readonly apiKey: string;
   private readonly apiSecret: string;
   private readonly rateLimiter = new RateLimiter();
+  private lastNonce = 0;
 
   constructor(apiKey: string, apiSecret: string) {
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
+  }
+
+  private nextNonce(): number {
+    const now = Date.now() * 1000;
+    this.lastNonce = Math.max(now, this.lastNonce + 1);
+    return this.lastNonce;
   }
 
   // -------------------------------------------------------------------------
@@ -103,7 +110,7 @@ export class KrakenClient implements ExchangeClient {
   ): Promise<Record<string, unknown>> {
     await this.rateLimiter.consume(cost);
 
-    const nonce = Date.now() * 1000;
+    const nonce = this.nextNonce();
     const body = new URLSearchParams({
       nonce: String(nonce),
       ...Object.fromEntries(
