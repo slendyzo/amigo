@@ -29,6 +29,7 @@ enum ExpenseType {
   SURVIVAL_VARIABLE // Variable recurring (Utilities: Luz, Água, Gás)
   LIFESTYLE         // Daily variable spending
   PROJECT           // Tagged to a specific project (e.g., Casa)
+  INVESTMENT        // Exchange/broker funding (Kraken, Trading212, etc.)
 }
 
 enum ExpenseStatus {
@@ -41,6 +42,26 @@ enum RecurrenceInterval {
   MONTHLY
   QUARTERLY
   YEARLY
+}
+
+enum ExchangeProvider {
+  KRAKEN
+  TRADING212
+  BINANCE
+  BYBIT
+}
+
+enum AssetType {
+  CRYPTO
+  ETF
+  STOCK
+}
+
+enum SyncStatus {
+  IDLE
+  SYNCING
+  SUCCESS
+  ERROR
 }
 
 enum IncomeType {
@@ -170,6 +191,7 @@ model Workspace {
   categories   Category[]
   recurringTemplates RecurringTemplate[]
   incomes      Income[]
+  exchangeConnections ExchangeConnection[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -529,4 +551,126 @@ model Income {
   @@index([workspaceId, date])
   @@index([workspaceId, type])
   @@map("incomes")
+}
+
+// ============================================================================
+// PORTFOLIO TRACKING (Exchange connections, assets, snapshots)
+// ============================================================================
+
+model ExchangeConnection {
+  id            String           @id @default(cuid())
+  workspaceId   String
+  provider      ExchangeProvider
+  label         String           @db.VarChar(100) // "My Kraken", "T212 Pie"
+
+  // Encrypted credentials (AES-256-GCM)
+  encryptedApiKey    String  @db.Text
+  encryptedApiSecret String  @db.Text
+  encryptionIV       String  @db.VarChar(32) // hex IV
+  encryptionTag      String  @db.VarChar(32) // GCM auth tag
+
+  // Sync state
+  syncStatus    SyncStatus  @default(IDLE)
+  lastSyncAt    DateTime?
+  lastSyncError String?     @db.VarChar(500)
+
+  // Cached account summary
+  freeCash      Decimal?    @db.Decimal(18, 2)
+  freeCashCurrency String?  @db.VarChar(10)
+
+  isActive      Boolean     @default(true)
+
+  // Relations
+  workspace     Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assets        PortfolioAsset[]
+  snapshots     PortfolioSnapshot[]
+  deposits      ExchangeDeposit[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([workspaceId, provider, label])
+  @@index([workspaceId])
+  @@map("exchange_connections")
+}
+
+model PortfolioAsset {
+  id                   String    @id @default(cuid())
+  exchangeConnectionId String
+
+  // Asset identity
+  symbol              String    @db.VarChar(20)   // "BTC", "CSPX", "XDWL"
+  name                String    @db.VarChar(200)  // "Bitcoin", "iShares Core S&P 500"
+  assetType           AssetType
+
+  // Holdings
+  quantity            Decimal   @db.Decimal(18, 8) // 8 decimal places for crypto
+  averageBuyPrice     Decimal   @db.Decimal(18, 8)
+  averageBuyPriceEur  Decimal   @db.Decimal(18, 8)
+
+  // Current valuation (updated on sync)
+  currentPrice        Decimal   @db.Decimal(18, 8)
+  currentPriceEur     Decimal   @db.Decimal(18, 8)
+  currentValue        Decimal   @db.Decimal(18, 2) // quantity * currentPrice
+  currentValueEur     Decimal   @db.Decimal(18, 2)
+
+  // P&L
+  totalCost           Decimal   @db.Decimal(18, 2) // total invested
+  totalCostEur        Decimal   @db.Decimal(18, 2)
+  unrealizedPnl       Decimal   @db.Decimal(18, 2) // currentValue - totalCost
+  unrealizedPnlEur    Decimal   @db.Decimal(18, 2)
+  unrealizedPnlPct    Decimal   @db.Decimal(8, 4)  // percentage P&L
+
+  // Currency of the asset on the exchange
+  currency            String    @default("EUR") @db.VarChar(3)
+
+  lastUpdatedAt       DateTime  @default(now())
+
+  // Relations
+  exchangeConnection  ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeConnectionId, symbol])
+  @@index([exchangeConnectionId])
+  @@map("portfolio_assets")
+}
+
+model PortfolioSnapshot {
+  id                   String   @id @default(cuid())
+  exchangeConnectionId String
+
+  date                 DateTime @db.Date
+  totalValueEur        Decimal  @db.Decimal(18, 2)
+  totalCostEur         Decimal  @db.Decimal(18, 2)
+  unrealizedPnlEur     Decimal  @db.Decimal(18, 2)
+  freeCashEur          Decimal? @db.Decimal(18, 2)
+
+  // Per-asset breakdown at this point in time
+  assetBreakdown       String?  @db.Text // JSON
+
+  exchangeConnection   ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeConnectionId, date])
+  @@index([exchangeConnectionId, date])
+  @@map("portfolio_snapshots")
+}
+
+model ExchangeDeposit {
+  id                   String   @id @default(cuid())
+  exchangeConnectionId String
+
+  externalId           String   @db.VarChar(200) // exchange's own reference ID
+  amount               Decimal  @db.Decimal(18, 2)
+  currency             String   @db.VarChar(10)
+  amountEur            Decimal  @db.Decimal(18, 2)
+  date                 DateTime
+
+  // Link to expense system
+  linkedExpenseId      String?  // null until user confirms
+  dismissed            Boolean  @default(false) // user said "ignore this"
+
+  exchangeConnection   ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
+
+  @@unique([exchangeConnectionId, externalId])
+  @@index([exchangeConnectionId])
+  @@map("exchange_deposits")
 }

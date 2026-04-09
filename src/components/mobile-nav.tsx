@@ -40,6 +40,7 @@ const navGroups: NavGroup[] = [
     items: [
       { key: "incomes", href: "/dashboard/incomes", icon: "dollar" },
       { key: "recurring", href: "/dashboard/recurring", icon: "repeat" },
+      { key: "portfolio", href: "/dashboard/portfolio", icon: "trending-up" },
     ],
   },
   {
@@ -138,6 +139,11 @@ const icons: Record<string, ReactNode> = {
   close: (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+    </svg>
+  ),
+  "trending-up": (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
     </svg>
   ),
   wand: (

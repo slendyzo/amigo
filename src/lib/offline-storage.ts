@@ -9,7 +9,7 @@ export type OfflineExpense = {
   name: string;
   amount: number;
   currency: string;
-  type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
+  type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT" | "INVESTMENT";
   date: string;
   categoryId?: string;
   bankAccountId?: string;

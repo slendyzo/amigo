@@ -164,7 +164,7 @@ export default function DashboardOverview({
     name: string;
     amount: number;
     currency?: string;
-    type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
+    type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT" | "INVESTMENT";
     date: string;
     category: { id: string; name: string } | null;
     bankAccount: { id: string; name: string } | null;

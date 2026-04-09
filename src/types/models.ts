@@ -23,7 +23,7 @@ export type Project = {
   isActive?: boolean;
 };
 
-export type ExpenseType = "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
+export type ExpenseType = "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT" | "INVESTMENT";
 
 export type ExpenseStatus = "PAID" | "PENDING";
 

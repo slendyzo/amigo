@@ -49,4 +49,5 @@ export const EXPENSE_TYPE_BADGE_CLASSES: Record<string, string> = {
   SURVIVAL_VARIABLE: "bg-cyan-100 text-cyan-700",
   LIFESTYLE: "bg-purple-100 text-purple-700",
   PROJECT: "bg-amber-100 text-amber-700",
+  INVESTMENT: "bg-emerald-100 text-emerald-700",
 };
