@@ -163,11 +163,12 @@ export class Trading212Client implements ExchangeClient {
   // Order history: 6 req/min
   private orderLimiter = new RateLimiter(5, 60_000);
 
-  constructor(
-    private readonly apiKey: string,
-    // Trading212 only uses apiKey; apiSecret accepted for interface consistency
-    _apiSecret?: string
-  ) {}
+  private readonly authHeader: string;
+
+  constructor(apiKey: string, apiSecret: string) {
+    const encoded = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
+    this.authHeader = `Basic ${encoded}`;
+  }
 
   // -------------------------------------------------------------------------
   // Core HTTP helper
@@ -182,7 +183,7 @@ export class Trading212Client implements ExchangeClient {
     const url = `${BASE_URL}${path}`;
     const res = await fetch(url, {
       headers: {
-        Authorization: this.apiKey,
+        Authorization: this.authHeader,
         "Content-Type": "application/json",
       },
     });
