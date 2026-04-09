@@ -10,8 +10,7 @@ import type {
 const BASE_URL = "https://live.trading212.com/api/v0";
 
 // Known ETF ticker patterns — checked via prefix/suffix matching and explicit list.
-// Trading212 tickers are usually the LSE/Xetra symbol; ETFs typically end in common
-// suffixes or appear in this well-known set.
+// Trading212 tickers use format like "CSPX_L_EQ", "VWCE_DE_EQ" etc.
 const KNOWN_ETF_TICKERS = new Set([
   "CSPX",
   "VWCE",
@@ -63,14 +62,18 @@ const KNOWN_ETF_TICKERS = new Set([
   "MXFD",
 ]);
 
-// Known ETF suffixes (Xetra/LSE conventions)
-const ETF_SUFFIXES = ["ETF", "UCITS", "ACC", "DIST", "GBP", "USD", "EUR"];
+const ETF_SUFFIXES = ["ETF", "UCITS", "ACC", "DIST"];
 
 function isEtfTicker(ticker: string): boolean {
-  const upper = ticker.toUpperCase();
-  if (KNOWN_ETF_TICKERS.has(upper)) return true;
-  // Tickers that contain typical ETF suffix substrings
-  return ETF_SUFFIXES.some((suffix) => upper.includes(suffix));
+  // T212 tickers look like "CSPX_L_EQ" — extract the base symbol before "_"
+  const base = ticker.split("_")[0].toUpperCase();
+  if (KNOWN_ETF_TICKERS.has(base)) return true;
+  return ETF_SUFFIXES.some((suffix) => base.includes(suffix));
+}
+
+// Extract display symbol from T212 ticker (e.g. "CSPX_L_EQ" → "CSPX")
+function displaySymbol(ticker: string): string {
+  return ticker.split("_")[0];
 }
 
 // ---------------------------------------------------------------------------
@@ -86,13 +89,11 @@ class RateLimiter {
 
   async throttle(): Promise<void> {
     const now = Date.now();
-    // Drop timestamps outside the window
     this.timestamps = this.timestamps.filter((t) => now - t < this.windowMs);
     if (this.timestamps.length >= this.maxRequests) {
       const oldest = this.timestamps[0];
-      const waitMs = this.windowMs - (now - oldest) + 50; // small buffer
+      const waitMs = this.windowMs - (now - oldest) + 50;
       await new Promise((r) => setTimeout(r, waitMs));
-      // Recurse to re-check after waiting
       return this.throttle();
     }
     this.timestamps.push(Date.now());
@@ -100,7 +101,7 @@ class RateLimiter {
 }
 
 // ---------------------------------------------------------------------------
-// Trading212 API response shapes (internal — not exported)
+// Trading212 API response shapes (matching official docs.trading212.com)
 // ---------------------------------------------------------------------------
 
 interface PagedResponse<TItem> {
@@ -108,33 +109,51 @@ interface PagedResponse<TItem> {
   nextPagePath: string | null;
 }
 
+// GET /equity/positions
 interface T212Position {
-  ticker: string;
-  quantity: number;
-  averagePrice: number;
+  averagePricePaid: number;
+  createdAt: string;
   currentPrice: number;
-  ppl: number;
-  fxPpl: number | null;
-  initialFillDate: string;
-  frontend?: string;
-  maxBuy?: number;
-  maxSell?: number;
+  instrument: {
+    currency: string;
+    isin: string;
+    name: string;
+    ticker: string; // e.g. "CSPX_L_EQ"
+  };
+  quantity: number;
+  quantityAvailableForTrading: number;
+  quantityInPies: number;
+  walletImpact: {
+    currency: string;
+    currentValue: number;
+    fxImpact: number;
+    totalCost: number;
+    unrealizedProfitLoss: number;
+  };
 }
 
-interface T212AccountCash {
-  free: number;
-  total: number;
-  ppl: number;
-  result: number;
-  invested: number;
-  pipiResult: number;
-  blocked?: number | null;
+// GET /equity/account/summary
+interface T212AccountSummary {
+  cash: {
+    availableToTrade: number;
+    inPies: number;
+    reservedForOrders: number;
+  };
+  currency: string;
+  id: number;
+  investments: {
+    currentValue: number;
+    realizedProfitLoss: number;
+    totalCost: number;
+    unrealizedProfitLoss: number;
+  };
+  totalValue: number;
 }
 
 interface T212Transaction {
   reference: string;
   amount: number;
-  type: string; // "DEPOSIT", "WITHDRAWAL", "FEE", etc.
+  type: string;
   dateCreated: string;
   status?: string;
 }
@@ -142,13 +161,12 @@ interface T212Transaction {
 interface T212Order {
   id: string;
   ticker: string;
-  type: "BUY" | "SELL" | "MARKET_BUY" | "MARKET_SELL" | "LIMIT_BUY" | "LIMIT_SELL" | "STOP_SELL";
+  type: string;
   dateCreated: string;
   dateExecuted?: string | null;
   filledQuantity: number;
   fillPrice?: number | null;
   fillResult?: number | null;
-  taxes?: Array<{ fillId: string; quantity: number; timeCharged: string }>;
 }
 
 // ---------------------------------------------------------------------------
@@ -158,9 +176,7 @@ interface T212Order {
 export class Trading212Client implements ExchangeClient {
   readonly provider: ExchangeProvider = "TRADING212";
 
-  // General rate limit: 50 req/min
-  private generalLimiter = new RateLimiter(48, 60_000); // stay a bit under
-  // Order history: 6 req/min
+  private generalLimiter = new RateLimiter(48, 60_000);
   private orderLimiter = new RateLimiter(5, 60_000);
 
   private readonly authHeader: string;
@@ -180,7 +196,11 @@ export class Trading212Client implements ExchangeClient {
   ): Promise<T> {
     await limiter.throttle();
 
-    const url = `${BASE_URL}${path}`;
+    // If path starts with /api/v0, it's a full path from pagination — use base domain only
+    const url = path.startsWith("/api/v0")
+      ? `https://live.trading212.com${path}`
+      : `${BASE_URL}${path}`;
+
     const res = await fetch(url, {
       headers: {
         Authorization: this.authHeader,
@@ -206,25 +226,14 @@ export class Trading212Client implements ExchangeClient {
     firstPath: string,
     limiter: RateLimiter,
     getItems: (page: PagedResponse<TItem>) => TItem[],
-    sinceMs?: number
   ): Promise<TItem[]> {
     const all: TItem[] = [];
     let path: string | null = firstPath;
 
     while (path !== null) {
       const page: PagedResponse<TItem> = await this.request<PagedResponse<TItem>>(path, limiter);
-
-      const items = getItems(page);
-      all.push(...items);
-
-      // nextPagePath is a full path like "/api/v0/...?cursor=..."
-      // Strip leading slash duplication if the value already starts with "/"
-      const next = page.nextPagePath;
-      if (next) {
-        path = next.startsWith("/") ? next : `/${next}`;
-      } else {
-        path = null;
-      }
+      all.push(...getItems(page));
+      path = page.nextPagePath ?? null;
     }
 
     return all;
@@ -236,7 +245,7 @@ export class Trading212Client implements ExchangeClient {
 
   async testConnection(): Promise<{ success: boolean; error?: string }> {
     try {
-      await this.request<T212AccountCash>("/equity/account/cash");
+      await this.request<T212AccountSummary>("/equity/account/summary");
       return { success: true };
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -249,28 +258,31 @@ export class Trading212Client implements ExchangeClient {
     try {
       const raw = await this.request<T212Position[]>("/equity/positions");
 
-      return raw.filter((pos) => pos.ticker && pos.quantity > 0).map((pos) => {
-        const assetType = isEtfTicker(pos.ticker) ? "ETF" : "STOCK";
-        const totalCost = pos.quantity * pos.averagePrice;
-        const currentValue = pos.quantity * pos.currentPrice;
-        const unrealizedPnl = pos.ppl + (pos.fxPpl ?? 0);
-        const unrealizedPnlPct =
-          totalCost !== 0 ? (unrealizedPnl / totalCost) * 100 : 0;
+      return raw
+        .filter((pos) => pos.instrument?.ticker && pos.quantity > 0)
+        .map((pos) => {
+          const ticker = pos.instrument.ticker;
+          const symbol = displaySymbol(ticker);
+          const assetType = isEtfTicker(ticker) ? "ETF" : "STOCK";
+          const currency = pos.walletImpact?.currency ?? pos.instrument.currency ?? "EUR";
 
-        return {
-          symbol: pos.ticker,
-          name: pos.ticker, // T212 API doesn't return instrument name in positions
-          assetType,
-          quantity: pos.quantity,
-          averageBuyPrice: pos.averagePrice,
-          currentPrice: pos.currentPrice,
-          currency: "EUR", // T212 reports all values in account currency (EUR for EU accounts)
-          unrealizedPnl,
-          unrealizedPnlPct,
-          totalCost,
-          currentValue,
-        } satisfies ExchangePosition;
-      });
+          return {
+            symbol,
+            name: pos.instrument.name || symbol,
+            assetType,
+            quantity: pos.quantity,
+            averageBuyPrice: pos.averagePricePaid,
+            currentPrice: pos.currentPrice,
+            currency,
+            unrealizedPnl: pos.walletImpact?.unrealizedProfitLoss ?? 0,
+            unrealizedPnlPct:
+              pos.walletImpact?.totalCost !== 0
+                ? ((pos.walletImpact?.unrealizedProfitLoss ?? 0) / pos.walletImpact.totalCost) * 100
+                : 0,
+            totalCost: pos.walletImpact?.totalCost ?? 0,
+            currentValue: pos.walletImpact?.currentValue ?? 0,
+          } satisfies ExchangePosition;
+        });
     } catch (err) {
       console.error("[Trading212] getPositions failed:", err);
       throw err;
@@ -279,25 +291,17 @@ export class Trading212Client implements ExchangeClient {
 
   async getAccountSummary(): Promise<ExchangeAccountSummary> {
     try {
-      const cash = await this.request<T212AccountCash>(
-        "/equity/account/cash"
+      const summary = await this.request<T212AccountSummary>(
+        "/equity/account/summary"
       );
 
-      // ppl = open P&L (unrealized), result = closed P&L (realized) + FX
-      // invested = total cost basis in open positions
-      const totalValue = cash.total;
-      const totalCost = cash.invested;
-      const unrealizedPnl = cash.ppl;
-      // result includes both realized + FX; we subtract open ppl to isolate realized
-      const realizedPnl = cash.result - cash.ppl;
-
       return {
-        totalValue,
-        totalCost,
-        unrealizedPnl,
-        realizedPnl,
-        freeCash: cash.free,
-        currency: "EUR",
+        totalValue: summary.totalValue,
+        totalCost: summary.investments.totalCost,
+        unrealizedPnl: summary.investments.unrealizedProfitLoss,
+        realizedPnl: summary.investments.realizedProfitLoss,
+        freeCash: summary.cash.availableToTrade,
+        currency: summary.currency || "EUR",
       } satisfies ExchangeAccountSummary;
     } catch (err) {
       console.error("[Trading212] getAccountSummary failed:", err);
@@ -313,7 +317,6 @@ export class Trading212Client implements ExchangeClient {
         "/equity/history/transactions",
         this.generalLimiter,
         (page) => page.items,
-        sinceMs
       );
 
       return all
@@ -344,14 +347,12 @@ export class Trading212Client implements ExchangeClient {
     try {
       const all = await this.fetchAllPages<T212Order>(
         "/equity/history/orders",
-        this.orderLimiter, // stricter limit for this endpoint
+        this.orderLimiter,
         (page) => page.items,
-        sinceMs
       );
 
       return all
         .filter((order) => {
-          // Only include executed orders
           if (!order.dateExecuted) return false;
           if (sinceMs !== undefined) {
             const orderMs = new Date(order.dateExecuted).getTime();
@@ -360,19 +361,15 @@ export class Trading212Client implements ExchangeClient {
           return true;
         })
         .map((order) => {
-          const isSell =
-            order.type === "SELL" ||
-            order.type === "MARKET_SELL" ||
-            order.type === "LIMIT_SELL" ||
-            order.type === "STOP_SELL";
+          const isSell = order.type.includes("SELL");
 
           return {
             externalId: order.id,
-            symbol: order.ticker,
+            symbol: displaySymbol(order.ticker),
             side: isSell ? "sell" : "buy",
             quantity: order.filledQuantity,
             price: order.fillPrice ?? 0,
-            fee: 0, // T212 is commission-free; taxes are listed separately in order.taxes
+            fee: 0,
             feeCurrency: "EUR",
             date: new Date(order.dateExecuted!),
             currency: "EUR",

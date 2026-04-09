@@ -229,7 +229,7 @@ export class KrakenClient implements ExchangeClient {
 
     for (const asset of cryptoAssets) {
       try {
-        const pair = `${asset.rawCode}EUR`;
+        const pair = `${asset.symbol}EUR`;
         const ticker = await this.publicGet("/0/public/Ticker", { pair });
 
         // Ticker result key may vary; grab the first key

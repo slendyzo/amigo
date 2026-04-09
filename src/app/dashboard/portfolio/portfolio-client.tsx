@@ -133,6 +133,36 @@ export default function PortfolioClient({
     }
   };
 
+  const handleLogInvestment = async (deposit: Deposit) => {
+    try {
+      const res = await fetch("/api/expenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: `${deposit.exchange.label} Deposit`,
+          amount: deposit.amountEur,
+          currency: "EUR",
+          type: "INVESTMENT",
+          date: deposit.date,
+          excludeFromBudget: true,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to create expense");
+      const expense = await res.json();
+      // Link deposit to expense
+      await fetch(`/api/portfolio/deposits/${deposit.id}/link`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expenseId: expense.id }),
+      });
+      // Optimistically hide the deposit
+      setDismissedDeposits((prev) => new Set(prev).add(deposit.id));
+      router.refresh();
+    } catch (err) {
+      console.error("Failed to log investment:", err);
+    }
+  };
+
   const visibleDeposits = deposits.filter((d) => !dismissedDeposits.has(d.id));
 
   // ── Empty state: no connections ───────────────────────────────────────────
@@ -310,8 +340,12 @@ export default function PortfolioClient({
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0 mt-2 sm:mt-0">
-                  <Button size="sm" className="bg-[#0070f3] hover:bg-[#0060df] text-white text-xs h-7">
-                    {t("logAsExpense")}
+                  <Button
+                    size="sm"
+                    className="bg-[#0070f3] hover:bg-[#0060df] text-white text-xs h-7"
+                    onClick={() => handleLogInvestment(deposit)}
+                  >
+                    {t("logAsInvestment")}
                   </Button>
                   <Button
                     size="sm"
