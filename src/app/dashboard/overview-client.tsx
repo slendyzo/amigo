@@ -187,6 +187,9 @@ export default function DashboardOverview({
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
+  // Mobile: tap-to-reveal action buttons
+  const [expandedMobileRow, setExpandedMobileRow] = useState<string | null>(null);
+
   // Edit state
   const [editingExpense, setEditingExpense] = useState<{
     id: string;
@@ -1504,13 +1507,24 @@ export default function DashboardOverview({
               <div className="divide-y divide-slate-100">
                 {filteredTransactions.map((transaction) => {
                   const isIncome = isIncomeTransaction(transaction);
+                  const isRowExpanded = expandedMobileRow === transaction.id;
                   return (
                     <div
                       key={transaction.id}
                       onClick={(e) => {
                         const target = e.target as HTMLElement;
                         if (target.closest("button")) return;
-                        if (!isIncome) {
+                        if (isIncome) return;
+
+                        // Mobile: tap to reveal buttons, tap again to view detail
+                        if (window.matchMedia("(max-width: 767px)").matches) {
+                          if (isRowExpanded) {
+                            handleViewExpense(transaction.id);
+                            setExpandedMobileRow(null);
+                          } else {
+                            setExpandedMobileRow(transaction.id);
+                          }
+                        } else {
                           handleViewExpense(transaction.id);
                         }
                       }}
@@ -1584,7 +1598,7 @@ export default function DashboardOverview({
                             transaction.excludeFromBudget ? "text-slate-400 line-through" :
                             transaction.amountEur < 0 ? "text-green-600" : "text-slate-900";
                           return amt.secondary ? (
-                            <div className="text-right whitespace-nowrap">
+                            <div className={`text-right whitespace-nowrap transition-transform duration-200 ease-out ${isRowExpanded ? "-translate-x-1" : ""} md:translate-x-0`}>
                               <p className={`font-semibold tabular-nums text-sm md:text-base ${colorClass}`}>
                                 {amt.text}
                               </p>
@@ -1593,7 +1607,7 @@ export default function DashboardOverview({
                               </p>
                             </div>
                           ) : (
-                            <p className={`font-semibold tabular-nums text-sm md:text-base whitespace-nowrap ${colorClass}`}>
+                            <p className={`font-semibold tabular-nums text-sm md:text-base whitespace-nowrap transition-transform duration-200 ease-out ${isRowExpanded ? "-translate-x-1" : ""} md:translate-x-0 ${colorClass}`}>
                               {amt.text}
                             </p>
                           );
@@ -1610,14 +1624,18 @@ export default function DashboardOverview({
                                   {deletingId === transaction.id ? "..." : "Del"}
                                 </button>
                                 <button
-                                  onClick={() => setConfirmDeleteId(null)}
+                                  onClick={() => { setConfirmDeleteId(null); setExpandedMobileRow(null); }}
                                   className="px-2 md:px-3 py-1.5 md:py-1 text-xs md:text-sm border border-slate-300 rounded-lg active:bg-slate-100 md:hover:bg-slate-100 tap-none"
                                 >
                                   No
                                 </button>
                               </div>
                             ) : (
-                              <div className="flex items-center gap-1">
+                              <div className={`flex items-center gap-1 transition-all duration-200 ease-out ${
+                                isRowExpanded
+                                  ? "opacity-100 translate-x-0"
+                                  : "opacity-0 translate-x-3 pointer-events-none"
+                              } md:opacity-0 md:translate-x-0 md:pointer-events-auto md:group-hover:opacity-100`}>
                                 <button
                                   onClick={() => handleToggleExclude(transaction as Expense)}
                                   className={`hidden md:inline-flex md:opacity-0 md:group-hover:opacity-100 p-2 rounded-lg transition-all tap-none ${
@@ -1639,7 +1657,7 @@ export default function DashboardOverview({
                                 <button
                                   onClick={() => handleEditExpense(transaction.id)}
                                   disabled={isLoadingExpense}
-                                  className="md:opacity-0 md:group-hover:opacity-100 p-1.5 md:p-2 text-slate-400 active:text-blue-500 active:bg-blue-50 md:hover:text-blue-500 md:hover:bg-blue-50 rounded-lg transition-all tap-none disabled:opacity-50"
+                                  className="p-1.5 md:p-2 text-slate-400 active:text-blue-500 active:bg-blue-50 md:hover:text-blue-500 md:hover:bg-blue-50 rounded-lg transition-all tap-none disabled:opacity-50"
                                   aria-label="Edit expense"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1648,7 +1666,7 @@ export default function DashboardOverview({
                                 </button>
                                 <button
                                   onClick={() => setConfirmDeleteId(transaction.id)}
-                                  className="md:opacity-0 md:group-hover:opacity-100 p-1.5 md:p-2 text-slate-400 active:text-red-500 active:bg-red-50 md:hover:text-red-500 md:hover:bg-red-50 rounded-lg transition-all tap-none"
+                                  className="p-1.5 md:p-2 text-slate-400 active:text-red-500 active:bg-red-50 md:hover:text-red-500 md:hover:bg-red-50 rounded-lg transition-all tap-none"
                                   aria-label="Delete expense"
                                 >
                                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

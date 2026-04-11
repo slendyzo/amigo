@@ -221,7 +221,7 @@ export class KrakenClient implements ExchangeClient {
         quantity: Number(qty),
       }));
 
-    // 3. Build average buy prices from trade history
+    // 3. Build average buy prices from trade history (currency-aware)
     const avgBuyPrices = await this.calcAverageBuyPrices();
 
     // 4. Fetch current prices and build positions
@@ -229,14 +229,46 @@ export class KrakenClient implements ExchangeClient {
 
     for (const asset of cryptoAssets) {
       try {
-        const pair = `${asset.symbol}EUR`;
-        const ticker = await this.publicGet("/0/public/Ticker", { pair });
+        const buyInfo = avgBuyPrices[asset.symbol];
+        const buyCurrency = buyInfo?.currency ?? "EUR";
 
-        // Ticker result key may vary; grab the first key
-        const tickerData = Object.values(ticker)[0] as { c: [string, string] } | undefined;
-        const currentPrice = tickerData ? Number(tickerData.c[0]) : 0;
+        // Fetch ticker in the same currency as the buy trades
+        // so averageBuyPrice and currentPrice are in the same unit
+        let currentPrice = 0;
+        let positionCurrency = buyCurrency;
 
-        const averageBuyPrice = avgBuyPrices[asset.symbol] ?? 0;
+        // Try dominant trade currency first, then fall back to EUR
+        const pairsToTry =
+          buyCurrency !== "EUR"
+            ? [`${asset.symbol}${buyCurrency}`, `${asset.symbol}EUR`]
+            : [`${asset.symbol}EUR`];
+
+        for (const pair of pairsToTry) {
+          try {
+            const ticker = await this.publicGet("/0/public/Ticker", { pair });
+            const tickerData = Object.values(ticker)[0] as
+              | { c: [string, string] }
+              | undefined;
+            if (tickerData) {
+              currentPrice = Number(tickerData.c[0]);
+              break;
+            }
+          } catch {
+            // If the native-currency pair doesn't exist, fall back to EUR
+            // and reset currency so avg buy price (in buy currency) isn't
+            // mixed with a EUR current price
+            if (pair === pairsToTry[0] && pairsToTry.length > 1) {
+              positionCurrency = "EUR";
+            }
+          }
+        }
+
+        // If we had to fall back to EUR for the ticker but buys were in
+        // another currency, the avg buy price is meaningless — zero it out
+        // so sync.ts doesn't produce a garbage P&L (it'll show 0 cost basis)
+        const averageBuyPrice =
+          positionCurrency === buyCurrency ? (buyInfo?.avgPrice ?? 0) : 0;
+
         const totalCost = averageBuyPrice * asset.quantity;
         const currentValue = currentPrice * asset.quantity;
         const unrealizedPnl = currentValue - totalCost;
@@ -250,7 +282,7 @@ export class KrakenClient implements ExchangeClient {
           quantity: asset.quantity,
           averageBuyPrice,
           currentPrice,
-          currency: "EUR",
+          currency: positionCurrency,
           unrealizedPnl,
           unrealizedPnlPct,
           totalCost,
@@ -266,8 +298,11 @@ export class KrakenClient implements ExchangeClient {
 
   // -------------------------------------------------------------------------
   // Helper: calculate average buy price per normalised symbol from trade history
+  // Returns average price + the dominant quote currency per symbol
   // -------------------------------------------------------------------------
-  private async calcAverageBuyPrices(): Promise<Record<string, number>> {
+  private async calcAverageBuyPrices(): Promise<
+    Record<string, { avgPrice: number; currency: string }>
+  > {
     const result = await this.privatePost("/0/private/TradesHistory", {}, 2);
     const trades = result.trades as Record<
       string,
@@ -276,31 +311,53 @@ export class KrakenClient implements ExchangeClient {
 
     if (!trades) return {};
 
-    // Weighted average for buy side
-    const acc: Record<string, { totalCost: number; totalQty: number }> = {};
+    // Track costs per (symbol, quoteCurrency) to avoid mixing USD and EUR
+    const acc: Record<
+      string,
+      Record<string, { totalCost: number; totalQty: number }>
+    > = {};
 
     for (const trade of Object.values(trades)) {
       if (trade.type !== "buy") continue;
 
-      // Pair is something like "XXBTZEUR" — extract base asset
       const pairRaw = trade.pair;
-      // Kraken pairs are 6-8 chars; base is usually first 4 chars (X/Z prefixed)
       const baseRaw = pairRaw.slice(0, pairRaw.length === 8 ? 4 : 3);
+      const quoteRaw = pairRaw.slice(pairRaw.length === 8 ? 4 : 3);
       const symbol = normaliseAsset(baseRaw);
+      const quoteCurrency = normaliseAsset(quoteRaw);
 
-      if (!acc[symbol]) acc[symbol] = { totalCost: 0, totalQty: 0 };
+      if (!acc[symbol]) acc[symbol] = {};
+      if (!acc[symbol][quoteCurrency])
+        acc[symbol][quoteCurrency] = { totalCost: 0, totalQty: 0 };
+
       const qty = Number(trade.vol);
       const price = Number(trade.price);
-      acc[symbol].totalCost += qty * price;
-      acc[symbol].totalQty += qty;
+      acc[symbol][quoteCurrency].totalCost += qty * price;
+      acc[symbol][quoteCurrency].totalQty += qty;
     }
 
-    return Object.fromEntries(
-      Object.entries(acc).map(([sym, { totalCost, totalQty }]) => [
-        sym,
-        totalQty > 0 ? totalCost / totalQty : 0,
-      ])
-    );
+    // For each symbol, pick the quote currency with the most volume traded
+    const averages: Record<string, { avgPrice: number; currency: string }> = {};
+
+    for (const [symbol, currencies] of Object.entries(acc)) {
+      let dominantCurrency = "EUR";
+      let maxQty = 0;
+
+      for (const [currency, data] of Object.entries(currencies)) {
+        if (data.totalQty > maxQty) {
+          maxQty = data.totalQty;
+          dominantCurrency = currency;
+        }
+      }
+
+      const data = currencies[dominantCurrency];
+      averages[symbol] = {
+        avgPrice: data.totalQty > 0 ? data.totalCost / data.totalQty : 0,
+        currency: dominantCurrency,
+      };
+    }
+
+    return averages;
   }
 
   // -------------------------------------------------------------------------
@@ -318,12 +375,20 @@ export class KrakenClient implements ExchangeClient {
     const unrealizedPnl = Number(tradeBalance.n ?? 0); // unrealized P&L
     const realizedPnl = Number(tradeBalance.rp ?? 0);  // realized P&L
 
-    // Cash = fiat + stablecoins (USDC, USDT, DAI treated as cash equivalents)
+    // Cash = fiat + stablecoins — convert each to EUR before summing
     const balances = await this.privatePost("/0/private/Balance");
+    const cashToEur: Record<string, number> = {
+      EUR: 1, ZEUR: 1,
+      USD: 0.84, ZUSD: 0.84,
+      GBP: 1.15, ZGBP: 1.15,
+      USDC: 0.84, USDT: 0.84, DAI: 0.84,
+    };
     let freeCash = 0;
     for (const [rawCode, qty] of Object.entries(balances)) {
-      if (CASH_CODES.has(rawCode) || CASH_CODES.has(normaliseAsset(rawCode))) {
-        freeCash += Number(qty);
+      const normalised = normaliseAsset(rawCode);
+      if (CASH_CODES.has(rawCode) || CASH_CODES.has(normalised)) {
+        const rate = cashToEur[rawCode] ?? cashToEur[normalised] ?? 1;
+        freeCash += Number(qty) * rate;
       }
     }
 
@@ -333,7 +398,7 @@ export class KrakenClient implements ExchangeClient {
       unrealizedPnl,
       realizedPnl,
       freeCash,
-      currency: "EUR",
+      currency: "EUR", // all cash converted to EUR above
     };
   }
 
