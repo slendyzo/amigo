@@ -49,6 +49,8 @@ enum ExchangeProvider {
   TRADING212
   BINANCE
   BYBIT
+  WALLET_ETH
+  WALLET_SOL
 }
 
 enum AssetType {
@@ -563,11 +565,14 @@ model ExchangeConnection {
   provider      ExchangeProvider
   label         String           @db.VarChar(100) // "My Kraken", "T212 Pie"
 
-  // Encrypted credentials (AES-256-GCM)
-  encryptedApiKey    String  @db.Text
-  encryptedApiSecret String  @db.Text
-  encryptionIV       String  @db.VarChar(32) // hex IV
-  encryptionTag      String  @db.VarChar(32) // GCM auth tag
+  // Wallet address (for WALLET_ETH, WALLET_SOL — public, no encryption needed)
+  walletAddress      String?  @db.VarChar(100)
+
+  // Encrypted credentials (AES-256-GCM) — optional for wallet providers
+  encryptedApiKey    String?  @db.Text
+  encryptedApiSecret String?  @db.Text
+  encryptionIV       String?  @db.VarChar(32) // hex IV
+  encryptionTag      String?  @db.VarChar(32) // GCM auth tag
 
   // Sync state
   syncStatus    SyncStatus  @default(IDLE)

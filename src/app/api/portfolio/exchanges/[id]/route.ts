@@ -117,6 +117,12 @@ export async function PUT(
       let resolvedApiSecret = apiSecret;
 
       if (!resolvedApiKey || !resolvedApiSecret) {
+        if (!existing.encryptedApiKey || !existing.encryptionIV || !existing.encryptionTag) {
+          return NextResponse.json(
+            { error: "Cannot update credentials for a wallet connection" },
+            { status: 400 }
+          );
+        }
         try {
           const decrypted = decrypt(
             existing.encryptedApiKey,

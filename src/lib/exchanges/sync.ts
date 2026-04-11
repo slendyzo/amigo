@@ -1,7 +1,8 @@
 import { prisma } from "@/lib/db";
 import { decrypt } from "@/lib/encryption";
 import { convertToEur } from "@/lib/currency";
-import { createExchangeClient } from "./factory";
+import { createExchangeClient, createWalletClient, isWalletProvider } from "./factory";
+import type { ExchangeClient } from "./types";
 
 // ─── syncExchange ────────────────────────────────────────────────────────────
 
@@ -23,19 +24,29 @@ export async function syncExchange(connectionId: string): Promise<void> {
   });
 
   try {
-    // 3. Decrypt API credentials (stored as JSON payload in encryptedApiKey)
-    const decrypted = decrypt(
-      connection.encryptedApiKey,
-      connection.encryptionIV,
-      connection.encryptionTag
-    );
-    const { apiKey, apiSecret } = JSON.parse(decrypted) as {
-      apiKey: string;
-      apiSecret: string;
-    };
+    // 3. Create client — wallet providers use address, exchanges use encrypted keys
+    let client: ExchangeClient;
 
-    // 4. Create exchange client
-    const client = createExchangeClient(connection.provider, apiKey, apiSecret);
+    if (isWalletProvider(connection.provider)) {
+      if (!connection.walletAddress) {
+        throw new Error("Wallet connection is missing walletAddress");
+      }
+      client = createWalletClient(connection.provider, connection.walletAddress);
+    } else {
+      if (!connection.encryptedApiKey || !connection.encryptionIV || !connection.encryptionTag) {
+        throw new Error("Exchange connection is missing encrypted credentials");
+      }
+      const decrypted = decrypt(
+        connection.encryptedApiKey,
+        connection.encryptionIV,
+        connection.encryptionTag
+      );
+      const { apiKey, apiSecret } = JSON.parse(decrypted) as {
+        apiKey: string;
+        apiSecret: string;
+      };
+      client = createExchangeClient(connection.provider, apiKey, apiSecret);
+    }
 
     // 5. Fetch data from exchange in parallel where safe
     const sinceCutoff = connection.lastSyncAt

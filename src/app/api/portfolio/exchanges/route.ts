@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { encrypt } from "@/lib/encryption";
-import { createExchangeClient } from "@/lib/exchanges/factory";
+import { createExchangeClient, createWalletClient, isWalletProvider } from "@/lib/exchanges/factory";
 import type { ExchangeProvider } from "@prisma/client";
 
 // GET - List all exchange connections for the workspace
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
         id: true,
         provider: true,
         label: true,
+        walletAddress: true,
         syncStatus: true,
         lastSyncAt: true,
         lastSyncError: true,
@@ -65,11 +66,11 @@ export async function POST(request: Request) {
     const shouldTest = searchParams.get("test") === "true";
 
     const body = await request.json();
-    const { provider, label, apiKey, apiSecret } = body;
+    const { provider, label, apiKey, apiSecret, walletAddress } = body;
 
-    if (!provider || !label || !apiKey || !apiSecret) {
+    if (!provider || !label) {
       return NextResponse.json(
-        { error: "provider, label, apiKey, and apiSecret are required" },
+        { error: "provider and label are required" },
         { status: 400 }
       );
     }
@@ -80,6 +81,8 @@ export async function POST(request: Request) {
       "TRADING212",
       "BINANCE",
       "BYBIT",
+      "WALLET_ETH",
+      "WALLET_SOL",
     ];
     if (!validProviders.includes(provider as ExchangeProvider)) {
       return NextResponse.json(
@@ -88,14 +91,28 @@ export async function POST(request: Request) {
       );
     }
 
+    const isWallet = isWalletProvider(provider as ExchangeProvider);
+
+    // Validate required fields per provider type
+    if (isWallet && !walletAddress) {
+      return NextResponse.json(
+        { error: "walletAddress is required for wallet providers" },
+        { status: 400 }
+      );
+    }
+    if (!isWallet && (!apiKey || !apiSecret)) {
+      return NextResponse.json(
+        { error: "apiKey and apiSecret are required for exchange providers" },
+        { status: 400 }
+      );
+    }
+
     // Optionally test the connection before saving
     if (shouldTest) {
       try {
-        const client = createExchangeClient(
-          provider as ExchangeProvider,
-          apiKey,
-          apiSecret
-        );
+        const client = isWallet
+          ? createWalletClient(provider as ExchangeProvider, walletAddress)
+          : createExchangeClient(provider as ExchangeProvider, apiKey, apiSecret);
         const testResult = await client.testConnection();
         if (!testResult.success) {
           return NextResponse.json(
@@ -116,19 +133,31 @@ export async function POST(request: Request) {
       }
     }
 
-    // Encrypt credentials — pack both into a single payload so they share IV/tag
-    const payload = JSON.stringify({ apiKey, apiSecret });
-    const { ciphertext, iv, tag } = encrypt(payload);
+    // Build data — wallets store address, exchanges store encrypted credentials
+    let encryptedApiKey: string | null = null;
+    let encryptedApiSecret: string | null = null;
+    let encryptionIV: string | null = null;
+    let encryptionTag: string | null = null;
+
+    if (!isWallet) {
+      const payload = JSON.stringify({ apiKey, apiSecret });
+      const encrypted = encrypt(payload);
+      encryptedApiKey = encrypted.ciphertext;
+      encryptedApiSecret = "";
+      encryptionIV = encrypted.iv;
+      encryptionTag = encrypted.tag;
+    }
 
     const connection = await prisma.exchangeConnection.create({
       data: {
         workspaceId: workspace.id,
         provider: provider as ExchangeProvider,
         label,
-        encryptedApiKey: ciphertext, // stores the combined encrypted payload
-        encryptedApiSecret: "", // kept empty — payload is in encryptedApiKey
-        encryptionIV: iv,
-        encryptionTag: tag,
+        walletAddress: isWallet ? walletAddress : null,
+        encryptedApiKey,
+        encryptedApiSecret,
+        encryptionIV,
+        encryptionTag,
         syncStatus: "IDLE",
         isActive: true,
       },
