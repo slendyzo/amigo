@@ -49,6 +49,7 @@ enum ExchangeProvider {
   TRADING212
   BINANCE
   BYBIT
+  BYBIT_EU
   WALLET_ETH
   WALLET_SOL
 }

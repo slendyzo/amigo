@@ -1489,6 +1489,9 @@
     "exchangeConnections": "Connexions de Plateformes",
     "krakenSetupHelp": "Créez une clé API en lecture seule sur kraken.com/u/security/api. Activez uniquement 'Query Funds' et 'Query Ledger/Trade History'.",
     "trading212SetupHelp": "Générez une clé API dans l'app Trading212 > Paramètres > API. Utilisez 'Practice' pour démo ou 'Live' pour le compte réel.",
+    "binanceSetupHelp": "Créez une clé API sur binance.com > Compte > Gestion API. Activez uniquement 'Enable Reading' — laissez le trading et les retraits désactivés. Restreignez par IP si possible.",
+    "bybitSetupHelp": "Créez une clé API sur bybit.com > Gestion API. Choisissez 'System-generated' et définissez les permissions sur Read-Only (Wallet, Positions, Ordres).",
+    "bybitEuSetupHelp": "Bybit.eu est l'entité européenne agréée MiCAR et constitue un compte distinct de bybit.com — connectez-vous sur bybit.eu et créez la clé là. Définissez les permissions sur Read-Only.",
     "details": "Détails",
     "profit": "Profit",
     "loss": "Perte"

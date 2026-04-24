@@ -27,11 +27,12 @@ interface ExchangesClientProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const PROVIDER_META: Record<string, { name: string; badgeBg: string; badgeLetter: string }> = {
+const PROVIDER_META: Record<string, { name: string; badgeBg: string; badgeLetter: string; badgeLetterClass?: string }> = {
   KRAKEN: { name: "Kraken", badgeBg: "bg-amber-500", badgeLetter: "K" },
   TRADING212: { name: "Trading 212", badgeBg: "bg-blue-500", badgeLetter: "T" },
   BINANCE: { name: "Binance", badgeBg: "bg-yellow-400", badgeLetter: "B" },
   BYBIT: { name: "Bybit", badgeBg: "bg-orange-500", badgeLetter: "B" },
+  BYBIT_EU: { name: "Bybit.EU", badgeBg: "bg-orange-500", badgeLetter: "EU", badgeLetterClass: "text-xs tracking-tight" },
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -199,7 +200,8 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                   {/* Provider badge */}
                   <span
                     className={[
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-base font-bold text-white",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-white",
+                      meta.badgeLetterClass ?? "text-base",
                       meta.badgeBg,
                     ].join(" ")}
                   >

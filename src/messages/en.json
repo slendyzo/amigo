@@ -1518,6 +1518,9 @@
     "exchangeConnections": "Exchange Connections",
     "krakenSetupHelp": "Create a read-only API key at kraken.com/u/security/api. Only enable 'Query Funds' and 'Query Ledger/Trade History'.",
     "trading212SetupHelp": "Generate an API key in Trading212 app > Settings > API. Use 'Practice' for demo or 'Live' for real account.",
+    "binanceSetupHelp": "Create an API key at binance.com > Account > API Management. Enable only 'Enable Reading' — leave trading and withdrawals disabled. IP-restrict the key if you can.",
+    "bybitSetupHelp": "Create an API key at bybit.com > API Management. Choose 'System-generated' and set permissions to Read-Only (Wallet, Positions, Orders).",
+    "bybitEuSetupHelp": "Bybit.eu is the EU MiCAR-licensed entity and is a separate account from bybit.com — log in at bybit.eu and create the key there. Set permissions to Read-Only.",
     "details": "Details",
     "profit": "Profit",
     "loss": "Loss"

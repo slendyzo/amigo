@@ -27,6 +27,8 @@ export function createExchangeClient(
       return new BinanceClient(apiKey, apiSecret);
     case "BYBIT":
       return new BybitClient(apiKey, apiSecret);
+    case "BYBIT_EU":
+      return new BybitClient(apiKey, apiSecret, "https://api.bybit.eu");
     default:
       throw new Error(`Unsupported exchange provider: ${provider}`);
   }

@@ -1473,6 +1473,9 @@
     "exchangeConnections": "Ligações de Corretoras",
     "krakenSetupHelp": "Cria uma chave API só de leitura em kraken.com/u/security/api. Ativa apenas 'Query Funds' e 'Query Ledger/Trade History'.",
     "trading212SetupHelp": "Gera uma chave API na app Trading212 > Definições > API. Usa 'Practice' para demo ou 'Live' para conta real.",
+    "binanceSetupHelp": "Cria uma chave API em binance.com > Conta > Gestão de API. Ativa apenas 'Enable Reading' — deixa trading e levantamentos desativados. Restringe por IP se conseguires.",
+    "bybitSetupHelp": "Cria uma chave API em bybit.com > Gestão de API. Escolhe 'System-generated' e define as permissões como Read-Only (Wallet, Posições, Ordens).",
+    "bybitEuSetupHelp": "A Bybit.eu é a entidade europeia licenciada pelo MiCAR e é uma conta separada da bybit.com — entra em bybit.eu e cria a chave aí. Define as permissões como Read-Only.",
     "details": "Detalhes",
     "profit": "Lucro",
     "loss": "Prejuízo"

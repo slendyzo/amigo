@@ -81,6 +81,7 @@ export async function POST(request: Request) {
       "TRADING212",
       "BINANCE",
       "BYBIT",
+      "BYBIT_EU",
       "WALLET_ETH",
       "WALLET_SOL",
     ];

@@ -7,7 +7,7 @@ import {
   ExchangeTrade,
 } from "./types";
 
-const BASE_URL = "https://api.bybit.com";
+const DEFAULT_BASE_URL = "https://api.bybit.com";
 const RECV_WINDOW = 5000;
 
 // ---------------------------------------------------------------------------
@@ -62,11 +62,13 @@ export class BybitClient implements ExchangeClient {
   readonly provider = "BYBIT" as const;
   private readonly apiKey: string;
   private readonly apiSecret: string;
+  private readonly baseUrl: string;
   private readonly rateLimiter = new RateLimiter();
 
-  constructor(apiKey: string, apiSecret: string) {
+  constructor(apiKey: string, apiSecret: string, baseUrl: string = DEFAULT_BASE_URL) {
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
+    this.baseUrl = baseUrl;
   }
 
   // -------------------------------------------------------------------------
@@ -97,7 +99,7 @@ export class BybitClient implements ExchangeClient {
 
     const signature = this.sign(timestamp, qs);
 
-    const res = await fetch(`${BASE_URL}${path}${qs ? `?${qs}` : ""}`, {
+    const res = await fetch(`${this.baseUrl}${path}${qs ? `?${qs}` : ""}`, {
       method: "GET",
       headers: {
         "X-BAPI-API-KEY": this.apiKey,
@@ -133,7 +135,7 @@ export class BybitClient implements ExchangeClient {
       Object.fromEntries(Object.entries(params).map(([k, v]) => [k, String(v)]))
     ).toString();
 
-    const res = await fetch(`${BASE_URL}${path}${qs ? `?${qs}` : ""}`);
+    const res = await fetch(`${this.baseUrl}${path}${qs ? `?${qs}` : ""}`);
 
     if (!res.ok) {
       throw new Error(`Bybit HTTP ${res.status} on ${path}`);

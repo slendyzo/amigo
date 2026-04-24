@@ -16,9 +16,9 @@ interface ExchangeConnectionModalProps {
   } | null;
 }
 
-type Provider = "KRAKEN" | "TRADING212";
+type Provider = "KRAKEN" | "TRADING212" | "BINANCE" | "BYBIT" | "BYBIT_EU";
 
-const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; badgeText: string; badgeLetter: string }[] = [
+const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; badgeText: string; badgeLetter: string; badgeLetterClass?: string }[] = [
   {
     id: "KRAKEN",
     name: "Kraken",
@@ -35,7 +35,40 @@ const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; 
     badgeText: "text-white",
     badgeLetter: "T",
   },
+  {
+    id: "BINANCE",
+    name: "Binance",
+    accent: "border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30",
+    badgeBg: "bg-yellow-400",
+    badgeText: "text-slate-900",
+    badgeLetter: "B",
+  },
+  {
+    id: "BYBIT",
+    name: "Bybit",
+    accent: "border-orange-500 bg-orange-50 dark:bg-orange-950/30",
+    badgeBg: "bg-orange-500",
+    badgeText: "text-white",
+    badgeLetter: "B",
+  },
+  {
+    id: "BYBIT_EU",
+    name: "Bybit.EU",
+    accent: "border-orange-500 bg-orange-50 dark:bg-orange-950/30",
+    badgeBg: "bg-orange-500",
+    badgeText: "text-white",
+    badgeLetter: "EU",
+    badgeLetterClass: "text-[11px] tracking-tight",
+  },
 ];
+
+const HELP_TEXT_KEY: Record<Provider, string> = {
+  KRAKEN: "krakenSetupHelp",
+  TRADING212: "trading212SetupHelp",
+  BINANCE: "binanceSetupHelp",
+  BYBIT: "bybitSetupHelp",
+  BYBIT_EU: "bybitEuSetupHelp",
+};
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -100,7 +133,7 @@ export default function ExchangeConnectionModal({
   if (!isOpen) return null;
 
   const selectedProviderMeta = PROVIDERS.find((p) => p.id === provider)!;
-  const helpText = provider === "KRAKEN" ? t("krakenSetupHelp") : t("trading212SetupHelp");
+  const helpText = t(HELP_TEXT_KEY[provider]);
 
   // ─── Handlers ─────────────────────────────────────────────────────────────
 
@@ -207,14 +240,15 @@ export default function ExchangeConnectionModal({
                 >
                   <span
                     className={[
-                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-bold",
+                      "flex h-8 w-8 shrink-0 items-center justify-center rounded-lg font-bold",
+                      p.badgeLetterClass ?? "text-sm",
                       p.badgeBg,
                       p.badgeText,
                     ].join(" ")}
                   >
                     {p.badgeLetter}
                   </span>
-                  <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+                  <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
                     {p.name}
                   </span>
                 </button>
