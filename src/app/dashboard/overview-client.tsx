@@ -1414,12 +1414,19 @@ export default function DashboardOverview({
               {expenses.length > 0 ? (
                 <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
                   {expenses.slice(0, 5).map((e) => (
-                    <div key={e.id} className="flex justify-between items-center py-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 -mx-2 px-2 rounded-lg transition-colors" onClick={() => handleViewExpense(e.id)}>
-                      <div>
-                        <p className="text-sm font-medium text-slate-900 dark:text-white">{e.name}</p>
+                    <div key={e.id} className="flex justify-between items-center gap-3 py-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 -mx-2 px-2 rounded-lg transition-colors" onClick={() => handleViewExpense(e.id)}>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{e.name}</p>
+                          {e.projects && e.projects.length > 0 && e.projects.map((project) => (
+                            <span key={project.id} className="px-2 py-0.5 text-[10px] rounded-full bg-orange-100 text-orange-700 flex-shrink-0">
+                              {project.name}
+                            </span>
+                          ))}
+                        </div>
                         <p className="text-xs text-slate-400">{new Date(e.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short", timeZone: "UTC" })}</p>
                       </div>
-                      <p className={`text-sm font-semibold tabular-nums ${e.amountEur < 0 ? "text-green-600" : "text-slate-900 dark:text-white"}`}>
+                      <p className={`text-sm font-semibold tabular-nums flex-shrink-0 ${e.amountEur < 0 ? "text-green-600" : "text-slate-900 dark:text-white"}`}>
                         {e.amountEur < 0 ? `(€${Math.abs(e.amountEur).toFixed(2)})` : `-€${e.amountEur.toFixed(2)}`}
                       </p>
                     </div>
