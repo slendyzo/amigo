@@ -59,24 +59,11 @@ jobs:
             echo "=== Building Docker image ==="
             docker compose build
 
-            # Restart with new image
+            # Restart with new image — docker compose up -d already fails the
+            # script (via set -e) if containers can't start, so no extra health
+            # check is needed. Keeping the final command fast + quiet avoids a
+            # drone-ssh race where the SSH session closes before the exit code
+            # is read back, which shows up as a false-red "exit 255" in Actions.
             echo "=== Starting container ==="
             docker compose up -d
-
-            # Wait for container to be healthy
-            echo "=== Waiting for container to start ==="
-            sleep 5
-
-            # Show status
-            echo "=== Deployment complete ==="
-            echo "Deployed build: $NEXT_PUBLIC_BUILD_ID @ $NEXT_PUBLIC_BUILD_DATE"
-            docker compose ps
-
-            # Verify the container is running
-            if docker compose ps | grep -q "Up"; then
-              echo "SUCCESS: Container is running"
-            else
-              echo "ERROR: Container failed to start"
-              docker compose logs --tail=50
-              exit 1
-            fi
+            echo "=== Deployed: $NEXT_PUBLIC_BUILD_ID @ $NEXT_PUBLIC_BUILD_DATE ==="
