@@ -40,17 +40,15 @@ jobs:
             git reset --hard origin/main
             echo "Current commit: $(git rev-parse HEAD)"
 
-            # Set build info
-            BUILD_ID=$(git rev-parse --short HEAD)
-            BUILD_DATE=$(date +"%d %b %Y, %H:%M")
-            echo "Build ID: $BUILD_ID"
-            echo "Build Date: $BUILD_DATE"
+            # Set build info — exported so docker-compose.yml args: picks them up
+            export NEXT_PUBLIC_BUILD_ID=$(git rev-parse --short HEAD)
+            export NEXT_PUBLIC_BUILD_DATE=$(date +"%d %b %Y, %H:%M")
+            echo "Build ID: $NEXT_PUBLIC_BUILD_ID"
+            echo "Build Date: $NEXT_PUBLIC_BUILD_DATE"
 
             # Build new image (keeps cache for fast rebuilds)
             echo "=== Building Docker image ==="
-            docker compose build \
-              --build-arg NEXT_PUBLIC_BUILD_ID="$BUILD_ID" \
-              --build-arg NEXT_PUBLIC_BUILD_DATE="$BUILD_DATE"
+            docker compose build
 
             # Restart with new image
             echo "=== Starting container ==="
@@ -67,7 +65,7 @@ jobs:
 
             # Show status
             echo "=== Deployment complete ==="
-            echo "Deployed build: $BUILD_ID @ $BUILD_DATE"
+            echo "Deployed build: $NEXT_PUBLIC_BUILD_ID @ $NEXT_PUBLIC_BUILD_DATE"
             docker compose ps
 
             # Verify the container is running

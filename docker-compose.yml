@@ -20,6 +20,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_BUILD_ID: ${NEXT_PUBLIC_BUILD_ID:-dev}
+        NEXT_PUBLIC_BUILD_DATE: ${NEXT_PUBLIC_BUILD_DATE:-unknown}
     container_name: amigo
     restart: always
     ports:

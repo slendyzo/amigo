@@ -2,6 +2,17 @@ const { execSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
 
+// Skip when build info is already provided by the environment (e.g. Docker
+// --build-arg → ENV). Overwriting .env.local here would be a no-op in practice
+// because process.env wins in Next.js, but writing "dev"/"unknown" fallbacks
+// into the repo is noisy and misleading — bail out instead.
+if (process.env.NEXT_PUBLIC_BUILD_ID && process.env.NEXT_PUBLIC_BUILD_DATE) {
+  console.log(
+    `Build info inherited from env: ${process.env.NEXT_PUBLIC_BUILD_ID} @ ${process.env.NEXT_PUBLIC_BUILD_DATE}`
+  );
+  process.exit(0);
+}
+
 // Get git commit hash (short)
 let commitHash = 'dev';
 try {
