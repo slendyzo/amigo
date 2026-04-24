@@ -1413,7 +1413,9 @@ export default function DashboardOverview({
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("recentExpenses")}</p>
               {expenses.length > 0 ? (
                 <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                  {expenses.slice(0, 5).map((e) => (
+                  {expenses.slice(0, 5).map((e) => {
+                    const shownEur = effectiveEur(e);
+                    return (
                     <div key={e.id} className="flex justify-between items-center gap-3 py-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 -mx-2 px-2 rounded-lg transition-colors" onClick={() => handleViewExpense(e.id)}>
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -1426,11 +1428,12 @@ export default function DashboardOverview({
                         </div>
                         <p className="text-xs text-slate-400">{new Date(e.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short", timeZone: "UTC" })}</p>
                       </div>
-                      <p className={`text-sm font-semibold tabular-nums flex-shrink-0 ${e.amountEur < 0 ? "text-green-600" : "text-slate-900 dark:text-white"}`}>
-                        {e.amountEur < 0 ? `(€${Math.abs(e.amountEur).toFixed(2)})` : `-€${e.amountEur.toFixed(2)}`}
+                      <p className={`text-sm font-semibold tabular-nums flex-shrink-0 ${shownEur < 0 ? "text-green-600" : "text-slate-900 dark:text-white"}`}>
+                        {shownEur < 0 ? `(€${Math.abs(shownEur).toFixed(2)})` : `-€${shownEur.toFixed(2)}`}
                       </p>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               ) : (
                 <p className="text-sm text-slate-400 text-center py-4">{t("transactions.noTransactions")}</p>

@@ -79,6 +79,13 @@ export default function ExpenseDetailModal({
   const isRefund = amount < 0;
   const userShare = getUserShare(e.splitCount, e.splitData);
   const displayAmount = userShare !== null ? userShare : amount;
+  // A split is "customized" when any row is locked or any amount diverges
+  // from the equal share — in that case the "X/per person × N" hint is a lie.
+  const splitPeople = parseSplitData(e.splitData);
+  const perPerson = e.splitCount && e.splitCount > 0 ? Math.abs(amount) / e.splitCount : 0;
+  const isSplitCustomized =
+    !!splitPeople &&
+    splitPeople.some((p) => p.locked || Math.abs(p.amount - perPerson) > 0.01);
 
   const typeLabels: Record<string, string> = {
     SURVIVAL_FIXED: t("types.fixed"),
@@ -289,27 +296,25 @@ export default function ExpenseDetailModal({
                   </p>
                   <p className="text-xs text-indigo-600">
                     {t("yourShare")}: {formatCurrency(displayAmount, e.currency || "EUR")}
-                    <span className="text-indigo-400 ml-1">({formatCurrency(Math.abs(amount) / e.splitCount, e.currency || "EUR")}/{t("perPersonUnit")} × {e.splitCount})</span>
+                    {!isSplitCustomized && (
+                      <span className="text-indigo-400 ml-1">({formatCurrency(Math.abs(amount) / e.splitCount, e.currency || "EUR")}/{t("perPersonUnit")} × {e.splitCount})</span>
+                    )}
                   </p>
                 </div>
               </div>
-              {(() => {
-                const people = parseSplitData(e.splitData);
-                if (!people) return null;
-                return (
-                  <div className="mt-2 space-y-1">
-                    {people.map((p, i) => (
-                      <div key={i} className="flex justify-between text-xs">
-                        <span className="text-slate-600">{p.label}</span>
-                        <span className={`font-medium ${p.locked ? "text-indigo-600" : "text-slate-700"}`}>
-                          {formatCurrency(p.amount, e.currency || "EUR")}
-                          {p.locked && ` (${t("fixed")})`}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
+              {splitPeople && (
+                <div className="mt-2 space-y-1">
+                  {splitPeople.map((p, i) => (
+                    <div key={i} className="flex justify-between text-xs">
+                      <span className="text-slate-600">{p.label}</span>
+                      <span className={`font-medium ${p.locked ? "text-indigo-600" : "text-slate-700"}`}>
+                        {formatCurrency(p.amount, e.currency || "EUR")}
+                        {p.locked && ` (${t("fixed")})`}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
