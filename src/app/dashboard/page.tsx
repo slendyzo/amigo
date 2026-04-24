@@ -125,6 +125,7 @@ export default async function DashboardPage({
         amountExpression: true,
         excludeFromBudget: true,
         splitCount: true,
+        splitData: true,
         createdAt: true,
         category: { select: { id: true, name: true, parentId: true, parent: { select: { id: true, name: true } } } },
         projects: { select: { id: true, name: true } },
@@ -148,6 +149,7 @@ export default async function DashboardPage({
         amountExpression: true,
         excludeFromBudget: true,
         splitCount: true,
+        splitData: true,
         createdAt: true,
         category: { select: { id: true, name: true, parentId: true, parent: { select: { id: true, name: true } } } },
         projects: { select: { id: true, name: true } },
@@ -289,6 +291,7 @@ export default async function DashboardPage({
     projects: e.projects.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })),
     excludeFromBudget: e.excludeFromBudget,
     splitCount: e.splitCount,
+    splitData: e.splitData,
     createdAt: e.createdAt.toISOString(),
   });
 
