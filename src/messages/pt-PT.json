@@ -1050,7 +1050,9 @@
       "unlockAmount": "Desbloquear valor",
       "lockedExceedsTotal": "Os valores fixados excedem o total",
       "meLabel": "Eu",
-      "yourShare": "A tua parte"
+      "yourShare": "A tua parte",
+      "youTag": "Tu",
+      "ofTotal": "de {total}"
     }
   },
   "install": {

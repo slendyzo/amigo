@@ -1064,7 +1064,9 @@
       "unlockAmount": "Déverrouiller le montant",
       "lockedExceedsTotal": "Les montants verrouillés dépassent le total",
       "meLabel": "Moi",
-      "yourShare": "Votre part"
+      "yourShare": "Votre part",
+      "youTag": "Vous",
+      "ofTotal": "sur {total}"
     }
   },
   "install": {

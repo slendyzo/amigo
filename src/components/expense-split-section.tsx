@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { formatCurrency } from "@/lib/currencies";
 import {
@@ -8,6 +8,56 @@ import {
   initializeSplit,
   recalculateSplit,
 } from "@/lib/split-utils";
+
+// Isolated per-person amount input. Keeps a local string while focused so
+// the parent's `toFixed(2)` re-render can't clobber what the user is typing.
+// Commits on blur / Enter. This is the only input that knows about locks,
+// so we always mark the row locked on edit.
+type SplitAmountInputProps = {
+  amount: number;
+  locked: boolean;
+  onCommit: (numValue: number) => void;
+};
+
+function SplitAmountInput({ amount, locked, onCommit }: SplitAmountInputProps) {
+  const [localValue, setLocalValue] = useState(amount.toFixed(2));
+  const isFocused = useRef(false);
+
+  useEffect(() => {
+    if (!isFocused.current) setLocalValue(amount.toFixed(2));
+  }, [amount]);
+
+  return (
+    <input
+      type="text"
+      inputMode="decimal"
+      value={localValue}
+      onChange={(e) => setLocalValue(e.target.value.replace(/[^0-9.,]/g, ""))}
+      onFocus={(e) => {
+        isFocused.current = true;
+        setLocalValue(amount.toFixed(2));
+        e.currentTarget.select();
+      }}
+      onBlur={() => {
+        isFocused.current = false;
+        const n = parseFloat(localValue.replace(",", "."));
+        if (!isNaN(n)) onCommit(n);
+        else setLocalValue(amount.toFixed(2));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          (e.currentTarget as HTMLInputElement).blur();
+        }
+      }}
+      className={`w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent ${
+        locked
+          ? "border-indigo-400 bg-indigo-50/50"
+          : "border-slate-300 bg-white"
+      }`}
+    />
+  );
+}
 
 type ExpenseSplitSectionProps = {
   amount: number;
@@ -130,6 +180,13 @@ export default function ExpenseSplitSection({
   );
 
   const perPerson = splitCount > 0 ? amount / splitCount : 0;
+  // Treat the split as customized when any row is locked or any amount diverges
+  // from the equal share — in that case the "X/per person" line is misleading.
+  const isCustomized =
+    !!splitPeople &&
+    splitPeople.some(
+      (p) => p.locked || Math.abs(p.amount - perPerson) > 0.01
+    );
 
   if (amount <= 0) return null;
 
@@ -163,14 +220,21 @@ export default function ExpenseSplitSection({
         </div>
       </div>
 
-      {/* Per-person summary */}
+      {/* Per-person summary — show equal-split hint only when the split is even. */}
       <div className="text-sm text-indigo-600 font-medium">
         {splitPeople && splitPeople[0] ? (
           <>
             {t("yourShare")}: {formatCurrency(splitPeople[0].amount, currency)}
-            <span className="text-indigo-400 ml-1">
-              ({formatCurrency(perPerson, currency)}/{t("perPersonUnit")} × {splitCount})
-            </span>
+            {!isCustomized && (
+              <span className="text-indigo-400 ml-1">
+                ({formatCurrency(perPerson, currency)}/{t("perPersonUnit")} × {splitCount})
+              </span>
+            )}
+            {isCustomized && (
+              <span className="text-indigo-400 ml-1">
+                {t("ofTotal", { total: formatCurrency(amount, currency) })}
+              </span>
+            )}
           </>
         ) : (
           <>
@@ -211,8 +275,12 @@ export default function ExpenseSplitSection({
             <div key={i} className="flex items-center gap-2">
               {/* Label */}
               {i === 0 ? (
-                <div className="flex-1 min-w-0 rounded-md border border-indigo-300 bg-indigo-50 px-2.5 py-1.5 text-xs text-indigo-700 font-medium">
-                  {person.label}
+                <div className="flex-1 min-w-0 rounded-md border border-indigo-400 bg-indigo-100 px-2.5 py-1.5 text-xs text-indigo-800 font-semibold flex items-center gap-1.5">
+                  <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span className="truncate">{person.label}</span>
+                  <span className="ml-auto text-[10px] uppercase tracking-wide text-indigo-500 font-bold flex-shrink-0">{t("youTag")}</span>
                 </div>
               ) : (
                 <input
@@ -224,17 +292,10 @@ export default function ExpenseSplitSection({
               )}
               {/* Amount */}
               <div className="relative w-24">
-                <input
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={person.amount.toFixed(2)}
-                  onChange={(e) => handleAmountChange(i, e.target.value)}
-                  className={`w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent ${
-                    person.locked
-                      ? "border-indigo-400 bg-indigo-50/50"
-                      : "border-slate-300 bg-white"
-                  }`}
+                <SplitAmountInput
+                  amount={person.amount}
+                  locked={person.locked}
+                  onCommit={(n) => handleAmountChange(i, n.toString())}
                 />
               </div>
               {/* Lock toggle */}

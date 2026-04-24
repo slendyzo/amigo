@@ -1064,7 +1064,9 @@
       "unlockAmount": "Unlock amount",
       "lockedExceedsTotal": "Locked amounts exceed the total",
       "meLabel": "Me",
-      "yourShare": "Your share"
+      "yourShare": "Your share",
+      "youTag": "You",
+      "ofTotal": "of {total}"
     }
   },
   "install": {

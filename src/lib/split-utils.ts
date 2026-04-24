@@ -97,3 +97,26 @@ export function getUserShare(splitCount: number | null | undefined, splitData: s
   // Fallback: if no splitData, assume equal split (shouldn't happen normally)
   return null;
 }
+
+/**
+ * Resolve an expense's effective EUR amount — the user's share when split,
+ * otherwise the full amount. Use this in any aggregation (totals, monthly
+ * breakdowns, project sums) so split expenses don't count the full bill.
+ */
+// Accepts both plain JSON numbers (frontend) and Prisma Decimal (backend) —
+// Number() coerces both to a primitive number.
+export function effectiveEur(expense: {
+  splitCount?: number | null;
+  splitData?: string | null;
+  amount: unknown;
+  amountEur: unknown;
+}): number {
+  const amountEur = Number(expense.amountEur);
+  const amount = Number(expense.amount);
+  if (!expense.splitCount || expense.splitCount <= 1) return amountEur;
+  const share = getUserShare(expense.splitCount, expense.splitData);
+  if (share !== null && amount !== 0) {
+    return amountEur * (share / amount);
+  }
+  return amountEur / expense.splitCount;
+}

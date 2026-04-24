@@ -8,6 +8,8 @@ import AddExpenseModal from "@/components/add-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
 import ProjectWrappedModal from "@/components/project-wrapped-modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import { effectiveEur, getUserShare } from "@/lib/split-utils";
+import { formatCurrency } from "@/lib/currencies";
 
 type Category = {
   id: string;
@@ -36,6 +38,8 @@ type Expense = {
   bankAccount: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
   imageUrls?: string | null;
+  splitCount?: number | null;
+  splitData?: string | null;
 };
 
 type Project = {
@@ -105,9 +109,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       if (response.ok) {
         const data = await response.json();
         setExpenses(data.expenses || []);
-        // Calculate total
         const total = (data.expenses || []).reduce(
-          (sum: number, exp: Expense) => sum + Number(exp.amountEur),
+          (sum: number, exp: Expense) => sum + effectiveEur(exp),
           0
         );
         setTotalSpent(total);
@@ -164,11 +167,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     try {
       const response = await fetch(`/api/expenses?id=${id}`, { method: "DELETE" });
       if (response.ok) {
-        setExpenses(expenses.filter((e) => e.id !== id));
-        // Recalculate total
         const newExpenses = expenses.filter((e) => e.id !== id);
+        setExpenses(newExpenses);
         const newTotal = newExpenses.reduce(
-          (sum: number, exp: Expense) => sum + Number(exp.amountEur),
+          (sum: number, exp: Expense) => sum + effectiveEur(exp),
           0
         );
         setTotalSpent(newTotal);
@@ -198,7 +200,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       groups[key] = { label, expenses: [], total: 0 };
     }
     groups[key].expenses.push(expense);
-    groups[key].total += Number(expense.amountEur);
+    groups[key].total += effectiveEur(expense);
     return groups;
   }, {} as Record<string, { label: string; expenses: Expense[]; total: number }>);
 
@@ -372,6 +374,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                         <div>
                           <p className="font-medium text-slate-900 flex items-center gap-1.5">
                             {expense.name}
+                            {expense.splitCount && expense.splitCount > 1 && (
+                              <span className="text-[10px] px-1 py-0.5 rounded bg-indigo-100 text-indigo-600 font-medium">
+                                ÷{expense.splitCount}
+                              </span>
+                            )}
                             {expense.imageUrls && (
                               <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -393,18 +400,31 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                       </div>
                       <div className="flex items-center gap-3">
                         <div className="text-right">
-                          <p className={`font-medium ${Number(expense.amountEur) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
-                            {Number(expense.amountEur) < 0
-                              ? `(€${Math.abs(Number(expense.amountEur)).toFixed(2)})`
-                              : `€${Number(expense.amountEur).toFixed(2)}`}
-                          </p>
-                          {expense.currency !== "EUR" && (
-                            <p className="text-xs text-slate-400">
-                              {expense.currency} {Number(expense.amount) < 0
-                                ? `(${Math.abs(Number(expense.amount)).toFixed(2)})`
-                                : Number(expense.amount).toFixed(2)}
-                            </p>
-                          )}
+                          {(() => {
+                            const displayEur = effectiveEur(expense);
+                            const share = getUserShare(expense.splitCount, expense.splitData);
+                            const displayOriginal = share !== null ? share : Number(expense.amount);
+                            const fullEur = Number(expense.amountEur);
+                            return (
+                              <>
+                                <p className={`font-medium ${displayEur < 0 ? 'text-green-600' : 'text-slate-900'}`}>
+                                  {displayEur < 0
+                                    ? `(€${Math.abs(displayEur).toFixed(2)})`
+                                    : `€${displayEur.toFixed(2)}`}
+                                </p>
+                                {expense.currency !== "EUR" && (
+                                  <p className="text-xs text-slate-400">
+                                    {formatCurrency(displayOriginal, expense.currency)}
+                                  </p>
+                                )}
+                                {share !== null && (
+                                  <p className="text-[10px] text-slate-400 tabular-nums">
+                                    {`€${Math.abs(fullEur).toFixed(2)}`}
+                                  </p>
+                                )}
+                              </>
+                            );
+                          })()}
                         </div>
                         <button
                           onClick={() => handleEditExpense(expense)}

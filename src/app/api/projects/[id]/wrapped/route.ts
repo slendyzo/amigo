@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
+import { effectiveEur } from "@/lib/split-utils";
 
 // GET - Get project wrapped stats
 export async function GET(
@@ -51,25 +52,23 @@ export async function GET(
       });
     }
 
-    // Calculate total spent
-    const totalSpent = expenses.reduce(
-      (sum, exp) => sum + Number(exp.amountEur),
-      0
-    );
+    // All totals use the user's share on split expenses, not the full bill.
+    const shares = new Map(expenses.map((exp) => [exp.id, effectiveEur(exp)]));
+    const shareOf = (id: string) => shares.get(id) ?? 0;
 
-    // Budget usage percentage
+    const totalSpent = expenses.reduce((sum, exp) => sum + shareOf(exp.id), 0);
+
     const budgetUsage = project.budget
       ? (totalSpent / Number(project.budget)) * 100
       : null;
 
-    // Top categories
     const categoryTotals: Record<string, { name: string; total: number; count: number }> = {};
     for (const expense of expenses) {
       const categoryName = expense.category?.name || "Uncategorized";
       if (!categoryTotals[categoryName]) {
         categoryTotals[categoryName] = { name: categoryName, total: 0, count: 0 };
       }
-      categoryTotals[categoryName].total += Number(expense.amountEur);
+      categoryTotals[categoryName].total += shareOf(expense.id);
       categoryTotals[categoryName].count += 1;
     }
     const topCategories = Object.values(categoryTotals)
@@ -79,10 +78,9 @@ export async function GET(
         name: cat.name,
         total: cat.total,
         count: cat.count,
-        percentage: (cat.total / totalSpent) * 100,
+        percentage: totalSpent > 0 ? (cat.total / totalSpent) * 100 : 0,
       }));
 
-    // Monthly breakdown
     const monthlyTotals: Record<string, { month: string; total: number; count: number }> = {};
     for (const expense of expenses) {
       const date = new Date(expense.date);
@@ -95,14 +93,13 @@ export async function GET(
       if (!monthlyTotals[monthKey]) {
         monthlyTotals[monthKey] = { month: monthLabel, total: 0, count: 0 };
       }
-      monthlyTotals[monthKey].total += Number(expense.amountEur);
+      monthlyTotals[monthKey].total += shareOf(expense.id);
       monthlyTotals[monthKey].count += 1;
     }
     const monthlyBreakdown = Object.entries(monthlyTotals)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([, data]) => data);
 
-    // Date range
     const firstExpense = expenses[0];
     const lastExpense = expenses[expenses.length - 1];
     const dateRange = {
@@ -110,14 +107,11 @@ export async function GET(
       end: lastExpense.date,
     };
 
-    // Highest expense
     const highestExpense = expenses.reduce(
-      (max, exp) =>
-        Number(exp.amountEur) > Number(max.amountEur) ? exp : max,
+      (max, exp) => (shareOf(exp.id) > shareOf(max.id) ? exp : max),
       expenses[0]
     );
 
-    // Average expense
     const averageExpense = totalSpent / expenses.length;
 
     return NextResponse.json({
@@ -132,7 +126,7 @@ export async function GET(
         dateRange,
         highestExpense: {
           name: highestExpense.name,
-          amount: Number(highestExpense.amountEur),
+          amount: shareOf(highestExpense.id),
           date: highestExpense.date,
         },
         averageExpense,

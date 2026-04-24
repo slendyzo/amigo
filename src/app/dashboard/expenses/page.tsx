@@ -8,7 +8,7 @@ import EditExpenseModal from "@/components/edit-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
-import { getUserShare } from "@/lib/split-utils";
+import { effectiveEur, getUserShare } from "@/lib/split-utils";
 import ExportModal from "@/components/export-modal";
 
 type Expense = {
@@ -318,7 +318,10 @@ export default function ExpensesPage() {
           monthKey,
           monthLabel: `${MONTHS[parseInt(month)]} ${year}`,
           expenses: monthExpenses, // Already sorted from sortedExpenses
-          total: monthExpenses.reduce((sum, e) => sum + Number(e.amount), 0),
+          total: monthExpenses.reduce(
+            (sum, e) => sum + effectiveEur({ ...e, amountEur: e.amountEur ?? e.amount }),
+            0
+          ),
         };
       })
       .sort((a, b) => sortOrder === "desc"
