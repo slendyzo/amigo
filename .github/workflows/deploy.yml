@@ -46,6 +46,15 @@ jobs:
             echo "Build ID: $NEXT_PUBLIC_BUILD_ID"
             echo "Build Date: $NEXT_PUBLIC_BUILD_DATE"
 
+            # Clean up before building — dangling images from prior failed builds
+            # accumulate and eventually fill the disk. Runs BEFORE build so it
+            # can't be skipped by a build failure. Dangling-only (no -a), so
+            # current + cached layers are preserved.
+            echo "=== Cleaning up dangling images ==="
+            docker image prune -f
+            docker container prune -f
+            echo "Disk before build: $(df -h / | tail -1 | awk '{print $5}')"
+
             # Build new image (keeps cache for fast rebuilds)
             echo "=== Building Docker image ==="
             docker compose build
@@ -53,11 +62,6 @@ jobs:
             # Restart with new image
             echo "=== Starting container ==="
             docker compose up -d
-
-            # Clean up old/dangling images (keeps current + cache)
-            echo "=== Cleaning up old images ==="
-            docker image prune -f
-            echo "Disk usage: $(df -h / | tail -1 | awk '{print $5}')"
 
             # Wait for container to be healthy
             echo "=== Waiting for container to start ==="
