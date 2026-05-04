@@ -35,6 +35,15 @@ type SpecResult = {
 
 type ImageResult = { url: string; source: string; pageTitle: string } | null;
 
+type ExpenseCandidate = {
+  id: string;
+  name: string;
+  amountEur: number;
+  date: string;
+  matchScore: number;
+  matchReasons: string[];
+};
+
 type AddVehicleModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -49,6 +58,13 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Post-add: surface retroactive expense matches (AMIGO-164).
+  const [phase, setPhase] = useState<"form" | "matching">("form");
+  const [matchAssetId, setMatchAssetId] = useState<string | null>(null);
+  const [matchCandidates, setMatchCandidates] = useState<ExpenseCandidate[]>([]);
+  const [matchSelected, setMatchSelected] = useState<Set<string>>(new Set());
+  const [matchSubmitting, setMatchSubmitting] = useState(false);
 
   // Step 1
   const [brand, setBrand] = useState("");
@@ -108,6 +124,11 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
       setInterestRate("");
       setError(null);
       setSubmitting(false);
+      setPhase("form");
+      setMatchAssetId(null);
+      setMatchCandidates([]);
+      setMatchSelected(new Set());
+      setMatchSubmitting(false);
     }
   }, [isOpen, currentYear]);
 
@@ -223,6 +244,25 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
         }
       }
 
+      // After successful create, check for retroactive expense matches.
+      // Failures here are non-blocking — we just close the wizard.
+      try {
+        const matchRes = await fetch(`/api/assets/${asset.id}/match-expenses`);
+        if (matchRes.ok) {
+          const { candidates } = (await matchRes.json()) as { candidates?: ExpenseCandidate[] };
+          if (candidates && candidates.length > 0) {
+            setMatchAssetId(asset.id);
+            setMatchCandidates(candidates);
+            setMatchSelected(new Set(candidates.map((c) => c.id)));
+            setPhase("matching");
+            setSubmitting(false);
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("[add-vehicle] match-expenses check failed:", e);
+      }
+
       onSuccess?.();
       router.refresh();
       onClose();
@@ -231,6 +271,45 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const finishMatching = async (link: boolean) => {
+    if (!matchAssetId) {
+      onSuccess?.();
+      router.refresh();
+      onClose();
+      return;
+    }
+    if (!link || matchSelected.size === 0) {
+      onSuccess?.();
+      router.refresh();
+      onClose();
+      return;
+    }
+    setMatchSubmitting(true);
+    try {
+      await fetch(`/api/assets/${matchAssetId}/match-expenses`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expenseIds: [...matchSelected] }),
+      });
+    } catch (e) {
+      console.warn("[add-vehicle] retroactive link failed:", e);
+    } finally {
+      setMatchSubmitting(false);
+      onSuccess?.();
+      router.refresh();
+      onClose();
+    }
+  };
+
+  const toggleMatch = (id: string) => {
+    setMatchSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
   };
 
   if (!isOpen) return null;
@@ -258,26 +337,97 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
               <Car className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-base font-semibold leading-tight">{t("addVehicle")}</h2>
+              <h2 className="text-base font-semibold leading-tight">
+                {phase === "matching" ? t("matchHeader") : t("addVehicle")}
+              </h2>
               <p className="text-xs text-muted-foreground">
-                {t("stepCountOf", { current: step, total: 3 })}
+                {phase === "matching"
+                  ? `${brand} ${model}`
+                  : t("stepCountOf", { current: step, total: 3 })}
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            disabled={submitting}
+            disabled={submitting || matchSubmitting}
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-50"
           >
             <X className="h-4 w-4" />
           </button>
         </header>
 
-        <div className="px-5 pt-3">
-          <StepDots step={step} />
-        </div>
+        {phase === "form" && (
+          <div className="px-5 pt-3">
+            <StepDots step={step} />
+          </div>
+        )}
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
+          {phase === "matching" ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {t("matchSubheader", {
+                  count: matchCandidates.length,
+                  name: `${brand} ${model}`.trim(),
+                })}
+              </p>
+              <div className="flex items-center justify-between text-xs">
+                <button
+                  type="button"
+                  onClick={() => setMatchSelected(new Set(matchCandidates.map((c) => c.id)))}
+                  className="text-primary hover:underline"
+                >
+                  {t("matchSelectAll")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setMatchSelected(new Set())}
+                  className="text-muted-foreground hover:text-foreground"
+                >
+                  {t("matchClear")}
+                </button>
+              </div>
+              <ul className="divide-y divide-border/40 rounded-2xl border border-border/60 bg-card/80">
+                {matchCandidates.map((c) => {
+                  const checked = matchSelected.has(c.id);
+                  return (
+                    <li
+                      key={c.id}
+                      onClick={() => toggleMatch(c.id)}
+                      className="flex cursor-pointer items-center justify-between gap-3 px-4 py-2.5 text-sm transition-colors hover:bg-muted/40"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={cn(
+                            "flex h-4 w-4 shrink-0 items-center justify-center rounded border",
+                            checked
+                              ? "border-primary bg-primary text-primary-foreground"
+                              : "border-border bg-background",
+                          )}
+                          aria-hidden
+                        >
+                          {checked && <Check className="h-3 w-3" />}
+                        </span>
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{c.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(c.date).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="shrink-0 tabular-nums">
+                        {c.amountEur.toLocaleString(undefined, {
+                          style: "currency",
+                          currency: "EUR",
+                          maximumFractionDigits: 0,
+                        })}
+                      </p>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : (
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -572,46 +722,71 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
               )}
             </motion.div>
           </AnimatePresence>
+          )}
 
-          {error && (
+          {error && phase === "form" && (
             <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-500">{error}</p>
           )}
         </div>
 
-        <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
-          <button
-            type="button"
-            onClick={() => (step === 1 ? onClose() : setStep((s) => (s === 3 ? 2 : 1)))}
-            disabled={submitting}
-            className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
-          >
-            {step === 1 ? tCommon("cancel") : (
-              <>
-                <ChevronLeft className="h-4 w-4" /> {t("back")}
-              </>
-            )}
-          </button>
-          {step < 3 ? (
+        {phase === "matching" ? (
+          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
             <button
               type="button"
-              disabled={(step === 1 && !step1Ok) || (step === 2 && !step2Ok)}
-              onClick={() => setStep((s) => (s === 1 ? 2 : 3))}
-              className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
+              onClick={() => finishMatching(false)}
+              disabled={matchSubmitting}
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
             >
-              {t("next")} <ChevronRight className="h-4 w-4" />
+              {t("matchSkip")}
             </button>
-          ) : (
             <button
               type="button"
-              disabled={!step3Ok || submitting}
-              onClick={submit}
+              onClick={() => finishMatching(true)}
+              disabled={matchSubmitting || matchSelected.size === 0}
               className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
             >
-              {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? t("saving") : t("addVehicle")}
+              {matchSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {matchSubmitting
+                ? t("matchLinking")
+                : t("matchLink", { count: matchSelected.size })}
             </button>
-          )}
-        </footer>
+          </footer>
+        ) : (
+          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
+            <button
+              type="button"
+              onClick={() => (step === 1 ? onClose() : setStep((s) => (s === 3 ? 2 : 1)))}
+              disabled={submitting}
+              className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              {step === 1 ? tCommon("cancel") : (
+                <>
+                  <ChevronLeft className="h-4 w-4" /> {t("back")}
+                </>
+              )}
+            </button>
+            {step < 3 ? (
+              <button
+                type="button"
+                disabled={(step === 1 && !step1Ok) || (step === 2 && !step2Ok)}
+                onClick={() => setStep((s) => (s === 1 ? 2 : 3))}
+                className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
+              >
+                {t("next")} <ChevronRight className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={!step3Ok || submitting}
+                onClick={submit}
+                className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
+              >
+                {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
+                {submitting ? t("saving") : t("addVehicle")}
+              </button>
+            )}
+          </footer>
+        )}
       </motion.div>
     </div>
   );

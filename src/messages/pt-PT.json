@@ -1570,6 +1570,13 @@
     "salePriceWithCurrency": "Preço de venda ({currency})",
     "deleteVehicleConfirm": "Eliminar este veículo? As despesas ligadas serão desligadas mas mantidas.",
     "generationPrefix": "Geração",
-    "backToNetWorth": "Património"
+    "backToNetWorth": "Património",
+    "matchHeader": "Ligar despesas antigas?",
+    "matchSubheader": "Encontrámos {count} despesas que parecem pertencer ao teu {name}. Liga-as para contarem para o TCO.",
+    "matchSelectAll": "Selecionar tudo",
+    "matchClear": "Limpar",
+    "matchSkip": "Saltar",
+    "matchLink": "Ligar {count}",
+    "matchLinking": "A ligar…"
   }
 }

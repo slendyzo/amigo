@@ -1601,6 +1601,13 @@
     "salePriceWithCurrency": "Sale price ({currency})",
     "deleteVehicleConfirm": "Delete this vehicle? Linked expenses will be unlinked but kept.",
     "generationPrefix": "Gen",
-    "backToNetWorth": "Net Worth"
+    "backToNetWorth": "Net Worth",
+    "matchHeader": "Link past expenses?",
+    "matchSubheader": "We found {count} expenses that look like they belong to your {name}. Link them so they count toward TCO.",
+    "matchSelectAll": "Select all",
+    "matchClear": "Clear",
+    "matchSkip": "Skip",
+    "matchLink": "Link {count}",
+    "matchLinking": "Linking…"
   }
 }

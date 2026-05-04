@@ -1572,6 +1572,13 @@
     "salePriceWithCurrency": "Prix de vente ({currency})",
     "deleteVehicleConfirm": "Supprimer ce véhicule ? Les dépenses liées seront déliées mais conservées.",
     "generationPrefix": "Gén.",
-    "backToNetWorth": "Patrimoine"
+    "backToNetWorth": "Patrimoine",
+    "matchHeader": "Lier des dépenses passées ?",
+    "matchSubheader": "Nous avons trouvé {count} dépenses qui semblent appartenir à votre {name}. Liez-les pour qu'elles comptent dans le coût total.",
+    "matchSelectAll": "Tout sélectionner",
+    "matchClear": "Effacer",
+    "matchSkip": "Passer",
+    "matchLink": "Lier {count}",
+    "matchLinking": "Liaison…"
   }
 }
