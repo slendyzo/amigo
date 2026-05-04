@@ -81,12 +81,14 @@ export async function PUT(
       }
     }
 
+    const newAmount = amount !== undefined ? (amount ? parseFloat(amount) : null) : existing.amount;
+
     const template = await prisma.recurringTemplate.update({
       where: { id },
       data: {
         name,
         type: type ? (type as ExpenseType) : existing.type,
-        amount: amount !== undefined ? (amount ? parseFloat(amount) : null) : existing.amount,
+        amount: newAmount,
         currency: currency || existing.currency,
         interval: interval ? (interval as RecurrenceInterval) : existing.interval,
         dayOfMonth: parsedDayOfMonth, // null = no specific day (monthly)
@@ -107,6 +109,25 @@ export async function PUT(
         projects: { select: { id: true, name: true } },
       },
     });
+
+    // Bidirectional sync: propagate name/amount changes to any linked Liability.
+    const linkedLoans = await prisma.liability.findMany({
+      where: { recurringTemplateId: id, workspaceId: workspace.id },
+      select: { id: true, name: true, monthlyPayment: true, currency: true },
+    });
+    for (const loan of linkedLoans) {
+      const updates: { name?: string; monthlyPayment?: number } = {};
+      if (name !== undefined && name !== loan.name) updates.name = name;
+      if (newAmount != null && Number(loan.monthlyPayment) !== Number(newAmount)) {
+        updates.monthlyPayment = Number(newAmount);
+      }
+      if (Object.keys(updates).length > 0) {
+        await prisma.liability.update({
+          where: { id: loan.id },
+          data: updates,
+        });
+      }
+    }
 
     return NextResponse.json({ template });
   } catch (error) {

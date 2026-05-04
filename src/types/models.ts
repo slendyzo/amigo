@@ -53,6 +53,7 @@ export type Expense = {
   splitCount?: number | null;
   splitData?: string | null;
   importLogId?: string;
+  realAssetId?: string | null;
   createdAt?: string;
   updatedAt?: string;
 };

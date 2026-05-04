@@ -106,7 +106,7 @@ export async function POST(request: Request) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { quickAdd, name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData, description } = body;
+    const { quickAdd, name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData, description, realAssetId } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToConnect: string[] = projectIds || (projectId ? [projectId] : []);
@@ -275,6 +275,7 @@ export async function POST(request: Request) {
         splitCount: splitCount || null,
         splitData: splitData || null,
         description: description || null,
+        realAssetId: typeof realAssetId === "string" && realAssetId ? realAssetId : null,
         projects: projectIdsToConnect.length > 0
           ? { connect: projectIdsToConnect.map(id => ({ id })) }
           : undefined,

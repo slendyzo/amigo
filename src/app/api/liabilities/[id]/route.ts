@@ -103,6 +103,28 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       },
     });
 
+    // Bidirectional sync: propagate name/monthlyPayment changes to a linked template.
+    if (liability.recurringTemplateId) {
+      const updates: { name?: string; amount?: Prisma.Decimal } = {};
+      const tmpl = liability.recurringTemplate;
+      if (typeof body.name === "string" && tmpl && body.name.trim() !== tmpl.name) {
+        updates.name = body.name.trim();
+      }
+      if (
+        typeof body.monthlyPayment === "number" &&
+        tmpl &&
+        Number(tmpl.amount) !== body.monthlyPayment
+      ) {
+        updates.amount = new Prisma.Decimal(body.monthlyPayment);
+      }
+      if (Object.keys(updates).length > 0) {
+        await prisma.recurringTemplate.update({
+          where: { id: liability.recurringTemplateId },
+          data: updates,
+        });
+      }
+    }
+
     return NextResponse.json({ liability });
   } catch (error) {
     return errorResponse(error);

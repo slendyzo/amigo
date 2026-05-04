@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import ProjectTagSelector from "./project-tag-selector";
+import AssetLinkPicker from "./asset-link-picker";
 import { AmountInput } from "./ui/amount-input";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { useModalBodyClass } from "@/hooks/use-modal-body-class";
@@ -61,6 +62,7 @@ export default function EditExpenseModal({
   const [excludeFromBudget, setExcludeFromBudget] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [description, setDescription] = useState("");
+  const [linkedRealAssetId, setLinkedRealAssetId] = useState<string | null>(null);
   const [splitEnabled, setSplitEnabled] = useState(false);
   const [splitCount, setSplitCount] = useState(2);
   const [splitPeople, setSplitPeople] = useState<SplitPerson[] | null>(null);
@@ -136,6 +138,7 @@ export default function EditExpenseModal({
       setSplitPeople(parseSplitData(expense.splitData));
       setDescription(expense.description || "");
       setShowNotes(!!expense.description);
+      setLinkedRealAssetId(expense.realAssetId ?? null);
       setShowDatePicker(false);
       setShowDetails(false);
       setError("");
@@ -190,6 +193,7 @@ export default function EditExpenseModal({
           status,
           splitCount: splitEnabled ? splitCount : null,
           splitData: splitEnabled && splitPeople ? JSON.stringify(splitPeople) : null,
+          realAssetId: linkedRealAssetId,
         }),
       });
 
@@ -396,6 +400,11 @@ export default function EditExpenseModal({
               onNewTagNameChange={setNewTagName}
               onCreateTag={handleCreateTag}
               onCancelNewTag={resetTagInput}
+            />
+            <AssetLinkPicker
+              value={linkedRealAssetId}
+              onChange={setLinkedRealAssetId}
+              className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700/50"
             />
           </div>
 

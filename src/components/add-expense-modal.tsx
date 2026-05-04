@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import ProjectTagSelector from "./project-tag-selector";
+import AssetLinkPicker from "./asset-link-picker";
 import { AmountInput } from "./ui/amount-input";
 import { savePendingExpense, isOfflineStorageAvailable } from "@/lib/offline-storage";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
@@ -126,6 +127,7 @@ export default function AddExpenseModal({
   const [splitPeople, setSplitPeople] = useState<SplitPerson[] | null>(null);
 
   const [description, setDescription] = useState("");
+  const [linkedRealAssetId, setLinkedRealAssetId] = useState<string | null>(null);
 
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
@@ -244,6 +246,7 @@ export default function AddExpenseModal({
         // Split expense fields
         splitCount: splitEnabled ? splitCount : undefined,
         splitData: splitEnabled && splitPeople ? JSON.stringify(splitPeople) : undefined,
+        realAssetId: linkedRealAssetId || undefined,
       };
 
       // Try to submit online first
@@ -542,6 +545,11 @@ export default function AddExpenseModal({
               onNewTagNameChange={setNewTagName}
               onCreateTag={handleCreateTag}
               onCancelNewTag={resetTagInput}
+            />
+            <AssetLinkPicker
+              value={linkedRealAssetId}
+              onChange={setLinkedRealAssetId}
+              className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700/50"
             />
           </div>
 

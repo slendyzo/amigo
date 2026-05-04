@@ -102,7 +102,7 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, imageUrls, categorizedAt, splitCount, splitData, description } = body;
+    const { name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, imageUrls, categorizedAt, splitCount, splitData, description, realAssetId } = body;
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToSet: string[] | undefined = projectIds !== undefined
@@ -139,6 +139,7 @@ export async function PUT(
       splitCount?: number | null;
       splitData?: string | null;
       description?: string | null;
+      realAssetId?: string | null;
     };
 
     const updateData: UpdateData = {};
@@ -158,6 +159,7 @@ export async function PUT(
     if (splitCount !== undefined) updateData.splitCount = splitCount || null;
     if (splitData !== undefined) updateData.splitData = splitData || null;
     if (description !== undefined) updateData.description = description || null;
+    if (realAssetId !== undefined) updateData.realAssetId = realAssetId || null;
     if (status !== undefined) {
       updateData.status = status;
       // Set paidAt when marking as paid
