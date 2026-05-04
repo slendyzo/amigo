@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { TrendingUp, TrendingDown, Wallet, Car, Building2, CreditCard, ArrowRight } from "lucide-react";
 import { VehicleCard, type VehicleCardData } from "@/components/ui/vehicle-card";
 import { formatCurrency } from "@/lib/currencies";
@@ -50,16 +51,8 @@ type Props = {
   portfolioAssets: PortfolioAsset[];
 };
 
-const LIABILITY_LABELS: Record<string, string> = {
-  VEHICLE_LOAN: "Vehicle loan",
-  MORTGAGE: "Mortgage",
-  CREDIT_CARD: "Credit card",
-  PERSONAL_LOAN: "Personal loan",
-  STUDENT_LOAN: "Student loan",
-  OTHER: "Other liability",
-};
-
 export default function NetworthClient({ realAssets, liabilities, portfolioAssets }: Props) {
+  const t = useTranslations("rwa");
   const [tab, setTab] = useState<"active" | "sold">("active");
 
   const activeAssets = useMemo(() => realAssets.filter((a) => a.status === "ACTIVE"), [realAssets]);
@@ -81,31 +74,29 @@ export default function NetworthClient({ realAssets, liabilities, portfolioAsset
   return (
     <div className="space-y-6">
       <header className="space-y-2">
-        <p className="text-[10px] font-bold uppercase tracking-[0.8px] text-primary/80">Net Worth</p>
+        <p className="text-[10px] font-bold uppercase tracking-[0.8px] text-primary/80">{t("totalNetWorth")}</p>
         <div className="flex items-baseline gap-3">
           <h1 className="text-4xl font-bold tabular-nums">{formatCurrency(totals.netWorth, "EUR")}</h1>
         </div>
-        <p className="text-sm text-muted-foreground">
-          Investments + real-world assets minus liabilities. Updates daily.
-        </p>
+        <p className="text-sm text-muted-foreground">{t("summaryDescription")}</p>
       </header>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <SummaryTile
-          label="Investments"
+          label={t("investments")}
           value={totals.investments}
           icon={<TrendingUp className="h-4 w-4" />}
           tint="emerald"
           href="/dashboard/portfolio"
         />
         <SummaryTile
-          label="Real-world assets"
+          label={t("realWorldAssets")}
           value={totals.rwas}
           icon={<Car className="h-4 w-4" />}
           tint="sky"
         />
         <SummaryTile
-          label="Liabilities"
+          label={t("liabilities")}
           value={-totals.liabilities}
           icon={<CreditCard className="h-4 w-4" />}
           tint="rose"
@@ -114,16 +105,16 @@ export default function NetworthClient({ realAssets, liabilities, portfolioAsset
 
       <div className="flex gap-1 border-b border-border/60">
         <TabButton active={tab === "active"} onClick={() => setTab("active")}>
-          Active{activeAssets.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground">{activeAssets.length}</span>}
+          {t("active")}{activeAssets.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground">{activeAssets.length}</span>}
         </TabButton>
         <TabButton active={tab === "sold"} onClick={() => setTab("sold")}>
-          Sold{soldAssets.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground">{soldAssets.length}</span>}
+          {t("sold")}{soldAssets.length > 0 && <span className="ml-1.5 text-xs text-muted-foreground">{soldAssets.length}</span>}
         </TabButton>
       </div>
 
       {tab === "active" && (
         <div className="space-y-6">
-          <Section title="Real-world assets" emptyText="No vehicles yet. Add one from the dashboard.">
+          <Section title={t("realWorldAssets")} emptyText={t("noVehicles")}>
             {activeAssets.length > 0 && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {activeAssets.map((a, i) => (
@@ -140,26 +131,28 @@ export default function NetworthClient({ realAssets, liabilities, portfolioAsset
             )}
           </Section>
 
-          <Section title="Liabilities" emptyText="No active liabilities. Nice.">
+          <Section title={t("liabilities")} emptyText={t("noLiabilities")}>
             {activeLiabilities.length > 0 && (
               <ul className="space-y-2">
                 {activeLiabilities.map((l) => (
-                  <LiabilityRow key={l.id} liability={l} />
+                  <LiabilityRow key={l.id} liability={l} t={t} />
                 ))}
               </ul>
             )}
           </Section>
 
-          <Section title="Investments" emptyText="No exchange portfolios connected.">
+          <Section title={t("investments")} emptyText={t("noInvestments")}>
             {portfolioAssets.length > 0 && (
               <Link
                 href="/dashboard/portfolio"
                 className="flex items-center justify-between rounded-2xl border border-border/60 bg-card/80 p-4 transition-colors hover:border-border"
               >
                 <div>
-                  <p className="text-sm font-medium">{portfolioAssets.length} positions</p>
+                  <p className="text-sm font-medium">
+                    {t("positionsCount", { count: portfolioAssets.length })}
+                  </p>
                   <p className="text-xs text-muted-foreground tabular-nums">
-                    Cost basis {formatCurrency(portfolioAssets.reduce((s, a) => s + a.totalCostEur, 0), "EUR")}
+                    {t("costBasis")} {formatCurrency(portfolioAssets.reduce((s, a) => s + a.totalCostEur, 0), "EUR")}
                   </p>
                 </div>
                 <div className="text-right">
@@ -176,7 +169,7 @@ export default function NetworthClient({ realAssets, liabilities, portfolioAsset
       )}
 
       {tab === "sold" && (
-        <Section title="Closed positions" emptyText="No sold assets yet.">
+        <Section title={t("closedPositions")} emptyText={t("noSold")}>
           {soldAssets.length > 0 && (
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               {soldAssets.map((a, i) => (
@@ -297,8 +290,15 @@ function Section({
   );
 }
 
-function LiabilityRow({ liability }: { liability: Liability }) {
+function LiabilityRow({
+  liability,
+  t,
+}: {
+  liability: Liability;
+  t: ReturnType<typeof useTranslations>;
+}) {
   const Icon = liability.realAsset?.type === "PROPERTY" ? Building2 : liability.type === "VEHICLE_LOAN" ? Car : Wallet;
+  const labelKey = `loanLabels.${liability.type}`;
   return (
     <li className="flex items-center justify-between rounded-xl border border-border/60 bg-card/80 p-3 transition-colors hover:border-border">
       <div className="flex items-center gap-3">
@@ -307,7 +307,7 @@ function LiabilityRow({ liability }: { liability: Liability }) {
         </div>
         <div>
           <p className="text-sm font-medium">{liability.name}</p>
-          <p className="text-xs text-muted-foreground">{LIABILITY_LABELS[liability.type] ?? liability.type}</p>
+          <p className="text-xs text-muted-foreground">{t(labelKey)}</p>
         </div>
       </div>
       <div className="text-right">

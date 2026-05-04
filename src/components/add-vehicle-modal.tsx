@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Car, Sparkles, ChevronLeft, ChevronRight, X, Loader2, Check } from "lucide-react";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { cn } from "@/lib/utils";
@@ -42,6 +43,8 @@ type AddVehicleModalProps = {
 
 export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehicleModalProps) {
   const router = useRouter();
+  const t = useTranslations("rwa");
+  const tCommon = useTranslations("common");
   const currentYear = new Date().getUTCFullYear();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [submitting, setSubmitting] = useState(false);
@@ -255,8 +258,10 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
               <Car className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-base font-semibold leading-tight">Add vehicle</h2>
-              <p className="text-xs text-muted-foreground">Step {step} of 3</p>
+              <h2 className="text-base font-semibold leading-tight">{t("addVehicle")}</h2>
+              <p className="text-xs text-muted-foreground">
+                {t("stepCountOf", { current: step, total: 3 })}
+              </p>
             </div>
           </div>
           <button
@@ -284,7 +289,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
             >
               {step === 1 && (
                 <>
-                  <Field label="Brand">
+                  <Field label={t("brand")}>
                     <input
                       autoFocus
                       type="text"
@@ -294,7 +299,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                       className={inputClass}
                     />
                   </Field>
-                  <Field label="Model">
+                  <Field label={t("model")}>
                     <input
                       type="text"
                       value={model}
@@ -304,7 +309,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                     />
                   </Field>
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Year">
+                    <Field label={t("year")}>
                       <input
                         type="number"
                         min={1900}
@@ -314,7 +319,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                         className={inputClass}
                       />
                     </Field>
-                    <Field label="Trim (optional)">
+                    <Field label={t("trim")}>
                       <input
                         type="text"
                         value={trim}
@@ -332,7 +337,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                     className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary transition-colors hover:bg-primary/10 disabled:opacity-50"
                   >
                     {lookingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                    {lookingUp ? "Looking up specs…" : spec ? "Re-fetch specs" : "Auto-fill specs"}
+                    {lookingUp ? t("lookingUpSpecs") : spec ? t("refetchSpecs") : t("autoFillSpecs")}
                   </button>
 
                   {spec && (
@@ -350,9 +355,9 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                   )}
 
                   <details className="rounded-xl border border-border/40 px-3 py-2">
-                    <summary className="cursor-pointer text-xs text-muted-foreground">More details</summary>
+                    <summary className="cursor-pointer text-xs text-muted-foreground">{t("moreDetails")}</summary>
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                      <Field label="Fuel type">
+                      <Field label={t("fuelType")}>
                         <select
                           value={fuelType}
                           onChange={(e) => setFuelType(e.target.value as FuelType)}
@@ -366,7 +371,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           ))}
                         </select>
                       </Field>
-                      <Field label="Body">
+                      <Field label={t("bodyType")}>
                         <select
                           value={bodyType}
                           onChange={(e) => setBodyType(e.target.value as BodyType)}
@@ -380,7 +385,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           ))}
                         </select>
                       </Field>
-                      <Field label="Generation">
+                      <Field label={t("generation")}>
                         <input
                           type="text"
                           value={generation}
@@ -389,7 +394,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           className={inputClass}
                         />
                       </Field>
-                      <Field label="Color">
+                      <Field label={t("color")}>
                         <input
                           type="text"
                           value={color}
@@ -416,7 +421,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                   )}
 
                   <div className="grid grid-cols-2 gap-3">
-                    <Field label="Mileage (km)">
+                    <Field label={t("mileageKm")}>
                       <input
                         type="number"
                         min={0}
@@ -426,7 +431,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                         className={inputClass}
                       />
                     </Field>
-                    <Field label="License plate">
+                    <Field label={t("licensePlate")}>
                       <input
                         type="text"
                         value={plate}
@@ -437,7 +442,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                     </Field>
                   </div>
 
-                  <Field label="Purchase date">
+                  <Field label={t("purchaseDate")}>
                     <input
                       type="date"
                       value={purchaseDate}
@@ -447,7 +452,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                   </Field>
 
                   <div className="grid grid-cols-[1fr_5.5rem] gap-3">
-                    <Field label="Purchase price">
+                    <Field label={t("purchasePrice")}>
                       <div className="relative">
                         <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                           {getCurrencySymbol(purchaseCurrency)}
@@ -463,7 +468,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                         />
                       </div>
                     </Field>
-                    <Field label="Currency">
+                    <Field label={t("currency")}>
                       <select
                         value={purchaseCurrency}
                         onChange={(e) => setPurchaseCurrency(e.target.value)}
@@ -493,10 +498,8 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                     )}
                   >
                     <div>
-                      <p className="font-medium text-sm">This vehicle is financed</p>
-                      <p className="text-xs text-muted-foreground">
-                        Adds a loan + monthly payment template linked to this car.
-                      </p>
+                      <p className="font-medium text-sm">{t("isFinanced")}</p>
+                      <p className="text-xs text-muted-foreground">{t("isFinancedDescription")}</p>
                     </div>
                     <div
                       className={cn(
@@ -515,7 +518,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                       transition={{ duration: 0.3, ease: EASE }}
                       className="space-y-3"
                     >
-                      <Field label="Monthly payment">
+                      <Field label={t("monthlyPayment")}>
                         <div className="relative">
                           <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
                             {getCurrencySymbol(purchaseCurrency)}
@@ -532,7 +535,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                         </div>
                       </Field>
                       <div className="grid grid-cols-2 gap-3">
-                        <Field label="Term (months)">
+                        <Field label={t("termMonths")}>
                           <input
                             type="number"
                             min={1}
@@ -542,7 +545,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                             className={inputClass}
                           />
                         </Field>
-                        <Field label="Interest rate (%)">
+                        <Field label={t("interestRatePct")}>
                           <input
                             type="number"
                             step="0.01"
@@ -554,7 +557,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           />
                         </Field>
                       </div>
-                      <Field label="Loan start date">
+                      <Field label={t("loanStartDate")}>
                         <input
                           type="date"
                           value={loanStart}
@@ -562,9 +565,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           className={inputClass}
                         />
                       </Field>
-                      <p className="text-[11px] text-muted-foreground">
-                        Just enter what you remember — the app fills in the rest.
-                      </p>
+                      <p className="text-[11px] text-muted-foreground">{t("fillingHelpText")}</p>
                     </motion.div>
                   )}
                 </>
@@ -584,9 +585,9 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
             disabled={submitting}
             className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
           >
-            {step === 1 ? "Cancel" : (
+            {step === 1 ? tCommon("cancel") : (
               <>
-                <ChevronLeft className="h-4 w-4" /> Back
+                <ChevronLeft className="h-4 w-4" /> {t("back")}
               </>
             )}
           </button>
@@ -597,7 +598,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
               onClick={() => setStep((s) => (s === 1 ? 2 : 3))}
               className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
             >
-              Next <ChevronRight className="h-4 w-4" />
+              {t("next")} <ChevronRight className="h-4 w-4" />
             </button>
           ) : (
             <button
@@ -607,7 +608,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
               className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
             >
               {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-              {submitting ? "Saving…" : "Add vehicle"}
+              {submitting ? t("saving") : t("addVehicle")}
             </button>
           )}
         </footer>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Car, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currencies";
@@ -31,6 +32,7 @@ type VehicleCardProps = {
 const SPRING = { type: "spring" as const, stiffness: 400, damping: 28 };
 
 export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
+  const t = useTranslations("rwa");
   const link = href ?? `/dashboard/networth/vehicle/${vehicle.id}`;
   const cost = vehicle.purchasePriceEur;
   const current = vehicle.currentValueEur ?? cost;
@@ -67,7 +69,7 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
 
           <div>
             <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              {sold ? "Sold for" : "Estimated value"}
+              {sold ? t("soldFor") : t("estimatedValue")}
             </p>
             <div className="mt-0.5 flex items-baseline gap-2">
               <span className="text-2xl font-semibold tabular-nums">
@@ -76,7 +78,7 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
               <DeltaBadge delta={delta} sign={deltaSign} sold={sold} />
             </div>
             <p className="mt-0.5 text-xs text-muted-foreground tabular-nums">
-              Cost basis {formatCurrency(cost, "EUR")}
+              {t("costBasis")} {formatCurrency(cost, "EUR")}
             </p>
           </div>
 
@@ -89,12 +91,12 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
                     vehicle.realizedPnLEur > 0 ? "text-emerald-500" : "text-rose-500"
                   )}
                 >
-                  Realized P&amp;L {vehicle.realizedPnLEur > 0 ? "+" : ""}
+                  {t("realizedPnL")} {vehicle.realizedPnLEur > 0 ? "+" : ""}
                   {formatCurrency(vehicle.realizedPnLEur, "EUR")}
                 </span>
               ) : (
                 <span className="tabular-nums">
-                  TCO {formatCurrency(vehicle.monthlyTCOEur ?? 0, "EUR")}/mo
+                  TCO {t("tcoPerMonth", { amount: formatCurrency(vehicle.monthlyTCOEur ?? 0, "EUR") })}
                 </span>
               )}
             </footer>

@@ -3,6 +3,7 @@
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useTranslations } from "next-intl";
 import { Plus, Car, ArrowRight } from "lucide-react";
 import { VehicleCard, VehicleCardSkeleton, type VehicleCardData } from "@/components/ui/vehicle-card";
 import { formatCurrency } from "@/lib/currencies";
@@ -31,6 +32,7 @@ type DashboardRwaSectionProps = {
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 export default function DashboardRwaSection({ className }: DashboardRwaSectionProps) {
+  const t = useTranslations("rwa");
   const [assets, setAssets] = useState<VehicleCardData[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
@@ -74,17 +76,12 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
       <div className="flex items-end justify-between gap-2">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.8px] text-primary/80">
-            Real-World Assets
+            {t("section")}
           </p>
           <div className="mt-0.5 flex items-baseline gap-2">
             <h2 className="text-xl font-bold tabular-nums">
               {totalValue != null ? formatCurrency(totalValue, "EUR") : "—"}
             </h2>
-            {assets && assets.length > 0 && (
-              <span className="text-xs text-muted-foreground">
-                {assets.length} {assets.length === 1 ? "vehicle" : "vehicles"}
-              </span>
-            )}
           </div>
         </div>
         {assets && assets.length > 0 && (
@@ -92,7 +89,7 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
             href="/dashboard/networth"
             className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           >
-            View all <ArrowRight className="h-3 w-3" />
+            {t("viewAll")} <ArrowRight className="h-3 w-3" />
           </Link>
         )}
       </div>
@@ -106,7 +103,7 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
       )}
 
       {assets && assets.length === 0 && (
-        <EmptyState onAddClick={() => setShowAdd(true)} error={error} />
+        <EmptyState onAddClick={() => setShowAdd(true)} error={error} t={t} />
       )}
 
       {assets && assets.length > 0 && (
@@ -121,7 +118,7 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
               <VehicleCard vehicle={a} />
             </motion.div>
           ))}
-          <AddCard onClick={() => setShowAdd(true)} />
+          <AddCard onClick={() => setShowAdd(true)} t={t} />
         </div>
       )}
 
@@ -134,7 +131,15 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
   );
 }
 
-function EmptyState({ onAddClick, error }: { onAddClick: () => void; error: string | null }) {
+function EmptyState({
+  onAddClick,
+  error,
+  t,
+}: {
+  onAddClick: () => void;
+  error: string | null;
+  t: (key: string) => string;
+}) {
   return (
     <button
       type="button"
@@ -145,16 +150,16 @@ function EmptyState({ onAddClick, error }: { onAddClick: () => void; error: stri
         <Car className="h-6 w-6 text-primary" />
       </div>
       <div>
-        <p className="text-sm font-medium">{error ?? "Add your first vehicle"}</p>
+        <p className="text-sm font-medium">{error ?? t("addFirstVehicle")}</p>
         <p className="text-xs text-muted-foreground">
-          {error ? "Try refreshing the page" : "Track its value, mileage, loan, and total cost of ownership"}
+          {error ? "Try refreshing the page" : t("addFirstVehicleDescription")}
         </p>
       </div>
     </button>
   );
 }
 
-function AddCard({ onClick }: { onClick: () => void }) {
+function AddCard({ onClick, t }: { onClick: () => void; t: (key: string) => string }) {
   return (
     <button
       type="button"
@@ -165,7 +170,7 @@ function AddCard({ onClick }: { onClick: () => void }) {
         <Plus className="h-5 w-5 text-muted-foreground transition-colors group-hover:text-primary" />
       </div>
       <p className="text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
-        Add another vehicle
+        {t("addAnother")}
       </p>
     </button>
   );
