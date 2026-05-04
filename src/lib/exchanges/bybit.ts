@@ -5,19 +5,40 @@ import {
   ExchangeAccountSummary,
   ExchangeDepositRecord,
   ExchangeTrade,
+  PriceStatus,
 } from "./types";
+import { convertToEur } from "@/lib/currency";
 
 const DEFAULT_BASE_URL = "https://api.bybit.com";
 const RECV_WINDOW = 5000;
 
-// ---------------------------------------------------------------------------
-// Stablecoins / FIAT treated as cash
-// ---------------------------------------------------------------------------
-const CASH_CODES = new Set(["USDT", "USDC", "DAI", "USD", "EUR", "GBP"]);
+// ───────────────────────────────────────────────────────────────────────────────
+// What's special about Bybit V5
+//   - Multiple wallet types: Spot, Funding, Unified Trading Account, Earn.
+//     A user's tokens can sit in any of them — we have to fetch all four.
+//   - Symbols are concatenated like "BTCUSDT", "PUMPUSDT". The OLD code split
+//     on a hardcoded suffix list with `endsWith` — wrong for any base symbol
+//     that ENDS in one of those suffixes. We use /v5/market/instruments-info
+//     for authoritative base/quote.
+//   - Per-position currency reflects WHICH pair priced it: BTC priced via
+//     BTCUSDT → currency=USDT; via BTCUSDC → currency=USDC. Stops the
+//     hardcoded "USDT" lie that broke EUR conversion.
+//   - All-tickers endpoint /v5/market/tickers?category=spot returns every
+//     spot price in one call → no per-symbol HTTP round-trips.
+// ───────────────────────────────────────────────────────────────────────────────
 
-// ---------------------------------------------------------------------------
+// Stablecoins / fiat that count as cash, not as positions
+const FIAT_CODES = new Set(["USD", "EUR", "GBP"]);
+const STABLE_CODES = new Set(["USDT", "USDC", "DAI", "BUSD", "FDUSD", "TUSD", "PYUSD"]);
+const CASH_CODES = new Set([...FIAT_CODES, ...STABLE_CODES]);
+
+// Quote currency preference for picking the best ticker pair per asset.
+// USDT first because it's by far the deepest liquidity on Bybit.
+const QUOTE_PREFERENCE = ["USDT", "USDC", "USD", "EUR"] as const;
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Rate limiter — 120 requests per minute per endpoint
-// ---------------------------------------------------------------------------
+// ───────────────────────────────────────────────────────────────────────────────
 class RateLimiter {
   private tokens = 120;
   private lastRefill = Date.now();
@@ -46,18 +67,47 @@ function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-// ---------------------------------------------------------------------------
+// ───────────────────────────────────────────────────────────────────────────────
 // Bybit V5 response shape
-// ---------------------------------------------------------------------------
+// ───────────────────────────────────────────────────────────────────────────────
 interface BybitResponse<T> {
   retCode: number;
   retMsg: string;
   result: T;
 }
 
-// ---------------------------------------------------------------------------
+// ───────────────────────────────────────────────────────────────────────────────
+// Internal cache types
+// ───────────────────────────────────────────────────────────────────────────────
+
+interface InstrumentInfo {
+  symbol: string;
+  baseCoin: string;
+  quoteCoin: string;
+}
+
+interface InstrumentsCache {
+  // symbol → { baseCoin, quoteCoin }
+  bySymbol: Map<string, InstrumentInfo>;
+  // baseCoin|quoteCoin → symbol (for "BTC|USDT" → "BTCUSDT" lookup)
+  byBaseQuote: Map<string, string>;
+}
+
+interface TickerCache {
+  // symbol → lastPrice
+  bySymbol: Map<string, number>;
+}
+
+// Internal merged-balance row
+interface BalanceRow {
+  coin: string;
+  liquid: number;
+  locked: number; // staked / earn / locked portion
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Bybit client
-// ---------------------------------------------------------------------------
+// ───────────────────────────────────────────────────────────────────────────────
 export class BybitClient implements ExchangeClient {
   readonly provider = "BYBIT" as const;
   private readonly apiKey: string;
@@ -65,16 +115,16 @@ export class BybitClient implements ExchangeClient {
   private readonly baseUrl: string;
   private readonly rateLimiter = new RateLimiter();
 
+  private instrumentsPromise: Promise<InstrumentsCache> | null = null;
+  private tickerPromise: Promise<TickerCache> | null = null;
+
   constructor(apiKey: string, apiSecret: string, baseUrl: string = DEFAULT_BASE_URL) {
     this.apiKey = apiKey;
     this.apiSecret = apiSecret;
     this.baseUrl = baseUrl;
   }
 
-  // -------------------------------------------------------------------------
-  // Signature — GET: timestamp + apiKey + recvWindow + queryString
-  //             POST: timestamp + apiKey + recvWindow + body
-  // -------------------------------------------------------------------------
+  // ─── Signature ────────────────────────────────────────────────────────────────
   private sign(timestamp: number, payload: string): string {
     const message = `${timestamp}${this.apiKey}${RECV_WINDOW}${payload}`;
     return crypto
@@ -83,9 +133,7 @@ export class BybitClient implements ExchangeClient {
       .digest("hex");
   }
 
-  // -------------------------------------------------------------------------
-  // Authenticated GET
-  // -------------------------------------------------------------------------
+  // ─── Authenticated GET ────────────────────────────────────────────────────────
   private async privateGet<T>(
     path: string,
     params: Record<string, string | number> = {}
@@ -122,9 +170,7 @@ export class BybitClient implements ExchangeClient {
     return json.result;
   }
 
-  // -------------------------------------------------------------------------
-  // Public GET (no auth — for market data)
-  // -------------------------------------------------------------------------
+  // ─── Public GET ───────────────────────────────────────────────────────────────
   private async publicGet<T>(
     path: string,
     params: Record<string, string | number> = {}
@@ -150,9 +196,96 @@ export class BybitClient implements ExchangeClient {
     return json.result;
   }
 
-  // -------------------------------------------------------------------------
-  // testConnection
-  // -------------------------------------------------------------------------
+  // ─── Metadata: spot instruments (paginated), cached per instance ──────────────
+  private loadInstruments(): Promise<InstrumentsCache> {
+    if (this.instrumentsPromise) return this.instrumentsPromise;
+
+    this.instrumentsPromise = (async () => {
+      type Resp = {
+        list: Array<{
+          symbol: string;
+          baseCoin: string;
+          quoteCoin: string;
+          status: string;
+        }>;
+        nextPageCursor?: string;
+      };
+
+      const bySymbol = new Map<string, InstrumentInfo>();
+      const byBaseQuote = new Map<string, string>();
+      let cursor = "";
+
+      // Bybit returns up to 1000 instruments per call; spot has ~600 today.
+      // Loop in case it grows past the page size.
+      for (let page = 0; page < 10; page++) {
+        const params: Record<string, string | number> = {
+          category: "spot",
+          limit: 1000,
+        };
+        if (cursor) params.cursor = cursor;
+
+        const result = await this.publicGet<Resp>("/v5/market/instruments-info", params);
+
+        for (const inst of result.list ?? []) {
+          if (inst.status !== "Trading") continue;
+          const info = {
+            symbol: inst.symbol,
+            baseCoin: inst.baseCoin,
+            quoteCoin: inst.quoteCoin,
+          };
+          bySymbol.set(inst.symbol, info);
+          byBaseQuote.set(`${inst.baseCoin}|${inst.quoteCoin}`, inst.symbol);
+        }
+
+        if (!result.nextPageCursor) break;
+        cursor = result.nextPageCursor;
+      }
+
+      return { bySymbol, byBaseQuote };
+    })();
+
+    return this.instrumentsPromise;
+  }
+
+  // ─── Metadata: all spot tickers, cached per instance ─────────────────────────
+  // One call returns every spot price, no per-symbol round-trip.
+  private loadTickers(): Promise<TickerCache> {
+    if (this.tickerPromise) return this.tickerPromise;
+
+    this.tickerPromise = (async () => {
+      type Resp = {
+        list: Array<{ symbol: string; lastPrice: string }>;
+      };
+      const result = await this.publicGet<Resp>("/v5/market/tickers", {
+        category: "spot",
+      });
+      const bySymbol = new Map<string, number>();
+      for (const t of result.list ?? []) {
+        bySymbol.set(t.symbol, Number(t.lastPrice));
+      }
+      return { bySymbol };
+    })();
+
+    return this.tickerPromise;
+  }
+
+  // ─── Pick best pair for an asset, return { symbol, currency, price } ──────────
+  private pickBestPair(
+    coin: string,
+    instruments: InstrumentsCache,
+    tickers: TickerCache
+  ): { symbol: string; currency: string; price: number } | null {
+    for (const quote of QUOTE_PREFERENCE) {
+      const pairSymbol = instruments.byBaseQuote.get(`${coin}|${quote}`);
+      if (!pairSymbol) continue;
+      const price = tickers.bySymbol.get(pairSymbol);
+      if (price === undefined || price <= 0) continue;
+      return { symbol: pairSymbol, currency: quote, price };
+    }
+    return null;
+  }
+
+  // ─── testConnection ───────────────────────────────────────────────────────────
   async testConnection(): Promise<{ success: boolean; error?: string }> {
     try {
       await this.privateGet("/v5/account/wallet-balance", {
@@ -166,168 +299,198 @@ export class BybitClient implements ExchangeClient {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // Fetch current USDT price for a symbol
-  // -------------------------------------------------------------------------
-  private async getUsdtPrice(symbol: string): Promise<number> {
-    try {
-      const result = await this.publicGet<{
-        list: Array<{ symbol: string; lastPrice: string }>;
-      }>("/v5/market/tickers", {
-        category: "spot",
-        symbol: `${symbol}USDT`,
-      });
+  // ─── Wallet fetchers — each returns Map<coin, qty>; failures swallowed ────────
 
-      const ticker = result.list?.[0];
-      if (ticker) return Number(ticker.lastPrice);
-    } catch {
-      // fallback: no price found
+  private async fetchWalletBalances(
+    accountType: "SPOT" | "UNIFIED"
+  ): Promise<Map<string, number>> {
+    type Resp = {
+      list: Array<{ accountType: string; coin: Array<{ coin: string; equity: string; walletBalance: string }> }>;
+    };
+    try {
+      const res = await this.privateGet<Resp>("/v5/account/wallet-balance", {
+        accountType,
+      });
+      const account = res.list?.[0];
+      const map = new Map<string, number>();
+      for (const c of account?.coin ?? []) {
+        const qty = Number(c.equity || c.walletBalance || 0);
+        if (qty > 0) map.set(c.coin, qty);
+      }
+      return map;
+    } catch (err) {
+      console.warn(`[Bybit] ${accountType} wallet fetch failed:`, err instanceof Error ? err.message : err);
+      return new Map();
     }
-    return 0;
   }
 
-  // -------------------------------------------------------------------------
-  // getPositions
-  // -------------------------------------------------------------------------
-  async getPositions(): Promise<ExchangePosition[]> {
-    type WalletCoin = {
-      coin: string;
-      equity: string;
-      usdValue: string;
-      availableToWithdraw: string;
-      walletBalance: string;
-      cumRealisedPnl: string;
-      avgPrice: string;
+  private async fetchFundingBalances(): Promise<Map<string, number>> {
+    type Resp = {
+      balance: Array<{ coin: string; walletBalance: string }>;
     };
-    type WalletResult = {
-      list: Array<{ accountType: string; coin: WalletCoin[] }>;
-    };
-
-    const result = await this.privateGet<WalletResult>(
-      "/v5/account/wallet-balance",
-      { accountType: "UNIFIED" }
-    );
-
-    const account = result.list?.[0];
-    if (!account) return [];
-
-    const positions: ExchangePosition[] = [];
-
-    for (const coin of account.coin ?? []) {
-      const symbol = coin.coin;
-
-      // Skip stablecoins/fiat — those are cash, not positions
-      if (CASH_CODES.has(symbol)) continue;
-
-      const quantity = Number(coin.equity);
-      if (quantity <= 0) continue;
-
-      try {
-        const currentPrice = await this.getUsdtPrice(symbol);
-        const averageBuyPrice = Number(coin.avgPrice ?? 0);
-        const totalCost = averageBuyPrice * quantity;
-        const currentValue = currentPrice * quantity;
-        const unrealizedPnl = currentValue - totalCost;
-        const unrealizedPnlPct =
-          totalCost > 0 ? (unrealizedPnl / totalCost) * 100 : 0;
-
-        positions.push({
-          symbol,
-          name: symbol,
-          assetType: "CRYPTO",
-          quantity,
-          averageBuyPrice,
-          currentPrice,
-          currency: "USDT",
-          unrealizedPnl,
-          unrealizedPnlPct,
-          totalCost,
-          currentValue,
-        });
-      } catch (err) {
-        console.error("[Bybit] getPositions — skipping asset", symbol, err);
+    try {
+      const res = await this.privateGet<Resp>(
+        "/v5/asset/transfer/query-account-coins-balance",
+        { accountType: "FUND" }
+      );
+      const map = new Map<string, number>();
+      for (const c of res.balance ?? []) {
+        const qty = Number(c.walletBalance);
+        if (qty > 0) map.set(c.coin, qty);
       }
+      return map;
+    } catch (err) {
+      console.warn("[Bybit] FUND wallet fetch failed:", err instanceof Error ? err.message : err);
+      return new Map();
+    }
+  }
+
+  // Earn (Savings / On-chain Earn) — separate API surface; coin is staked.
+  // We treat the staked amount as "locked" so Kraken-like UI rendering works.
+  private async fetchEarnBalances(): Promise<Map<string, number>> {
+    type Resp = {
+      list: Array<{ coin: string; amount: string }>;
+    };
+    try {
+      const res = await this.privateGet<Resp>("/v5/earn/position", {});
+      const map = new Map<string, number>();
+      for (const c of res.list ?? []) {
+        const qty = Number(c.amount);
+        if (qty > 0) map.set(c.coin, qty);
+      }
+      return map;
+    } catch (err) {
+      console.warn("[Bybit] Earn position fetch failed:", err instanceof Error ? err.message : err);
+      return new Map();
+    }
+  }
+
+  // ─── getPositions ─────────────────────────────────────────────────────────────
+  async getPositions(): Promise<ExchangePosition[]> {
+    // 1. Fetch all wallets in parallel + metadata
+    const [spot, unified, funding, earn, instruments, tickers] = await Promise.all([
+      this.fetchWalletBalances("SPOT"),
+      this.fetchWalletBalances("UNIFIED"),
+      this.fetchFundingBalances(),
+      this.fetchEarnBalances(),
+      this.loadInstruments(),
+      this.loadTickers(),
+    ]);
+
+    // 2. Merge into Map<coin, { liquid, locked }>
+    const merged = new Map<string, BalanceRow>();
+    const addLiquid = (coin: string, qty: number) => {
+      const existing = merged.get(coin) ?? { coin, liquid: 0, locked: 0 };
+      existing.liquid += qty;
+      merged.set(coin, existing);
+    };
+    const addLocked = (coin: string, qty: number) => {
+      const existing = merged.get(coin) ?? { coin, liquid: 0, locked: 0 };
+      existing.locked += qty;
+      merged.set(coin, existing);
+    };
+
+    for (const wallet of [spot, unified, funding]) {
+      for (const [coin, qty] of wallet) addLiquid(coin, qty);
+    }
+    for (const [coin, qty] of earn) addLocked(coin, qty);
+
+    // 3. Drop cash (stablecoins + fiat) — those are freeCash, not positions
+    const positions: ExchangePosition[] = [];
+    for (const row of merged.values()) {
+      if (CASH_CODES.has(row.coin)) continue;
+
+      const totalQty = row.liquid + row.locked;
+      if (totalQty <= 0) continue;
+
+      // Pick the best pair to price this asset
+      const pair = this.pickBestPair(row.coin, instruments, tickers);
+
+      if (!pair) {
+        // Asset has no tradeable pair on Bybit — surface as UNAVAILABLE so
+        // the UI can hide it from totals but still show the holding.
+        positions.push({
+          symbol: row.coin,
+          name: row.coin,
+          assetType: "CRYPTO",
+          quantity: totalQty,
+          averageBuyPrice: 0,
+          currentPrice: 0,
+          currency: "USD",
+          unrealizedPnl: 0,
+          unrealizedPnlPct: 0,
+          totalCost: 0,
+          currentValue: 0,
+          priceStatus: "UNAVAILABLE" as PriceStatus,
+          priceUnavailableReason: "No tradeable pair on Bybit",
+          lockedQuantity: row.locked > 0 ? row.locked : undefined,
+        });
+        continue;
+      }
+
+      const currentValue = pair.price * totalQty;
+
+      positions.push({
+        symbol: row.coin,
+        name: row.coin,
+        assetType: "CRYPTO",
+        quantity: totalQty,
+        // Cost basis from trade history is computed by sync.ts via the Trade
+        // table once it backfills. The OLD bybit code returned avgPrice from
+        // the wallet response but it was unreliable; leaving it 0 here so the
+        // P&L only fills in once trades are persisted.
+        averageBuyPrice: 0,
+        currentPrice: pair.price,
+        currency: pair.currency,
+        unrealizedPnl: currentValue, // 0 cost basis → unrealizedPnl = currentValue (sync.ts can override later)
+        unrealizedPnlPct: 0,
+        totalCost: 0,
+        currentValue,
+        priceStatus: "OK" as PriceStatus,
+        lockedQuantity: row.locked > 0 ? row.locked : undefined,
+      });
     }
 
     return positions;
   }
 
-  // -------------------------------------------------------------------------
-  // getAccountSummary
-  // -------------------------------------------------------------------------
+  // ─── getAccountSummary ────────────────────────────────────────────────────────
+  // Sums all stablecoin/fiat balances across wallets, converts each to EUR
+  // via the shared convertToEur (which now normalises USDT/USDC → USD).
   async getAccountSummary(): Promise<ExchangeAccountSummary> {
-    type WalletCoin = {
-      coin: string;
-      equity: string;
-      usdValue: string;
-      walletBalance: string;
-      cumRealisedPnl: string;
-      avgPrice: string;
-    };
-    type WalletResult = {
-      list: Array<{
-        accountType: string;
-        totalEquity: string;
-        totalWalletBalance: string;
-        totalAvailableBalance: string;
-        coin: WalletCoin[];
-      }>;
-    };
+    const [spot, unified, funding] = await Promise.all([
+      this.fetchWalletBalances("SPOT"),
+      this.fetchWalletBalances("UNIFIED"),
+      this.fetchFundingBalances(),
+    ]);
 
-    const result = await this.privateGet<WalletResult>(
-      "/v5/account/wallet-balance",
-      { accountType: "UNIFIED" }
-    );
-
-    const account = result.list?.[0];
-    if (!account) {
-      return {
-        totalValue: 0,
-        totalCost: 0,
-        unrealizedPnl: 0,
-        realizedPnl: 0,
-        freeCash: 0,
-        currency: "USDT",
-      };
-    }
-
-    const totalValue = Number(account.totalEquity ?? 0);
-
-    // Accumulate cost basis and realised P&L from individual coin records
-    let totalCost = 0;
-    let realizedPnl = 0;
-    let freeCash = 0;
-
-    for (const coin of account.coin ?? []) {
-      const qty = Number(coin.equity);
-      const avgPrice = Number(coin.avgPrice ?? 0);
-      const cumRealised = Number(coin.cumRealisedPnl ?? 0);
-
-      if (CASH_CODES.has(coin.coin)) {
-        // Treat stablecoins as 1:1 USDT for free cash
-        freeCash += qty;
-      } else if (qty > 0 && avgPrice > 0) {
-        totalCost += qty * avgPrice;
+    // Sum cash by coin across wallets
+    const cashByCoin = new Map<string, number>();
+    for (const wallet of [spot, unified, funding]) {
+      for (const [coin, qty] of wallet) {
+        if (!CASH_CODES.has(coin)) continue;
+        cashByCoin.set(coin, (cashByCoin.get(coin) ?? 0) + qty);
       }
-
-      realizedPnl += cumRealised;
     }
 
-    const unrealizedPnl = totalValue - freeCash - totalCost;
+    // Convert each to EUR
+    let freeCashEur = 0;
+    for (const [coin, qty] of cashByCoin) {
+      const { amountEur } = await convertToEur(qty, coin);
+      freeCashEur += amountEur;
+    }
 
     return {
-      totalValue,
-      totalCost,
-      unrealizedPnl,
-      realizedPnl,
-      freeCash,
-      currency: "USDT",
+      totalValue: 0, // computed by sync.ts from positions; not used by sync flow
+      totalCost: 0,
+      unrealizedPnl: 0,
+      realizedPnl: 0,
+      freeCash: freeCashEur,
+      currency: "EUR",
     };
   }
 
-  // -------------------------------------------------------------------------
-  // getDeposits
-  // -------------------------------------------------------------------------
+  // ─── getDeposits ──────────────────────────────────────────────────────────────
   async getDeposits(since?: Date): Promise<ExchangeDepositRecord[]> {
     type DepositRow = {
       txID: string;
@@ -342,7 +505,11 @@ export class BybitClient implements ExchangeClient {
 
     const params: Record<string, string | number> = {};
     if (since) {
-      params.startTime = since.getTime();
+      const startMs = since.getTime();
+      // Bybit rejects intervals > 30 days — cap to last 30 days max
+      const thirtyDaysAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+      params.startTime = Math.max(startMs, thirtyDaysAgo);
+      params.endTime = Date.now();
     }
 
     const result = await this.privateGet<DepositResult>(
@@ -369,9 +536,7 @@ export class BybitClient implements ExchangeClient {
     return deposits;
   }
 
-  // -------------------------------------------------------------------------
-  // getTradeHistory — paginates through all pages
-  // -------------------------------------------------------------------------
+  // ─── getTradeHistory — paginates through all pages ─────────────────────────────
   async getTradeHistory(since?: Date): Promise<ExchangeTrade[]> {
     type ExecutionRow = {
       execId: string;
@@ -388,11 +553,13 @@ export class BybitClient implements ExchangeClient {
       nextPageCursor: string;
     };
 
+    const instruments = await this.loadInstruments();
+
     const trades: ExchangeTrade[] = [];
     let cursor = "";
+    const MAX_PAGES = 100; // 100 × 100 = 10k trades hard cap
 
-    // Bybit returns trades newest-first; paginate until we go past `since`
-    outer: while (true) {
+    outer: for (let page = 0; page < MAX_PAGES; page++) {
       const params: Record<string, string | number> = {
         category: "spot",
         limit: 100,
@@ -412,32 +579,25 @@ export class BybitClient implements ExchangeClient {
         const execTime = Number(row.execTime);
         if (since && execTime < since.getTime()) break outer;
 
-        // Derive base/quote from symbol — Bybit spot symbols end in USDT/USDC/BTC/ETH/DAI
-        const quoteGuesses = ["USDT", "USDC", "DAI", "BTC", "ETH", "BNB"];
-        let baseSymbol = row.symbol;
-        let quoteCurrency = "USDT";
-        for (const q of quoteGuesses) {
-          if (row.symbol.endsWith(q)) {
-            baseSymbol = row.symbol.slice(0, -q.length);
-            quoteCurrency = q;
-            break;
-          }
+        const inst = instruments.bySymbol.get(row.symbol);
+        if (!inst) {
+          console.warn(`[Bybit] Unknown trade symbol "${row.symbol}" — skipping`);
+          continue;
         }
 
         trades.push({
           externalId: row.execId,
-          symbol: baseSymbol,
+          symbol: inst.baseCoin,
           side: row.side.toLowerCase() as "buy" | "sell",
           quantity: Number(row.execQty),
           price: Number(row.execPrice),
           fee: Number(row.execFee),
-          feeCurrency: row.feeCurrency || quoteCurrency,
+          feeCurrency: row.feeCurrency || inst.quoteCoin,
           date: new Date(execTime),
-          currency: quoteCurrency,
+          currency: inst.quoteCoin,
         });
       }
 
-      // If Bybit returned a next cursor, continue; otherwise we're done
       if (!result.nextPageCursor) break;
       cursor = result.nextPageCursor;
     }
