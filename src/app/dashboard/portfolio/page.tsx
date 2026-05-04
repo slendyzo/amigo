@@ -23,7 +23,7 @@ export default async function PortfolioPage() {
         },
       },
     },
-    select: { id: true },
+    select: { id: true, defaultCurrency: true },
   });
 
   if (!workspace) {

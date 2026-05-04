@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { usePortfolioCurrency } from "@/components/portfolio/portfolio-currency-context";
+import DisplayCurrencyToggle from "@/components/portfolio/display-currency-toggle";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -39,13 +41,6 @@ interface Props {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatEur(value: number): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(value);
-}
-
 function formatQuantity(qty: number): string {
   if (qty < 0.01) return qty.toFixed(8);
   if (qty < 1) return qty.toFixed(6);
@@ -53,21 +48,21 @@ function formatQuantity(qty: number): string {
   return qty.toFixed(2);
 }
 
-function formatPrice(price: number): string {
-  if (price < 0.01) {
+// Format a NATIVE currency price (e.g., BTC's price in USDT) — no toggle
+// conversion since the value is already in the asset's exchange currency.
+function formatNativePrice(price: number, currency: string): string {
+  const decimals = price < 0.01 ? { min: 4, max: 6 } : { min: 2, max: 4 };
+  // Intl can choke on USDT/USDC, fall back to symbol prefix
+  try {
     return new Intl.NumberFormat("de-DE", {
       style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 4,
-      maximumFractionDigits: 6,
+      currency,
+      minimumFractionDigits: decimals.min,
+      maximumFractionDigits: decimals.max,
     }).format(price);
+  } catch {
+    return `${price.toFixed(decimals.max)} ${currency}`;
   }
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  }).format(price);
 }
 
 function formatRelativeTime(isoString: string): string {
@@ -105,6 +100,7 @@ const ASSET_TYPE_CONFIG: Record<string, { label: string; className: string }> = 
 
 export default function AssetDetailClient({ asset }: Props) {
   const t = useTranslations("portfolio");
+  const { formatAmount, formatPrice } = usePortfolioCurrency();
   const isPnlPositive = asset.unrealizedPnlEur >= 0;
 
   const assetConfig = ASSET_TYPE_CONFIG[asset.assetType] ?? {
@@ -120,16 +116,19 @@ export default function AssetDetailClient({ asset }: Props) {
 
   return (
     <div className="space-y-6 max-w-2xl">
-      {/* Back link */}
-      <Link
-        href="/dashboard/portfolio"
-        className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
-      >
-        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        {t("title")}
-      </Link>
+      {/* Back link + currency toggle */}
+      <div className="flex items-center justify-between gap-3">
+        <Link
+          href="/dashboard/portfolio"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          {t("title")}
+        </Link>
+        <DisplayCurrencyToggle />
+      </div>
 
       {/* Hero card */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6">
@@ -195,7 +194,7 @@ export default function AssetDetailClient({ asset }: Props) {
               {t("currentValue")}
             </p>
             <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">
-              {formatEur(asset.currentValueEur)}
+              {formatAmount(asset.currentValueEur)}
             </p>
           </div>
           <div className="text-right">
@@ -210,7 +209,7 @@ export default function AssetDetailClient({ asset }: Props) {
               }`}
             >
               {isPnlPositive ? "+" : ""}
-              {formatEur(asset.unrealizedPnlEur)}
+              {formatAmount(asset.unrealizedPnlEur)}
             </p>
             <p
               className={`text-sm font-semibold tabular-nums ${
@@ -238,7 +237,7 @@ export default function AssetDetailClient({ asset }: Props) {
         />
         <StatCard
           label={t("totalCost")}
-          value={formatEur(asset.totalCostEur)}
+          value={formatAmount(asset.totalCostEur)}
         />
         <StatCard
           label={t("currentPrice")}
@@ -258,7 +257,7 @@ export default function AssetDetailClient({ asset }: Props) {
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-500 dark:text-slate-400">{t("totalCost")}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300 tabular-nums">
-                {formatEur(asset.totalCostEur)}
+                {formatAmount(asset.totalCostEur)}
               </span>
             </div>
             <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -274,7 +273,7 @@ export default function AssetDetailClient({ asset }: Props) {
             <div className="flex items-center justify-between text-xs">
               <span className="text-slate-500 dark:text-slate-400">{t("currentValue")}</span>
               <span className="font-medium text-slate-700 dark:text-slate-300 tabular-nums">
-                {formatEur(asset.currentValueEur)}
+                {formatAmount(asset.currentValueEur)}
               </span>
             </div>
             <div className="h-3 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
@@ -315,7 +314,7 @@ export default function AssetDetailClient({ asset }: Props) {
             }`}
           >
             {isPnlPositive ? "+" : ""}
-            {formatEur(asset.unrealizedPnlEur)} ({isPnlPositive ? "+" : ""}
+            {formatAmount(asset.unrealizedPnlEur)} ({isPnlPositive ? "+" : ""}
             {asset.unrealizedPnlPct.toFixed(2)}%)
           </span>
         </div>
@@ -335,11 +334,11 @@ export default function AssetDetailClient({ asset }: Props) {
             <>
               <DetailRow
                 label={`${t("currentPrice")} (${asset.currency})`}
-                value={formatPrice(asset.currentPrice)}
+                value={formatNativePrice(asset.currentPrice, asset.currency)}
               />
               <DetailRow
                 label={`${t("avgBuyPrice")} (${asset.currency})`}
-                value={formatPrice(asset.averageBuyPrice)}
+                value={formatNativePrice(asset.averageBuyPrice, asset.currency)}
               />
             </>
           )}

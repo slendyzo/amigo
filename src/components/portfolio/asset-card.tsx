@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { usePortfolioCurrency } from "./portfolio-currency-context";
 
 interface Asset {
   id: string;
@@ -31,36 +32,12 @@ interface Props {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatEur(value: number): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(value);
-}
-
 function formatQuantity(qty: number): string {
   // Show up to 8 decimal places for crypto, fewer for stocks/ETFs
   if (qty < 0.01) return qty.toFixed(8);
   if (qty < 1) return qty.toFixed(6);
   if (qty < 100) return qty.toFixed(4);
   return qty.toFixed(2);
-}
-
-function formatPrice(price: number): string {
-  if (price < 0.01) {
-    return new Intl.NumberFormat("de-DE", {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 4,
-      maximumFractionDigits: 6,
-    }).format(price);
-  }
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 4,
-  }).format(price);
 }
 
 // ─── Asset type badge config ──────────────────────────────────────────────────
@@ -89,6 +66,7 @@ const ASSET_TYPE_CONFIG: Record<
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AssetCard({ asset, t }: Props) {
+  const { formatAmount, formatPrice } = usePortfolioCurrency();
   const isPnlPositive = asset.unrealizedPnlEur >= 0;
   const pnlBarWidthPct = Math.min(Math.abs(asset.unrealizedPnlPct), 100);
 
@@ -138,7 +116,7 @@ export default function AssetCard({ asset, t }: Props) {
             }`}
           >
             {isPnlPositive ? "+" : ""}
-            {formatEur(asset.unrealizedPnlEur)}
+            {formatAmount(asset.unrealizedPnlEur)}
           </p>
           <p
             className={`text-xs font-medium tabular-nums ${
@@ -178,7 +156,7 @@ export default function AssetCard({ asset, t }: Props) {
             {t("currentValue")}
           </span>
           <span className="tabular-nums font-medium text-slate-700 dark:text-slate-300">
-            {formatEur(asset.currentValueEur)}
+            {formatAmount(asset.currentValueEur)}
           </span>
         </div>
       </div>

@@ -9,6 +9,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { usePortfolioCurrency } from "./portfolio-currency-context";
 
 interface Asset {
   symbol: string;
@@ -43,9 +44,6 @@ const TYPE_COLORS: Record<string, string> = {
   STOCK: "#8b5cf6",   // purple-500
 };
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(value);
-
 interface SliceEntry {
   name: string;
   value: number;
@@ -55,15 +53,16 @@ interface SliceEntry {
 interface CustomTooltipProps {
   active?: boolean;
   payload?: Array<{ payload: SliceEntry & { percentage: number } }>;
+  formatAmount: (eurAmount: number) => string;
 }
 
-function CustomTooltip({ active, payload }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, formatAmount }: CustomTooltipProps) {
   if (!active || !payload?.length) return null;
   const entry = payload[0].payload;
   return (
     <div className="bg-slate-900 text-white text-xs rounded-xl px-3 py-2.5 shadow-lg border border-slate-700/50 min-w-[140px]">
       <p className="font-semibold mb-1 truncate">{entry.name}</p>
-      <p className="text-slate-300">{formatEur(entry.value)}</p>
+      <p className="text-slate-300">{formatAmount(entry.value)}</p>
       <p className="text-slate-400 mt-0.5">{entry.percentage.toFixed(1)}%</p>
     </div>
   );
@@ -71,6 +70,7 @@ function CustomTooltip({ active, payload }: CustomTooltipProps) {
 
 export function AllocationChart({ assets }: AllocationChartProps) {
   const t = useTranslations("portfolio");
+  const { formatAmount } = usePortfolioCurrency();
   const [view, setView] = useState<ViewMode>("asset");
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
 
@@ -199,7 +199,7 @@ export function AllocationChart({ assets }: AllocationChartProps) {
                     />
                   ))}
                 </Pie>
-                <Tooltip content={<CustomTooltip />} />
+                <Tooltip content={<CustomTooltip formatAmount={formatAmount} />} />
               </PieChart>
             </ResponsiveContainer>
           </div>
@@ -222,7 +222,7 @@ export function AllocationChart({ assets }: AllocationChartProps) {
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-2">
                   <span className="font-medium text-slate-800 dark:text-slate-200">
-                    {formatEur(entry.value)}
+                    {formatAmount(entry.value)}
                   </span>
                   <span className="text-slate-400 dark:text-slate-500 w-10 text-right">
                     {entry.percentage.toFixed(1)}%

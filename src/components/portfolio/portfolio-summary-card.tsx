@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { usePortfolioCurrency } from "./portfolio-currency-context";
 
 interface Connection {
   id: string;
@@ -52,13 +53,6 @@ interface Props {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function formatEur(value: number): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(value);
-}
-
 function formatPct(value: number): string {
   const sign = value >= 0 ? "+" : "";
   return `${sign}${value.toFixed(2)}%`;
@@ -86,6 +80,7 @@ const CURRENCY_FALLBACK: Record<string, string> = {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }: Props) {
+  const { formatAmount } = usePortfolioCurrency();
   // Aggregate totals across all assets
   const totalValueEur = assets.reduce((sum, a) => sum + a.currentValueEur, 0);
   const totalCostEur = assets.reduce((sum, a) => sum + a.totalCostEur, 0);
@@ -132,7 +127,7 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
           {t("totalValue")}
         </p>
         <p className="text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-50 tracking-tight">
-          {formatEur(totalValueEur)}
+          {formatAmount(totalValueEur)}
         </p>
       </div>
 
@@ -154,7 +149,7 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 14l-7 7m0 0l-7-7m7 7V3" />
             </svg>
           )}
-          {formatEur(Math.abs(totalPnlEur))}
+          {formatAmount(Math.abs(totalPnlEur))}
           <span className="opacity-75">({formatPct(totalPnlPct)})</span>
         </div>
 
@@ -189,7 +184,7 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
 
                 {/* Value */}
                 <span className="text-sm font-medium tabular-nums text-slate-800 dark:text-slate-200 flex-1">
-                  {formatEur(connValue)}
+                  {formatAmount(connValue)}
                 </span>
 
                 {/* P&L */}
@@ -201,7 +196,7 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
                   }`}
                 >
                   {isConnPositive ? "+" : ""}
-                  {formatEur(connPnl)} ({formatPct(connPct)})
+                  {formatAmount(connPnl)} ({formatPct(connPct)})
                 </span>
               </div>
             );
@@ -227,6 +222,7 @@ function FreeCashChip({
   fxMeta: FxMeta;
   label: string;
 }) {
+  const { formatAmount } = usePortfolioCurrency();
   // Show tooltip only if there's something interesting to show: more than one
   // currency, or a single non-EUR currency (so the rate breakdown is useful).
   const hasMultipleCurrencies = cashCurrencies.length > 1;
@@ -247,7 +243,7 @@ function FreeCashChip({
       >
         {label}:{" "}
         <span className="font-medium text-slate-700 dark:text-slate-300 tabular-nums">
-          {formatEur(totalEur)}
+          {formatAmount(totalEur)}
         </span>
       </button>
 
@@ -279,7 +275,7 @@ function FreeCashChip({
                     {formatNative(native, currency)}
                   </span>
                   <span className="text-slate-500 dark:text-slate-400">
-                    {eur !== null ? `≈ ${formatEur(eur)}` : "—"}
+                    {eur !== null ? `≈ ${formatAmount(eur)}` : "—"}
                   </span>
                 </div>
               );

@@ -9,6 +9,8 @@ import PortfolioSummaryCard from "@/components/portfolio/portfolio-summary-card"
 import AssetCard from "@/components/portfolio/asset-card";
 import { AllocationChart } from "@/components/portfolio/allocation-chart";
 import { PerformanceChart } from "@/components/portfolio/performance-chart";
+import { usePortfolioCurrency } from "@/components/portfolio/portfolio-currency-context";
+import DisplayCurrencyToggle from "@/components/portfolio/display-currency-toggle";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -78,13 +80,6 @@ function isStale(lastSyncAt: string | null): boolean {
   return Date.now() - new Date(lastSyncAt).getTime() > STALE_THRESHOLD_MS;
 }
 
-function formatEur(value: number): string {
-  return new Intl.NumberFormat("de-DE", {
-    style: "currency",
-    currency: "EUR",
-  }).format(value);
-}
-
 function formatDepositDate(isoString: string): string {
   return new Date(isoString).toLocaleDateString("en-GB", {
     day: "numeric",
@@ -103,6 +98,7 @@ export default function PortfolioClient({
 }: PortfolioClientProps) {
   const t = useTranslations("portfolio");
   const router = useRouter();
+  const { formatAmount } = usePortfolioCurrency();
 
   // Sync is kicked off detached on the server. We poll /api/portfolio for
   // syncStatus transitions and reflect them locally. Initial value: true if
@@ -357,7 +353,7 @@ export default function PortfolioClient({
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                    {formatEur(deposit.amountEur)}
+                    {formatAmount(deposit.amountEur)}
                     <span className="ml-2 text-xs font-normal text-slate-500 dark:text-slate-400">
                       ({deposit.currency !== "EUR"
                         ? `${deposit.amount.toFixed(2)} ${deposit.currency} · `
@@ -422,6 +418,7 @@ function PortfolioHeader({
         {t("title")}
       </h1>
       <div className="flex items-center gap-2">
+        <DisplayCurrencyToggle />
         <Link href="/dashboard/portfolio/exchanges">
           <Button variant="outline" size="sm" className="hidden sm:inline-flex">
             {t("manageExchanges")}

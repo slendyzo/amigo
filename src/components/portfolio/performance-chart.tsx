@@ -11,6 +11,7 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
+import { usePortfolioCurrency } from "./portfolio-currency-context";
 
 interface Snapshot {
   date: string;
@@ -35,15 +36,6 @@ const RANGE_LABEL_KEYS: Record<RangeKey, string> = {
   "all": "rangeAll",
 };
 
-const formatEur = (value: number) =>
-  new Intl.NumberFormat("de-DE", { style: "currency", currency: "EUR" }).format(value);
-
-function formatAxisValue(value: number): string {
-  if (Math.abs(value) >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`;
-  if (Math.abs(value) >= 1_000) return `${(value / 1_000).toFixed(0)}K`;
-  return `${value.toFixed(0)}`;
-}
-
 function formatDateLabel(dateStr: string, range: RangeKey): string {
   const date = new Date(dateStr);
   if (range === "1w" || range === "1m") {
@@ -61,9 +53,10 @@ interface CustomTooltipProps {
   }>;
   label?: string;
   range: RangeKey;
+  formatAmount: (eurAmount: number) => string;
 }
 
-function CustomTooltip({ active, payload, label, range }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, label, range, formatAmount }: CustomTooltipProps) {
   if (!active || !payload?.length || !label) return null;
 
   const portfolioEntry = payload.find((p) => p.name === "totalValueEur");
@@ -87,19 +80,19 @@ function CustomTooltip({ active, payload, label, range }: CustomTooltipProps) {
             <span className="w-2 h-2 rounded-full bg-[#0070f3]" />
             Value
           </span>
-          <span className="font-semibold">{formatEur(portfolioValue)}</span>
+          <span className="font-semibold">{formatAmount(portfolioValue)}</span>
         </div>
         <div className="flex items-center justify-between gap-4">
           <span className="flex items-center gap-1.5 text-slate-300">
             <span className="w-2 h-0.5 rounded bg-slate-400" />
             Cost
           </span>
-          <span className="text-slate-300">{formatEur(costValue)}</span>
+          <span className="text-slate-300">{formatAmount(costValue)}</span>
         </div>
         <div className="flex items-center justify-between gap-4 pt-1 mt-1 border-t border-slate-700">
           <span className="text-slate-300">P&amp;L</span>
           <span className={`font-semibold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-            {pnl >= 0 ? "+" : ""}{formatEur(pnl)}
+            {pnl >= 0 ? "+" : ""}{formatAmount(pnl)}
           </span>
         </div>
       </div>
@@ -109,6 +102,7 @@ function CustomTooltip({ active, payload, label, range }: CustomTooltipProps) {
 
 export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps) {
   const t = useTranslations("portfolio");
+  const { formatAmount, formatAxis } = usePortfolioCurrency();
   const [range, setRange] = useState<RangeKey>(initialRange as RangeKey);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
   const [loading, setLoading] = useState(true);
@@ -213,7 +207,7 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
                 />
 
                 <YAxis
-                  tickFormatter={(v) => `€${formatAxisValue(v)}`}
+                  tickFormatter={(v) => formatAxis(v)}
                   tick={{ fontSize: 11, fill: "#94a3b8" }}
                   tickLine={false}
                   axisLine={false}
@@ -221,7 +215,7 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
                 />
 
                 <Tooltip
-                  content={<CustomTooltip range={range} />}
+                  content={<CustomTooltip range={range} formatAmount={formatAmount} />}
                   cursor={{ stroke: "#0070f3", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
 
