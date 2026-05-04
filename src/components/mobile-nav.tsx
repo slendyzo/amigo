@@ -38,6 +38,7 @@ const navGroups: NavGroup[] = [
     collapsible: true,
     items: [
       { key: "holdings", href: "/dashboard/portfolio", icon: "trending-up" },
+      { key: "networth", href: "/dashboard/networth", icon: "wallet" },
       { key: "exchanges", href: "/dashboard/portfolio/exchanges", icon: "link" },
     ],
   },
@@ -159,6 +160,12 @@ const icons: Record<string, ReactNode> = {
   wand: (
     <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+    </svg>
+  ),
+  wallet: (
+    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 12a2 2 0 00-2-2h-2a2 2 0 00-2 2v0a2 2 0 002 2h2a2 2 0 002-2v0z" />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7a2 2 0 012-2h13a2 2 0 012 2v3M3 7v10a2 2 0 002 2h13a2 2 0 002-2v-3" />
     </svg>
   ),
 };

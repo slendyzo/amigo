@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 const AddExpenseModal = lazy(() => import("./add-expense-modal"));
 const AddIncomeModal = lazy(() => import("./add-income-modal"));
 const ReceiptScannerModal = lazy(() => import("./receipt-scanner-modal"));
+const AddVehicleModal = lazy(() => import("./add-vehicle-modal"));
 
 type CreatedExpense = {
   id: string;
@@ -35,14 +36,16 @@ type AddTypeSelectorProps = {
 export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: AddTypeSelectorProps) {
   const t = useTranslations("common");
   const tScanner = useTranslations("receiptScanner");
+  const tRwa = useTranslations("rwa");
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+  const [showVehicleModal, setShowVehicleModal] = useState(false);
 
   // Only return null if not open AND no modals are showing
   // This prevents unmounting the modals when the selector closes
-  const showSelector = isOpen && !showExpenseModal && !showIncomeModal && !showReceiptScanner;
-  const isActive = isOpen || showExpenseModal || showIncomeModal || showReceiptScanner;
+  const showSelector = isOpen && !showExpenseModal && !showIncomeModal && !showReceiptScanner && !showVehicleModal;
+  const isActive = isOpen || showExpenseModal || showIncomeModal || showReceiptScanner || showVehicleModal;
 
   if (!isActive) return null;
 
@@ -58,10 +61,15 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
     setShowReceiptScanner(true);
   };
 
+  const handleVehicleClick = () => {
+    setShowVehicleModal(true);
+  };
+
   const handleModalClose = () => {
     setShowExpenseModal(false);
     setShowIncomeModal(false);
     setShowReceiptScanner(false);
+    setShowVehicleModal(false);
     onClose();
     // Don't call onSuccess here - modals call router.refresh() which
     // triggers server re-render. The parent syncs via useEffect on prop changes.
@@ -157,6 +165,26 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
+
+                {/* Vehicle Option */}
+                <button
+                  onClick={handleVehicleClick}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-slate-200 hover:border-[#0070f3] hover:bg-blue-50 transition-all tap-none active:scale-[0.98]"
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 17H3v-5l2-5h11l4 5v5h-2M5 17h10M5 12h14" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-slate-900">{tRwa("addVehicle")}</h4>
+                    <p className="text-sm text-slate-500">{tRwa("addVehicleDescription")}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
 
               {/* Safe area padding for mobile */}
@@ -189,6 +217,15 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
           <ReceiptScannerModal
             isOpen={showReceiptScanner}
             onClose={handleModalClose}
+          />
+        </Suspense>
+      )}
+      {showVehicleModal && (
+        <Suspense fallback={null}>
+          <AddVehicleModal
+            isOpen={showVehicleModal}
+            onClose={handleModalClose}
+            onSuccess={handleModalClose}
           />
         </Suspense>
       )}
