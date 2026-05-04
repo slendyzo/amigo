@@ -642,8 +642,8 @@ model PortfolioAsset {
   unrealizedPnlEur    Decimal   @db.Decimal(18, 2)
   unrealizedPnlPct    Decimal   @db.Decimal(8, 4)  // percentage P&L
 
-  // Currency of the asset on the exchange
-  currency            String    @default("EUR") @db.VarChar(3)
+  // Currency of the asset on the exchange (USDT/USDC/etc. so 10 chars; matches freeCashCurrency + Trade.currency)
+  currency            String    @default("EUR") @db.VarChar(10)
 
   // Price availability — for assets we can hold but not price (delisted, no pair)
   priceStatus            PriceStatus @default(OK)
