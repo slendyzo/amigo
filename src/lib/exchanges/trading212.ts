@@ -181,9 +181,44 @@ export class Trading212Client implements ExchangeClient {
 
   private readonly authHeader: string;
 
+  // Per-instance caches, populated lazily and reused across all methods of a
+  // single sync. Both queries are stable for the duration of a sync.
+  private accountSummaryPromise: Promise<T212AccountSummary> | null = null;
+  private tickerCurrencyMapPromise: Promise<Map<string, string>> | null = null;
+
   constructor(apiKey: string, apiSecret: string) {
     const encoded = Buffer.from(`${apiKey}:${apiSecret}`).toString("base64");
     this.authHeader = `Basic ${encoded}`;
+  }
+
+  private getCachedAccountSummary(): Promise<T212AccountSummary> {
+    if (!this.accountSummaryPromise) {
+      this.accountSummaryPromise = this.request<T212AccountSummary>(
+        "/equity/account/summary"
+      );
+    }
+    return this.accountSummaryPromise;
+  }
+
+  // Maps T212 ticker (e.g. "AAPL_US_EQ") → instrument currency (e.g. "USD").
+  // Built from the user's currently-held positions. Sold-out positions won't
+  // appear here; their trade currency falls back to the account currency.
+  // TODO: for full coverage, hit /equity/metadata/instruments and persist the
+  // map (it's a ~500 KB response with thousands of tickers).
+  private async getTickerCurrencyMap(): Promise<Map<string, string>> {
+    if (!this.tickerCurrencyMapPromise) {
+      this.tickerCurrencyMapPromise = (async () => {
+        const positions = await this.request<T212Position[]>("/equity/positions");
+        const map = new Map<string, string>();
+        for (const p of positions) {
+          if (!p.instrument?.ticker) continue;
+          const cur = p.instrument.currency ?? p.walletImpact?.currency;
+          if (cur) map.set(p.instrument.ticker, cur);
+        }
+        return map;
+      })();
+    }
+    return this.tickerCurrencyMapPromise;
   }
 
   // -------------------------------------------------------------------------
@@ -303,9 +338,7 @@ export class Trading212Client implements ExchangeClient {
 
   async getAccountSummary(): Promise<ExchangeAccountSummary> {
     try {
-      const summary = await this.request<T212AccountSummary>(
-        "/equity/account/summary"
-      );
+      const summary = await this.getCachedAccountSummary();
 
       return {
         totalValue: summary.totalValue,
@@ -325,6 +358,12 @@ export class Trading212Client implements ExchangeClient {
     const sinceMs = since?.getTime();
 
     try {
+      // Account currency is the deposit currency — T212 settles deposits in
+      // the user's base currency before they get converted to instrument FX
+      // at trade time.
+      const summary = await this.getCachedAccountSummary();
+      const accountCurrency = summary.currency || "EUR";
+
       const all = await this.fetchAllPages<T212Transaction>(
         "/equity/history/transactions",
         this.generalLimiter,
@@ -343,7 +382,7 @@ export class Trading212Client implements ExchangeClient {
         .map((tx) => ({
           externalId: tx.reference,
           amount: tx.amount,
-          currency: "EUR",
+          currency: accountCurrency,
           date: new Date(tx.dateCreated),
           status: tx.status ?? "COMPLETED",
         }));
@@ -357,6 +396,14 @@ export class Trading212Client implements ExchangeClient {
     const sinceMs = since?.getTime();
 
     try {
+      // Resolve trade currency per-ticker via current positions. Sold-out
+      // tickers fall back to the account currency.
+      const [tickerCurrency, summary] = await Promise.all([
+        this.getTickerCurrencyMap(),
+        this.getCachedAccountSummary(),
+      ]);
+      const accountCurrency = summary.currency || "EUR";
+
       const all = await this.fetchAllPages<T212Order>(
         "/equity/history/orders",
         this.orderLimiter,
@@ -374,6 +421,7 @@ export class Trading212Client implements ExchangeClient {
         })
         .map((order) => {
           const isSell = order.type.includes("SELL");
+          const currency = tickerCurrency.get(order.ticker) ?? accountCurrency;
 
           return {
             externalId: order.id,
@@ -382,9 +430,9 @@ export class Trading212Client implements ExchangeClient {
             quantity: order.filledQuantity,
             price: order.fillPrice ?? 0,
             fee: 0,
-            feeCurrency: "EUR",
+            feeCurrency: currency,
             date: new Date(order.dateExecuted!),
-            currency: "EUR",
+            currency,
           } satisfies ExchangeTrade;
         });
     } catch (err) {
