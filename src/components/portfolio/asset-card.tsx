@@ -3,37 +3,16 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { usePortfolioCurrency } from "./portfolio-currency-context";
-
-interface Asset {
-  id: string;
-  symbol: string;
-  name: string;
-  assetType: string;
-  quantity: number;
-  averageBuyPrice: number;
-  averageBuyPriceEur: number;
-  currentPrice: number;
-  currentPriceEur: number;
-  currentValue: number;
-  currentValueEur: number;
-  totalCost: number;
-  totalCostEur: number;
-  unrealizedPnl: number;
-  unrealizedPnlEur: number;
-  unrealizedPnlPct: number;
-  currency: string;
-  exchange: { id: string; provider: string; label: string };
-}
+import type { AggregatedAsset } from "@/lib/portfolio/aggregate-assets";
 
 interface Props {
-  asset: Asset;
+  asset: AggregatedAsset;
   t: ReturnType<typeof useTranslations<"portfolio">>;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatQuantity(qty: number): string {
-  // Show up to 8 decimal places for crypto, fewer for stocks/ETFs
   if (qty < 0.01) return qty.toFixed(8);
   if (qty < 1) return qty.toFixed(6);
   if (qty < 100) return qty.toFixed(4);
@@ -76,9 +55,22 @@ export default function AssetCard({ asset, t }: Props) {
       "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
   };
 
+  // Source badge: single exchange label, or "N exchanges" when aggregated
+  const exchangeBadgeText =
+    asset.positions.length === 1
+      ? asset.positions[0].exchange.label
+      : `${asset.positions.length} exchanges`;
+
+  // Detail link goes to the symbol-aggregated detail page when there are
+  // multiple positions; falls back to the single-position page otherwise.
+  const detailHref =
+    asset.positions.length === 1
+      ? `/dashboard/portfolio/${asset.positions[0].id}`
+      : `/dashboard/portfolio/symbol/${encodeURIComponent(asset.symbol)}`;
+
   return (
     <Link
-      href={`/dashboard/portfolio/${asset.id}`}
+      href={detailHref}
       className="block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 hover:shadow-md transition-shadow"
     >
       {/* Main row */}
@@ -95,8 +87,19 @@ export default function AssetCard({ asset, t }: Props) {
               {assetConfig.label}
             </span>
             <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/30">
-              {asset.exchange.label}
+              {exchangeBadgeText}
             </span>
+            {asset.totalLockedQuantity > 0 && (
+              <span
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 border border-violet-200/60 dark:border-violet-700/30"
+                title={`${formatQuantity(asset.totalLockedQuantity)} ${asset.symbol} staked / locked`}
+              >
+                <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                {formatQuantity(asset.totalLockedQuantity)} staked
+              </span>
+            )}
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[180px]">
             {asset.name}
@@ -138,7 +141,7 @@ export default function AssetCard({ asset, t }: Props) {
             {t("quantity")}
           </span>
           <span className="tabular-nums font-medium text-slate-700 dark:text-slate-300">
-            {formatQuantity(asset.quantity)}
+            {formatQuantity(asset.totalQuantity)}
           </span>
         </div>
         <div className="w-px h-8 bg-slate-100 dark:bg-slate-800" />

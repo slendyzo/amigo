@@ -85,11 +85,17 @@ export function AllocationChart({ assets }: AllocationChartProps) {
     if (total === 0) return [];
 
     if (view === "asset") {
-      return assets
-        .filter((a) => a.currentValueEur > 0)
-        .map((a, i) => ({
-          name: a.symbol,
-          value: a.currentValueEur,
+      // Dedupe by symbol — BTC on multiple exchanges = one slice
+      const bySymbol = new Map<string, number>();
+      for (const a of assets) {
+        if (a.currentValueEur <= 0) continue;
+        bySymbol.set(a.symbol, (bySymbol.get(a.symbol) ?? 0) + a.currentValueEur);
+      }
+      return Array.from(bySymbol.entries())
+        .sort((a, b) => b[1] - a[1])
+        .map(([symbol, value], i) => ({
+          name: symbol,
+          value,
           color: PALETTE[i % PALETTE.length],
         }));
     }

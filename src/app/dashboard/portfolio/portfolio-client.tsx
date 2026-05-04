@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import PortfolioSummaryCard from "@/components/portfolio/portfolio-summary-card";
@@ -11,6 +12,7 @@ import { AllocationChart } from "@/components/portfolio/allocation-chart";
 import { PerformanceChart } from "@/components/portfolio/performance-chart";
 import { usePortfolioCurrency } from "@/components/portfolio/portfolio-currency-context";
 import DisplayCurrencyToggle from "@/components/portfolio/display-currency-toggle";
+import { aggregateAssetsBySymbol } from "@/lib/portfolio/aggregate-assets";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,6 +54,11 @@ interface Asset {
   unrealizedPnlEur: number;
   unrealizedPnlPct: number;
   currency: string;
+  lockedQuantity?: number | null;
+  realizedPnlEur?: number | null;
+  isDust?: boolean;
+  priceStatus?: string;
+  priceUnavailableReason?: string | null;
   exchange: { id: string; provider: string; label: string };
 }
 
@@ -107,6 +114,25 @@ export default function PortfolioClient({
     connections.some((c) => c.syncStatus === "SYNCING")
   );
   const [dismissedDeposits, setDismissedDeposits] = useState<Set<string>>(new Set());
+
+  // Partition raw assets by priceStatus, then aggregate each side by symbol.
+  // Hidden by default: dust positions (isDust = true). They're still in the
+  // raw list (so the chart can include them in totals if needed) but excluded
+  // from the user-visible asset cards.
+  const { pricedAssetsRaw, pricedAggregated, unpricedAggregated } = useMemo(() => {
+    const visible = assets.filter((a) => !a.isDust);
+    const priced = visible.filter(
+      (a) => (a.priceStatus ?? "OK") === "OK"
+    );
+    const unpriced = visible.filter(
+      (a) => (a.priceStatus ?? "OK") !== "OK"
+    );
+    return {
+      pricedAssetsRaw: priced,
+      pricedAggregated: aggregateAssetsBySymbol(priced),
+      unpricedAggregated: aggregateAssetsBySymbol(unpriced),
+    };
+  }, [assets]);
 
   // Poll /api/portfolio until no connection is in SYNCING state, then refresh.
   // Hard-capped at 10 min to defend against runaway polling if something is wrong.
@@ -329,7 +355,7 @@ export default function PortfolioClient({
       />
 
       {/* Allocation Chart */}
-      <AllocationChart assets={assets} />
+      <AllocationChart assets={pricedAssetsRaw} />
 
       {/* Performance Chart */}
       <PerformanceChart />
@@ -381,22 +407,109 @@ export default function PortfolioClient({
         </div>
       )}
 
-      {/* Asset List */}
+      {/* Asset List — aggregated by symbol across exchanges */}
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-slate-900 dark:text-slate-100">
             {t("assets")}
           </h2>
           <span className="text-xs text-slate-500 dark:text-slate-400">
-            {assets.length} {assets.length === 1 ? "asset" : "assets"}
+            {pricedAggregated.length} {pricedAggregated.length === 1 ? "asset" : "assets"}
           </span>
         </div>
         <div className="space-y-2">
-          {assets.map((asset) => (
-            <AssetCard key={asset.id} asset={asset} t={t} />
+          {pricedAggregated.map((asset) => (
+            <AssetCard key={asset.symbol} asset={asset} t={t} />
           ))}
         </div>
       </div>
+
+      {/* Unpriced section — collapsed by default */}
+      {unpricedAggregated.length > 0 && (
+        <UnpricedAssetsSection assets={unpricedAggregated} />
+      )}
+    </div>
+  );
+}
+
+// ─── UnpricedAssetsSection ───────────────────────────────────────────────────
+
+function UnpricedAssetsSection({
+  assets,
+}: {
+  assets: ReturnType<typeof aggregateAssetsBySymbol>;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="rounded-2xl border border-slate-200/60 dark:border-slate-700/40 bg-white/40 dark:bg-slate-900/30">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 text-left"
+      >
+        <div className="flex items-center gap-2">
+          <svg className="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <span className="text-sm font-medium text-slate-700 dark:text-slate-200">
+            Holdings without price data
+          </span>
+          <span className="text-xs text-slate-400 dark:text-slate-500 tabular-nums">
+            ({assets.length})
+          </span>
+        </div>
+        <motion.svg
+          className="w-4 h-4 text-slate-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+          animate={{ rotate: open ? 180 : 0 }}
+          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+        </motion.svg>
+      </button>
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            key="content"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-2">
+              {assets.map((a) => (
+                <div
+                  key={a.symbol}
+                  className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg bg-slate-50 dark:bg-slate-800/40"
+                  title={a.priceUnavailableReason ?? "Price not available"}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-slate-700 dark:text-slate-200">
+                      {a.symbol}
+                    </p>
+                    <p className="text-[10px] text-slate-400 dark:text-slate-500">
+                      {a.positions.length === 1
+                        ? a.positions[0].exchange.label
+                        : `${a.positions.length} exchanges`}
+                    </p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-xs tabular-nums text-slate-700 dark:text-slate-300">
+                      {a.totalQuantity.toFixed(8).replace(/0+$/, "").replace(/\.$/, "")}
+                    </p>
+                    <p className="text-[10px] text-amber-600 dark:text-amber-500">
+                      Price unavailable
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

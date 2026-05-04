@@ -80,6 +80,11 @@ export default async function PortfolioPage() {
         unrealizedPnlEur: true,
         unrealizedPnlPct: true,
         currency: true,
+        lockedQuantity: true,
+        realizedPnlEur: true,
+        isDust: true,
+        priceStatus: true,
+        priceUnavailableReason: true,
         exchangeConnection: {
           select: { id: true, provider: true, label: true },
         },
@@ -157,6 +162,11 @@ export default async function PortfolioPage() {
     unrealizedPnlEur: Number(a.unrealizedPnlEur),
     unrealizedPnlPct: Number(a.unrealizedPnlPct),
     currency: a.currency,
+    lockedQuantity: a.lockedQuantity !== null ? Number(a.lockedQuantity) : null,
+    realizedPnlEur: a.realizedPnlEur !== null ? Number(a.realizedPnlEur) : null,
+    isDust: a.isDust,
+    priceStatus: a.priceStatus,
+    priceUnavailableReason: a.priceUnavailableReason,
     exchange: {
       id: a.exchangeConnection.id,
       provider: a.exchangeConnection.provider,

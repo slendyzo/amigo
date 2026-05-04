@@ -39,7 +39,24 @@ const STATUS_DOT: Record<string, string> = {
   SUCCESS: "bg-emerald-500",
   SYNCING: "bg-yellow-400 animate-pulse",
   ERROR: "bg-red-500",
+  PARTIAL: "bg-amber-500",
   IDLE: "bg-slate-300 dark:bg-slate-600",
+};
+
+const STATUS_LABEL: Record<string, string> = {
+  SUCCESS: "Synced",
+  SYNCING: "Syncing",
+  ERROR: "Error",
+  PARTIAL: "Synced (partial)",
+  IDLE: "Idle",
+};
+
+const STATUS_TEXT_COLOR: Record<string, string> = {
+  SUCCESS: "text-emerald-600 dark:text-emerald-400",
+  SYNCING: "text-yellow-600 dark:text-yellow-400",
+  ERROR: "text-red-600 dark:text-red-400",
+  PARTIAL: "text-amber-600 dark:text-amber-400",
+  IDLE: "text-slate-500 dark:text-slate-400",
 };
 
 function formatRelativeTime(isoString: string | null): string {
@@ -221,25 +238,31 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                     {/* Status row */}
                     <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <span className={["w-2 h-2 rounded-full shrink-0", statusDot].join(" ")} />
-                      <span>
+                      <span className={STATUS_TEXT_COLOR[conn.syncStatus] ?? STATUS_TEXT_COLOR.IDLE}>
                         {conn.syncStatus === "SUCCESS" && conn.lastSyncAt
                           ? `${t("syncSuccess")} · ${formatRelativeTime(conn.lastSyncAt)}`
-                          : conn.syncStatus === "SYNCING"
-                          ? t("syncing")
-                          : conn.syncStatus === "ERROR"
-                          ? t("syncError")
-                          : conn.lastSyncAt
-                          ? `${t("lastSync")} ${formatRelativeTime(conn.lastSyncAt)}`
-                          : t("neverSynced")}
+                          : conn.syncStatus === "PARTIAL" && conn.lastSyncAt
+                          ? `${STATUS_LABEL.PARTIAL} · ${formatRelativeTime(conn.lastSyncAt)}`
+                          : STATUS_LABEL[conn.syncStatus] ??
+                            (conn.lastSyncAt
+                              ? `${t("lastSync")} ${formatRelativeTime(conn.lastSyncAt)}`
+                              : t("neverSynced"))}
                       </span>
                     </div>
 
-                    {/* Error message */}
-                    {conn.syncStatus === "ERROR" && conn.lastSyncError && (
-                      <p className="text-xs text-red-500 dark:text-red-400 mt-0.5">
-                        {conn.lastSyncError}
-                      </p>
-                    )}
+                    {/* Error / partial message */}
+                    {(conn.syncStatus === "ERROR" || conn.syncStatus === "PARTIAL") &&
+                      conn.lastSyncError && (
+                        <p
+                          className={`text-xs mt-0.5 ${
+                            conn.syncStatus === "PARTIAL"
+                              ? "text-amber-600 dark:text-amber-500"
+                              : "text-red-500 dark:text-red-400"
+                          }`}
+                        >
+                          {conn.lastSyncError}
+                        </p>
+                      )}
                   </div>
                 </div>
 
