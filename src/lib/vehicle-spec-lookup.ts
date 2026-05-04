@@ -1,4 +1,4 @@
-// Vehicle spec lookup via Claude Haiku 4.5.
+// Vehicle spec lookup via Z.AI GLM-4.6 (Coding Plan endpoint).
 //
 // Given a free-text vehicle description (e.g. "2018 Mazda MX-5 Miata Sport"),
 // returns structured fields the add-vehicle wizard pre-fills:
@@ -8,12 +8,14 @@
 //   - imageHint (an image-search query string)
 //
 // Returns null on any failure (missing API key, rate limit, network error,
-// invalid model output) so callers degrade to manual entry. Costs ~€0.001/call.
-// System prompt is cached to amortize latency + cost across lookups.
+// invalid model output) so callers degrade to manual entry.
+//
+// `thinking: { type: "disabled" }` is required — without it GLM-4.6 burns the
+// output budget on reasoning tokens before emitting tool args, and tool calls
+// come back truncated or empty.
 
-import Anthropic from "@anthropic-ai/sdk";
-
-const MODEL = "claude-haiku-4-5-20251001";
+const ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions";
+const MODEL = "glm-4.6";
 
 const FUEL_TYPES = ["PETROL", "DIESEL", "HYBRID", "EV", "OTHER"] as const;
 const BODY_TYPES = [
@@ -45,83 +47,102 @@ export type VehicleSpecResult = {
   imageHint: string | null;
 };
 
-const SYSTEM_PROMPT = `You are a vehicle spec lookup assistant. Given a brand, model, year, and optional trim, return your best estimate of the original MSRP in EUR (when new), fuel type, body type, generation code (e.g. "ND" for 4th-gen Mazda MX-5), and an image search query that would surface a clean press photo of the model.
+const SYSTEM_PROMPT = `You are a vehicle spec lookup assistant. Given a brand, model, year, and optional trim, invoke the record_vehicle_spec tool with your best estimate of the original MSRP in EUR (when new), fuel type, body type, manufacturer generation code (e.g. "ND" for 4th-gen Mazda MX-5), and an image search query that would surface a clean press photo of the model.
 
-Be honest about uncertainty: if you don't know the MSRP for a specific market or trim, omit it. Use European pricing (EUR, when-new) where possible. Prefer the manufacturer's standardized generation code when one exists.
+Be honest about uncertainty: if you don't know the MSRP for a specific market or trim, set it to null. Use European pricing (EUR, when-new) where possible. Prefer the manufacturer's standardized generation code when one exists.
 
-Always respond by calling the record_vehicle_spec tool — never with free-form prose.`;
+Always invoke the tool — never reply with prose.`;
 
 const TOOL = {
-  name: "record_vehicle_spec",
-  description: "Record the vehicle specs derived from the user's input.",
-  input_schema: {
-    type: "object" as const,
-    properties: {
-      originalMsrpEur: {
-        type: ["number", "null"],
-        description: "Original MSRP in EUR when the vehicle was new. Null if unknown.",
+  type: "function" as const,
+  function: {
+    name: "record_vehicle_spec",
+    description: "Record the vehicle specs derived from the user's input.",
+    parameters: {
+      type: "object" as const,
+      properties: {
+        originalMsrpEur: {
+          type: ["number", "null"],
+          description: "Original MSRP in EUR when the vehicle was new. Null if unknown.",
+        },
+        fuelType: {
+          type: "string",
+          enum: [...FUEL_TYPES],
+          description: "Engine type. Use HYBRID for plug-in or full hybrid, EV for fully electric.",
+        },
+        bodyType: {
+          type: "string",
+          enum: [...BODY_TYPES],
+          description: "Body shape. Use OTHER if it doesn't fit cleanly.",
+        },
+        generation: {
+          type: ["string", "null"],
+          description:
+            "Manufacturer generation code (e.g. 'ND' for 4th-gen Miata, 'F30' for BMW 3-series). Null if not standardized.",
+        },
+        imageHint: {
+          type: ["string", "null"],
+          description: "Search query that would return a clean front-3/4 press photo of this model.",
+        },
       },
-      fuelType: {
-        type: ["string", "null"],
-        enum: [...FUEL_TYPES, null],
-        description: "Engine type. Use HYBRID for plug-in or full hybrid, EV for fully electric.",
-      },
-      bodyType: {
-        type: ["string", "null"],
-        enum: [...BODY_TYPES, null],
-        description: "Body shape. Use OTHER if it doesn't fit cleanly.",
-      },
-      generation: {
-        type: ["string", "null"],
-        description: "Manufacturer generation code (e.g. 'ND' for 4th-gen Miata, 'F30' for BMW 3-series). Null if not standardized.",
-      },
-      imageHint: {
-        type: ["string", "null"],
-        description: "Search query that would return a clean front-3/4 press photo of this model.",
-      },
+      required: ["originalMsrpEur", "fuelType", "bodyType", "generation", "imageHint"],
     },
-    required: ["originalMsrpEur", "fuelType", "bodyType", "generation", "imageHint"],
   },
 };
 
-let client: Anthropic | null = null;
+type ChatCompletionResponse = {
+  choices?: Array<{
+    message?: {
+      tool_calls?: Array<{
+        function?: {
+          name?: string;
+          arguments?: string;
+        };
+      }>;
+    };
+  }>;
+};
 
-function getClient(): Anthropic | null {
-  if (client) return client;
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+export async function lookupVehicleSpec(
+  input: VehicleSpecLookup,
+): Promise<VehicleSpecResult | null> {
+  const apiKey = process.env.ZAI_API_KEY;
   if (!apiKey) return null;
-  client = new Anthropic({ apiKey });
-  return client;
-}
-
-export async function lookupVehicleSpec(input: VehicleSpecLookup): Promise<VehicleSpecResult | null> {
-  const c = getClient();
-  if (!c) return null;
 
   const userText =
     `Brand: ${input.brand}\nModel: ${input.model}\nYear: ${input.year}` +
     (input.trim ? `\nTrim: ${input.trim}` : "");
 
   try {
-    const response = await c.messages.create({
-      model: MODEL,
-      max_tokens: 512,
-      system: [
-        {
-          type: "text",
-          text: SYSTEM_PROMPT,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      tools: [TOOL],
-      tool_choice: { type: "tool", name: TOOL.name },
-      messages: [{ role: "user", content: userText }],
+    const res = await fetch(ENDPOINT, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      body: JSON.stringify({
+        model: MODEL,
+        thinking: { type: "disabled" },
+        max_tokens: 512,
+        messages: [
+          { role: "system", content: SYSTEM_PROMPT },
+          { role: "user", content: userText },
+        ],
+        tools: [TOOL],
+        tool_choice: { type: "function", function: { name: TOOL.function.name } },
+      }),
     });
 
-    const block = response.content.find((b) => b.type === "tool_use");
-    if (!block || block.type !== "tool_use") return null;
+    if (!res.ok) {
+      console.error("[vehicle-spec-lookup] Z.AI HTTP", res.status, await res.text().catch(() => ""));
+      return null;
+    }
 
-    const out = block.input as Partial<VehicleSpecResult> & Record<string, unknown>;
+    const data: ChatCompletionResponse = await res.json();
+    const args = data.choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments;
+    if (!args) return null;
+
+    const out = JSON.parse(args) as Partial<VehicleSpecResult> & Record<string, unknown>;
 
     const fuelType =
       typeof out.fuelType === "string" && (FUEL_TYPES as readonly string[]).includes(out.fuelType)
@@ -140,7 +161,7 @@ export async function lookupVehicleSpec(input: VehicleSpecLookup): Promise<Vehic
       imageHint: typeof out.imageHint === "string" ? out.imageHint : null,
     };
   } catch (err) {
-    console.error("[vehicle-spec-lookup] Claude API failed:", err);
+    console.error("[vehicle-spec-lookup] Z.AI request failed:", err);
     return null;
   }
 }
