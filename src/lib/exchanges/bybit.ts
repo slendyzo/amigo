@@ -319,7 +319,14 @@ export class BybitClient implements ExchangeClient {
       }
       return map;
     } catch (err) {
-      console.warn(`[Bybit] ${accountType} wallet fetch failed:`, err instanceof Error ? err.message : err);
+      const msg = err instanceof Error ? err.message : String(err);
+      // UTA-migrated accounts return "accountType only support UNIFIED" when
+      // SPOT is requested — that's expected, not an error. Log as info.
+      if (accountType === "SPOT" && /only support UNIFIED/i.test(msg)) {
+        console.log("[Bybit] SPOT wallet skipped (UTA account — balances live in UNIFIED)");
+      } else {
+        console.warn(`[Bybit] ${accountType} wallet fetch failed:`, msg);
+      }
       return new Map();
     }
   }
@@ -347,22 +354,38 @@ export class BybitClient implements ExchangeClient {
 
   // Earn (Savings / On-chain Earn) — separate API surface; coin is staked.
   // We treat the staked amount as "locked" so Kraken-like UI rendering works.
+  // Bybit's Earn endpoint requires a `category` parameter; the two main ones
+  // are FlexibleSaving and OnChain. We try both, tolerating "no positions"
+  // and "category not enabled" as silent zero results.
   private async fetchEarnBalances(): Promise<Map<string, number>> {
     type Resp = {
-      list: Array<{ coin: string; amount: string }>;
+      list?: Array<{ coin: string; amount?: string; principal?: string }>;
     };
-    try {
-      const res = await this.privateGet<Resp>("/v5/earn/position", {});
-      const map = new Map<string, number>();
-      for (const c of res.list ?? []) {
-        const qty = Number(c.amount);
-        if (qty > 0) map.set(c.coin, qty);
+
+    const map = new Map<string, number>();
+
+    for (const category of ["FlexibleSaving", "OnChain"] as const) {
+      try {
+        const res = await this.privateGet<Resp>("/v5/earn/position", {
+          category,
+        });
+        for (const c of res.list ?? []) {
+          const qty = Number(c.amount ?? c.principal ?? 0);
+          if (qty > 0) map.set(c.coin, (map.get(c.coin) ?? 0) + qty);
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        // "Invalid parameter" / "category not enabled" / 180001 etc. — user
+        // doesn't use this Earn product. Log at info level, not warn.
+        if (/Invalid parameter|180001|180002/i.test(msg)) {
+          console.log(`[Bybit] Earn ${category} not in use (skipped)`);
+        } else {
+          console.warn(`[Bybit] Earn ${category} fetch failed:`, msg);
+        }
       }
-      return map;
-    } catch (err) {
-      console.warn("[Bybit] Earn position fetch failed:", err instanceof Error ? err.message : err);
-      return new Map();
     }
+
+    return map;
   }
 
   // ─── getPositions ─────────────────────────────────────────────────────────────
