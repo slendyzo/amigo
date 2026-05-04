@@ -1556,6 +1556,20 @@
       "PERSONAL_LOAN": "Crédito pessoal",
       "STUDENT_LOAN": "Crédito de estudante",
       "OTHER": "Outro passivo"
-    }
+    },
+    "mileage": "Quilometragem",
+    "chartValueLabel": "Valor",
+    "totalCostOfOwnership": "Custo total de posse",
+    "monthlySuffix": "/mês",
+    "linkedSuffix": "{count} ligadas",
+    "noLinkedExpenses": "Ainda não há despesas ligadas. Liga recibos (combustível, pneus, IUC) a partir da janela de despesas para registar o TCO.",
+    "aprSuffix": "{rate}% TAEG",
+    "ofAmount": "de {amount}",
+    "failedToMarkSold": "Não foi possível marcar como vendido",
+    "genericError": "Algo correu mal",
+    "salePriceWithCurrency": "Preço de venda ({currency})",
+    "deleteVehicleConfirm": "Eliminar este veículo? As despesas ligadas serão desligadas mas mantidas.",
+    "generationPrefix": "Geração",
+    "backToNetWorth": "Património"
   }
 }

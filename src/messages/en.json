@@ -1587,6 +1587,20 @@
       "PERSONAL_LOAN": "Personal loan",
       "STUDENT_LOAN": "Student loan",
       "OTHER": "Other liability"
-    }
+    },
+    "mileage": "Mileage",
+    "chartValueLabel": "Value",
+    "totalCostOfOwnership": "Total cost of ownership",
+    "monthlySuffix": "/mo",
+    "linkedSuffix": "{count} linked",
+    "noLinkedExpenses": "No linked expenses yet. Link receipts (fuel, tires, IUC) from the expense modal to track TCO.",
+    "aprSuffix": "{rate}% APR",
+    "ofAmount": "of {amount}",
+    "failedToMarkSold": "Failed to mark as sold",
+    "genericError": "Something went wrong",
+    "salePriceWithCurrency": "Sale price ({currency})",
+    "deleteVehicleConfirm": "Delete this vehicle? Linked expenses will be unlinked but kept.",
+    "generationPrefix": "Gen",
+    "backToNetWorth": "Net Worth"
   }
 }

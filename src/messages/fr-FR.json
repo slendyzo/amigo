@@ -1558,6 +1558,20 @@
       "PERSONAL_LOAN": "Crédit personnel",
       "STUDENT_LOAN": "Prêt étudiant",
       "OTHER": "Autre dette"
-    }
+    },
+    "mileage": "Kilométrage",
+    "chartValueLabel": "Valeur",
+    "totalCostOfOwnership": "Coût total de possession",
+    "monthlySuffix": "/mois",
+    "linkedSuffix": "{count} liées",
+    "noLinkedExpenses": "Aucune dépense liée pour l'instant. Liez vos reçus (carburant, pneus, taxes) depuis la fenêtre de dépenses pour suivre le coût total.",
+    "aprSuffix": "{rate}% TAEG",
+    "ofAmount": "sur {amount}",
+    "failedToMarkSold": "Impossible de marquer comme vendu",
+    "genericError": "Une erreur s'est produite",
+    "salePriceWithCurrency": "Prix de vente ({currency})",
+    "deleteVehicleConfirm": "Supprimer ce véhicule ? Les dépenses liées seront déliées mais conservées.",
+    "generationPrefix": "Gén.",
+    "backToNetWorth": "Patrimoine"
   }
 }

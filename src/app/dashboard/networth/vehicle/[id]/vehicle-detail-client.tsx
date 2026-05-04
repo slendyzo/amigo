@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   ArrowLeft,
   Car,
@@ -85,6 +86,8 @@ type Props = {
 
 export default function VehicleDetailClient({ asset, vehicle, liabilities, valuationHistory, expenses }: Props) {
   const router = useRouter();
+  const t = useTranslations("rwa");
+  const tDashboard = useTranslations("dashboard");
   const [showSell, setShowSell] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -109,7 +112,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
   const monthlyTCO = monthsOwned > 0 ? linkedExpensesTotal / monthsOwned : 0;
 
   const handleDelete = async () => {
-    if (!confirm("Delete this vehicle? Linked expenses will be unlinked but kept.")) return;
+    if (!confirm(t("deleteVehicleConfirm"))) return;
     setBusy(true);
     const res = await fetch(`/api/assets/${asset.id}`, { method: "DELETE" });
     if (res.ok) {
@@ -125,7 +128,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
         href="/dashboard/networth"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
-        <ArrowLeft className="h-4 w-4" /> Net Worth
+        <ArrowLeft className="h-4 w-4" /> {t("backToNetWorth")}
       </Link>
 
       {/* Hero */}
@@ -151,7 +154,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
               <div className="mt-4 flex flex-wrap gap-1.5">
                 {vehicle.fuelType && <Chip>{vehicle.fuelType}</Chip>}
                 {vehicle.bodyType && <Chip>{vehicle.bodyType}</Chip>}
-                {vehicle.generation && <Chip>Gen {vehicle.generation}</Chip>}
+                {vehicle.generation && <Chip>{t("generationPrefix")} {vehicle.generation}</Chip>}
                 {vehicle.color && <Chip>{vehicle.color}</Chip>}
               </div>
             </div>
@@ -162,7 +165,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
                   onClick={() => setShowSell(true)}
                   className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
                 >
-                  Mark as sold
+                  {t("markAsSold")}
                 </button>
               )}
               <button
@@ -179,9 +182,9 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
 
       {/* Stats row */}
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label="Cost basis" value={formatCurrency(asset.purchasePriceEur, "EUR")} />
+        <Stat label={t("costBasis")} value={formatCurrency(asset.purchasePriceEur, "EUR")} />
         <Stat
-          label={sold ? "Sale price" : "Estimated value"}
+          label={sold ? t("salePrice") : t("estimatedValue")}
           value={formatCurrency(current, "EUR")}
           accent={
             sold ? null : (
@@ -189,22 +192,22 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
             )
           }
         />
-        <Stat label="Months owned" value={String(monthsOwned)} />
+        <Stat label={t("monthsOwned")} value={String(monthsOwned)} />
         {realizedPnL != null ? (
           <Stat
-            label="Realized P&L"
+            label={t("realizedPnL")}
             value={`${realizedPnL > 0 ? "+" : ""}${formatCurrency(realizedPnL, "EUR")}`}
             valueClass={realizedPnL > 0 ? "text-emerald-500" : "text-rose-500"}
           />
         ) : (
-          <Stat label="Mileage" value={vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : "—"} />
+          <Stat label={t("mileage")} value={vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : "—"} />
         )}
       </div>
 
       {/* Value-over-time chart */}
       {chartData.length > 1 && (
         <section className="rounded-2xl border border-border/60 bg-card/80 p-5">
-          <h2 className="text-xs font-bold uppercase tracking-[0.8px] text-muted-foreground">Value over time</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.8px] text-muted-foreground">{t("valueOverTime")}</h2>
           <div className="mt-3 h-[220px] w-full">
             <ResponsiveContainer>
               <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
@@ -217,7 +220,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
                     borderRadius: 8,
                     fontSize: 12,
                   }}
-                  formatter={(v) => [formatCurrency(typeof v === "number" ? v : Number(v), "EUR"), "Value"]}
+                  formatter={(v) => [formatCurrency(typeof v === "number" ? v : Number(v), "EUR"), t("chartValueLabel")]}
                 />
                 <Line
                   type="monotone"
@@ -236,7 +239,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
       {/* Loans */}
       {liabilities.length > 0 && (
         <section className="space-y-2">
-          <h2 className="text-xs font-bold uppercase tracking-[0.8px] text-muted-foreground">Loan</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.8px] text-muted-foreground">{t("loan")}</h2>
           {liabilities.map((l) => (
             <LoanCard key={l.id} loan={l} />
           ))}
@@ -246,14 +249,14 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
       {/* TCO */}
       <section className="space-y-2">
         <div className="flex items-baseline justify-between">
-          <h2 className="text-xs font-bold uppercase tracking-[0.8px] text-muted-foreground">Total cost of ownership</h2>
+          <h2 className="text-xs font-bold uppercase tracking-[0.8px] text-muted-foreground">{t("totalCostOfOwnership")}</h2>
           <p className="text-xs text-muted-foreground tabular-nums">
-            {formatCurrency(monthlyTCO, "EUR")}/mo · {expenses.length} linked
+            {formatCurrency(monthlyTCO, "EUR")}{t("monthlySuffix")} · {t("linkedSuffix", { count: expenses.length })}
           </p>
         </div>
         {expenses.length === 0 ? (
           <p className="text-sm text-muted-foreground">
-            No linked expenses yet. Link receipts (fuel, tires, IUC) from the expense modal to track TCO.
+            {t("noLinkedExpenses")}
           </p>
         ) : (
           <ul className="divide-y divide-border/40 rounded-2xl border border-border/60 bg-card/80">
@@ -262,7 +265,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
                 <div className="min-w-0">
                   <p className="truncate font-medium">{e.name}</p>
                   <p className="text-xs text-muted-foreground">
-                    {new Date(e.date).toLocaleDateString()} · {e.categoryName ?? "Uncategorized"}
+                    {new Date(e.date).toLocaleDateString()} · {e.categoryName ?? tDashboard("uncategorized")}
                   </p>
                 </div>
                 <p className="ml-3 tabular-nums">{formatCurrency(e.amountEur, "EUR")}</p>
@@ -332,6 +335,7 @@ function DeltaInline({ delta }: { delta: number }) {
 }
 
 function LoanCard({ loan }: { loan: Liability }) {
+  const t = useTranslations("rwa");
   const paidOff = loan.status === "PAID_OFF";
   const progressPct = loan.principalEur > 0
     ? Math.min(100, ((loan.principalEur - loan.currentBalanceEur) / loan.principalEur) * 100)
@@ -349,12 +353,12 @@ function LoanCard({ loan }: { loan: Liability }) {
             <p className="text-xs text-muted-foreground">
               {paidOff ? (
                 <span className="inline-flex items-center gap-1 text-emerald-500">
-                  <CheckCircle className="h-3 w-3" /> Paid off
+                  <CheckCircle className="h-3 w-3" /> {t("paidOff")}
                 </span>
               ) : (
                 <>
-                  {loan.monthlyPayment != null && `${formatCurrency(loan.monthlyPayment, loan.currency)}/mo`}
-                  {loan.interestRate != null && ` · ${loan.interestRate}% APR`}
+                  {loan.monthlyPayment != null && `${formatCurrency(loan.monthlyPayment, loan.currency)}${t("monthlySuffix")}`}
+                  {loan.interestRate != null && ` · ${t("aprSuffix", { rate: loan.interestRate })}`}
                 </>
               )}
             </p>
@@ -365,7 +369,7 @@ function LoanCard({ loan }: { loan: Liability }) {
             {formatCurrency(loan.currentBalanceEur, "EUR")}
           </p>
           <p className="text-xs text-muted-foreground tabular-nums">
-            of {formatCurrency(loan.principalEur, "EUR")}
+            {t("ofAmount", { amount: formatCurrency(loan.principalEur, "EUR") })}
           </p>
         </div>
       </div>
@@ -392,6 +396,8 @@ function SellModal({
   onClose: () => void;
   onSold: () => void;
 }) {
+  const t = useTranslations("rwa");
+  const tCommon = useTranslations("common");
   const [salePrice, setSalePrice] = useState("");
   const [soldAt, setSoldAt] = useState(() => new Date().toISOString().slice(0, 10));
   const [busy, setBusy] = useState(false);
@@ -415,11 +421,11 @@ function SellModal({
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e.error || "Failed to mark as sold");
+        throw new Error(e.error || t("failedToMarkSold"));
       }
       onSold();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Something went wrong");
+      setError(e instanceof Error ? e.message : t("genericError"));
     } finally {
       setBusy(false);
     }
@@ -444,7 +450,7 @@ function SellModal({
       >
         <header className="mb-4 flex items-start justify-between">
           <div>
-            <h2 className="text-lg font-semibold">Mark as sold</h2>
+            <h2 className="text-lg font-semibold">{t("markAsSold")}</h2>
             <p className="text-xs text-muted-foreground">{asset.name}</p>
           </div>
           <button onClick={onClose} disabled={busy} className="rounded-lg p-1 text-muted-foreground hover:bg-muted">
@@ -455,7 +461,7 @@ function SellModal({
         <div className="space-y-3">
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Sale price ({asset.purchaseCurrency})
+              {t("salePriceWithCurrency", { currency: asset.purchaseCurrency })}
             </span>
             <input
               type="number"
@@ -470,7 +476,7 @@ function SellModal({
           </label>
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
-              Sold on
+              {t("soldOn")}
             </span>
             <input
               type="date"
@@ -482,7 +488,10 @@ function SellModal({
 
           {willCloseLoan && activeLoan && (
             <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
-              This sale will pay off the &ldquo;{activeLoan.name}&rdquo; loan ({formatCurrency(activeLoan.currentBalanceEur, "EUR")} outstanding) and stop the recurring payment.
+              {t("willCloseLoan", {
+                name: activeLoan.name,
+                balance: formatCurrency(activeLoan.currentBalanceEur, "EUR"),
+              })}
             </p>
           )}
           {error && (
@@ -492,7 +501,7 @@ function SellModal({
 
         <footer className="mt-5 flex items-center justify-end gap-2">
           <button onClick={onClose} disabled={busy} className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
-            Cancel
+            {tCommon("cancel")}
           </button>
           <button
             onClick={submit}
@@ -500,7 +509,7 @@ function SellModal({
             className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-            Mark as sold
+            {t("markAsSold")}
           </button>
         </footer>
       </motion.div>
