@@ -207,6 +207,8 @@ model Workspace {
   recurringTemplates RecurringTemplate[]
   incomes      Income[]
   exchangeConnections ExchangeConnection[]
+  realAssets   RealAsset[]
+  liabilities  Liability[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -373,6 +375,9 @@ model Expense {
   splitCount        Int?              // Number of people splitting (null = not split)
   splitData         String?   @db.Text // JSON array of {label, amount, locked} per person
 
+  // Real-world asset linkage (vehicle TCO, etc.)
+  realAssetId       String?
+
   // Relations
   workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   bankAccount       BankAccount?       @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
@@ -380,6 +385,7 @@ model Expense {
   projects          Project[]          // Many-to-many: expense can have multiple tags
   recurringTemplate RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
   importLog         ImportLog?         @relation(fields: [importLogId], references: [id], onDelete: SetNull)
+  realAsset         RealAsset?         @relation(fields: [realAssetId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -388,6 +394,7 @@ model Expense {
   @@index([workspaceId, type])
   @@index([workspaceId, categoryId])
   @@index([importLogId])
+  @@index([realAssetId])
   @@map("expenses")
 }
 
@@ -425,6 +432,7 @@ model RecurringTemplate {
   bankAccount BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
   projects    Project[]    // Many-to-many: tag templates with projects
   expenses    Expense[]
+  liabilities Liability[]  @relation("LiabilityTemplate") // Loans linked to this monthly payment
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -733,4 +741,179 @@ model ExchangeDeposit {
   @@unique([exchangeConnectionId, externalId])
   @@index([exchangeConnectionId])
   @@map("exchange_deposits")
+}
+
+// ============================================================================
+// REAL-WORLD ASSETS (Vehicles, Real Estate)
+// ============================================================================
+
+enum RealAssetType {
+  VEHICLE
+  PROPERTY
+}
+
+enum RealAssetStatus {
+  ACTIVE
+  SOLD
+}
+
+enum VehicleFuelType {
+  PETROL
+  DIESEL
+  HYBRID
+  EV
+  OTHER
+}
+
+enum VehicleBodyType {
+  SEDAN
+  HATCHBACK
+  SUV
+  WAGON
+  COUPE
+  CONVERTIBLE
+  TRUCK
+  OTHER
+}
+
+enum LiabilityType {
+  VEHICLE_LOAN
+  MORTGAGE
+  CREDIT_CARD
+  PERSONAL_LOAN
+  STUDENT_LOAN
+  OTHER
+}
+
+enum LiabilityStatus {
+  ACTIVE
+  PAID_OFF
+  DEFAULTED
+}
+
+model RealAsset {
+  id          String          @id @default(cuid())
+  workspaceId String
+  type        RealAssetType
+  name        String          @db.VarChar(255)
+  status      RealAssetStatus @default(ACTIVE)
+
+  // Purchase
+  purchasePrice    Decimal  @db.Decimal(14, 2)
+  purchaseCurrency String   @default("EUR") @db.VarChar(3)
+  purchasePriceEur Decimal  @db.Decimal(14, 2)
+  purchaseDate     DateTime
+
+  // Current valuation (refreshed by cron + on-demand)
+  currentValue          Decimal?  @db.Decimal(14, 2)
+  currentValueEur       Decimal?  @db.Decimal(14, 2)
+  currentValueUpdatedAt DateTime?
+  currentValueSource    String?   @db.VarChar(50) // "heuristic", "stand_virtual", "manual", "sale"
+
+  // Sale (status=SOLD)
+  soldAt       DateTime?
+  salePrice    Decimal? @db.Decimal(14, 2)
+  salePriceEur Decimal? @db.Decimal(14, 2)
+  saleCurrency String?  @db.VarChar(3)
+
+  // Display
+  imageUrl String? @db.VarChar(500)
+  notes    String? @db.VarChar(2000)
+
+  // Relations
+  workspace        Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  vehicle          Vehicle?
+  valuationHistory ValuationHistory[]
+  liabilities      Liability[]
+  expenses         Expense[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId, type, status])
+  @@index([workspaceId, status])
+  @@map("real_assets")
+}
+
+model Vehicle {
+  realAssetId String @id
+
+  brand      String  @db.VarChar(100)
+  model      String  @db.VarChar(100)
+  generation String? @db.VarChar(50) // e.g., "ND" for Miata
+  year       Int
+  trim       String? @db.VarChar(100)
+
+  mileage          Int?      // km
+  mileageUpdatedAt DateTime?
+
+  vin   String? @db.VarChar(17)
+  plate String? @db.VarChar(20)
+  color String? @db.VarChar(50)
+
+  fuelType VehicleFuelType?
+  bodyType VehicleBodyType?
+
+  realAsset RealAsset @relation(fields: [realAssetId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([brand, model])
+  @@map("vehicles")
+}
+
+model ValuationHistory {
+  id          String @id @default(cuid())
+  realAssetId String
+
+  value    Decimal @db.Decimal(14, 2)
+  valueEur Decimal @db.Decimal(14, 2)
+  currency String  @default("EUR") @db.VarChar(3)
+  source   String  @db.VarChar(50) // "heuristic", "stand_virtual", "manual", "sale"
+
+  recordedAt DateTime @default(now())
+
+  realAsset RealAsset @relation(fields: [realAssetId], references: [id], onDelete: Cascade)
+
+  @@index([realAssetId, recordedAt])
+  @@map("valuation_history")
+}
+
+model Liability {
+  id                  String  @id @default(cuid())
+  workspaceId         String
+  realAssetId         String? // Nullable: standalone liabilities (credit cards, personal loans)
+  recurringTemplateId String? // Nullable: linked monthly payment template
+
+  type     LiabilityType
+  name     String          @db.VarChar(255)
+  status   LiabilityStatus @default(ACTIVE)
+  currency String          @default("EUR") @db.VarChar(3)
+
+  // Loan parameters
+  principal      Decimal  @db.Decimal(14, 2)
+  principalEur   Decimal  @db.Decimal(14, 2)
+  interestRate   Decimal? @db.Decimal(7, 4) // Annual % e.g., 6.5000
+  termMonths     Int?
+  monthlyPayment Decimal? @db.Decimal(12, 2)
+  startDate      DateTime
+
+  // Computed (refreshed nightly via cron)
+  currentBalance    Decimal @db.Decimal(14, 2)
+  currentBalanceEur Decimal @db.Decimal(14, 2)
+
+  // Relations
+  workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  realAsset         RealAsset?         @relation(fields: [realAssetId], references: [id], onDelete: SetNull)
+  recurringTemplate RecurringTemplate? @relation("LiabilityTemplate", fields: [recurringTemplateId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId, status])
+  @@index([workspaceId, type])
+  @@index([realAssetId])
+  @@index([recurringTemplateId])
+  @@map("liabilities")
 }

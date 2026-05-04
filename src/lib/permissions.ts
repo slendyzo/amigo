@@ -34,7 +34,17 @@ export type Permission =
   | "project:manage"
   | "bank_account:manage"
   | "recurring:manage"
-  | "import:execute";
+  | "import:execute"
+  // Real-world assets (vehicles, real estate)
+  | "real_asset:read"
+  | "real_asset:create"
+  | "real_asset:update"
+  | "real_asset:delete"
+  // Liabilities (loans, credit cards, etc.)
+  | "liability:read"
+  | "liability:create"
+  | "liability:update"
+  | "liability:delete";
 
 /**
  * Permission matrix for each role
@@ -65,6 +75,15 @@ const ROLE_PERMISSIONS: Record<WorkspaceRole, Permission[]> = {
     "bank_account:manage",
     "recurring:manage",
     "import:execute",
+    // Real assets + liabilities
+    "real_asset:read",
+    "real_asset:create",
+    "real_asset:update",
+    "real_asset:delete",
+    "liability:read",
+    "liability:create",
+    "liability:update",
+    "liability:delete",
   ],
   ADMIN: [
     // Limited workspace control
@@ -88,6 +107,15 @@ const ROLE_PERMISSIONS: Record<WorkspaceRole, Permission[]> = {
     "bank_account:manage",
     "recurring:manage",
     "import:execute",
+    // Real assets + liabilities
+    "real_asset:read",
+    "real_asset:create",
+    "real_asset:update",
+    "real_asset:delete",
+    "liability:read",
+    "liability:create",
+    "liability:update",
+    "liability:delete",
   ],
   MEMBER: [
     // View only for workspace
@@ -100,6 +128,9 @@ const ROLE_PERMISSIONS: Record<WorkspaceRole, Permission[]> = {
     "expense:delete_own",
     // Can create expenses (as their own)
     "expense:create",
+    // Real assets + liabilities: read-only for members
+    "real_asset:read",
+    "liability:read",
   ],
 };
 
