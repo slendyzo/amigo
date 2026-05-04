@@ -21,8 +21,15 @@ interface Connection {
   lastSyncError: string | null;
   freeCash: number | null;
   freeCashCurrency: string | null;
+  freeCashEur: number | null;
+  freeCashRateEurPerUnit: number | null;
   isActive: boolean;
   _count: { assets: number };
+}
+
+interface FxMeta {
+  source: "live" | "static";
+  sourceDate: string | null; // ECB date if live, e.g., "2026-04-30"
 }
 
 interface Asset {
@@ -59,6 +66,7 @@ interface PortfolioClientProps {
   connections: Connection[];
   assets: Asset[];
   deposits: Deposit[];
+  fxMeta: FxMeta;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -91,27 +99,74 @@ export default function PortfolioClient({
   connections,
   assets,
   deposits,
+  fxMeta,
 }: PortfolioClientProps) {
   const t = useTranslations("portfolio");
   const router = useRouter();
-  const [isSyncing, setIsSyncing] = useState(false);
+
+  // Sync is kicked off detached on the server. We poll /api/portfolio for
+  // syncStatus transitions and reflect them locally. Initial value: true if
+  // any connection is currently SYNCING (e.g., user reloaded mid-sync).
+  const [isSyncing, setIsSyncing] = useState(() =>
+    connections.some((c) => c.syncStatus === "SYNCING")
+  );
   const [dismissedDeposits, setDismissedDeposits] = useState<Set<string>>(new Set());
 
-  // Background auto-sync when data is stale
+  // Poll /api/portfolio until no connection is in SYNCING state, then refresh.
+  // Hard-capped at 10 min to defend against runaway polling if something is wrong.
+  const pollUntilSynced = useCallback(async () => {
+    const POLL_INTERVAL_MS = 2000;
+    const POLL_TIMEOUT_MS = 10 * 60 * 1000;
+    const startedAt = Date.now();
+
+    while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+      try {
+        const res = await fetch("/api/portfolio");
+        if (!res.ok) continue;
+        const data = (await res.json()) as {
+          exchanges?: Array<{ syncStatus: string }>;
+        };
+        const stillSyncing = data.exchanges?.some(
+          (e) => e.syncStatus === "SYNCING"
+        );
+        if (!stillSyncing) {
+          setIsSyncing(false);
+          router.refresh();
+          return;
+        }
+      } catch {
+        // Transient network error — keep polling
+      }
+    }
+    // Timed out — give up on the spinner so the user isn't stuck
+    setIsSyncing(false);
+  }, [router]);
+
   const triggerSync = useCallback(async () => {
     if (isSyncing) return;
     setIsSyncing(true);
     try {
-      await fetch("/api/portfolio/sync", { method: "POST" });
-      router.refresh();
+      const res = await fetch("/api/portfolio/sync", { method: "POST" });
+      // 409 means a sync was already in flight — fine, just poll for it
+      if (!res.ok && res.status !== 409) {
+        setIsSyncing(false);
+        return;
+      }
     } catch {
-      // Sync failure is non-critical — page still shows last known data
-    } finally {
       setIsSyncing(false);
+      return;
     }
-  }, [isSyncing, router]);
+    void pollUntilSynced();
+  }, [isSyncing, pollUntilSynced]);
 
+  // On mount: if any connection is already SYNCING (process is mid-sync) just
+  // poll. If data is stale, trigger a fresh sync.
   useEffect(() => {
+    if (isSyncing) {
+      void pollUntilSynced();
+      return;
+    }
     const hasStaleConnection = connections.some((c) => isStale(c.lastSyncAt));
     if (hasStaleConnection) {
       triggerSync();
@@ -270,7 +325,12 @@ export default function PortfolioClient({
       )}
 
       {/* Summary Card */}
-      <PortfolioSummaryCard connections={connections} assets={assets} t={t} />
+      <PortfolioSummaryCard
+        connections={connections}
+        assets={assets}
+        fxMeta={fxMeta}
+        t={t}
+      />
 
       {/* Allocation Chart */}
       <AllocationChart assets={assets} />

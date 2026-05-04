@@ -2,6 +2,20 @@
 // Uses Frankfurter API (free, no API key, ECB data) with in-memory cache
 // Falls back to static rates if API fails
 
+// Stablecoin → fiat mapping. Stablecoins peg ~1:1 to a fiat currency, but
+// FX APIs (Frankfurter/ECB) don't list them. We treat them as their underlying
+// fiat for conversion so portfolio values priced in USDT/USDC don't quietly
+// fall back to rate=1 (which would mean "USDT == EUR" → ~16% undervaluation).
+const STABLE_TO_FIAT: Record<string, string> = {
+  USDT: "USD",
+  USDC: "USD",
+  DAI: "USD",
+  BUSD: "USD",
+  FDUSD: "USD",
+  TUSD: "USD",
+  PYUSD: "USD",
+};
+
 // Fallback rates: EUR per 1 unit of foreign currency (updated Feb 2026)
 const STATIC_RATES: Record<string, number> = {
   EUR: 1,
@@ -22,14 +36,30 @@ const STATIC_RATES: Record<string, number> = {
   CNY: 0.13,  // 1 CNY ≈ 0.13 EUR
 };
 
+// Track currencies we've already warned about to avoid log spam
+const warnedUnknownCurrencies = new Set<string>();
+
 // Cache for exchange rates (refreshed every hour for more current rates)
-let ratesCache: { rates: Record<string, number>; timestamp: number } | null = null;
+let ratesCache: {
+  rates: Record<string, number>;
+  timestamp: number;
+  source: "live" | "static";
+  sourceDate: string | null; // ECB date from Frankfurter, e.g. "2026-04-30"
+} | null = null;
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hour
 
-export async function getExchangeRates(): Promise<Record<string, number>> {
+async function getRatesWithMeta(): Promise<{
+  rates: Record<string, number>;
+  source: "live" | "static";
+  sourceDate: string | null;
+}> {
   // Return cached rates if still valid
   if (ratesCache && Date.now() - ratesCache.timestamp < CACHE_DURATION) {
-    return ratesCache.rates;
+    return {
+      rates: ratesCache.rates,
+      source: ratesCache.source,
+      sourceDate: ratesCache.sourceDate,
+    };
   }
 
   try {
@@ -43,7 +73,10 @@ export async function getExchangeRates(): Promise<Record<string, number>> {
       throw new Error(`Frankfurter API returned ${response.status}`);
     }
 
-    const data = await response.json();
+    const data = (await response.json()) as {
+      date?: string;
+      rates?: Record<string, number>;
+    };
 
     // Convert from EUR base to "how much EUR per 1 unit of currency"
     const rates: Record<string, number> = { EUR: 1 };
@@ -56,25 +89,58 @@ export async function getExchangeRates(): Promise<Record<string, number>> {
       }
     }
 
-    ratesCache = { rates, timestamp: Date.now() };
-    console.log(`[FOREX] Fetched live rates from Frankfurter (date: ${data.date})`);
-    return rates;
+    const sourceDate = data.date ?? null;
+    ratesCache = {
+      rates,
+      timestamp: Date.now(),
+      source: "live",
+      sourceDate,
+    };
+    console.log(`[FOREX] Fetched live rates from Frankfurter (date: ${sourceDate})`);
+    return { rates, source: "live", sourceDate };
   } catch (error) {
     console.error("[FOREX] Failed to fetch live rates, using static fallback:", error);
-    return STATIC_RATES;
+    return { rates: STATIC_RATES, source: "static", sourceDate: null };
   }
+}
+
+export async function getExchangeRates(): Promise<Record<string, number>> {
+  return (await getRatesWithMeta()).rates;
+}
+
+// For UI: get the rate snapshot's source + date (when was this rate set by the ECB?)
+export async function getExchangeRatesMeta(): Promise<{
+  source: "live" | "static";
+  sourceDate: string | null;
+}> {
+  const { source, sourceDate } = await getRatesWithMeta();
+  return { source, sourceDate };
 }
 
 export async function convertToEur(
   amount: number,
   fromCurrency: string
 ): Promise<{ amountEur: number; exchangeRate: number }> {
-  if (fromCurrency === "EUR") {
+  // Normalise stablecoins to their underlying fiat (USDT → USD, etc.)
+  const normalised = STABLE_TO_FIAT[fromCurrency] ?? fromCurrency;
+
+  if (normalised === "EUR") {
     return { amountEur: amount, exchangeRate: 1 };
   }
 
   const rates = await getExchangeRates();
-  const rate = rates[fromCurrency] || STATIC_RATES[fromCurrency] || 1;
+  const rate = rates[normalised] ?? STATIC_RATES[normalised];
+
+  if (rate === undefined) {
+    // No rate found anywhere — warn once per currency, fall back to 1
+    if (!warnedUnknownCurrencies.has(fromCurrency)) {
+      warnedUnknownCurrencies.add(fromCurrency);
+      console.warn(
+        `[FOREX] Unknown currency "${fromCurrency}" (normalised: "${normalised}") — using rate=1 as fallback. Add to STABLE_TO_FIAT or STATIC_RATES if needed.`
+      );
+    }
+    return { amountEur: amount, exchangeRate: 1 };
+  }
 
   return {
     amountEur: Number((amount * rate).toFixed(2)),
@@ -111,5 +177,6 @@ export function formatCurrency(
 
 // Get static rate for display (doesn't make API call)
 export function getStaticRate(currency: string): number {
-  return STATIC_RATES[currency] || 1;
+  const normalised = STABLE_TO_FIAT[currency] ?? currency;
+  return STATIC_RATES[normalised] ?? 1;
 }

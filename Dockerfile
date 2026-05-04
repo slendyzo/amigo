@@ -83,5 +83,5 @@ EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Warm up Neon DB before starting the server to avoid cold start on first request
+# Verify DB reachable before starting the server (fail fast on bad config)
 CMD ["sh", "-c", "node warmup-db.mjs && node server.js"]

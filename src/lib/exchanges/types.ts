@@ -9,6 +9,8 @@ export interface ExchangeClient {
   getTradeHistory(since?: Date): Promise<ExchangeTrade[]>;
 }
 
+export type PriceStatus = "OK" | "UNAVAILABLE" | "STALE";
+
 export type ExchangePosition = {
   symbol: string;
   name: string;
@@ -21,6 +23,12 @@ export type ExchangePosition = {
   unrealizedPnlPct: number;
   totalCost: number;
   currentValue: number;
+
+  // Optional cross-cutting fields used by the new sync correctness pipeline.
+  // Connectors that don't yet supply them get OK / null / undefined defaults.
+  priceStatus?: PriceStatus;
+  priceUnavailableReason?: string | null;
+  lockedQuantity?: number; // staked / earn / locked portion of the quantity
 };
 
 export type ExchangeAccountSummary = {

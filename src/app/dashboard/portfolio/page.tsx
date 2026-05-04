@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { reconcileStuckSyncs } from "@/lib/exchanges/sync";
+import { convertToEur, getExchangeRatesMeta } from "@/lib/currency";
 import PortfolioClient from "./portfolio-client";
 
 export const dynamic = "force-dynamic";
@@ -33,6 +35,9 @@ export default async function PortfolioPage() {
       </div>
     );
   }
+
+  // Self-heal stuck SYNCING rows (process restart mid-sync, etc.) before reading
+  await reconcileStuckSyncs(workspace.id);
 
   // Parallel fetch: connections (with asset counts), assets, unlinked deposits
   const [connections, assets, deposits] = await Promise.all([
@@ -98,19 +103,41 @@ export default async function PortfolioPage() {
     }),
   ]);
 
-  // Convert all Decimal fields to Number before passing to client
-  const connectionsForClient = connections.map((c) => ({
-    id: c.id,
-    provider: c.provider,
-    label: c.label,
-    syncStatus: c.syncStatus,
-    lastSyncAt: c.lastSyncAt ? c.lastSyncAt.toISOString() : null,
-    lastSyncError: c.lastSyncError ?? null,
-    freeCash: c.freeCash !== null ? Number(c.freeCash) : null,
-    freeCashCurrency: c.freeCashCurrency ?? null,
-    isActive: c.isActive,
-    _count: { assets: c._count.assets },
-  }));
+  // Compute per-connection freeCash in EUR (server-side so the client gets a
+  // single trusted number to sum + display). Per-currency native breakdown is
+  // also returned for the tooltip in PortfolioSummaryCard.
+  const fxMeta = await getExchangeRatesMeta();
+
+  const connectionsForClient = await Promise.all(
+    connections.map(async (c) => {
+      const freeCashNative = c.freeCash !== null ? Number(c.freeCash) : null;
+      const freeCashCurrency = c.freeCashCurrency ?? null;
+
+      let freeCashEur: number | null = null;
+      let freeCashRateEurPerUnit: number | null = null;
+
+      if (freeCashNative !== null && freeCashCurrency) {
+        const conv = await convertToEur(freeCashNative, freeCashCurrency);
+        freeCashEur = conv.amountEur;
+        freeCashRateEurPerUnit = conv.exchangeRate;
+      }
+
+      return {
+        id: c.id,
+        provider: c.provider,
+        label: c.label,
+        syncStatus: c.syncStatus,
+        lastSyncAt: c.lastSyncAt ? c.lastSyncAt.toISOString() : null,
+        lastSyncError: c.lastSyncError ?? null,
+        freeCash: freeCashNative,
+        freeCashCurrency,
+        freeCashEur,
+        freeCashRateEurPerUnit,
+        isActive: c.isActive,
+        _count: { assets: c._count.assets },
+      };
+    })
+  );
 
   const assetsForClient = assets.map((a) => ({
     id: a.id,
@@ -154,6 +181,7 @@ export default async function PortfolioPage() {
       connections={connectionsForClient}
       assets={assetsForClient}
       deposits={depositsForClient}
+      fxMeta={fxMeta}
     />
   );
 }

@@ -111,8 +111,11 @@ nano .env
 Edit the file with these values:
 
 ```env
-# Get this from https://console.neon.tech - your project's connection string
-DATABASE_URL="postgresql://neondb_owner:YOUR_PASSWORD@YOUR_HOST.neon.tech/neondb?sslmode=require"
+# Self-hosted Postgres (docker-compose service named "db")
+DATABASE_URL="postgresql://amigo:YOUR_DB_PASSWORD@db:5432/amigo"
+
+# Postgres password used by the docker-compose db service
+POSTGRES_PASSWORD="generate-with-openssl-rand-base64-24"
 
 # Generate a random secret (run this command and paste the output):
 # openssl rand -base64 32
@@ -341,7 +344,7 @@ docker compose logs
 
 ### Database connection failed
 - Check your `DATABASE_URL` in `.env`
-- Make sure Neon database is active (it may sleep after inactivity)
+- Make sure the `db` service is running: `docker compose ps`
 - Test connection: `docker compose exec amigo node -e "console.log('test')"`
 
 ### SSH deploy fails

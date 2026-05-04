@@ -6,37 +6,57 @@ import {
   ExchangeDepositRecord,
   ExchangeTrade,
 } from "./types";
+import { convertToEur } from "@/lib/currency";
 
 const BASE_URL = "https://api.kraken.com";
 
-// ---------------------------------------------------------------------------
-// Asset code normalisation
-// Kraken uses non-standard codes like XXBT, XETH, ZUSD, ZEUR etc.
-// ---------------------------------------------------------------------------
-function normaliseAsset(raw: string): string {
-  const known: Record<string, string> = {
-    XXBT: "BTC",
-    XBT: "BTC",
-    XETH: "ETH",
-    ZUSD: "USD",
-    XXLM: "XLM",
-    ZEUR: "EUR",
-    ZGBP: "GBP",
-  };
-  if (known[raw]) return known[raw];
-  // Strip leading X or Z when the result would be a 3-char ticker
-  if ((raw.startsWith("X") || raw.startsWith("Z")) && raw.length === 4) {
-    return raw.slice(1);
-  }
-  return raw;
-}
+// ───────────────────────────────────────────────────────────────────────────────
+// What's special about Kraken
+//   - Asset codes are non-standard: XXBT/XBT/XETH/ZUSD/ZEUR etc.
+//   - Staked/locked balances appear with suffixes: ATOM.S, DOT.S, ETH2.S, KSM.B
+//     The .S/.B/.M/.HOLD/.F/.P suffix means the user owns the asset but it's
+//     locked. We MERGE these into the canonical symbol so the UI shows one row.
+//   - Trade pairs use legacy concatenated codes: XXBTZEUR, MATICEUR, SHIBEUR.
+//     We rely on /0/public/AssetPairs to map (base, quote) authoritatively
+//     instead of slicing strings.
+//   - Many low-cap pairs only quote in USD/USDT/USDC, not EUR.
+//   - /0/private/TradesHistory returns max 50 trades per page; must paginate
+//     via the `ofs` (offset) query param.
+//   - Rate-limited: starter tier max 15, decay 0.33/sec. Trade endpoints cost 2.
+// ───────────────────────────────────────────────────────────────────────────────
 
-const FIAT_CODES = new Set(["EUR", "USD", "GBP", "ZEUR", "ZUSD", "ZGBP"]);
-const CASH_CODES = new Set([...FIAT_CODES, "USDC", "USDT", "DAI"]);
+// Suffixes Kraken appends to staked / bonded / locked / margin balances.
+// These are stripped to find the canonical symbol; the suffix portion is
+// summed separately into lockedQuantity.
+const LOCKED_SUFFIX_RE = /\.(S|B|M|F|P|HOLD)$/;
 
-// ---------------------------------------------------------------------------
+// Hard-coded fallback for the common Kraken codes that pre-date AssetPairs.
+// Used only when the Assets-endpoint lookup is missing (e.g., dust assets that
+// got listed/delisted between sync calls). AssetPairs is the source of truth.
+const LEGACY_NORMALISE: Record<string, string> = {
+  XXBT: "BTC",
+  XBT: "BTC",
+  XETH: "ETH",
+  ZUSD: "USD",
+  ZEUR: "EUR",
+  ZGBP: "GBP",
+  ZJPY: "JPY",
+  ZCAD: "CAD",
+  ZCHF: "CHF",
+  ZAUD: "AUD",
+};
+
+const FIAT_CODES = new Set(["EUR", "USD", "GBP", "JPY", "CAD", "CHF", "AUD"]);
+const STABLE_CODES = new Set(["USDT", "USDC", "DAI", "BUSD", "FDUSD", "TUSD", "PYUSD"]);
+const CASH_CODES = new Set([...FIAT_CODES, ...STABLE_CODES]);
+
+// Quote-currency preference order when picking a ticker pair for an asset.
+// Tried first → last; we use the first one that exists in AssetPairs.
+const QUOTE_PREFERENCE = ["EUR", "USD", "USDT", "USDC", "GBP"] as const;
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Rate limiter — Starter tier: max 15, decay 0.33/sec, ledger/trade cost 2
-// ---------------------------------------------------------------------------
+// ───────────────────────────────────────────────────────────────────────────────
 class RateLimiter {
   private counter = 0;
   private lastDecay = Date.now();
@@ -65,9 +85,27 @@ function sleep(ms: number) {
   return new Promise<void>((resolve) => setTimeout(resolve, ms));
 }
 
-// ---------------------------------------------------------------------------
+// ───────────────────────────────────────────────────────────────────────────────
+// Metadata caches — populated lazily per client instance, refreshed per sync
+// ───────────────────────────────────────────────────────────────────────────────
+
+type KrakenAssetInfo = { altname: string; decimals: number };
+type KrakenPairInfo = { base: string; quote: string; pairKey: string };
+
+interface MetadataMaps {
+  // raw code (e.g., "XXBT", "XATOM", "MATIC") → canonical symbol ("BTC", "ATOM", "MATIC")
+  assetByCode: Map<string, string>;
+  // canonical symbol (e.g., "BTC") → raw code (for pair lookup against AssetPairs)
+  rawByCanonical: Map<string, string>;
+  // pairKey (e.g., "XXBTZEUR", "MATICEUR") → { base, quote, pairKey }
+  pairByKey: Map<string, KrakenPairInfo>;
+  // canonical-symbol-pair "BTC|EUR" → pairKey, used for fast lookup
+  pairByBaseQuote: Map<string, string>;
+}
+
+// ───────────────────────────────────────────────────────────────────────────────
 // Kraken client
-// ---------------------------------------------------------------------------
+// ───────────────────────────────────────────────────────────────────────────────
 export class KrakenClient implements ExchangeClient {
   readonly provider = "KRAKEN" as const;
   private readonly apiKey: string;
@@ -75,6 +113,9 @@ export class KrakenClient implements ExchangeClient {
   private readonly rateLimiter = new RateLimiter();
   private lastNonce = 0;
   private requestQueue: Promise<unknown> = Promise.resolve();
+
+  // Metadata is loaded once per client instance lifetime (one sync = one instance).
+  private metadataPromise: Promise<MetadataMaps> | null = null;
 
   constructor(apiKey: string, apiSecret: string) {
     this.apiKey = apiKey;
@@ -87,9 +128,7 @@ export class KrakenClient implements ExchangeClient {
     return this.lastNonce;
   }
 
-  // -------------------------------------------------------------------------
-  // Signature generation
-  // -------------------------------------------------------------------------
+  // ─── Signature ────────────────────────────────────────────────────────────────
   private sign(path: string, nonce: number, body: string): string {
     const message = nonce + body;
     const sha256 = crypto.createHash("sha256").update(message).digest();
@@ -102,9 +141,7 @@ export class KrakenClient implements ExchangeClient {
     return hmac;
   }
 
-  // -------------------------------------------------------------------------
-  // Private POST request
-  // -------------------------------------------------------------------------
+  // ─── Private POST ─────────────────────────────────────────────────────────────
   private privatePost(
     path: string,
     params: Record<string, string | number> = {},
@@ -161,9 +198,7 @@ export class KrakenClient implements ExchangeClient {
     return json.result ?? {};
   }
 
-  // -------------------------------------------------------------------------
-  // Public GET request
-  // -------------------------------------------------------------------------
+  // ─── Public GET ───────────────────────────────────────────────────────────────
   private async publicGet(
     path: string,
     params: Record<string, string> = {}
@@ -188,9 +223,123 @@ export class KrakenClient implements ExchangeClient {
     return json.result ?? {};
   }
 
-  // -------------------------------------------------------------------------
-  // testConnection
-  // -------------------------------------------------------------------------
+  // ─── Metadata: AssetPairs + Assets, cached per instance ───────────────────────
+  private async loadMetadata(): Promise<MetadataMaps> {
+    if (this.metadataPromise) return this.metadataPromise;
+
+    this.metadataPromise = (async () => {
+      const [assets, pairs] = await Promise.all([
+        this.publicGet("/0/public/Assets") as Promise<
+          Record<string, KrakenAssetInfo>
+        >,
+        this.publicGet("/0/public/AssetPairs") as Promise<
+          Record<string, { base: string; quote: string; altname?: string; wsname?: string }>
+        >,
+      ]);
+
+      // Asset map: rawCode → canonical altname (e.g., XXBT → XBT)
+      // Then we additionally normalise the altname (XBT → BTC) via LEGACY_NORMALISE.
+      const assetByCode = new Map<string, string>();
+      const rawByCanonical = new Map<string, string>();
+
+      for (const [rawCode, info] of Object.entries(assets)) {
+        const altname = info.altname ?? rawCode;
+        const canonical = LEGACY_NORMALISE[altname] ?? altname;
+        assetByCode.set(rawCode, canonical);
+        rawByCanonical.set(canonical, rawCode);
+      }
+
+      // Pair map: pairKey → { base, quote }, base/quote stored as canonical symbols
+      const pairByKey = new Map<string, KrakenPairInfo>();
+      const pairByBaseQuote = new Map<string, string>();
+
+      for (const [pairKey, info] of Object.entries(pairs)) {
+        // Skip darkpool pairs (suffix ".d") — they share quotes with the regular pair
+        if (pairKey.endsWith(".d")) continue;
+
+        const baseCanonical =
+          assetByCode.get(info.base) ??
+          LEGACY_NORMALISE[info.base] ??
+          info.base;
+        const quoteCanonical =
+          assetByCode.get(info.quote) ??
+          LEGACY_NORMALISE[info.quote] ??
+          info.quote;
+
+        pairByKey.set(pairKey, {
+          base: baseCanonical,
+          quote: quoteCanonical,
+          pairKey,
+        });
+        pairByBaseQuote.set(`${baseCanonical}|${quoteCanonical}`, pairKey);
+      }
+
+      return { assetByCode, rawByCanonical, pairByKey, pairByBaseQuote };
+    })();
+
+    return this.metadataPromise;
+  }
+
+  // ─── Asset code normalisation ─────────────────────────────────────────────────
+  // Strips locked-suffix and resolves to canonical symbol via Assets map.
+  // Returns { canonical, isLocked } so callers can split liquid vs locked.
+  private normaliseAsset(
+    rawCode: string,
+    metadata: MetadataMaps
+  ): { canonical: string; isLocked: boolean } {
+    const isLocked = LOCKED_SUFFIX_RE.test(rawCode);
+    const stripped = isLocked ? rawCode.replace(LOCKED_SUFFIX_RE, "") : rawCode;
+
+    // Try Assets map first (authoritative)
+    const fromMap = metadata.assetByCode.get(stripped);
+    if (fromMap) return { canonical: fromMap, isLocked };
+
+    // Try legacy table (XXBT → BTC, ZEUR → EUR)
+    if (LEGACY_NORMALISE[stripped]) {
+      return { canonical: LEGACY_NORMALISE[stripped], isLocked };
+    }
+
+    // Heuristic last resort: 4-char codes starting with X or Z
+    if (
+      (stripped.startsWith("X") || stripped.startsWith("Z")) &&
+      stripped.length === 4
+    ) {
+      const guess = stripped.slice(1);
+      console.warn(
+        `[Kraken] Asset "${rawCode}" not in AssetPairs map — falling back to heuristic "${guess}"`
+      );
+      return { canonical: guess, isLocked };
+    }
+
+    return { canonical: stripped, isLocked };
+  }
+
+  // ─── Resolve trade pair → { baseSymbol, quoteCurrency } ────────────────────────
+  // Replaces the broken slice() heuristic. Returns null if pair unknown.
+  private resolvePair(
+    pairKey: string,
+    metadata: MetadataMaps
+  ): { baseSymbol: string; quoteCurrency: string } | null {
+    const info = metadata.pairByKey.get(pairKey);
+    if (!info) return null;
+    return { baseSymbol: info.base, quoteCurrency: info.quote };
+  }
+
+  // ─── Pick the best pair to fetch a current price for an asset ──────────────────
+  // Returns { pairKey, quoteCurrency } from the first pair that exists in
+  // AssetPairs, in order of QUOTE_PREFERENCE. Returns null if none exist.
+  private pickBestPair(
+    canonicalSymbol: string,
+    metadata: MetadataMaps
+  ): { pairKey: string; quoteCurrency: string } | null {
+    for (const quote of QUOTE_PREFERENCE) {
+      const pairKey = metadata.pairByBaseQuote.get(`${canonicalSymbol}|${quote}`);
+      if (pairKey) return { pairKey, quoteCurrency: quote };
+    }
+    return null;
+  }
+
+  // ─── testConnection ───────────────────────────────────────────────────────────
   async testConnection(): Promise<{ success: boolean; error?: string }> {
     try {
       await this.privatePost("/0/private/Balance");
@@ -202,155 +351,258 @@ export class KrakenClient implements ExchangeClient {
     }
   }
 
-  // -------------------------------------------------------------------------
-  // getPositions
-  // -------------------------------------------------------------------------
+  // ─── getPositions ─────────────────────────────────────────────────────────────
   async getPositions(): Promise<ExchangePosition[]> {
-    // 1. Fetch all balances
-    const balances = await this.privatePost("/0/private/Balance");
+    // 1. Load AssetPairs/Assets metadata + balances in parallel
+    const [metadata, balances] = await Promise.all([
+      this.loadMetadata(),
+      this.privatePost("/0/private/Balance"),
+    ]);
 
-    // 2. Filter crypto assets with non-zero balance
-    const cryptoAssets = Object.entries(balances)
-      .filter(([rawCode, qty]) => {
-        const normalised = normaliseAsset(rawCode);
-        return !CASH_CODES.has(rawCode) && !CASH_CODES.has(normalised) && Number(qty) > 0;
-      })
-      .map(([rawCode, qty]) => ({
-        rawCode,
-        symbol: normaliseAsset(rawCode),
-        quantity: Number(qty),
-      }));
+    // 2. Merge balances by canonical symbol, splitting liquid vs locked
+    type MergedRow = { canonical: string; liquid: number; locked: number };
+    const mergedBySymbol = new Map<string, MergedRow>();
 
-    // 3. Build average buy prices from trade history (currency-aware)
-    const avgBuyPrices = await this.calcAverageBuyPrices();
+    for (const [rawCode, qtyStr] of Object.entries(balances)) {
+      const qty = Number(qtyStr);
+      if (qty <= 0) continue;
 
-    // 4. Fetch current prices and build positions
+      const { canonical, isLocked } = this.normaliseAsset(rawCode, metadata);
+
+      // Skip cash / stablecoin balances — those are freeCash, not positions
+      if (CASH_CODES.has(canonical)) continue;
+
+      const existing = mergedBySymbol.get(canonical) ?? {
+        canonical,
+        liquid: 0,
+        locked: 0,
+      };
+      if (isLocked) existing.locked += qty;
+      else existing.liquid += qty;
+      mergedBySymbol.set(canonical, existing);
+    }
+
+    const merged = Array.from(mergedBySymbol.values());
+    if (merged.length === 0) return [];
+
+    // 3. Compute average buy prices from full paginated trade history
+    const avgBuyPrices = await this.calcAverageBuyPrices(metadata);
+
+    // 4. Pick the best pair per asset and batch-fetch current prices
+    type PairAssignment = {
+      asset: MergedRow;
+      pairKey: string | null;
+      quoteCurrency: string | null;
+    };
+
+    const assignments: PairAssignment[] = merged.map((asset) => {
+      const buyInfo = avgBuyPrices[asset.canonical];
+      // Honour the asset's dominant trade currency if the pair exists; else pick best
+      let pickedPair: { pairKey: string; quoteCurrency: string } | null = null;
+
+      if (buyInfo?.currency) {
+        const pairKey = metadata.pairByBaseQuote.get(
+          `${asset.canonical}|${buyInfo.currency}`
+        );
+        if (pairKey) {
+          pickedPair = { pairKey, quoteCurrency: buyInfo.currency };
+        }
+      }
+      if (!pickedPair) {
+        pickedPair = this.pickBestPair(asset.canonical, metadata);
+      }
+
+      return {
+        asset,
+        pairKey: pickedPair?.pairKey ?? null,
+        quoteCurrency: pickedPair?.quoteCurrency ?? null,
+      };
+    });
+
+    // Batch ticker call: one request for all assignments that have a pair
+    const batchPairKeys = assignments
+      .map((a) => a.pairKey)
+      .filter((p): p is string => p !== null);
+
+    const tickerData = batchPairKeys.length
+      ? ((await this.publicGet("/0/public/Ticker", {
+          pair: batchPairKeys.join(","),
+        })) as Record<string, { c: [string, string] }>)
+      : {};
+
+    // 5. Build positions
     const positions: ExchangePosition[] = [];
 
-    for (const asset of cryptoAssets) {
-      try {
-        const buyInfo = avgBuyPrices[asset.symbol];
-        const buyCurrency = buyInfo?.currency ?? "EUR";
+    for (const { asset, pairKey, quoteCurrency } of assignments) {
+      const totalQty = asset.liquid + asset.locked;
 
-        // Fetch ticker in the same currency as the buy trades
-        // so averageBuyPrice and currentPrice are in the same unit
-        let currentPrice = 0;
-        let positionCurrency = buyCurrency;
-
-        // Try dominant trade currency first, then fall back to EUR
-        const pairsToTry =
-          buyCurrency !== "EUR"
-            ? [`${asset.symbol}${buyCurrency}`, `${asset.symbol}EUR`]
-            : [`${asset.symbol}EUR`];
-
-        for (const pair of pairsToTry) {
-          try {
-            const ticker = await this.publicGet("/0/public/Ticker", { pair });
-            const tickerData = Object.values(ticker)[0] as
-              | { c: [string, string] }
-              | undefined;
-            if (tickerData) {
-              currentPrice = Number(tickerData.c[0]);
-              break;
-            }
-          } catch {
-            // If the native-currency pair doesn't exist, fall back to EUR
-            // and reset currency so avg buy price (in buy currency) isn't
-            // mixed with a EUR current price
-            if (pair === pairsToTry[0] && pairsToTry.length > 1) {
-              positionCurrency = "EUR";
-            }
-          }
-        }
-
-        // If we had to fall back to EUR for the ticker but buys were in
-        // another currency, the avg buy price is meaningless — zero it out
-        // so sync.ts doesn't produce a garbage P&L (it'll show 0 cost basis)
-        const averageBuyPrice =
-          positionCurrency === buyCurrency ? (buyInfo?.avgPrice ?? 0) : 0;
-
-        const totalCost = averageBuyPrice * asset.quantity;
-        const currentValue = currentPrice * asset.quantity;
-        const unrealizedPnl = currentValue - totalCost;
-        const unrealizedPnlPct =
-          totalCost > 0 ? (unrealizedPnl / totalCost) * 100 : 0;
-
+      // Unpriceable: no pair anywhere in our preferred quote list
+      if (!pairKey || !quoteCurrency) {
         positions.push({
-          symbol: asset.symbol,
-          name: asset.symbol,
+          symbol: asset.canonical,
+          name: asset.canonical,
           assetType: "CRYPTO",
-          quantity: asset.quantity,
-          averageBuyPrice,
-          currentPrice,
-          currency: positionCurrency,
-          unrealizedPnl,
-          unrealizedPnlPct,
-          totalCost,
-          currentValue,
+          quantity: totalQty,
+          averageBuyPrice: 0,
+          currentPrice: 0,
+          currency: "EUR",
+          unrealizedPnl: 0,
+          unrealizedPnlPct: 0,
+          totalCost: 0,
+          currentValue: 0,
+          priceStatus: "UNAVAILABLE",
+          priceUnavailableReason: "No tradeable pair on Kraken",
+          lockedQuantity: asset.locked > 0 ? asset.locked : undefined,
         });
-      } catch (err) {
-        console.error("[Kraken] getPositions — skipping asset", asset.symbol, err);
+        continue;
       }
+
+      const ticker = tickerData[pairKey];
+      const currentPrice = ticker ? Number(ticker.c[0]) : 0;
+
+      if (currentPrice === 0) {
+        // Pair exists in AssetPairs but ticker returned no data — treat as
+        // STALE rather than UNAVAILABLE so the user sees we tried but failed.
+        positions.push({
+          symbol: asset.canonical,
+          name: asset.canonical,
+          assetType: "CRYPTO",
+          quantity: totalQty,
+          averageBuyPrice: 0,
+          currentPrice: 0,
+          currency: quoteCurrency,
+          unrealizedPnl: 0,
+          unrealizedPnlPct: 0,
+          totalCost: 0,
+          currentValue: 0,
+          priceStatus: "STALE",
+          priceUnavailableReason: `Ticker returned no price for ${pairKey}`,
+          lockedQuantity: asset.locked > 0 ? asset.locked : undefined,
+        });
+        continue;
+      }
+
+      // Cost basis: only valid if avg buy price was computed in the same currency
+      const buyInfo = avgBuyPrices[asset.canonical];
+      const averageBuyPrice =
+        buyInfo && buyInfo.currency === quoteCurrency ? buyInfo.avgPrice : 0;
+
+      const totalCost = averageBuyPrice * totalQty;
+      const currentValue = currentPrice * totalQty;
+      const unrealizedPnl = currentValue - totalCost;
+      const unrealizedPnlPct =
+        totalCost > 0 ? (unrealizedPnl / totalCost) * 100 : 0;
+
+      positions.push({
+        symbol: asset.canonical,
+        name: asset.canonical,
+        assetType: "CRYPTO",
+        quantity: totalQty,
+        averageBuyPrice,
+        currentPrice,
+        currency: quoteCurrency,
+        unrealizedPnl,
+        unrealizedPnlPct,
+        totalCost,
+        currentValue,
+        priceStatus: "OK",
+        lockedQuantity: asset.locked > 0 ? asset.locked : undefined,
+      });
     }
 
     return positions;
   }
 
-  // -------------------------------------------------------------------------
-  // Helper: calculate average buy price per normalised symbol from trade history
-  // Returns average price + the dominant quote currency per symbol
-  // -------------------------------------------------------------------------
-  private async calcAverageBuyPrices(): Promise<
-    Record<string, { avgPrice: number; currency: string }>
-  > {
-    const result = await this.privatePost("/0/private/TradesHistory", {}, 2);
-    const trades = result.trades as Record<
-      string,
-      { pair: string; type: string; price: string; vol: string }
-    > | undefined;
+  // ─── Helper: weighted average buy price per symbol from FULL trade history ─────
+  // Paginates TradesHistory (Kraken returns 50 per page); computes per-(symbol,
+  // quoteCurrency) weighted avg; picks the dominant quote currency per symbol.
+  private async calcAverageBuyPrices(
+    metadata: MetadataMaps
+  ): Promise<Record<string, { avgPrice: number; currency: string }>> {
+    type RawTrade = {
+      pair: string;
+      type: string;
+      price: string;
+      vol: string;
+    };
 
-    if (!trades) return {};
+    // Paginate all trades
+    const allTrades: RawTrade[] = [];
+    let offset = 0;
+    const PAGE_SIZE = 50;
 
-    // Track costs per (symbol, quoteCurrency) to avoid mixing USD and EUR
+    // Hard cap to defend against runaway pagination on bizarre accounts.
+    // 200 pages × 50 trades = 10,000 trades — plenty for personal use.
+    const MAX_PAGES = 200;
+    let pages = 0;
+
+    while (pages < MAX_PAGES) {
+      const result = await this.privatePost(
+        "/0/private/TradesHistory",
+        { ofs: offset },
+        2
+      );
+      const trades = result.trades as Record<string, RawTrade> | undefined;
+      const count = (result.count as number) ?? 0;
+
+      if (!trades || Object.keys(trades).length === 0) break;
+
+      allTrades.push(...Object.values(trades));
+      offset += Object.keys(trades).length;
+      pages++;
+
+      // Stop early if we've fetched everything (count is total, not page size)
+      if (offset >= count) break;
+    }
+
+    if (pages >= MAX_PAGES) {
+      console.warn(
+        `[Kraken] calcAverageBuyPrices hit ${MAX_PAGES}-page cap (${allTrades.length} trades); avg buy prices may be incomplete`
+      );
+    }
+
+    // Aggregate per (canonical-symbol, canonical-quote-currency)
     const acc: Record<
       string,
       Record<string, { totalCost: number; totalQty: number }>
     > = {};
 
-    for (const trade of Object.values(trades)) {
+    for (const trade of allTrades) {
       if (trade.type !== "buy") continue;
 
-      const pairRaw = trade.pair;
-      const baseRaw = pairRaw.slice(0, pairRaw.length === 8 ? 4 : 3);
-      const quoteRaw = pairRaw.slice(pairRaw.length === 8 ? 4 : 3);
-      const symbol = normaliseAsset(baseRaw);
-      const quoteCurrency = normaliseAsset(quoteRaw);
+      const resolved = this.resolvePair(trade.pair, metadata);
+      if (!resolved) {
+        console.warn(`[Kraken] Unknown pair "${trade.pair}" in trade history — skipping`);
+        continue;
+      }
 
-      if (!acc[symbol]) acc[symbol] = {};
-      if (!acc[symbol][quoteCurrency])
-        acc[symbol][quoteCurrency] = { totalCost: 0, totalQty: 0 };
+      const { baseSymbol, quoteCurrency } = resolved;
+      if (!acc[baseSymbol]) acc[baseSymbol] = {};
+      if (!acc[baseSymbol][quoteCurrency]) {
+        acc[baseSymbol][quoteCurrency] = { totalCost: 0, totalQty: 0 };
+      }
 
       const qty = Number(trade.vol);
       const price = Number(trade.price);
-      acc[symbol][quoteCurrency].totalCost += qty * price;
-      acc[symbol][quoteCurrency].totalQty += qty;
+      acc[baseSymbol][quoteCurrency].totalCost += qty * price;
+      acc[baseSymbol][quoteCurrency].totalQty += qty;
     }
 
     // For each symbol, pick the quote currency with the most volume traded
     const averages: Record<string, { avgPrice: number; currency: string }> = {};
 
-    for (const [symbol, currencies] of Object.entries(acc)) {
+    for (const [symbol, byQuote] of Object.entries(acc)) {
       let dominantCurrency = "EUR";
       let maxQty = 0;
 
-      for (const [currency, data] of Object.entries(currencies)) {
+      for (const [currency, data] of Object.entries(byQuote)) {
         if (data.totalQty > maxQty) {
           maxQty = data.totalQty;
           dominantCurrency = currency;
         }
       }
 
-      const data = currencies[dominantCurrency];
+      const data = byQuote[dominantCurrency];
       averages[symbol] = {
         avgPrice: data.totalQty > 0 ? data.totalCost / data.totalQty : 0,
         currency: dominantCurrency,
@@ -360,36 +612,31 @@ export class KrakenClient implements ExchangeClient {
     return averages;
   }
 
-  // -------------------------------------------------------------------------
-  // getAccountSummary
-  // -------------------------------------------------------------------------
+  // ─── getAccountSummary ────────────────────────────────────────────────────────
   async getAccountSummary(): Promise<ExchangeAccountSummary> {
-    // Trade balance gives overall equity in EUR
-    const tradeBalance = await this.privatePost(
-      "/0/private/TradeBalance",
-      { asset: "ZEUR" }
-    );
+    const [metadata, tradeBalance, balances] = await Promise.all([
+      this.loadMetadata(),
+      this.privatePost("/0/private/TradeBalance", { asset: "ZEUR" }),
+      this.privatePost("/0/private/Balance"),
+    ]);
 
-    const totalValue = Number(tradeBalance.eb ?? 0); // equivalent balance
-    const totalCost = Number(tradeBalance.c ?? 0);   // cost basis
-    const unrealizedPnl = Number(tradeBalance.n ?? 0); // unrealized P&L
-    const realizedPnl = Number(tradeBalance.rp ?? 0);  // realized P&L
+    const totalValue = Number(tradeBalance.eb ?? 0);
+    const totalCost = Number(tradeBalance.c ?? 0);
+    const unrealizedPnl = Number(tradeBalance.n ?? 0);
+    const realizedPnl = Number(tradeBalance.rp ?? 0);
 
-    // Cash = fiat + stablecoins — convert each to EUR before summing
-    const balances = await this.privatePost("/0/private/Balance");
-    const cashToEur: Record<string, number> = {
-      EUR: 1, ZEUR: 1,
-      USD: 0.84, ZUSD: 0.84,
-      GBP: 1.15, ZGBP: 1.15,
-      USDC: 0.84, USDT: 0.84, DAI: 0.84,
-    };
-    let freeCash = 0;
-    for (const [rawCode, qty] of Object.entries(balances)) {
-      const normalised = normaliseAsset(rawCode);
-      if (CASH_CODES.has(rawCode) || CASH_CODES.has(normalised)) {
-        const rate = cashToEur[rawCode] ?? cashToEur[normalised] ?? 1;
-        freeCash += Number(qty) * rate;
-      }
+    // Sum cash/stablecoin balances, converting each to EUR via convertToEur
+    // (which now handles USDT/USDC/DAI normalisation correctly).
+    let freeCashEur = 0;
+    for (const [rawCode, qtyStr] of Object.entries(balances)) {
+      const qty = Number(qtyStr);
+      if (qty <= 0) continue;
+
+      const { canonical } = this.normaliseAsset(rawCode, metadata);
+      if (!CASH_CODES.has(canonical)) continue;
+
+      const { amountEur } = await convertToEur(qty, canonical);
+      freeCashEur += amountEur;
     }
 
     return {
@@ -397,43 +644,46 @@ export class KrakenClient implements ExchangeClient {
       totalCost,
       unrealizedPnl,
       realizedPnl,
-      freeCash,
-      currency: "EUR", // all cash converted to EUR above
+      freeCash: freeCashEur,
+      currency: "EUR",
     };
   }
 
-  // -------------------------------------------------------------------------
-  // getDeposits
-  // -------------------------------------------------------------------------
+  // ─── getDeposits ──────────────────────────────────────────────────────────────
   async getDeposits(since?: Date): Promise<ExchangeDepositRecord[]> {
+    const metadata = await this.loadMetadata();
+
     const params: Record<string, string | number> = { type: "deposit" };
     if (since) params.start = Math.floor(since.getTime() / 1000);
 
     const result = await this.privatePost("/0/private/Ledgers", params, 2);
-    const ledger = result.ledger as Record<
-      string,
-      {
-        refid: string;
-        asset: string;
-        amount: string;
-        time: number;
-        subtype: string;
-      }
-    > | undefined;
+    const ledger = result.ledger as
+      | Record<
+          string,
+          {
+            refid: string;
+            asset: string;
+            amount: string;
+            time: number;
+            subtype: string;
+          }
+        >
+      | undefined;
 
     if (!ledger) return [];
 
     const deposits: ExchangeDepositRecord[] = [];
 
     for (const [id, entry] of Object.entries(ledger)) {
-      const normalised = normaliseAsset(entry.asset);
-      // Only fiat deposits
-      if (!FIAT_CODES.has(entry.asset) && !FIAT_CODES.has(normalised)) continue;
+      const { canonical } = this.normaliseAsset(entry.asset, metadata);
+      // Only fiat deposits surface as "spent on the exchange" — stablecoin
+      // deposits are usually internal transfers, not account funding.
+      if (!FIAT_CODES.has(canonical)) continue;
 
       deposits.push({
         externalId: entry.refid || id,
         amount: Number(entry.amount),
-        currency: normalised,
+        currency: canonical,
         date: new Date(entry.time * 1000),
         status: "completed",
       });
@@ -442,49 +692,72 @@ export class KrakenClient implements ExchangeClient {
     return deposits;
   }
 
-  // -------------------------------------------------------------------------
-  // getTradeHistory
-  // -------------------------------------------------------------------------
+  // ─── getTradeHistory — paginates fully ─────────────────────────────────────────
   async getTradeHistory(since?: Date): Promise<ExchangeTrade[]> {
-    const params: Record<string, string | number> = {};
-    if (since) params.start = Math.floor(since.getTime() / 1000);
+    const metadata = await this.loadMetadata();
 
-    const result = await this.privatePost("/0/private/TradesHistory", params, 2);
-    const trades = result.trades as Record<
-      string,
-      {
-        ordertxid: string;
-        pair: string;
-        type: string;
-        vol: string;
-        price: string;
-        fee: string;
-        feecurrency?: string;
-        time: number;
+    type RawTrade = {
+      ordertxid: string;
+      pair: string;
+      type: string;
+      vol: string;
+      price: string;
+      fee: string;
+      feecurrency?: string;
+      time: number;
+    };
+
+    const allTrades: ExchangeTrade[] = [];
+    let offset = 0;
+    const MAX_PAGES = 200;
+    let pages = 0;
+
+    while (pages < MAX_PAGES) {
+      const params: Record<string, string | number> = { ofs: offset };
+      if (since) params.start = Math.floor(since.getTime() / 1000);
+
+      const result = await this.privatePost("/0/private/TradesHistory", params, 2);
+      const trades = result.trades as Record<string, RawTrade> | undefined;
+      const count = (result.count as number) ?? 0;
+
+      if (!trades || Object.keys(trades).length === 0) break;
+
+      for (const [id, trade] of Object.entries(trades)) {
+        const resolved = this.resolvePair(trade.pair, metadata);
+        if (!resolved) {
+          console.warn(`[Kraken] Unknown pair "${trade.pair}" in trade — skipping`);
+          continue;
+        }
+
+        const feeCurrency = trade.feecurrency
+          ? this.normaliseAsset(trade.feecurrency, metadata).canonical
+          : resolved.quoteCurrency;
+
+        allTrades.push({
+          externalId: trade.ordertxid || id,
+          symbol: resolved.baseSymbol,
+          side: trade.type as "buy" | "sell",
+          quantity: Number(trade.vol),
+          price: Number(trade.price),
+          fee: Number(trade.fee),
+          feeCurrency,
+          date: new Date(trade.time * 1000),
+          currency: resolved.quoteCurrency,
+        });
       }
-    > | undefined;
 
-    if (!trades) return [];
+      offset += Object.keys(trades).length;
+      pages++;
 
-    return Object.entries(trades).map(([id, trade]) => {
-      const pairRaw = trade.pair;
-      const baseRaw = pairRaw.slice(0, pairRaw.length === 8 ? 4 : 3);
-      const symbol = normaliseAsset(baseRaw);
+      if (offset >= count) break;
+    }
 
-      const quoteRaw = pairRaw.slice(pairRaw.length === 8 ? 4 : 3);
-      const currency = normaliseAsset(quoteRaw);
+    if (pages >= MAX_PAGES) {
+      console.warn(
+        `[Kraken] getTradeHistory hit ${MAX_PAGES}-page cap (${allTrades.length} trades returned)`
+      );
+    }
 
-      return {
-        externalId: trade.ordertxid || id,
-        symbol,
-        side: trade.type as "buy" | "sell",
-        quantity: Number(trade.vol),
-        price: Number(trade.price),
-        fee: Number(trade.fee),
-        feeCurrency: trade.feecurrency ? normaliseAsset(trade.feecurrency) : currency,
-        date: new Date(trade.time * 1000),
-        currency,
-      };
-    });
+    return allTrades;
   }
 }

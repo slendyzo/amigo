@@ -64,7 +64,19 @@ enum SyncStatus {
   IDLE
   SYNCING
   SUCCESS
+  PARTIAL
   ERROR
+}
+
+enum PriceStatus {
+  OK
+  UNAVAILABLE
+  STALE
+}
+
+enum TradeSide {
+  BUY
+  SELL
 }
 
 enum IncomeType {
@@ -576,9 +588,11 @@ model ExchangeConnection {
   encryptionTag      String?  @db.VarChar(32) // GCM auth tag
 
   // Sync state
-  syncStatus    SyncStatus  @default(IDLE)
-  lastSyncAt    DateTime?
-  lastSyncError String?     @db.VarChar(500)
+  syncStatus           SyncStatus  @default(IDLE)
+  lastSyncAt           DateTime?
+  lastSyncError        String?     @db.VarChar(500)
+  syncStartedAt        DateTime?   // Set when sync begins; used to detect stuck SYNCING state
+  tradeHistoryComplete Boolean     @default(false) // Flips true once we've paginated to empty
 
   // Cached account summary
   freeCash      Decimal?    @db.Decimal(18, 2)
@@ -591,6 +605,7 @@ model ExchangeConnection {
   assets        PortfolioAsset[]
   snapshots     PortfolioSnapshot[]
   deposits      ExchangeDeposit[]
+  trades        Trade[]
 
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
@@ -630,6 +645,19 @@ model PortfolioAsset {
   // Currency of the asset on the exchange
   currency            String    @default("EUR") @db.VarChar(3)
 
+  // Price availability — for assets we can hold but not price (delisted, no pair)
+  priceStatus            PriceStatus @default(OK)
+  priceUnavailableReason String?     @db.VarChar(200)
+
+  // Locked / staked portion of quantity (e.g., Kraken .S balances, Bybit Earn)
+  lockedQuantity      Decimal?  @db.Decimal(18, 8)
+
+  // Realized P&L computed from Trade history (null until tradeHistoryComplete)
+  realizedPnlEur      Decimal?  @db.Decimal(18, 2)
+
+  // Marked dust (value < threshold and no trade history) — hidden from UI by default
+  isDust              Boolean   @default(false)
+
   lastUpdatedAt       DateTime  @default(now())
 
   // Relations
@@ -638,6 +666,32 @@ model PortfolioAsset {
   @@unique([exchangeConnectionId, symbol])
   @@index([exchangeConnectionId])
   @@map("portfolio_assets")
+}
+
+model Trade {
+  id                   String    @id @default(cuid())
+  exchangeConnectionId String
+
+  externalId           String    @db.VarChar(200) // exchange's own trade/execution ID
+  symbol               String    @db.VarChar(20)  // canonical base symbol (e.g., BTC, ATOM)
+  side                 TradeSide
+
+  quantity             Decimal   @db.Decimal(18, 8) // base asset quantity
+  price                Decimal   @db.Decimal(18, 8) // price per unit, in `currency`
+  currency             String    @db.VarChar(10)    // quote currency (USD, USDT, EUR, ...)
+  fee                  Decimal   @db.Decimal(18, 8) @default(0)
+  feeCurrency          String    @db.VarChar(10)
+
+  date                 DateTime
+
+  exchangeConnection   ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
+
+  createdAt            DateTime  @default(now())
+
+  @@unique([exchangeConnectionId, externalId])
+  @@index([exchangeConnectionId, symbol, date])
+  @@index([exchangeConnectionId, date])
+  @@map("trades")
 }
 
 model PortfolioSnapshot {

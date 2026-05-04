@@ -15,7 +15,7 @@ import { PrismaClient } from "@prisma/client";
 import pg from "pg";
 import crypto from "crypto";
 
-// Initialize Prisma with Neon adapter (same as src/lib/db.ts)
+// Initialize Prisma with the pg adapter (same as src/lib/db.ts)
 const connectionString = process.env.DATABASE_URL!;
 const pool = new pg.Pool({ connectionString });
 const adapter = new PrismaPg(pool);

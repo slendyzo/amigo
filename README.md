@@ -39,7 +39,7 @@ Your friendly expense tracker - a modern personal finance app built with Next.js
 |-------|------------|
 | Framework | Next.js 15 (App Router + Turbopack) |
 | Language | TypeScript 5.7 |
-| Database | PostgreSQL (Neon) |
+| Database | PostgreSQL 17 (self-hosted) |
 | ORM | Prisma 7 |
 | Auth | NextAuth v5 (Auth.js) |
 | Styling | Tailwind CSS 4 |
@@ -49,7 +49,7 @@ Your friendly expense tracker - a modern personal finance app built with Next.js
 
 ### Prerequisites
 - Node.js 22+ (for development)
-- PostgreSQL database (or [Neon](https://neon.tech) account)
+- PostgreSQL database (run via Docker Compose or any Postgres host)
 - Docker & Docker Compose (for self-hosting)
 
 ### Local Development
@@ -204,7 +204,6 @@ server {
 
 Amigo uses PostgreSQL. You can use:
 
-- **[Neon](https://neon.tech)** - Free tier available, serverless PostgreSQL
 - **Local PostgreSQL** - Run your own instance
 - **Docker PostgreSQL** - Add to docker-compose.yml:
 
@@ -393,6 +392,5 @@ MIT License - see [LICENSE](LICENSE) for details.
 
 - [Next.js](https://nextjs.org/) - React framework
 - [Prisma](https://prisma.io/) - Database ORM
-- [Neon](https://neon.tech/) - Serverless PostgreSQL
 - [Auth.js](https://authjs.dev/) - Authentication
 - [Tailwind CSS](https://tailwindcss.com/) - Styling

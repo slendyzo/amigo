@@ -28,9 +28,7 @@ To ensure sustainability and growth while respecting the "one-time fee" preferen
 - **Mobile:** Capacitor (to wrap the Next.js app for iOS/Android stores).
 - **Styling:** Tailwind CSS + Shadcn UI.
 - **Charts:** Tremor.so (optimized for the Electric Blue theme).
-- **Database:** Prisma ORM.
-    - **SaaS Mode:** Connects to PostgreSQL (Supabase/Neon).
-    - **Self-Hosted Mode:** Connects to a local SQLite file via environment variables.
+- **Database:** Prisma ORM with self-hosted PostgreSQL 17 (Docker container).
 
 ### B. Anti-Piracy & Security
 - **Server-Side Brain:** AI parsing, receipt validation, and workspace syncing must happen on the server (Next.js API).

@@ -3,7 +3,7 @@
 ## Project Overview
 High-end, minimalist expense tracking app with "Survival vs Lifestyle" cost analysis.
 
-**Tech Stack:** Next.js 15, Prisma 7, PostgreSQL (Neon), NextAuth v5, Tailwind CSS
+**Tech Stack:** Next.js 15, Prisma 7, PostgreSQL 17 (self-hosted), NextAuth v5, Tailwind CSS
 
 ---
 
@@ -13,7 +13,7 @@ High-end, minimalist expense tracking app with "Survival vs Lifestyle" cost anal
 - **File:** `prisma/schema.prisma`
 - **Models:** User, Workspace, WorkspaceMember, BankAccount, Category, Project, Expense, RecurringTemplate, KeywordMapping, PurchaseReceipt, ImportLog
 - **Enums:** SubscriptionStatus, WorkspaceType, ExpenseType (SURVIVAL_FIXED, SURVIVAL_VARIABLE, LIFESTYLE, PROJECT), ExpenseStatus, RecurrenceInterval
-- **Database:** Neon PostgreSQL (EU West 2 - London)
+- **Database:** Self-hosted PostgreSQL 17 (Docker on Proxmox CT 104)
 
 ### 2. Authentication (NextAuth v5)
 - **Files:**
@@ -255,7 +255,7 @@ High-end, minimalist expense tracking app with "Survival vs Lifestyle" cost anal
 
 ## Environment Variables (.env)
 ```
-DATABASE_URL="postgresql://..." # Neon connection string
+DATABASE_URL="postgresql://amigo:password@db:5432/amigo" # Self-hosted Postgres (Docker)
 AUTH_SECRET="..." # Generate with: npx auth secret
 AUTH_URL="http://localhost:3000"
 GOOGLE_CLIENT_ID="" # Optional

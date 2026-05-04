@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
+import { reconcileStuckSyncs } from "@/lib/exchanges/sync";
 
 // GET - Aggregated portfolio summary across all exchanges
 export async function GET() {
@@ -11,6 +12,13 @@ export async function GET() {
     }
 
     const { workspace } = context;
+
+    // Self-heal: any connection stuck in SYNCING > 5min (e.g., from a process
+    // restart mid-sync) gets flipped to ERROR so the UI doesn't spin forever.
+    const reconciled = await reconcileStuckSyncs(workspace.id);
+    if (reconciled > 0) {
+      console.log(`[Portfolio] Reconciled ${reconciled} stuck SYNCING row(s)`);
+    }
 
     const connections = await prisma.exchangeConnection.findMany({
       where: { workspaceId: workspace.id, isActive: true },
