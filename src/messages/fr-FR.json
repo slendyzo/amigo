@@ -41,6 +41,7 @@
   "nav": {
     "dashboard": "Tableau de Bord",
     "holdings": "Avoirs",
+    "networth": "Patrimoine",
     "exchanges": "Plateformes",
     "sectionPortfolio": "Portefeuille",
     "sectionFinances": "Finances",

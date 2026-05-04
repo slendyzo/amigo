@@ -16,6 +16,7 @@ const ExpenseDetailModal = lazy(() => import("@/components/expense-detail-modal"
 const OnboardingModal = lazy(() => import("@/components/onboarding-modal"));
 const AnnouncementModal = lazy(() => import("@/components/announcement-modal"));
 const BurnChart = lazy(() => import("@/components/ui/burn-chart").then(mod => ({ default: mod.BurnChart })));
+const DashboardRwaSection = lazy(() => import("@/components/dashboard-rwa-section"));
 
 // Loading skeleton for the chart
 function ChartSkeleton() {
@@ -1699,6 +1700,13 @@ export default function DashboardOverview({
             )}
           </div>
         </div>
+      </div>
+
+      {/* ==================== REAL-WORLD ASSETS ==================== */}
+      <div className="mt-6">
+        <Suspense fallback={null}>
+          <DashboardRwaSection />
+        </Suspense>
       </div>
 
       {/* ==================== MODALS ==================== */}
