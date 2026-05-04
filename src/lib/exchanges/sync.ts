@@ -3,6 +3,7 @@ import type { PriceStatus as DbPriceStatus, TradeSide } from "@prisma/client";
 import { decrypt } from "@/lib/encryption";
 import { convertToEur } from "@/lib/currency";
 import { createExchangeClient, createWalletClient, isWalletProvider } from "./factory";
+import { computeCostBasisFromTrades, realizedPnlToEur } from "./cost-basis";
 import type { ExchangeClient, ExchangePosition } from "./types";
 
 // EUR threshold below which a position is considered dust (and hidden by
@@ -294,31 +295,60 @@ export async function syncExchange(
       ...rawTrades.map((t) => t.symbol),
     ]);
 
+    // Cost basis from full trade history. Only meaningful once we've completed
+    // the backfill — otherwise we'd be averaging an incomplete set of buys.
+    // The flag was just (potentially) flipped above, so re-read connection state.
+    const isHistoryComplete =
+      connection.tradeHistoryComplete ||
+      (!dryRun && wantFullTradeHistory && rawTrades.length > 0);
+
+    const costBasisMap = isHistoryComplete
+      ? await computeCostBasisFromTrades(connectionId)
+      : new Map();
+
     // 6. Compute EUR-converted asset rows + diff entries
     const computedAssets: ComputedAssetRow[] = [];
     const assetDiffs: AssetDiff[] = [];
 
     for (const pos of positions) {
+      // Override avg buy price + cost + P&L from the Trade table when we have
+      // a complete trade history. The connector's getPositions can return
+      // averageBuyPrice=0 (e.g., Bybit) and we'll fill it in here. If no trade
+      // history covers this symbol, fall back to whatever the connector said.
+      const cb = costBasisMap.get(pos.symbol);
+      const useTradeBasis = cb && cb.avgBuyPrice > 0 && cb.currency === pos.currency;
+
+      const averageBuyPrice = useTradeBasis ? cb!.avgBuyPrice : pos.averageBuyPrice;
+      const totalCost = averageBuyPrice * pos.quantity;
+      const currentValue = pos.currentValue; // already qty * currentPrice
+      const unrealizedPnl = currentValue - totalCost;
+      const unrealizedPnlPct = totalCost > 0 ? (unrealizedPnl / totalCost) * 100 : 0;
+
       const { amountEur: currentPriceEur } = await convertToEur(
         pos.currentPrice,
         pos.currency
       );
       const { amountEur: averageBuyPriceEur } = await convertToEur(
-        pos.averageBuyPrice,
+        averageBuyPrice,
         pos.currency
       );
       const { amountEur: currentValueEur } = await convertToEur(
-        pos.currentValue,
+        currentValue,
         pos.currency
       );
       const { amountEur: totalCostEur } = await convertToEur(
-        pos.totalCost,
+        totalCost,
         pos.currency
       );
       const { amountEur: unrealizedPnlEur } = await convertToEur(
-        pos.unrealizedPnl,
+        unrealizedPnl,
         pos.currency
       );
+
+      // Realized P&L (from sells) — convert at today's FX. Only when complete.
+      const realizedPnlEur = cb && cb.realizedPnl !== 0
+        ? await realizedPnlToEur(cb.realizedPnl, cb.currency)
+        : null;
 
       const priceStatus: DbPriceStatus = (pos.priceStatus ?? "OK") as DbPriceStatus;
       const isDust =
@@ -331,17 +361,17 @@ export async function syncExchange(
         name: pos.name,
         assetType: pos.assetType,
         quantity: pos.quantity,
-        averageBuyPrice: pos.averageBuyPrice,
+        averageBuyPrice,
         averageBuyPriceEur,
         currentPrice: pos.currentPrice,
         currentPriceEur,
-        currentValue: pos.currentValue,
+        currentValue,
         currentValueEur,
-        totalCost: pos.totalCost,
+        totalCost,
         totalCostEur,
-        unrealizedPnl: pos.unrealizedPnl,
+        unrealizedPnl,
         unrealizedPnlEur,
-        unrealizedPnlPct: pos.unrealizedPnlPct,
+        unrealizedPnlPct,
         currency: pos.currency,
         priceStatus,
         priceUnavailableReason: pos.priceUnavailableReason ?? null,
@@ -400,21 +430,22 @@ export async function syncExchange(
             name: pos.name,
             assetType: pos.assetType,
             quantity: pos.quantity,
-            averageBuyPrice: pos.averageBuyPrice,
+            averageBuyPrice: computed.averageBuyPrice,
             averageBuyPriceEur,
             currentPrice: pos.currentPrice,
             currentPriceEur,
-            currentValue: pos.currentValue,
+            currentValue: computed.currentValue,
             currentValueEur,
-            totalCost: pos.totalCost,
+            totalCost: computed.totalCost,
             totalCostEur,
-            unrealizedPnl: pos.unrealizedPnl,
+            unrealizedPnl: computed.unrealizedPnl,
             unrealizedPnlEur,
-            unrealizedPnlPct: pos.unrealizedPnlPct,
+            unrealizedPnlPct: computed.unrealizedPnlPct,
             currency: pos.currency,
             priceStatus: computed.priceStatus,
             priceUnavailableReason: computed.priceUnavailableReason,
             lockedQuantity: computed.lockedQuantity,
+            realizedPnlEur,
             isDust: computed.isDust,
             lastUpdatedAt: new Date(),
           },
@@ -422,21 +453,22 @@ export async function syncExchange(
             name: pos.name,
             assetType: pos.assetType,
             quantity: pos.quantity,
-            averageBuyPrice: pos.averageBuyPrice,
+            averageBuyPrice: computed.averageBuyPrice,
             averageBuyPriceEur,
             currentPrice: pos.currentPrice,
             currentPriceEur,
-            currentValue: pos.currentValue,
+            currentValue: computed.currentValue,
             currentValueEur,
-            totalCost: pos.totalCost,
+            totalCost: computed.totalCost,
             totalCostEur,
-            unrealizedPnl: pos.unrealizedPnl,
+            unrealizedPnl: computed.unrealizedPnl,
             unrealizedPnlEur,
-            unrealizedPnlPct: pos.unrealizedPnlPct,
+            unrealizedPnlPct: computed.unrealizedPnlPct,
             currency: pos.currency,
             priceStatus: computed.priceStatus,
             priceUnavailableReason: computed.priceUnavailableReason,
             lockedQuantity: computed.lockedQuantity,
+            realizedPnlEur,
             isDust: computed.isDust,
             lastUpdatedAt: new Date(),
           },
