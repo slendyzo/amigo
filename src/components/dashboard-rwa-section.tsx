@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Plus, Car, ArrowRight } from "lucide-react";
 import { VehicleCard, VehicleCardSkeleton, type VehicleCardData } from "@/components/ui/vehicle-card";
+import { PropertyCard, type PropertyCardData } from "@/components/ui/property-card";
 import { formatCurrency } from "@/lib/currencies";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,7 @@ const AddVehicleModal = lazy(() => import("@/components/add-vehicle-modal"));
 type ApiAsset = {
   id: string;
   name: string;
+  type: "VEHICLE" | "PROPERTY";
   status: "ACTIVE" | "SOLD";
   imageUrl: string | null;
   purchasePriceEur: string | number;
@@ -23,7 +25,18 @@ type ApiAsset = {
     model: string;
     year: number;
   } | null;
+  property: {
+    propertyType: string;
+    concelho: string | null;
+    address: string | null;
+    livableAreaM2: number | null;
+    bedrooms: number | null;
+  } | null;
 };
+
+type RwaCard =
+  | { kind: "vehicle"; data: VehicleCardData }
+  | { kind: "property"; data: PropertyCardData };
 
 type DashboardRwaSectionProps = {
   className?: string;
@@ -33,25 +46,41 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 
 export default function DashboardRwaSection({ className }: DashboardRwaSectionProps) {
   const t = useTranslations("rwa");
-  const [assets, setAssets] = useState<VehicleCardData[] | null>(null);
+  const [assets, setAssets] = useState<RwaCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
   const fetchAssets = async () => {
     try {
-      const res = await fetch("/api/assets?type=VEHICLE&status=ACTIVE", { cache: "no-store" });
+      const res = await fetch("/api/assets?status=ACTIVE", { cache: "no-store" });
       if (!res.ok) throw new Error(`status ${res.status}`);
       const data = (await res.json()) as { assets: ApiAsset[] };
       setAssets(
-        data.assets.map((a) => ({
-          id: a.id,
-          name: a.name,
-          status: a.status,
-          imageUrl: a.imageUrl,
-          purchasePriceEur: Number(a.purchasePriceEur),
-          currentValueEur: a.currentValueEur != null ? Number(a.currentValueEur) : null,
-          vehicle: a.vehicle ? { brand: a.vehicle.brand, model: a.vehicle.model, year: a.vehicle.year } : null,
-        }))
+        data.assets.map((a): RwaCard => {
+          const common = {
+            id: a.id,
+            name: a.name,
+            status: a.status,
+            imageUrl: a.imageUrl,
+            purchasePriceEur: Number(a.purchasePriceEur),
+            currentValueEur: a.currentValueEur != null ? Number(a.currentValueEur) : null,
+          };
+          if (a.type === "PROPERTY") {
+            return {
+              kind: "property",
+              data: { ...common, property: a.property },
+            };
+          }
+          return {
+            kind: "vehicle",
+            data: {
+              ...common,
+              vehicle: a.vehicle
+                ? { brand: a.vehicle.brand, model: a.vehicle.model, year: a.vehicle.year }
+                : null,
+            },
+          };
+        }),
       );
     } catch (e) {
       console.error("[rwa-section] fetch failed:", e);
@@ -66,7 +95,10 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
 
   const totalValue = useMemo(() => {
     if (!assets) return null;
-    return assets.reduce((sum, a) => sum + (a.currentValueEur ?? a.purchasePriceEur), 0);
+    return assets.reduce(
+      (sum, a) => sum + (a.data.currentValueEur ?? a.data.purchasePriceEur),
+      0,
+    );
   }, [assets]);
 
   const handleSuccess = () => fetchAssets();
@@ -110,12 +142,16 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {assets.map((a, i) => (
             <motion.div
-              key={a.id}
+              key={a.data.id}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.35, ease: EASE, delay: i * 0.06 }}
             >
-              <VehicleCard vehicle={a} />
+              {a.kind === "property" ? (
+                <PropertyCard property={a.data} />
+              ) : (
+                <VehicleCard vehicle={a.data} />
+              )}
             </motion.div>
           ))}
           <AddCard onClick={() => setShowAdd(true)} t={t} />
