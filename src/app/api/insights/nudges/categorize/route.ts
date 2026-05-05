@@ -13,6 +13,7 @@ import { prisma } from "@/lib/db";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { generateInsight, InsightParseError } from "@/lib/glm";
 import { buildCategorizePrompt } from "@/lib/prompts/nudge-categorize";
+import { isWorkspaceCategorizeSnoozed } from "@/lib/insight-aggregator";
 
 const LOCALE_MAP: Record<string, "en-GB" | "pt-PT" | "fr-FR"> = {
   en: "en-GB",
@@ -28,6 +29,13 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const countOnly = searchParams.get("countOnly") === "1";
+
+  // Snooze gate — if workspace-wide categorize nudge is snoozed, suppress entirely
+  const snoozed = await isWorkspaceCategorizeSnoozed(ctx.workspace.id);
+  if (snoozed) {
+    if (countOnly) return NextResponse.json({ count: 0 });
+    return NextResponse.json({ count: 0, rows: [], totalUntagged: 0, categories: [] });
+  }
 
   const untaggedCount = await prisma.expense.count({
     where: { workspaceId: ctx.workspace.id, categoryId: null },

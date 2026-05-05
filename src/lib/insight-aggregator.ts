@@ -423,7 +423,7 @@ export async function aggregateNudgeCandidates(
     if (coveredByTemplate) continue;
 
     // Snooze suppression
-    const hash = sha256(`keyword:${prefix8}:recurring`);
+    const hash = sha256(`recurring:${prefix8}`);
     if (snoozedRecurringHashes.has(hash)) continue;
 
     recurringCandidates.push({
@@ -461,4 +461,39 @@ export async function aggregateNudgeCandidates(
     recurringCandidates,
     potentialClusterSeeds,
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Snooze helpers (used by nudge route handlers)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Returns true if the workspace has an active NUDGE_CATEGORIZE snooze.
+ */
+export async function isWorkspaceCategorizeSnoozed(workspaceId: string): Promise<boolean> {
+  const result = await prisma.insight.findFirst({
+    where: {
+      workspaceId,
+      type: InsightType.NUDGE_CATEGORIZE,
+      inputHash: sha256("categorize:workspace"),
+      snoozeUntil: { gt: new Date() },
+    },
+    select: { id: true },
+  });
+  return !!result;
+}
+
+/**
+ * Returns the set of inputHashes for active NUDGE_PROJECT snoozes in the workspace.
+ */
+export async function getProjectSnoozeHashes(workspaceId: string): Promise<Set<string>> {
+  const rows = await prisma.insight.findMany({
+    where: {
+      workspaceId,
+      type: InsightType.NUDGE_PROJECT,
+      snoozeUntil: { gt: new Date() },
+    },
+    select: { inputHash: true },
+  });
+  return new Set(rows.map((r) => r.inputHash));
 }

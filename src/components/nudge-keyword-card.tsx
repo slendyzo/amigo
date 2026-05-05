@@ -24,7 +24,18 @@ export default function NudgeKeywordCard({
 
   if (dismissed) return null;
 
-  const handleDismiss = () => setDismissed(true);
+  const handleDismiss = async () => {
+    setDismissed(true); // optimistic
+    try {
+      await fetch("/api/insights/dismiss", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "NUDGE_KEYWORD", scope: { merchantKey, categoryId } }),
+      });
+    } catch (err) {
+      console.error("[advisor] dismiss failed:", err);
+    }
+  };
 
   const handleAccept = async () => {
     setLoading(true);

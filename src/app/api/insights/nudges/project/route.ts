@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
+import { createHash } from "crypto";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { generateInsight } from "@/lib/glm";
-import { aggregateNudgeCandidates } from "@/lib/insight-aggregator";
+import { aggregateNudgeCandidates, getProjectSnoozeHashes } from "@/lib/insight-aggregator";
 import { buildNudgeProjectPrompt } from "@/lib/prompts/nudge-project";
+
+function sha256(input: string): string {
+  return createHash("sha256").update(input).digest("hex");
+}
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -89,7 +94,10 @@ export async function GET(): Promise<NextResponse> {
     seeds.map((s) => [s.id, s])
   );
 
-  // Resolve clusters — filter out any ids not in the seed set
+  // Fetch active project snooze hashes so we can filter snoozed clusters
+  const snoozedProjectHashes = await getProjectSnoozeHashes(workspaceId);
+
+  // Resolve clusters — filter out any ids not in the seed set, and snoozed clusters
   const clusters: ClusterResult[] = clusterOutput.clusters
     .map((cluster) => {
       const validExpenses = cluster.expenseIds
@@ -97,6 +105,12 @@ export async function GET(): Promise<NextResponse> {
         .map((id) => seedMap.get(id)!);
 
       if (validExpenses.length < 3) return null;
+
+      // Check if this cluster is snoozed
+      const clusterHash = sha256(
+        `project:${validExpenses.map((e) => e.id).slice().sort().join(",")}`
+      );
+      if (snoozedProjectHashes.has(clusterHash)) return null;
 
       return {
         theme: cluster.theme,

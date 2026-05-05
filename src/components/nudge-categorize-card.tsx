@@ -17,7 +17,18 @@ export default function NudgeCategorizeCard({ count, onClick }: NudgeCategorizeC
   return (
     <div className="relative w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5">
       <button
-        onClick={() => setDismissed(true)}
+        onClick={async () => {
+          setDismissed(true); // optimistic
+          try {
+            await fetch("/api/insights/dismiss", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ type: "NUDGE_CATEGORIZE", scope: {} }),
+            });
+          } catch (err) {
+            console.error("[advisor] dismiss failed:", err);
+          }
+        }}
         aria-label={t("nudges.common.dismiss")}
         className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
       >

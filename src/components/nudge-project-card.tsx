@@ -34,6 +34,22 @@ export default function NudgeProjectCard({
 
   if (dismissed) return null;
 
+  const handleDismiss = async () => {
+    setDismissed(true); // optimistic
+    try {
+      await fetch("/api/insights/dismiss", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          type: "NUDGE_PROJECT",
+          scope: { expenseIds: cluster.expenses.map((e) => e.id) },
+        }),
+      });
+    } catch (err) {
+      console.error("[advisor] dismiss failed:", err);
+    }
+  };
+
   // Radio-style UX: picking a project from the dropdown disables the text input
   // and vice-versa — typing clears the dropdown.
   const handleDropdownChange = (value: string) => {
@@ -91,7 +107,7 @@ export default function NudgeProjectCard({
     <div className="relative w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5">
       {/* Dismiss X */}
       <button
-        onClick={() => setDismissed(true)}
+        onClick={handleDismiss}
         aria-label={t("nudges.common.dismiss")}
         className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
       >
@@ -156,7 +172,7 @@ export default function NudgeProjectCard({
           {loading ? "…" : t("nudges.project.tagButton")}
         </button>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={handleDismiss}
           className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
         >
           {t("nudges.common.notNow")}

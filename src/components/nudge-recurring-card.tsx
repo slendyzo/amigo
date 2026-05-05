@@ -49,6 +49,21 @@ export default function NudgeRecurringCard({
 
   if (dismissed) return null;
 
+  const namePrefix8 = name.toLowerCase().trim().slice(0, 8);
+
+  const handleDismiss = async () => {
+    setDismissed(true); // optimistic
+    try {
+      await fetch("/api/insights/dismiss", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type: "NUDGE_RECURRING", scope: { namePrefix8 } }),
+      });
+    } catch (err) {
+      console.error("[advisor] dismiss failed:", err);
+    }
+  };
+
   const handleAccept = async () => {
     setLoading(true);
     try {
@@ -72,7 +87,7 @@ export default function NudgeRecurringCard({
   return (
     <div className="relative w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5">
       <button
-        onClick={() => setDismissed(true)}
+        onClick={handleDismiss}
         aria-label={t("nudges.common.dismiss")}
         className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
       >
@@ -101,7 +116,7 @@ export default function NudgeRecurringCard({
           {t("nudges.recurring.createTemplate")}
         </button>
         <button
-          onClick={() => setDismissed(true)}
+          onClick={handleDismiss}
           className="px-3 py-1.5 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
         >
           {t("nudges.common.notNow")}
