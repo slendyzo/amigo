@@ -1627,6 +1627,25 @@
     "linkedAssetNone": "— Aucun —",
     "unlinkAsset": "Délier l'actif",
     "noActiveAssets": "Aucun actif pour l'instant. Ajoute un véhicule ou un bien depuis le tableau de bord.",
-    "actionsMenu": "Actions"
+    "actionsMenu": "Actions",
+    "fuelTypeOption": {
+      "PETROL": "Essence",
+      "DIESEL": "Diesel",
+      "HYBRID": "Hybride",
+      "EV": "Électrique",
+      "OTHER": "Autre"
+    },
+    "bodyTypeOption": {
+      "SEDAN": "Berline",
+      "HATCHBACK": "Citadine",
+      "SUV": "SUV",
+      "WAGON": "Break",
+      "COUPE": "Coupé",
+      "CONVERTIBLE": "Cabriolet",
+      "TRUCK": "Camion",
+      "OTHER": "Autre"
+    },
+    "originalMsrp": "Prix neuf",
+    "aiSuggestedHint": "Suggéré par IA · vous pouvez tout modifier ci-dessous."
   }
 }

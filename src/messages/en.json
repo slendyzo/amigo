@@ -1636,6 +1636,7 @@
     "energyRatingLabel": "Energy rating",
     "bedrooms": "Bedrooms",
     "bathrooms": "Bathrooms",
+    "financedToggle": "Mortgage on this property",
     "financedToggleDescription": "Track an active mortgage on this property",
     "deletePropertyConfirm": "Delete this property? Linked expenses will be unlinked but kept.",
     "deleteProperty": "Delete property",
@@ -1656,6 +1657,25 @@
     "linkedAssetNone": "— None —",
     "unlinkAsset": "Unlink asset",
     "noActiveAssets": "No assets yet. Add a vehicle or property from the dashboard.",
-    "actionsMenu": "Actions"
+    "actionsMenu": "Actions",
+    "fuelTypeOption": {
+      "PETROL": "Petrol",
+      "DIESEL": "Diesel",
+      "HYBRID": "Hybrid",
+      "EV": "Electric",
+      "OTHER": "Other"
+    },
+    "bodyTypeOption": {
+      "SEDAN": "Sedan",
+      "HATCHBACK": "Hatchback",
+      "SUV": "SUV",
+      "WAGON": "Wagon",
+      "COUPE": "Coupé",
+      "CONVERTIBLE": "Convertible",
+      "TRUCK": "Truck",
+      "OTHER": "Other"
+    },
+    "originalMsrp": "Original MSRP",
+    "aiSuggestedHint": "Suggested by AI · you can override anything below."
   }
 }

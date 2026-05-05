@@ -12,6 +12,7 @@ import { Prisma, type PrismaClient } from "@prisma/client";
 const AMOUNT_TOLERANCE_EUR = 5;
 
 const VEHICLE_GENERIC_KEYWORDS = [
+  // EN
   "loan",
   "lease",
   "finance",
@@ -19,10 +20,24 @@ const VEHICLE_GENERIC_KEYWORDS = [
   "car",
   "vehicle",
   "fuel",
-  "gas",
   "petrol",
   "diesel",
   "iuc",
+  // PT
+  "carro",
+  "viatura",
+  "automovel",
+  "automóvel",
+  "gasolina",
+  "gasoleo",
+  "gasóleo",
+  "combustivel",
+  "combustível",
+  "portagem",
+  "via verde",
+  "estacionamento",
+  "oficina",
+  "pneus",
 ];
 
 const PROPERTY_GENERIC_KEYWORDS = [
@@ -34,7 +49,6 @@ const PROPERTY_GENERIC_KEYWORDS = [
   "utilities",
   "water",
   "electricity",
-  "gas",
   "internet",
   "broadband",
   "property tax",
@@ -49,7 +63,7 @@ const PROPERTY_GENERIC_KEYWORDS = [
   "água",
   "luz",
   "edp",
-  "galp gas",
+  "galp",
   "natural gas",
   "gas natural",
   "gás natural",
@@ -107,6 +121,12 @@ export async function findCandidateExpenses(
   }
   if (recurringTemplateId) orClauses.push({ recurringTemplateId });
   for (const kw of allKeywords) {
+    // Word-boundary regex to keep "car" from matching "Cartão", "SD Card",
+    // "Skin Care", "Recarga", "Secar". Postgres' `mode: "insensitive"` works
+    // with a regex when we wrap with `\\m...\\M` (word boundaries) — Prisma
+    // doesn't expose that directly, so we use a `~*` raw match via Prisma.sql
+    // is overkill here; the SQL pre-filter is just a search-space narrow,
+    // and the scoring loop below applies the proper word-boundary check.
     orClauses.push({ name: { contains: kw, mode: "insensitive" } });
   }
 
@@ -149,7 +169,7 @@ export async function findCandidateExpenses(
       const lower = e.name.toLowerCase();
       const specificSet = new Set(specificKeywords);
       for (const kw of allKeywords) {
-        if (lower.includes(kw)) {
+        if (matchesWord(lower, kw)) {
           const isSpecific = specificSet.has(kw);
           score += isSpecific ? 4 : 1;
           reasons.push(isSpecific ? "name" : "keyword");
@@ -187,4 +207,14 @@ function collectSpecificKeywords(
         .map((s) => s.toLowerCase()),
     ),
   );
+}
+
+// Word-boundary match against a lowercased haystack. Prevents short keywords
+// like "car" from matching "Cartão" / "SD Card" / "Skin Care" / "Recarga" /
+// "Secar". Treats hyphens, slashes, plus signs and parentheses as word
+// boundaries (common in expense names like "GPL+gasolina" or "carro/oficina").
+function matchesWord(haystack: string, keyword: string): boolean {
+  const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(`(^|[^\\p{L}\\p{N}])${escaped}($|[^\\p{L}\\p{N}])`, "u");
+  return re.test(haystack);
 }

@@ -1625,6 +1625,25 @@
     "linkedAssetNone": "— Nenhum —",
     "unlinkAsset": "Remover ativo",
     "noActiveAssets": "Ainda sem ativos. Adiciona um veículo ou imóvel a partir do dashboard.",
-    "actionsMenu": "Ações"
+    "actionsMenu": "Ações",
+    "fuelTypeOption": {
+      "PETROL": "Gasolina",
+      "DIESEL": "Gasóleo",
+      "HYBRID": "Híbrido",
+      "EV": "Elétrico",
+      "OTHER": "Outro"
+    },
+    "bodyTypeOption": {
+      "SEDAN": "Sedan",
+      "HATCHBACK": "Hatchback",
+      "SUV": "SUV",
+      "WAGON": "Carrinha",
+      "COUPE": "Coupé",
+      "CONVERTIBLE": "Descapotável",
+      "TRUCK": "Camião",
+      "OTHER": "Outro"
+    },
+    "originalMsrp": "Preço de novo",
+    "aiSuggestedHint": "Sugerido por IA · podes alterar tudo abaixo."
   }
 }

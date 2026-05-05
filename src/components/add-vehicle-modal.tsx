@@ -609,14 +609,22 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
 
                   {spec && (
                     <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
-                      {spec.fuelType && <ChipRow label="Fuel">{spec.fuelType}</ChipRow>}
-                      {spec.bodyType && <ChipRow label="Body">{spec.bodyType}</ChipRow>}
-                      {spec.generation && <ChipRow label="Generation">{spec.generation}</ChipRow>}
+                      {spec.fuelType && (
+                        <ChipRow label={t("fuelType")}>{t(`fuelTypeOption.${spec.fuelType}`)}</ChipRow>
+                      )}
+                      {spec.bodyType && (
+                        <ChipRow label={t("bodyType")}>{t(`bodyTypeOption.${spec.bodyType}`)}</ChipRow>
+                      )}
+                      {spec.generation && (
+                        <ChipRow label={t("generation")}>{spec.generation}</ChipRow>
+                      )}
                       {spec.originalMsrpEur && (
-                        <ChipRow label="Original MSRP">€{spec.originalMsrpEur.toLocaleString()}</ChipRow>
+                        <ChipRow label={t("originalMsrp")}>
+                          €{spec.originalMsrpEur.toLocaleString()}
+                        </ChipRow>
                       )}
                       <p className="text-[11px] text-muted-foreground">
-                        Suggested by AI · you can override anything below.
+                        {t("aiSuggestedHint")}
                       </p>
                     </div>
                   )}
@@ -633,7 +641,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           <option value="">—</option>
                           {FUEL_OPTIONS.map((f) => (
                             <option key={f} value={f}>
-                              {f}
+                              {t(`fuelTypeOption.${f}`)}
                             </option>
                           ))}
                         </select>
@@ -647,7 +655,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           <option value="">—</option>
                           {BODY_OPTIONS.map((b) => (
                             <option key={b} value={b}>
-                              {b}
+                              {t(`bodyTypeOption.${b}`)}
                             </option>
                           ))}
                         </select>
