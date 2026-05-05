@@ -776,6 +776,25 @@ enum VehicleBodyType {
   OTHER
 }
 
+enum PropertyType {
+  APARTMENT
+  HOUSE
+  LAND
+  COMMERCIAL
+  OTHER
+}
+
+enum EnergyRating {
+  A_PLUS
+  A
+  B
+  B_MINUS
+  C
+  D
+  E
+  F
+}
+
 enum LiabilityType {
   VEHICLE_LOAN
   MORTGAGE
@@ -823,6 +842,7 @@ model RealAsset {
   // Relations
   workspace        Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   vehicle          Vehicle?
+  property         Property?
   valuationHistory ValuationHistory[]
   liabilities      Liability[]
   expenses         Expense[]
@@ -861,6 +881,42 @@ model Vehicle {
 
   @@index([brand, model])
   @@map("vehicles")
+}
+
+model Property {
+  realAssetId String @id
+
+  propertyType PropertyType
+
+  // Location (PT-centric, free-text + concelho key for INE valuation index)
+  address    String? @db.VarChar(255)
+  postalCode String? @db.VarChar(20)
+  distrito   String? @db.VarChar(100)
+  concelho   String? @db.VarChar(100)
+  freguesia  String? @db.VarChar(100)
+  country    String  @default("PT") @db.VarChar(2)
+
+  // Physical
+  livableAreaM2  Int?
+  totalAreaM2    Int?
+  bedrooms       Int?
+  bathrooms      Int?
+  yearBuilt      Int?
+  floor          Int? // for apartments
+  parkingSpaces  Int?
+  energyRating   EnergyRating?
+
+  // Recurring fees
+  condominiumFeeMonthly Decimal? @db.Decimal(10, 2)
+
+  realAsset RealAsset @relation(fields: [realAssetId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([concelho])
+  @@index([propertyType])
+  @@map("properties")
 }
 
 model ValuationHistory {
