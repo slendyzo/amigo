@@ -69,7 +69,11 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
           className,
         )}
       >
-        <PropertyImage src={property.imageUrl ?? mapUrl} alt={property.name} />
+        <PropertyImage
+          src={property.imageUrl ?? mapUrl}
+          alt={property.name}
+          isMap={!property.imageUrl && !!mapUrl}
+        />
 
         <div className="space-y-3 p-4">
           <header className="flex items-start justify-between gap-2">
@@ -133,23 +137,48 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
   );
 }
 
-function PropertyImage({ src, alt }: { src: string | null; alt: string }) {
+function PropertyImage({
+  src,
+  alt,
+  isMap,
+}: {
+  src: string | null;
+  alt: string;
+  isMap: boolean;
+}) {
   if (!src) {
     return (
-      <div className="flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-violet-500/10 to-violet-500/5">
+      <div className="flex aspect-[16/9] max-h-[200px] w-full items-center justify-center bg-gradient-to-br from-violet-500/10 to-violet-500/5">
         <Home className="h-10 w-10 text-violet-500/60" strokeWidth={1.5} />
       </div>
     );
   }
   return (
-    <div className="aspect-[16/9] w-full overflow-hidden bg-muted/40">
+    <div className="relative aspect-[16/9] max-h-[200px] w-full overflow-hidden bg-muted/40">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}
         alt={alt}
         loading="lazy"
-        className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+        className={cn(
+          "h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]",
+          // Tone down raw OSM tiles so they read as a "location chip" not a debug screen.
+          isMap && "saturate-[0.55] brightness-[0.97] contrast-[0.95]",
+        )}
       />
+      {isMap && (
+        <>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/40" />
+          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="relative">
+              <div className="absolute inset-0 -m-1.5 rounded-full bg-primary/25 blur-md" />
+              <div className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-md">
+                <Home className="h-3 w-3" strokeWidth={2.5} />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }

@@ -122,13 +122,13 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
 function VehicleImage({ src, alt }: { src: string | null; alt: string }) {
   if (!src) {
     return (
-      <div className="flex aspect-[16/9] w-full items-center justify-center bg-gradient-to-br from-muted/40 to-muted/10">
+      <div className="flex aspect-[16/9] max-h-[200px] w-full items-center justify-center bg-gradient-to-br from-muted/40 to-muted/10">
         <Car className="h-10 w-10 text-muted-foreground/50" strokeWidth={1.5} />
       </div>
     );
   }
   return (
-    <div className="aspect-[16/9] w-full overflow-hidden bg-muted/40">
+    <div className="aspect-[16/9] max-h-[200px] w-full overflow-hidden bg-muted/40">
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={src}

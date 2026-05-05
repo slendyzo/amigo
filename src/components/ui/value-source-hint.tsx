@@ -2,13 +2,17 @@
 
 // Tiny ? hint icon next to "Estimated value" labels on RWA cards. Hovering
 // reveals a popover explaining where the number comes from + when it was
-// last refreshed. Inert on touch — hover-only.
+// last refreshed.
+//
+// Edge-collision: on first open we measure the trigger's viewport position
+// and flip the popover's horizontal anchor (left / center / right) so it
+// stays inside the card instead of clipping past the right edge.
 //
 // The component sits inside <Link> wrappers, so we stopPropagation on the
 // trigger to prevent accidental navigation when the user clicks the icon
 // to keep the tooltip pinned.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -90,6 +94,10 @@ function formatRelative(iso: string): string {
   return `${Math.round(mo / 12)}y ago`;
 }
 
+type Align = "left" | "center" | "right";
+
+const POPOVER_WIDTH_PX = 256; // matches w-64
+
 export function ValueSourceHint({
   source,
   updatedAt,
@@ -98,7 +106,26 @@ export function ValueSourceHint({
   className,
 }: ValueSourceHintProps) {
   const [open, setOpen] = useState(false);
+  const [align, setAlign] = useState<Align>("center");
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const desc = source ? SOURCE_DESCRIPTIONS[source] : null;
+
+  // Decide horizontal anchor on every open so it stays inside the viewport
+  // even after layout shifts.
+  useEffect(() => {
+    if (!open || !triggerRef.current) return;
+    const rect = triggerRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const half = POPOVER_WIDTH_PX / 2;
+    const margin = 12; // breathing room from viewport edge
+    if (rect.left + rect.width / 2 + half + margin > vw) {
+      setAlign("right");
+    } else if (rect.left + rect.width / 2 - half - margin < 0) {
+      setAlign("left");
+    } else {
+      setAlign("center");
+    }
+  }, [open]);
 
   if (!desc) return null;
   const { label, body } = desc(assetType);
@@ -110,6 +137,13 @@ export function ValueSourceHint({
     setOpen((v) => !v);
   };
 
+  const anchorClass =
+    align === "right"
+      ? "right-0"
+      : align === "left"
+      ? "left-0"
+      : "left-1/2 -translate-x-1/2";
+
   return (
     <span
       className={cn("relative inline-flex", className)}
@@ -117,6 +151,7 @@ export function ValueSourceHint({
       onMouseLeave={() => setOpen(false)}
     >
       <button
+        ref={triggerRef}
         type="button"
         onClick={handleClick}
         className="inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground/80"
@@ -134,7 +169,8 @@ export function ValueSourceHint({
             transition={{ duration: 0.16, ease: EASE }}
             role="tooltip"
             className={cn(
-              "absolute left-1/2 top-full z-50 mt-1 w-64 -translate-x-1/2",
+              "absolute top-full z-50 mt-1 w-64",
+              anchorClass,
               "rounded-lg border border-border/80 bg-popover/98 p-3 text-left shadow-2xl backdrop-blur-md",
             )}
             onClick={(e) => {
