@@ -162,10 +162,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
 
   const yearNum = pick.year ?? NaN;
   const canLookup = !!brand && !!model && Number.isFinite(yearNum);
-  // Step 1 is OK once Year + Make + Model are set. Trim is required to
-  // submit (enforced by submit guard below) but allowing Next to advance
-  // before trim selection would skip the dropdown — so we require all four.
-  const step1Ok = canLookup && pick.trim !== undefined;
+  const step1Ok = canLookup;
   const step2Ok = step1Ok && parseFloat(purchasePrice) > 0 && purchaseDate;
   const step3Ok =
     !financed ||

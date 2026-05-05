@@ -2,14 +2,13 @@
 
 // Cascading vehicle picker: Year → Make → Model → Trim.
 //
-// Each level is locked until the previous one is set. Make/Model/Trim are
-// fetched lazily from /api/taxonomy/vehicle (which AI-builds the catalog
-// the first time a (year, make, ...) tuple is requested and caches forever).
-//
-// Solves the original bug: forcing the user to pick a known trim from a
-// dropdown means an MX-5 RF can never accidentally be saved as a soft-top.
+// Year/Make/Model are dropdowns (Make is a static PT-market list, Models come
+// from a cached AI lookup). Trim is a free-text input — users know what they
+// own from the registration doc, and an LLM can't reliably enumerate every
+// OEM trim across years/markets without hallucinating ("Matzen Edition" on a
+// Duster, etc).
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -36,6 +35,8 @@ export type CascadingVehiclePickerProps = {
     noTrim: string;
     noResults: string;
     yearPlaceholder: string;
+    trimPlaceholder: string;
+    trimHint: string;
   }>;
 };
 
@@ -43,12 +44,14 @@ const DEFAULT_COPY = {
   year: "Year",
   make: "Make",
   model: "Model",
-  trim: "Trim",
+  trim: "Trim (optional)",
   pickFirst: "Pick the previous field first",
   loading: "Loading options…",
   noTrim: "Base / no trim",
   noResults: "No options found — try refreshing or pick a different parent.",
   yearPlaceholder: "2019",
+  trimPlaceholder: "e.g. Sport, RF, GT Line",
+  trimHint: "Type the trim from your registration doc, or leave empty.",
 };
 
 const MIN_YEAR = 1990;
@@ -68,14 +71,11 @@ export function CascadingVehiclePicker({
   const [makesLoading, setMakesLoading] = useState(false);
   const [models, setModels] = useState<string[] | null>(null);
   const [modelsLoading, setModelsLoading] = useState(false);
-  const [trims, setTrims] = useState<string[] | null>(null);
-  const [trimsLoading, setTrimsLoading] = useState(false);
 
   // Reset downstream when year changes
   useEffect(() => {
     setMakes(null);
     setModels(null);
-    setTrims(null);
     if (value.year == null) return;
     let cancelled = false;
     setMakesLoading(true);
@@ -93,7 +93,6 @@ export function CascadingVehiclePicker({
   // Reset downstream when make changes
   useEffect(() => {
     setModels(null);
-    setTrims(null);
     if (value.year == null || !value.make) return;
     let cancelled = false;
     setModelsLoading(true);
@@ -107,23 +106,6 @@ export function CascadingVehiclePicker({
       cancelled = true;
     };
   }, [value.year, value.make]);
-
-  // Reset downstream when model changes
-  useEffect(() => {
-    setTrims(null);
-    if (value.year == null || !value.make || !value.model) return;
-    let cancelled = false;
-    setTrimsLoading(true);
-    fetchTaxonomy({ year: value.year, make: value.make, model: value.model })
-      .then((vals) => {
-        if (cancelled) return;
-        setTrims(vals);
-      })
-      .finally(() => !cancelled && setTrimsLoading(false));
-    return () => {
-      cancelled = true;
-    };
-  }, [value.year, value.make, value.model]);
 
   return (
     <div className="space-y-3">
@@ -173,20 +155,23 @@ export function CascadingVehiclePicker({
         noResultsHint={copy.noResults}
       />
 
-      <DropdownField
-        label={copy.trim}
-        options={trims}
-        loading={trimsLoading}
-        disabled={!value.model}
-        value={value.trim ?? ""}
-        onSelect={(v) =>
-          onChange({ ...value, trim: v === "__base__" ? null : v })
-        }
-        emptyHint={copy.pickFirst}
-        loadingHint={copy.loading}
-        noResultsHint={copy.noResults}
-        extraOption={{ value: "__base__", label: copy.noTrim }}
-      />
+      {/* Trim — free text. Empty string is treated as "no trim". */}
+      <Field label={copy.trim}>
+        <input
+          type="text"
+          value={value.trim ?? ""}
+          onChange={(e) => {
+            const next = e.target.value;
+            onChange({ ...value, trim: next.length === 0 ? null : next });
+          }}
+          placeholder={copy.trimPlaceholder}
+          disabled={!value.model}
+          className={cn(inputClass, "disabled:cursor-not-allowed disabled:bg-muted/30")}
+        />
+        <span className="mt-1 block text-[11px] text-muted-foreground/70">
+          {copy.trimHint}
+        </span>
+      </Field>
     </div>
   );
 }
@@ -214,7 +199,6 @@ type DropdownFieldProps = {
   emptyHint: string;
   loadingHint: string;
   noResultsHint: string;
-  extraOption?: { value: string; label: string };
 };
 
 function DropdownField({
@@ -227,20 +211,39 @@ function DropdownField({
   emptyHint,
   loadingHint,
   noResultsHint,
-  extraOption,
 }: DropdownFieldProps) {
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
 
   // Close when disabled
   useEffect(() => {
     if (disabled && open) setOpen(false);
   }, [disabled, open]);
 
+  // Close on outside pointer down. Using mousedown + touchstart instead of a
+  // full-viewport overlay div — the overlay was eating taps on the modal's
+  // own controls (close button, footer) and on touch devices it didn't
+  // reliably register as an outside-click anyway.
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent | TouchEvent) => {
+      const target = e.target as Node | null;
+      if (!target || !rootRef.current) return;
+      if (!rootRef.current.contains(target)) setOpen(false);
+    };
+    document.addEventListener("mousedown", handler);
+    document.addEventListener("touchstart", handler);
+    return () => {
+      document.removeEventListener("mousedown", handler);
+      document.removeEventListener("touchstart", handler);
+    };
+  }, [open]);
+
   const visibleLabel = value || (disabled ? emptyHint : loading ? loadingHint : "—");
 
   return (
     <Field label={label}>
-      <div className="relative">
+      <div ref={rootRef} className="relative">
         <button
           type="button"
           disabled={disabled || loading}
@@ -267,63 +270,37 @@ function DropdownField({
 
         <AnimatePresence>
           {open && options && (
-            <>
-              {/* Click-outside catcher */}
-              <div
-                className="fixed inset-0 z-30"
-                onClick={() => setOpen(false)}
-                aria-hidden
-              />
-              <motion.ul
-                initial={{ opacity: 0, y: -4, scale: 0.99 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: -4, scale: 0.99 }}
-                transition={{ duration: 0.18, ease: EASE }}
-                className="absolute z-40 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-border/80 bg-card p-1 shadow-2xl backdrop-blur-md"
-              >
-                {options.length === 0 ? (
-                  <li className="px-3 py-2 text-xs text-muted-foreground">
-                    {noResultsHint}
+            <motion.ul
+              initial={{ opacity: 0, y: -4, scale: 0.99 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.99 }}
+              transition={{ duration: 0.18, ease: EASE }}
+              className="absolute z-40 mt-1 max-h-64 w-full overflow-y-auto rounded-xl border border-border/80 bg-card p-1 shadow-2xl backdrop-blur-md"
+            >
+              {options.length === 0 ? (
+                <li className="px-3 py-2 text-xs text-muted-foreground">
+                  {noResultsHint}
+                </li>
+              ) : (
+                options.map((opt) => (
+                  <li key={opt}>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onSelect(opt);
+                        setOpen(false);
+                      }}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-muted",
+                        value === opt && "bg-primary/10 font-medium text-primary",
+                      )}
+                    >
+                      {opt}
+                    </button>
                   </li>
-                ) : (
-                  <>
-                    {extraOption && (
-                      <li>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onSelect(extraOption.value);
-                            setOpen(false);
-                          }}
-                          className={cn(
-                            "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm italic text-muted-foreground hover:bg-muted",
-                          )}
-                        >
-                          {extraOption.label}
-                        </button>
-                      </li>
-                    )}
-                    {options.map((opt) => (
-                      <li key={opt}>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            onSelect(opt);
-                            setOpen(false);
-                          }}
-                          className={cn(
-                            "flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm hover:bg-muted",
-                            value === opt && "bg-primary/10 font-medium text-primary",
-                          )}
-                        >
-                          {opt}
-                        </button>
-                      </li>
-                    ))}
-                  </>
-                )}
-              </motion.ul>
-            </>
+                ))
+              )}
+            </motion.ul>
           )}
         </AnimatePresence>
       </div>
