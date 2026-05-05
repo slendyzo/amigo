@@ -46,15 +46,12 @@ jobs:
             echo "Build ID: $NEXT_PUBLIC_BUILD_ID"
             echo "Build Date: $NEXT_PUBLIC_BUILD_DATE"
 
-            # Clean up before building. We run an aggressive prune (-a) so
-            # untagged-but-existing images from prior builds get reclaimed too —
-            # dangling-only prune leaves those behind and they fill the LXC
-            # disk over time, eventually causing silent "no space left on
-            # device" build failures that the workflow reports as success.
-            # Build cache is preserved automatically because the in-progress
-            # build will pull layers from the registry / rebuild as needed.
-            echo "=== Cleaning up unused images + stopped containers ==="
-            docker image prune -af
+            # Pre-build: only stop containers + sanity-check disk. Do NOT
+            # prune images here — that wipes the BuildKit layer cache and
+            # forces npm install / prisma generate / next build to run from
+            # scratch every push, blowing build times from ~90s to 5-12min.
+            # Image cleanup happens AFTER the build instead (dangling-only).
+            echo "=== Pre-build cleanup ==="
             docker container prune -f
             echo "Disk before build: $(df -h / | tail -1 | awk '{print $5}')"
 
@@ -64,12 +61,20 @@ jobs:
             if [ "$AVAIL_KB" -lt 3145728 ]; then
               echo "ERROR: less than 3 GB free on /. Refusing to build to avoid silent failure."
               df -h /
-              exit 1
+              # Try a one-shot recovery prune before giving up.
+              docker image prune -af
+              AVAIL_KB=$(df --output=avail / | tail -1 | tr -d ' ')
+              if [ "$AVAIL_KB" -lt 3145728 ]; then
+                exit 1
+              fi
+              echo "Recovered disk: $(df -h / | tail -1 | awk '{print $5}')"
             fi
 
-            # Build new image. --pull ensures base node:22-alpine is current.
+            # Build new image. No --pull: keep the cached base layers; the
+            # daily prune cron at 04:30 + monthly Renovate-style refresh will
+            # surface stale-base concerns separately.
             echo "=== Building Docker image ==="
-            docker compose build --pull
+            docker compose build
 
             # Restart with new image — docker compose up -d already fails the
             # script (via set -e) if containers can't start, so no extra health
@@ -78,4 +83,10 @@ jobs:
             # is read back, which shows up as a false-red "exit 255" in Actions.
             echo "=== Starting container ==="
             docker compose up -d
+
+            # Post-deploy: drop now-orphaned previous image (dangling only —
+            # cache layers stay).
+            echo "=== Post-deploy prune ==="
+            docker image prune -f
+
             echo "=== Deployed: $NEXT_PUBLIC_BUILD_ID @ $NEXT_PUBLIC_BUILD_DATE ==="
