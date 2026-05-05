@@ -18,7 +18,11 @@
 
 const STADIA_BASE = "https://tiles.stadiamaps.com/tiles";
 const STADIA_STYLE = "alidade_smooth";
-const DEFAULT_ZOOM = 18;
+// Zoom 16 ≈ 150m per tile at PT latitudes — shows the street plus a few
+// surrounding blocks, which reads as "this is the neighborhood" without
+// becoming an empty rooftop close-up. Zoom 18 was too tight for cards and
+// the hero alike.
+const DEFAULT_ZOOM = 16;
 const GRID_TILES = 2;
 
 function tileUrl(z: number, x: number, y: number): string {
