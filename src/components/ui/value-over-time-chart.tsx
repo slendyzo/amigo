@@ -13,8 +13,9 @@
 // Loading state: skeleton card with shimmer + progress copy.
 // no_data state: explainer + Add valuation CTA.
 
-import { useMemo } from "react";
-import { motion } from "framer-motion";
+import { useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { ChevronDown, Info } from "lucide-react";
 import {
   Area,
   CartesianGrid,
@@ -59,6 +60,11 @@ export type ValueOverTimeChartProps = {
   status?: "loading" | "done" | "no_data";
   progress?: { current: number; total: number };
   onAddValuation?: () => void;
+  /**
+   * Asset-class context for the methodology disclosure ("How this chart is
+   * built"). Defaults to vehicle when omitted.
+   */
+  assetType?: "vehicle" | "property";
   /** Translations / copy. Kept on caller side so this stays presentation-only. */
   copy?: Partial<{
     title: string;
@@ -75,6 +81,9 @@ export type ValueOverTimeChartProps = {
     listingsLabel: string; // "{n} listings"
     yourEntryLabel: string; // "Your entry"
     aiEstimateLabel: string;
+    methodologyToggle: string; // "How this chart is built"
+    methodologyToggleHide: string;
+    methodologySummary: string; // "{real} market scrapes · {ai} AI fills · {manual} manual"
   }>;
 };
 
@@ -94,6 +103,9 @@ const DEFAULT_COPY = {
   listingsLabel: "{n} listings",
   yourEntryLabel: "Your entry",
   aiEstimateLabel: "AI estimate",
+  methodologyToggle: "How this chart is built",
+  methodologyToggleHide: "Hide details",
+  methodologySummary: "{real} market scrapes · {ai} AI fills · {manual} manual",
 } as const;
 
 const COLOR = "var(--primary)";
@@ -106,6 +118,7 @@ export function ValueOverTimeChart({
   status = "done",
   progress,
   onAddValuation,
+  assetType = "vehicle",
   copy: copyOverrides,
 }: ValueOverTimeChartProps) {
   const copy = { ...DEFAULT_COPY, ...copyOverrides };
@@ -261,6 +274,13 @@ export function ValueOverTimeChart({
       </div>
 
       <Legend copy={copy} hasManual={sortedPoints.some((p) => p.source === "manual")} hasEstimate={sortedPoints.some((p) => p.source === "ai_estimate")} />
+
+      <MethodologySection
+        points={sortedPoints}
+        assetType={assetType}
+        hasReference={!!referenceLine && referenceLine.length > 0}
+        copy={copy}
+      />
     </Card>
   );
 }
@@ -430,6 +450,138 @@ function Legend({
         </span>
       )}
     </div>
+  );
+}
+
+// ─── Methodology disclosure ─────────────────────────────────────────────────
+
+function MethodologySection({
+  points,
+  assetType,
+  hasReference,
+  copy,
+}: {
+  points: ValuePoint[];
+  assetType: "vehicle" | "property";
+  hasReference: boolean;
+  copy: CopyShape;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const counts = useMemo(() => {
+    let real = 0;
+    let ai = 0;
+    let manual = 0;
+    let purchase = 0;
+    const realDates: string[] = [];
+    for (const p of points) {
+      if (p.source === "web_archive" || p.source === "live_scrape") {
+        real++;
+        realDates.push(p.date);
+      } else if (p.source === "ai_estimate") {
+        ai++;
+      } else if (p.source === "manual") {
+        manual++;
+      } else if (p.source === "purchase") {
+        purchase++;
+      }
+    }
+    return { real, ai, manual, purchase, realDates };
+  }, [points]);
+
+  const summary = fmt(copy.methodologySummary, {
+    real: counts.real,
+    ai: counts.ai,
+    manual: counts.manual,
+  });
+
+  return (
+    <div className="mt-3 border-t border-border/40 pt-2.5 text-[11px] text-muted-foreground">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        className="inline-flex items-center gap-1 text-left transition-colors hover:text-foreground"
+      >
+        <Info className="h-3 w-3" />
+        <span>{open ? copy.methodologyToggleHide : copy.methodologyToggle}</span>
+        <span className="text-muted-foreground/70">· {summary}</span>
+        <ChevronDown
+          className={cn("h-3 w-3 transition-transform", open && "rotate-180")}
+        />
+      </button>
+
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            className="overflow-hidden"
+          >
+            <div className="mt-2 space-y-2 leading-relaxed">
+              <Para>
+                <span className="font-medium text-foreground/90">Solid dots</span> are
+                real market data. For vehicles, scraped from{" "}
+                <Lit>Standvirtual</Lit> + <Lit>OLX</Lit> archives via the Internet
+                Archive&rsquo;s CDX API for historical snapshots, plus the same sites
+                live every 5 days going forward. For properties,{" "}
+                <Lit>Idealista</Lit> + <Lit>Imovirtual</Lit> on the same cadence. Each
+                dot is the median of N matching listings (filtered by mileage ±15% for
+                vehicles, livable area ±15% for properties); the count appears in the
+                tooltip.
+              </Para>
+              <Para>
+                <span className="font-medium text-foreground/90">Hollow rings</span>{" "}
+                are AI estimates. When real-data gaps exceed 4 months, we send the
+                asset spec (year, make, model, trim, purchase price + date) and the
+                surrounding real anchor points to <Lit>Z.AI GLM-4.6</Lit>, which
+                returns one value per ~quarter inside the gap. The model interpolates
+                a plausible depreciation curve consistent with the real anchors —
+                it&rsquo;s estimation, not market data, and never shifts the real
+                dots.
+              </Para>
+              <Para>
+                <span className="font-medium text-foreground/90">Diamonds</span> are
+                valuations you logged manually (independent appraisal, insurance
+                value, offer received). They survive spec edits and re-runs of the
+                backfill.
+              </Para>
+              {hasReference && assetType === "property" && (
+                <Para>
+                  <span className="font-medium text-foreground/90">Faded line</span>{" "}
+                  is the INE concelho index (
+                  <Lit>
+                    Valor mediano das vendas de alojamentos familiares (€/m²)
+                  </Lit>
+                  ), rebased so it passes through your purchase price at the
+                  purchase quarter. Pulled directly from{" "}
+                  <Lit>ine.pt/ine/json_indicador/pindica.jsp</Lit>, indicator{" "}
+                  <Lit>0011370</Lit>, refreshed weekly.
+                </Para>
+              )}
+              <Para>
+                Honest about gaps: when no comparables exist for a date, that part
+                of the chart stays empty rather than being filled with fiction. Real
+                dots always outrank estimates if the same date has both.
+              </Para>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function Para({ children }: { children: React.ReactNode }) {
+  return <p className="text-[11px]">{children}</p>;
+}
+
+function Lit({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="rounded bg-muted/60 px-1 py-0.5 font-mono text-[10px] text-foreground/80">
+      {children}
+    </span>
   );
 }
 

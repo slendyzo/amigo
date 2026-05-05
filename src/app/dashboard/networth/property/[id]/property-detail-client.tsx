@@ -427,6 +427,7 @@ export default function PropertyDetailClient({
               : undefined
           }
           onAddValuation={() => setShowAddValuation(true)}
+          assetType="property"
           copy={{ title: t("valueOverTime") }}
         />
       )}
