@@ -103,7 +103,8 @@ model User {
   emailVerified      DateTime?
   subscriptionStatus SubscriptionStatus @default(BASIC)
   aiCredits          Int                @default(0)
-  aiProcessingEnabled Boolean           @default(false)
+  aiProcessingEnabled Boolean           @default(false) // Doubles as AI Advisor consent flag
+  aiConsentAt        DateTime?          // When user accepted/declined the AI advisor consent prompt
   activeWorkspaceId  String?            // Currently selected workspace for multi-workspace support
   seenAnnouncements  String[]           @default([]) // Array of announcement IDs user has dismissed
 
@@ -209,6 +210,7 @@ model Workspace {
   exchangeConnections ExchangeConnection[]
   realAssets   RealAsset[]
   liabilities  Liability[]
+  insights     Insight[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1088,4 +1090,54 @@ model Liability {
   @@index([realAssetId])
   @@index([recurringTemplateId])
   @@map("liabilities")
+}
+
+// ============================================================================
+// AI ADVISOR (Insights, retrospectives, nudges)
+// ============================================================================
+
+enum InsightType {
+  RETROSPECTIVE       // Day-1 monthly retrospective popup
+  NUDGE_CATEGORIZE    // "X expenses need a category" prompt
+  NUDGE_KEYWORD       // "Make Continente → Groceries a rule?" prompt
+  NUDGE_RECURRING     // "Spotify recurs monthly — add template?" prompt
+  NUDGE_PROJECT       // "These 4 expenses look like a project" prompt
+}
+
+enum InsightStatus {
+  OPEN       // Active, surfaced to the user
+  ACCEPTED   // User acted on it (created rule, tagged, etc.) — never returns for same scope
+  DISMISSED  // User dismissed; respect snoozeUntil before regenerating
+  EXPIRED    // Time-bound (e.g. retrospective for an old month) and no longer surfaced
+}
+
+model Insight {
+  id          String        @id @default(cuid())
+  workspaceId String
+  type        InsightType
+  status      InsightStatus @default(OPEN)
+
+  generatedAt DateTime      @default(now())
+  readAt      DateTime?     // For RETROSPECTIVE: when user opened the popup
+  dismissedAt DateTime?
+  snoozeUntil DateTime?     // Suppress re-detection until this timestamp
+
+  content     Json          // Structured LLM output (headline + observations, or per-row guesses)
+  payload     Json          // Pre-aggregated stats sent to the LLM (audit trail + dedupe input)
+  inputHash   String        @db.VarChar(64) // sha256 of payload — idempotency key for cron generation
+
+  // Period (RETROSPECTIVE only)
+  periodYear  Int?
+  periodMonth Int? // 1..12
+
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([workspaceId, type, status])
+  @@index([workspaceId, periodYear, periodMonth])
+  @@index([workspaceId, snoozeUntil])
+  @@index([workspaceId, type, inputHash])
+  @@map("insights")
 }
