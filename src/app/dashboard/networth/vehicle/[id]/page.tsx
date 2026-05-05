@@ -18,7 +18,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
     include: {
       vehicle: true,
       liabilities: true,
-      valuationHistory: { orderBy: { recordedAt: "desc" }, take: 90 },
+      valuationHistory: { orderBy: { recordedAt: "asc" }, take: 1000 },
       expenses: {
         select: {
           id: true,
@@ -53,6 +53,8 @@ export default async function VehicleDetailPage({ params }: PageProps) {
         currentValueSource: asset.currentValueSource,
         soldAt: asset.soldAt?.toISOString() ?? null,
         salePriceEur: asset.salePriceEur != null ? Number(asset.salePriceEur) : null,
+        backfillStatus: asset.backfillStatus,
+        backfillProgress: asset.backfillProgress,
       }}
       vehicle={{
         brand: asset.vehicle.brand,
@@ -83,6 +85,8 @@ export default async function VehicleDetailPage({ params }: PageProps) {
         id: v.id,
         valueEur: Number(v.valueEur),
         source: v.source,
+        sampleSize: v.sampleSize,
+        metadata: v.metadata as Record<string, unknown> | null,
         recordedAt: v.recordedAt.toISOString(),
       }))}
       expenses={asset.expenses.map((e) => ({

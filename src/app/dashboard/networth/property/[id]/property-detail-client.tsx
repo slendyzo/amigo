@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,11 +23,17 @@ import {
   Building2,
   Zap,
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { formatCurrency } from "@/lib/currencies";
 import { buildStaticMapUrl } from "@/lib/static-map";
 import { cn } from "@/lib/utils";
 import EditPropertyModal from "@/components/edit-property-modal";
+import {
+  ValueOverTimeChart,
+  type ValuePoint,
+  type ValuePointSource,
+  type ReferenceLinePoint,
+} from "@/components/ui/value-over-time-chart";
+import { AddValuationModal } from "@/components/add-valuation-modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -45,6 +51,8 @@ type Asset = {
   currentValueSource: string | null;
   soldAt: string | null;
   salePriceEur: number | null;
+  backfillStatus: string | null;
+  backfillProgress: number | null;
 };
 
 type Property = {
@@ -82,7 +90,26 @@ type Liability = {
   startDate: string;
 };
 
-type ValuationPoint = { id: string; valueEur: number; source: string; recordedAt: string };
+type ValuationPoint = {
+  id: string;
+  valueEur: number;
+  source: string;
+  sampleSize: number | null;
+  metadata: Record<string, unknown> | null;
+  recordedAt: string;
+};
+
+const KNOWN_SOURCES: ValuePointSource[] = [
+  "purchase",
+  "web_archive",
+  "live_scrape",
+  "ai_estimate",
+  "manual",
+];
+
+function normalizeSource(s: string): ValuePointSource {
+  return (KNOWN_SOURCES as string[]).includes(s) ? (s as ValuePointSource) : "ai_estimate";
+}
 
 type ExpenseRow = {
   id: string;
@@ -100,6 +127,7 @@ type Props = {
   liabilities: Liability[];
   valuationHistory: ValuationPoint[];
   expenses: ExpenseRow[];
+  referenceLine: ReferenceLinePoint[];
 };
 
 const ENERGY_LABEL: Record<NonNullable<Property["energyRating"]>, string> = {
@@ -119,12 +147,14 @@ export default function PropertyDetailClient({
   liabilities,
   valuationHistory,
   expenses,
+  referenceLine,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("rwa");
   const tDashboard = useTranslations("dashboard");
   const [showSell, setShowSell] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
+  const [showAddValuation, setShowAddValuation] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -142,11 +172,55 @@ export default function PropertyDetailClient({
     );
   }, [asset.purchaseDate, asset.soldAt, sold]);
 
-  const chartData = useMemo(() => {
-    return [...valuationHistory]
-      .reverse()
-      .map((v) => ({ date: v.recordedAt.slice(0, 10), value: v.valueEur }));
-  }, [valuationHistory]);
+  const chartPoints: ValuePoint[] = useMemo(
+    () =>
+      valuationHistory.map((v) => ({
+        date: v.recordedAt.slice(0, 10),
+        value: v.valueEur,
+        source: normalizeSource(v.source),
+        sampleSize: v.sampleSize,
+        note:
+          v.metadata && typeof v.metadata === "object" && "note" in v.metadata
+            ? String(v.metadata.note)
+            : null,
+      })),
+    [valuationHistory],
+  );
+
+  const [backfillStatus, setBackfillStatus] = useState<string | null>(asset.backfillStatus);
+  const [backfillProgress, setBackfillProgress] = useState<number | null>(asset.backfillProgress);
+
+  useEffect(() => {
+    if (backfillStatus !== "queued" && backfillStatus !== "running") return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/assets/${asset.id}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const json = (await res.json()) as { asset?: { backfillStatus: string | null; backfillProgress: number | null } };
+        if (cancelled || !json.asset) return;
+        setBackfillStatus(json.asset.backfillStatus);
+        setBackfillProgress(json.asset.backfillProgress);
+        if (json.asset.backfillStatus === "done" || json.asset.backfillStatus === "no_data") {
+          router.refresh();
+        }
+      } catch {
+        // ignore
+      }
+    };
+    const interval = setInterval(poll, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [asset.id, backfillStatus, router]);
+
+  const chartStatus: "loading" | "done" | "no_data" =
+    backfillStatus === "queued" || backfillStatus === "running"
+      ? "loading"
+      : backfillStatus === "no_data"
+      ? "no_data"
+      : "done";
 
   const linkedExpensesTotal = expenses.reduce((s, e) => s + e.amountEur, 0);
   const monthlyTCO = monthsOwned > 0 ? linkedExpensesTotal / monthsOwned : 0;
@@ -340,64 +414,21 @@ export default function PropertyDetailClient({
 
       {/* Value-over-time chart */}
       {!sold && (
-        <section className="rounded-2xl border border-border/60 bg-card/80 p-5">
-          <div className="mb-2 flex items-baseline justify-between">
-            <h2 className="text-xs font-bold uppercase tracking-[0.8px] text-muted-foreground">
-              {t("valueOverTime")}
-            </h2>
-            {property.concelho && (
-              <p className="text-xs text-muted-foreground">
-                {t("ineIndex", { concelho: property.concelho })}
-              </p>
-            )}
-          </div>
-
-          {chartData.length > 1 ? (
-            <div className="h-[220px] w-full">
-              <ResponsiveContainer>
-                <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-                  <XAxis
-                    dataKey="date"
-                    tick={{ fontSize: 11 }}
-                    stroke="currentColor"
-                    className="text-muted-foreground"
-                  />
-                  <YAxis
-                    tick={{ fontSize: 11 }}
-                    stroke="currentColor"
-                    className="text-muted-foreground"
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      background: "var(--card)",
-                      border: "1px solid var(--border)",
-                      borderRadius: 8,
-                      fontSize: 12,
-                    }}
-                    formatter={(v) => [
-                      formatCurrency(typeof v === "number" ? v : Number(v), "EUR"),
-                      t("chartValueLabel"),
-                    ]}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="value"
-                    stroke="hsl(var(--primary))"
-                    strokeWidth={2}
-                    dot={false}
-                    isAnimationActive
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <ChartEmptyState
-              purchasePrice={asset.purchasePriceEur}
-              purchaseDateLabel={purchaseDateLabel}
-              caption={t("trackingFromCaption", { month: purchaseDateLabel })}
-            />
-          )}
-        </section>
+        <ValueOverTimeChart
+          points={chartPoints}
+          referenceLine={referenceLine}
+          referenceLabel={
+            property.concelho ? t("ineIndex", { concelho: property.concelho }) : undefined
+          }
+          status={chartStatus}
+          progress={
+            chartStatus === "loading" && backfillProgress != null
+              ? { current: backfillProgress, total: 100 }
+              : undefined
+          }
+          onAddValuation={() => setShowAddValuation(true)}
+          copy={{ title: t("valueOverTime") }}
+        />
       )}
 
       {/* Loans */}
@@ -457,6 +488,17 @@ export default function PropertyDetailClient({
             onClose={() => setShowSell(false)}
             onSold={() => {
               setShowSell(false);
+              router.refresh();
+            }}
+          />
+        )}
+        {showAddValuation && (
+          <AddValuationModal
+            assetId={asset.id}
+            defaultCurrency={asset.purchaseCurrency}
+            onClose={() => setShowAddValuation(false)}
+            onSaved={() => {
+              setShowAddValuation(false);
               router.refresh();
             }}
           />

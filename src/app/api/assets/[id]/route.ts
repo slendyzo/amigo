@@ -5,6 +5,7 @@ import { convertToEur } from "@/lib/currency";
 import { computeVehicleHeuristicValue } from "@/lib/asset-valuation";
 import { geocodePostalCode } from "@/lib/geocode";
 import { regeneratePropertyValuationHistory } from "@/lib/property-valuation-regen";
+import { enqueueBackfill } from "@/lib/asset-backfill";
 import {
   requireActiveWorkspace,
   requirePermission,
@@ -142,11 +143,31 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       const vehicleInput = (body.vehicle ?? {}) as Record<string, unknown>;
       const vehicleData: Prisma.VehicleUpdateInput = {};
 
+      // AMIGO-203: detect spec changes (brand/model/year/trim) so we can
+      // discard scraped + estimated valuation rows after the update commits.
+      // Manual rows + purchase row are preserved — those are facts about
+      // THIS asset regardless of how it's labelled.
+      let specChanged = false;
       if (typeof vehicleInput.brand === "string") vehicleData.brand = vehicleInput.brand.trim();
       if (typeof vehicleInput.model === "string") vehicleData.model = vehicleInput.model.trim();
       if (typeof vehicleInput.generation === "string") vehicleData.generation = vehicleInput.generation;
       if (typeof vehicleInput.year === "number") vehicleData.year = vehicleInput.year;
       if (typeof vehicleInput.trim === "string") vehicleData.trim = vehicleInput.trim;
+      if (existing.vehicle) {
+        const newBrand = (vehicleData.brand as string | undefined) ?? existing.vehicle.brand;
+        const newModel = (vehicleData.model as string | undefined) ?? existing.vehicle.model;
+        const newYear = (vehicleData.year as number | undefined) ?? existing.vehicle.year;
+        const newTrim =
+          vehicleData.trim !== undefined
+            ? (vehicleData.trim as string | null)
+            : existing.vehicle.trim;
+        specChanged =
+          newBrand !== existing.vehicle.brand ||
+          newModel !== existing.vehicle.model ||
+          newYear !== existing.vehicle.year ||
+          (newTrim ?? null) !== (existing.vehicle.trim ?? null);
+      }
+
       if (typeof vehicleInput.vin === "string") vehicleData.vin = vehicleInput.vin;
       if (typeof vehicleInput.plate === "string") vehicleData.plate = vehicleInput.plate;
       if (typeof vehicleInput.color === "string") vehicleData.color = vehicleInput.color;
@@ -215,6 +236,20 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
         return tx.realAsset.findUnique({ where: { id }, include: detailInclude });
       });
+
+      // AMIGO-203: spec changed → wipe scraped/estimated/legacy-heuristic
+      // rows (manual + purchase rows are preserved) and re-fire backfill.
+      if (specChanged) {
+        await prisma.valuationHistory.deleteMany({
+          where: {
+            realAssetId: id,
+            source: { in: ["web_archive", "live_scrape", "ai_estimate", "heuristic"] },
+          },
+        });
+        void enqueueBackfill(id).catch((err) =>
+          console.error("[PUT /api/assets] enqueueBackfill after spec change failed:", err),
+        );
+      }
 
       return NextResponse.json({ asset: updated });
     }

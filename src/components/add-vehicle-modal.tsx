@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { Car, Sparkles, ChevronLeft, ChevronRight, X, Loader2, Check } from "lucide-react";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { cn } from "@/lib/utils";
+import { CascadingVehiclePicker } from "@/components/cascading-vehicle-picker";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -84,11 +85,19 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateSubmitting, setTemplateSubmitting] = useState(false);
 
-  // Step 1
-  const [brand, setBrand] = useState("");
-  const [model, setModel] = useState("");
-  const [year, setYear] = useState<string>(String(currentYear));
-  const [trim, setTrim] = useState("");
+  // Step 1 — cascading dropdown picker (Year → Make → Model → Trim).
+  // `pick` is the canonical state; legacy `brand`/`model`/`year`/`trim`
+  // string state derived for the rest of the wizard + submit payload.
+  const [pick, setPick] = useState<{
+    year?: number;
+    make?: string;
+    model?: string;
+    trim?: string | null;
+  }>({});
+  const brand = pick.make ?? "";
+  const model = pick.model ?? "";
+  const year = pick.year != null ? String(pick.year) : "";
+  const trim = pick.trim ?? "";
   const [fuelType, setFuelType] = useState<FuelType | "">("");
   const [bodyType, setBodyType] = useState<BodyType | "">("");
   const [generation, setGeneration] = useState("");
@@ -122,10 +131,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   useEffect(() => {
     if (!isOpen) {
       setStep(1);
-      setBrand("");
-      setModel("");
-      setYear(String(currentYear));
-      setTrim("");
+      setPick({});
       setFuelType("");
       setBodyType("");
       setGeneration("");
@@ -154,9 +160,12 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
     }
   }, [isOpen, currentYear]);
 
-  const yearNum = useMemo(() => parseInt(year, 10), [year]);
-  const canLookup = brand.trim() && model.trim() && Number.isFinite(yearNum);
-  const step1Ok = canLookup;
+  const yearNum = pick.year ?? NaN;
+  const canLookup = !!brand && !!model && Number.isFinite(yearNum);
+  // Step 1 is OK once Year + Make + Model are set. Trim is required to
+  // submit (enforced by submit guard below) but allowing Next to advance
+  // before trim selection would skip the dropdown — so we require all four.
+  const step1Ok = canLookup && pick.trim !== undefined;
   const step2Ok = step1Ok && parseFloat(purchasePrice) > 0 && purchaseDate;
   const step3Ok =
     !financed ||
@@ -169,7 +178,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
       const res = await fetch("/api/vehicle/lookup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), year: yearNum, trim: trim.trim() || null }),
+        body: JSON.stringify({ brand, model, year: yearNum, trim: trim || null }),
       });
       const data = await res.json();
       const s: SpecResult | null = data.spec ?? null;
@@ -188,12 +197,12 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   };
 
   const fetchImage = async () => {
-    if (!brand.trim() || !model.trim()) return;
+    if (!brand || !model) return;
     try {
       const res = await fetch("/api/vehicle/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand: brand.trim(), model: model.trim(), generation: generation || null }),
+        body: JSON.stringify({ brand, model, generation: generation || null }),
       });
       const data = await res.json();
       setImageData(data.image ?? null);
@@ -219,16 +228,16 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "VEHICLE",
-          name: `${brand.trim()} ${model.trim()}`.trim(),
+          name: `${brand} ${model}`.trim(),
           purchasePrice: parseFloat(purchasePrice),
           purchaseCurrency,
           purchaseDate,
           imageUrl: imageData?.url ?? null,
           vehicle: {
-            brand: brand.trim(),
-            model: model.trim(),
+            brand,
+            model,
             year: yearNum,
-            trim: trim.trim() || null,
+            trim: trim || null,
             mileage: mileage ? parseInt(mileage, 10) : null,
             plate: plate.trim() || null,
             color: color.trim() || null,
@@ -252,7 +261,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "VEHICLE_LOAN",
-            name: `${brand.trim()} ${model.trim()} loan`.trim(),
+            name: `${brand} ${model} loan`.trim(),
             currency: purchaseCurrency,
             principal: parseFloat(purchasePrice),
             monthlyPayment: parseFloat(monthlyPayment),
@@ -556,46 +565,16 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
             >
               {step === 1 && (
                 <>
-                  <Field label={t("brand")}>
-                    <input
-                      autoFocus
-                      type="text"
-                      value={brand}
-                      onChange={(e) => setBrand(e.target.value)}
-                      placeholder="BMW"
-                      className={inputClass}
-                    />
-                  </Field>
-                  <Field label={t("model")}>
-                    <input
-                      type="text"
-                      value={model}
-                      onChange={(e) => setModel(e.target.value)}
-                      placeholder="M340i"
-                      className={inputClass}
-                    />
-                  </Field>
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label={t("year")}>
-                      <input
-                        type="number"
-                        min={1900}
-                        max={currentYear + 1}
-                        value={year}
-                        onChange={(e) => setYear(e.target.value)}
-                        className={inputClass}
-                      />
-                    </Field>
-                    <Field label={t("trim")}>
-                      <input
-                        type="text"
-                        value={trim}
-                        onChange={(e) => setTrim(e.target.value)}
-                        placeholder="xDrive"
-                        className={inputClass}
-                      />
-                    </Field>
-                  </div>
+                  <CascadingVehiclePicker
+                    value={pick}
+                    onChange={setPick}
+                    copy={{
+                      year: t("year"),
+                      make: t("brand"),
+                      model: t("model"),
+                      trim: t("trim"),
+                    }}
+                  />
 
                   <button
                     type="button"

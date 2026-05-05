@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
 import { computeVehicleHeuristicValue } from "@/lib/asset-valuation";
 import { geocodePostalCode } from "@/lib/geocode";
+import { enqueueBackfill } from "@/lib/asset-backfill";
 import {
   requireActiveWorkspace,
   requirePermission,
@@ -318,6 +319,15 @@ export async function POST(request: Request) {
 
       return tx.realAsset.findUnique({ where: { id: created.id }, include: assetInclude });
     });
+
+    // Fire-and-forget: backfill runs async, the chart polls for completion
+    // via /api/assets/[id]. Failures inside the job are self-contained and
+    // never affect this response.
+    if (asset?.id) {
+      void enqueueBackfill(asset.id).catch((err) =>
+        console.error("[POST /api/assets] enqueueBackfill failed:", err),
+      );
+    }
 
     return NextResponse.json({ asset }, { status: 201 });
   } catch (error) {

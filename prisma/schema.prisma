@@ -827,7 +827,13 @@ model RealAsset {
   currentValue          Decimal?  @db.Decimal(14, 2)
   currentValueEur       Decimal?  @db.Decimal(14, 2)
   currentValueUpdatedAt DateTime?
-  currentValueSource    String?   @db.VarChar(50) // "heuristic", "stand_virtual", "manual", "sale"
+  currentValueSource    String?   @db.VarChar(50) // "purchase", "web_archive", "live_scrape", "ai_estimate", "heuristic", "stand_virtual", "manual", "sale", "stale"
+
+  // Async backfill state (Web Archive scrape on creation / spec change)
+  backfillStatus     String?   @db.VarChar(20) // "queued" | "running" | "done" | "no_data"
+  backfillProgress   Int?      // 0..100 (or N out of total snapshot count)
+  backfillStartedAt  DateTime?
+  backfillFinishedAt DateTime?
 
   // Sale (status=SOLD)
   soldAt       DateTime?
@@ -932,7 +938,21 @@ model ValuationHistory {
   value    Decimal @db.Decimal(14, 2)
   valueEur Decimal @db.Decimal(14, 2)
   currency String  @default("EUR") @db.VarChar(3)
-  source   String  @db.VarChar(50) // "heuristic", "stand_virtual", "manual", "sale"
+  // "purchase"     — anchor at purchase date (filled, solid dot)
+  // "web_archive"  — historical scrape from archive.org (filled, solid dot)
+  // "live_scrape"  — current cron scrape (filled, solid dot)
+  // "ai_estimate"  — Z.AI fallback for gaps (hollow ring dot)
+  // "manual"       — user-entered valuation (diamond dot)
+  // "heuristic"    — legacy daily depreciation cron (kept for backwards compat)
+  // "stand_virtual" / "sale" — legacy values; no new rows written
+  source   String  @db.VarChar(50)
+
+  // Number of comparable listings the median was derived from. Null for
+  // ai_estimate, manual, purchase, and legacy heuristic rows.
+  sampleSize Int?
+
+  // Per-source structured context (e.g. {archiveDate, mileageBand, aiReasoning, note}).
+  metadata Json?
 
   recordedAt DateTime @default(now())
 
@@ -940,6 +960,56 @@ model ValuationHistory {
 
   @@index([realAssetId, recordedAt])
   @@map("valuation_history")
+}
+
+// AI-built dropdown taxonomy for the cascading vehicle wizard.
+// Lazy populated: first user of a (year, make) combination triggers a
+// Z.AI GLM-4.6 call; everyone after gets the cached result for free.
+//
+// `level` is one of "makes" | "models" | "trims".
+// `parentKey` encodes the path: "2019" for makes, "2019|Mazda" for models,
+// "2019|Mazda|MX-5" for trims.
+// `values` is a JSON array of strings (the dropdown options at that level).
+model VehicleTaxonomy {
+  id        String   @id @default(cuid())
+  level     String   @db.VarChar(20)
+  parentKey String   @db.VarChar(255)
+  values    Json
+  source    String   @db.VarChar(50) // "ai_glm_4_6", "manual"
+  createdAt DateTime @default(now())
+
+  @@unique([level, parentKey])
+  @@map("vehicle_taxonomy")
+}
+
+// Cached scrape results, keyed by spec hash so multiple users sharing the
+// same vehicle spec don't trigger redundant scrapes. Populated by the
+// 5-day cron (live snapshots) and the per-asset backfill job (Web Archive).
+//
+// `specHash` is sha256(year|make|model|trim) so equality lookups are stable.
+// `listings` is JSON: [{price, currency, year, mileage, trim, url}, ...]
+// for vehicles, or [{price, currency, areaM2, bedrooms, bathrooms, ...}]
+// for properties (the asset type is implicit in how the snapshot is queried).
+//
+// `archiveDate` is set only for `source IN ('web_archive', ...)` rows where
+// the snapshot represents a specific historical timestamp; null for live
+// scrapes.
+model SpecMarketSnapshot {
+  id          String    @id @default(cuid())
+  specHash    String    @db.VarChar(64)
+  year        Int
+  make        String    @db.VarChar(100)
+  model       String    @db.VarChar(100)
+  trim        String?   @db.VarChar(100)
+  scrapedAt   DateTime  @default(now())
+  source      String    @db.VarChar(50) // "standvirtual_live" | "olx_live" | "web_archive" | "idealista_live" | "imovirtual_live"
+  archiveDate DateTime?
+  listings    Json
+  sampleSize  Int       @default(0)
+
+  @@index([specHash, scrapedAt])
+  @@index([source, scrapedAt])
+  @@map("spec_market_snapshots")
 }
 
 // Quarterly housing price index by Portuguese concelho (município).

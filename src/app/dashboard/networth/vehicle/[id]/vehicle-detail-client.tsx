@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -16,9 +16,14 @@ import {
   Loader2,
   X,
 } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { formatCurrency } from "@/lib/currencies";
 import { cn } from "@/lib/utils";
+import {
+  ValueOverTimeChart,
+  type ValuePoint,
+  type ValuePointSource,
+} from "@/components/ui/value-over-time-chart";
+import { AddValuationModal } from "@/components/add-valuation-modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -35,6 +40,8 @@ type Asset = {
   currentValueSource: string | null;
   soldAt: string | null;
   salePriceEur: number | null;
+  backfillStatus: string | null;
+  backfillProgress: number | null;
 };
 
 type Vehicle = {
@@ -64,7 +71,26 @@ type Liability = {
   startDate: string;
 };
 
-type ValuationPoint = { id: string; valueEur: number; source: string; recordedAt: string };
+type ValuationPoint = {
+  id: string;
+  valueEur: number;
+  source: string;
+  sampleSize: number | null;
+  metadata: Record<string, unknown> | null;
+  recordedAt: string;
+};
+
+const KNOWN_SOURCES: ValuePointSource[] = [
+  "purchase",
+  "web_archive",
+  "live_scrape",
+  "ai_estimate",
+  "manual",
+];
+
+function normalizeSource(s: string): ValuePointSource {
+  return (KNOWN_SOURCES as string[]).includes(s) ? (s as ValuePointSource) : "ai_estimate";
+}
 
 type ExpenseRow = {
   id: string;
@@ -89,6 +115,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
   const t = useTranslations("rwa");
   const tDashboard = useTranslations("dashboard");
   const [showSell, setShowSell] = useState(false);
+  const [showAddValuation, setShowAddValuation] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const sold = asset.status === "SOLD";
@@ -102,11 +129,56 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
     return Math.max(0, Math.round((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24 * 30.44)));
   }, [asset.purchaseDate, asset.soldAt, sold]);
 
-  const chartData = useMemo(() => {
-    return [...valuationHistory]
-      .reverse()
-      .map((v) => ({ date: v.recordedAt.slice(0, 10), value: v.valueEur }));
-  }, [valuationHistory]);
+  const chartPoints: ValuePoint[] = useMemo(
+    () =>
+      valuationHistory.map((v) => ({
+        date: v.recordedAt.slice(0, 10),
+        value: v.valueEur,
+        source: normalizeSource(v.source),
+        sampleSize: v.sampleSize,
+        note:
+          v.metadata && typeof v.metadata === "object" && "note" in v.metadata
+            ? String(v.metadata.note)
+            : null,
+      })),
+    [valuationHistory],
+  );
+
+  // Poll the asset endpoint while backfill is running so the chart densifies live.
+  const [backfillStatus, setBackfillStatus] = useState<string | null>(asset.backfillStatus);
+  const [backfillProgress, setBackfillProgress] = useState<number | null>(asset.backfillProgress);
+
+  useEffect(() => {
+    if (backfillStatus !== "queued" && backfillStatus !== "running") return;
+    let cancelled = false;
+    const poll = async () => {
+      try {
+        const res = await fetch(`/api/assets/${asset.id}`, { cache: "no-store" });
+        if (!res.ok) return;
+        const json = (await res.json()) as { asset?: { backfillStatus: string | null; backfillProgress: number | null } };
+        if (cancelled || !json.asset) return;
+        setBackfillStatus(json.asset.backfillStatus);
+        setBackfillProgress(json.asset.backfillProgress);
+        if (json.asset.backfillStatus === "done" || json.asset.backfillStatus === "no_data") {
+          router.refresh();
+        }
+      } catch {
+        // ignore
+      }
+    };
+    const interval = setInterval(poll, 5000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [asset.id, backfillStatus, router]);
+
+  const chartStatus: "loading" | "done" | "no_data" =
+    backfillStatus === "queued" || backfillStatus === "running"
+      ? "loading"
+      : backfillStatus === "no_data"
+      ? "no_data"
+      : "done";
 
   const linkedExpensesTotal = expenses.reduce((s, e) => s + e.amountEur, 0);
   const monthlyTCO = monthsOwned > 0 ? linkedExpensesTotal / monthsOwned : 0;
@@ -205,36 +277,17 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
       </div>
 
       {/* Value-over-time chart */}
-      {chartData.length > 1 && (
-        <section className="rounded-2xl border border-border/60 bg-card/80 p-5">
-          <h2 className="text-xs font-bold uppercase tracking-[0.8px] text-muted-foreground">{t("valueOverTime")}</h2>
-          <div className="mt-3 h-[220px] w-full">
-            <ResponsiveContainer>
-              <LineChart data={chartData} margin={{ top: 10, right: 10, bottom: 0, left: 0 }}>
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} stroke="currentColor" className="text-muted-foreground" />
-                <YAxis tick={{ fontSize: 11 }} stroke="currentColor" className="text-muted-foreground" />
-                <Tooltip
-                  contentStyle={{
-                    background: "var(--card)",
-                    border: "1px solid var(--border)",
-                    borderRadius: 8,
-                    fontSize: 12,
-                  }}
-                  formatter={(v) => [formatCurrency(typeof v === "number" ? v : Number(v), "EUR"), t("chartValueLabel")]}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="value"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2}
-                  dot={false}
-                  isAnimationActive
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </section>
-      )}
+      <ValueOverTimeChart
+        points={chartPoints}
+        status={chartStatus}
+        progress={
+          chartStatus === "loading" && backfillProgress != null
+            ? { current: backfillProgress, total: 100 }
+            : undefined
+        }
+        onAddValuation={() => setShowAddValuation(true)}
+        copy={{ title: t("valueOverTime") }}
+      />
 
       {/* Loans */}
       {liabilities.length > 0 && (
@@ -283,6 +336,17 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
             onClose={() => setShowSell(false)}
             onSold={() => {
               setShowSell(false);
+              router.refresh();
+            }}
+          />
+        )}
+        {showAddValuation && (
+          <AddValuationModal
+            assetId={asset.id}
+            defaultCurrency={asset.purchaseCurrency}
+            onClose={() => setShowAddValuation(false)}
+            onSaved={() => {
+              setShowAddValuation(false);
               router.refresh();
             }}
           />
