@@ -17,6 +17,8 @@ const OnboardingModal = lazy(() => import("@/components/onboarding-modal"));
 const AnnouncementModal = lazy(() => import("@/components/announcement-modal"));
 const BurnChart = lazy(() => import("@/components/ui/burn-chart").then(mod => ({ default: mod.BurnChart })));
 const DashboardRwaSection = lazy(() => import("@/components/dashboard-rwa-section"));
+const AdvisorColdstartCard = lazy(() => import("@/components/advisor-coldstart-card"));
+const RetrospectiveModal = lazy(() => import("@/components/retrospective-modal"));
 
 // Loading skeleton for the chart
 function ChartSkeleton() {
@@ -217,6 +219,25 @@ export default function DashboardOverview({
   // Pull-to-refresh state
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // AI Advisor cold-start state
+  const [advisorState, setAdvisorState] = useState<{
+    aiProcessingEnabled: boolean;
+    isColdstart: boolean;
+    expenseCount: number;
+    monthsTracked: number;
+  } | null>(null);
+
+  // Retrospective state
+  type UnreadInsight = {
+    id: string;
+    periodYear: number;
+    periodMonth: number;
+    content: { headline: string; observations: [string, string, string]; momHighlights: Array<{ category: string; currentTotal: number; prevTotal: number; pctChange: number }> };
+    readAt: string | null;
+  };
+  const [unreadRetro, setUnreadRetro] = useState<UnreadInsight | null>(null);
+  const [showRetro, setShowRetro] = useState(false);
+
   // Onboarding modal state - show if not completed
   const [showOnboarding, setShowOnboarding] = useState(!onboardingCompleted);
 
@@ -304,6 +325,30 @@ export default function DashboardOverview({
       }
     };
     autoGenerateRecurring();
+
+    // Fetch AI Advisor state for cold-start card and unread retrospective
+    const fetchAdvisorState = async () => {
+      try {
+        const [stateRes, retroRes] = await Promise.all([
+          fetch("/api/user/advisor-state"),
+          fetch("/api/insights/retrospective"),
+        ]);
+        if (stateRes.ok) {
+          const data = await stateRes.json();
+          setAdvisorState(data);
+        }
+        if (retroRes.ok) {
+          const retro = await retroRes.json();
+          if (retro && retro.id) {
+            setUnreadRetro(retro);
+            // Delay popup slightly so it doesn't fight first paint
+            const timer = setTimeout(() => setShowRetro(true), 600);
+            return () => clearTimeout(timer);
+          }
+        }
+      } catch { /* non-critical, ignore */ }
+    };
+    fetchAdvisorState();
   }, [router]);
 
   // Month navigation for swipe
@@ -1409,6 +1454,16 @@ export default function DashboardOverview({
               </div>
             )}
 
+            {/* AI Advisor cold-start card — suppressed when an unread retrospective exists */}
+            {advisorState?.aiProcessingEnabled && advisorState?.isColdstart && !unreadRetro && (
+              <Suspense fallback={null}>
+                <AdvisorColdstartCard
+                  expenseCount={advisorState.expenseCount}
+                  monthsTracked={advisorState.monthsTracked}
+                />
+              </Suspense>
+            )}
+
             {/* Recent Expenses */}
             <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
               <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("recentExpenses")}</p>
@@ -1504,6 +1559,16 @@ export default function DashboardOverview({
               </select>
             </div>
           </div>
+
+          {/* AI Advisor cold-start card (mobile) — suppressed when an unread retrospective exists */}
+          {advisorState?.aiProcessingEnabled && advisorState?.isColdstart && !unreadRetro && (
+            <Suspense fallback={null}>
+              <AdvisorColdstartCard
+                expenseCount={advisorState.expenseCount}
+                monthsTracked={advisorState.monthsTracked}
+              />
+            </Suspense>
+          )}
 
           {/* Transaction List */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -1791,6 +1856,21 @@ export default function DashboardOverview({
             isOpen={showAnnouncement}
             onClose={() => setShowAnnouncement(false)}
             announcementId={currentAnnouncementId}
+          />
+        </Suspense>
+      )}
+
+      {/* Retrospective popup — auto-shown on day 1 of month when unread insight exists */}
+      {showRetro && unreadRetro && (
+        <Suspense fallback={null}>
+          <RetrospectiveModal
+            isOpen={showRetro}
+            onClose={() => {
+              setShowRetro(false);
+              setUnreadRetro(null);
+            }}
+            insight={unreadRetro}
+            markReadOnClose={true}
           />
         </Suspense>
       )}

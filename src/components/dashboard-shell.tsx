@@ -14,6 +14,7 @@ const GlobalAddButton = lazy(() => import("./global-add-button"));
 const FeedbackButton = lazy(() => import("./feedback-button"));
 const IOSInstallPrompt = lazy(() => import("./ios-install-prompt"));
 const AnnouncementModal = lazy(() => import("./announcement-modal"));
+const AiConsentModal = lazy(() => import("./ai-consent-modal"));
 const OfflineIndicator = lazy(() => import("./offline-indicator").then(mod => ({ default: mod.OfflineIndicator })));
 const ServiceWorkerRegister = lazy(() => import("./service-worker-register").then(mod => ({ default: mod.ServiceWorkerRegister })));
 const ChangelogModal = lazy(() => import("./changelog-modal").then(mod => ({ default: mod.ChangelogModal })));
@@ -176,6 +177,11 @@ const icons: Record<string, ReactNode> = {
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M16 12h2m-2 0a1 1 0 11-2 0 1 1 0 012 0zM3 9h18" />
     </svg>
   ),
+  "bar-chart": (
+    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+    </svg>
+  ),
 };
 
 interface DashboardShellProps {
@@ -190,6 +196,8 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
   const t = useTranslations("nav");
   const tCommon = useTranslations("common");
   const [showAnnouncement, setShowAnnouncement] = useState(false);
+  const [showAiConsent, setShowAiConsent] = useState(false);
+  const [aiEnabled, setAiEnabled] = useState(false);
   const [badgeCounts, setBadgeCounts] = useState<Record<string, number>>({});
   const [collapsedSections, setCollapsedSections] = useState<Record<string, boolean>>({});
 
@@ -199,6 +207,19 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
       const stored = localStorage.getItem("amigo-sidebar-collapsed");
       if (stored) setCollapsedSections(JSON.parse(stored));
     } catch {}
+  }, []);
+
+  // Check AI consent on mount — show modal if user has never been asked; track enabled state for nav gating
+  useEffect(() => {
+    fetch("/api/user/ai-consent")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          if (data.aiConsentAt === null) setShowAiConsent(true);
+          if (data.aiProcessingEnabled) setAiEnabled(true);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Fetch badge counts
@@ -350,6 +371,26 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
             </div>
           )}
 
+          {/* Insights link — only shown to users who enabled AI processing */}
+          {aiEnabled && (
+            <div>
+              <div className="my-3 border-t border-slate-200" />
+              <Link
+                href="/dashboard/insights"
+                className={`
+                  flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors
+                  ${isActive("/dashboard/insights")
+                    ? "bg-[#0070f3] text-white"
+                    : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                  }
+                `}
+              >
+                {icons["bar-chart"]}
+                <span>{t("insights")}</span>
+              </Link>
+            </div>
+          )}
+
           {/* What's New button */}
           <div>
             <div className="my-3 border-t border-slate-200" />
@@ -446,8 +487,18 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
         <IOSInstallPrompt />
       </Suspense>
 
+      {/* AI Consent Modal — shown before announcement if user has never been asked */}
+      {showAiConsent && (
+        <Suspense fallback={null}>
+          <AiConsentModal
+            isOpen={showAiConsent}
+            onClose={() => setShowAiConsent(false)}
+          />
+        </Suspense>
+      )}
+
       {/* What's New Announcement Modal */}
-      {showAnnouncement && (
+      {!showAiConsent && showAnnouncement && (
         <Suspense fallback={null}>
           <AnnouncementModal
             isOpen={showAnnouncement}

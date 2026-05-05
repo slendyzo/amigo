@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "save": "Enregistrer",
     "cancel": "Annuler",
@@ -67,7 +67,8 @@
     "whatsNew": "Nouveautés",
     "sectionMoney": "Argent",
     "sectionOrganize": "Organiser",
-    "sectionData": "Données"
+    "sectionData": "Données",
+    "insights": "Analyses"
   },
   "auth": {
     "signIn": "Connexion",
@@ -1676,5 +1677,32 @@
     },
     "originalMsrp": "Prix neuf",
     "aiSuggestedHint": "Suggéré par IA · vous pouvez tout modifier ci-dessous."
+  },
+  "aiAdvisor": {
+    "title": "Conseiller IA",
+    "description": "Envoie des statistiques agrégées de vos dépenses pour générer des rétrospectives mensuelles et des suggestions comptables.",
+    "toggleLabel": "Les données envoyées comprennent les totaux mensuels, les ventilations par catégorie et les principaux marchands. Les transactions brutes ne sont jamais transmises.",
+    "statusEnabled": "Activé",
+    "statusDisabled": "Désactivé",
+    "consent": {
+      "title": "Votre conseiller IA",
+      "description": "Le Conseiller IA analyse vos statistiques de dépenses agrégées pour générer des rétrospectives mensuelles et des suggestions comptables. Aucune transaction brute ni donnée personnelle n'est transmise.",
+      "privacy": "Lorsqu'il est activé, des statistiques pré-agrégées de votre espace de travail sont envoyées à Z.ai (Zhipu AI, Chine) pour générer des analyses. Les données comprennent les totaux mensuels, les ventilations par catégorie et par marchand, et les comptes de dépenses. Les transactions brutes et les informations personnellement identifiables ne sont jamais transmises. Vous pouvez retirer votre consentement à tout moment dans les Paramètres.",
+      "viewTerms": "Voir les conditions complètes",
+      "decline": "Pas maintenant",
+      "enable": "Activer le conseiller"
+    },
+    "coldstart": {
+      "heading": "Le conseiller collecte vos données",
+      "body": "Une fois un mois complet enregistré, les rétrospectives mensuelles apparaîtront ici. {count} dépenses enregistrées pour l'instant.",
+      "dismiss": "Ignorer"
+    },
+    "retrospective": {
+      "viewArchive": "Voir les rétrospectives passées",
+      "archiveTitle": "Analyses",
+      "archiveSubtitle": "{count} rétrospectives",
+      "archiveEmpty": "Pas encore de rétrospectives. La première apparaîtra quand vous aurez enregistré un mois complet.",
+      "observationLabel": "Observation"
+    }
   }
 }

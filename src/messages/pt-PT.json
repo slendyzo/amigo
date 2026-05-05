@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "save": "Guardar",
     "cancel": "Cancelar",
@@ -67,7 +67,8 @@
     "whatsNew": "Novidades",
     "sectionMoney": "Dinheiro",
     "sectionOrganize": "Organizar",
-    "sectionData": "Dados"
+    "sectionData": "Dados",
+    "insights": "Análises"
   },
   "auth": {
     "signIn": "Iniciar Sessão",
@@ -1674,5 +1675,32 @@
     },
     "originalMsrp": "Preço de novo",
     "aiSuggestedHint": "Sugerido por IA · podes alterar tudo abaixo."
+  },
+  "aiAdvisor": {
+    "title": "Consultor IA",
+    "description": "Envia estatísticas agregadas das suas despesas para gerar retrospetivas mensais e sugestões de contabilidade.",
+    "toggleLabel": "Os dados enviados incluem totais mensais, resumos por categoria e principais comerciantes. As transações individuais nunca são transmitidas.",
+    "statusEnabled": "Ativo",
+    "statusDisabled": "Inativo",
+    "consent": {
+      "title": "Conheça o Consultor IA",
+      "description": "O Consultor IA analisa estatísticas agregadas das suas despesas para gerar retrospetivas mensais e sugestões de contabilidade. Não são enviadas transações individuais nem dados pessoais.",
+      "privacy": "Quando ativo, são enviadas estatísticas pré-agregadas do seu espaço de trabalho para a Z.ai (Zhipu AI, China) para gerar análises. Os dados incluem totais mensais, resumos por categoria e comerciante, e contagens de despesas. As transações individuais e informações pessoais identificáveis nunca são transmitidas. Pode retirar o consentimento a qualquer momento em Definições.",
+      "viewTerms": "Ver termos completos",
+      "decline": "Agora não",
+      "enable": "Ativar consultor"
+    },
+    "coldstart": {
+      "heading": "O consultor está a recolher dados",
+      "body": "Assim que tiver um mês completo registado, as retrospetivas mensais aparecerão aqui. {count} despesas registadas até agora.",
+      "dismiss": "Dispensar"
+    },
+    "retrospective": {
+      "viewArchive": "Ver retrospetivas anteriores",
+      "archiveTitle": "Análises",
+      "archiveSubtitle": "{count} retrospetivas",
+      "archiveEmpty": "Sem retrospetivas ainda. A primeira aparecerá quando tiver um mês completo registado.",
+      "observationLabel": "Observação"
+    }
   }
 }

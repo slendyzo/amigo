@@ -1,4 +1,4 @@
-{
+﻿{
   "common": {
     "save": "Save",
     "cancel": "Cancel",
@@ -67,7 +67,8 @@
     "whatsNew": "What's New",
     "sectionMoney": "Money",
     "sectionOrganize": "Organize",
-    "sectionData": "Data"
+    "sectionData": "Data",
+    "insights": "Insights"
   },
   "auth": {
     "signIn": "Sign In",
@@ -1705,5 +1706,32 @@
     },
     "originalMsrp": "Original MSRP",
     "aiSuggestedHint": "Suggested by AI · you can override anything below."
+  },
+  "aiAdvisor": {
+    "title": "AI Advisor",
+    "description": "Send aggregated spending statistics to generate monthly retrospectives and bookkeeping suggestions.",
+    "toggleLabel": "Data sent includes monthly totals, category breakdowns, and top merchants. Raw transactions are never transmitted.",
+    "statusEnabled": "Enabled",
+    "statusDisabled": "Disabled",
+    "consent": {
+      "title": "Introducing AI Advisor",
+      "description": "AI Advisor analyses your aggregated spending data to generate monthly retrospectives and bookkeeping suggestions. No raw transactions or personal details are sent.",
+      "privacy": "When enabled, pre-aggregated statistics from your workspace are sent to Z.ai (Zhipu AI, China) to generate insights. Data includes monthly totals, category and merchant breakdowns, and expense counts. Raw transactions and personally identifiable information are never transmitted. You can withdraw consent at any time in Settings.",
+      "viewTerms": "View full terms",
+      "decline": "Not now",
+      "enable": "Enable advisor"
+    },
+    "coldstart": {
+      "heading": "Advisor is gathering data",
+      "body": "Once you have a full month tracked, monthly retrospectives will appear here. {count} expenses logged so far.",
+      "dismiss": "Dismiss"
+    },
+    "retrospective": {
+      "viewArchive": "View past retrospectives",
+      "archiveTitle": "Insights",
+      "archiveSubtitle": "{count} retrospectives",
+      "archiveEmpty": "No retrospectives yet. The first one will appear when you've tracked a full month.",
+      "observationLabel": "Observation"
+    }
   }
 }
