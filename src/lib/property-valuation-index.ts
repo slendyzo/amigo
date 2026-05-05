@@ -1,12 +1,30 @@
 // INE quarterly housing price index ingest — fetcher + parser + upsert.
 //
-// The default source is the INE pindica.jsp JSON endpoint which exposes the
-// "Preço mediano por m² de alojamentos familiares" indicator (varcd 0011784)
-// at concelho granularity. The exact varcd / dim period code may shift between
-// publications, so the fetch URL is env-overridable via INE_HOUSING_INDEX_URL.
+// The default source is the INE pindica.jsp JSON endpoint which historically
+// exposed the "Preço mediano por m² de alojamentos familiares" indicator
+// (varcd 0011784) at concelho granularity. The fetch URL is env-overridable
+// via INE_HOUSING_INDEX_URL.
+//
+// **Status (May 2026):** INE has retired the pindica.jsp endpoint entirely —
+// every varcd + every path under /ine/json_indicadores/ now returns 404.
+// `fetchLatestIneHousingIndex` will throw `IneEndpointGoneError` in that case;
+// the cron handler catches it and returns a 200 with `mode: "ine_unavailable"`
+// so we don't spam alerts. Manual seed mode (POST {rows: [...]} to the cron
+// endpoint) still works and is the recommended path until we migrate.
+//
+// **Migration target (AMIGO-178 follow-up):** INE BDMUNICIPIOS or the newer
+// Geohab platform. Both expose similar concelho-level data but in a different
+// shape than pindica.jsp — the parser will need adapting.
 //
 // We don't trust the underlying unit — the engine only ever uses ratios between
 // two rows for the same concelho, so this storage layer is unit-agnostic.
+
+export class IneEndpointGoneError extends Error {
+  constructor(public url: string, public status: number) {
+    super(`INE endpoint gone (HTTP ${status}) for ${url} — see lib/property-valuation-index.ts header`);
+    this.name = "IneEndpointGoneError";
+  }
+}
 
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
@@ -55,6 +73,12 @@ export async function fetchLatestIneHousingIndex(
     headers: { Accept: "application/json" },
     cache: "no-store",
   });
+  if (res.status === 404) {
+    // The whole pindica.jsp surface was retired upstream — surface a
+    // dedicated error type so the cron can degrade quietly instead of
+    // alerting on every run.
+    throw new IneEndpointGoneError(url, res.status);
+  }
   if (!res.ok) {
     throw new Error(`INE fetch failed ${res.status} ${res.statusText} for ${url}`);
   }

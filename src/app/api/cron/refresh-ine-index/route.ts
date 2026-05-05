@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import {
   fetchLatestIneHousingIndex,
   upsertIneRows,
+  IneEndpointGoneError,
   type IneIndexRow,
 } from "@/lib/property-valuation-index";
 
@@ -78,6 +79,19 @@ export async function POST(request: Request) {
       tookMs: Date.now() - startedAt,
     });
   } catch (err) {
+    if (err instanceof IneEndpointGoneError) {
+      // pindica.jsp is fully dead upstream (every varcd 404s). Don't alert
+      // on this every Monday — we already have manual-seed rows in the DB
+      // and the chart degrades gracefully when a concelho has no data.
+      // Tracked in AMIGO-178; migrating to BDMUNICIPIOS / Geohab is the fix.
+      console.warn(`[cron/refresh-ine-index] ${err.message}`);
+      return NextResponse.json({
+        ok: true,
+        mode: "ine_unavailable",
+        message: "INE pindica.jsp endpoint is retired upstream; manual-seed rows preserved.",
+        tookMs: Date.now() - startedAt,
+      });
+    }
     console.error("[cron/refresh-ine-index] live fetch failed:", err);
     return NextResponse.json(
       {
