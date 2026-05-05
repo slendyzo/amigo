@@ -1607,6 +1607,21 @@
     "energyRatingLabel": "Classe énergétique",
     "bedrooms": "Chambres",
     "bathrooms": "Salles de bain",
-    "financedToggleDescription": "Suivre un prêt hypothécaire actif sur ce bien"
+    "financedToggleDescription": "Suivre un prêt hypothécaire actif sur ce bien",
+    "deletePropertyConfirm": "Supprimer ce bien ? Les dépenses liées seront déliées mais conservées.",
+    "deleteProperty": "Supprimer le bien",
+    "editDetails": "Modifier les détails",
+    "bedroomsCount": "{count} ch",
+    "bathroomsCount": "{count} sdb",
+    "floorLabel": "Étage {floor}",
+    "soldOnLabel": "Vendu · {date}",
+    "ownedFor": "Détenu depuis",
+    "monthlyTCOLabel": "Coût mensuel",
+    "ineIndex": "Indice INE concelho · {concelho}",
+    "trackingFromCaption": "Suivi depuis {month} — première mise à jour de l'indice au prochain trimestre",
+    "mortgage": "Prêt hypothécaire",
+    "costOfOwnership": "Coût de détention",
+    "noLinkedShort": "Aucune dépense liée",
+    "noLinkedExpensesProperty": "Aucune dépense liée pour l'instant. Liez les charges, l'IMI, les utilities et l'entretien pour suivre le coût de détention."
   }
 }

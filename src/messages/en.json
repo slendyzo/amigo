@@ -1636,6 +1636,21 @@
     "energyRatingLabel": "Energy rating",
     "bedrooms": "Bedrooms",
     "bathrooms": "Bathrooms",
-    "financedToggleDescription": "Track an active mortgage on this property"
+    "financedToggleDescription": "Track an active mortgage on this property",
+    "deletePropertyConfirm": "Delete this property? Linked expenses will be unlinked but kept.",
+    "deleteProperty": "Delete property",
+    "editDetails": "Edit details",
+    "bedroomsCount": "{count} bd",
+    "bathroomsCount": "{count} ba",
+    "floorLabel": "Floor {floor}",
+    "soldOnLabel": "Sold · {date}",
+    "ownedFor": "Owned for",
+    "monthlyTCOLabel": "Monthly cost",
+    "ineIndex": "INE concelho index · {concelho}",
+    "trackingFromCaption": "Tracking from {month} — first index update next quarter",
+    "mortgage": "Mortgage",
+    "costOfOwnership": "Cost of ownership",
+    "noLinkedShort": "No linked expenses",
+    "noLinkedExpensesProperty": "No linked expenses yet. Link condo fees, IMI, utilities and maintenance to track cost of ownership."
   }
 }
