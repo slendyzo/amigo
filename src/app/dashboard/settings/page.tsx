@@ -56,6 +56,7 @@ const LANGUAGES = [
 export default function SettingsPage() {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
+  const tAi = useTranslations("aiAdvisor");
   const [stats, setStats] = useState<Stats | null>(null);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [recurringIncomes, setRecurringIncomes] = useState<RecurringIncome[]>([]);
@@ -95,8 +96,23 @@ export default function SettingsPage() {
   // Restart onboarding state
   const [isRestartingOnboarding, setIsRestartingOnboarding] = useState(false);
 
+  // AI Advisor state
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [aiConsentAt, setAiConsentAt] = useState<string | null>(null);
+  const [isTogglingAi, setIsTogglingAi] = useState(false);
+
   useEffect(() => {
     fetchData();
+    // Fetch AI consent state
+    fetch("/api/user/ai-consent")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data) {
+          setAiEnabled(data.aiProcessingEnabled);
+          setAiConsentAt(data.aiConsentAt);
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const fetchData = async () => {
@@ -308,6 +324,27 @@ export default function SettingsPage() {
 
   const getCurrencySymbol = (code: string) => {
     return CURRENCIES.find((c) => c.code === code)?.symbol || "€";
+  };
+
+  const handleToggleAi = async () => {
+    const newAction = aiEnabled ? "decline" : "enable";
+    setIsTogglingAi(true);
+    try {
+      const res = await fetch("/api/user/ai-consent", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: newAction }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAiEnabled(data.aiProcessingEnabled);
+        setAiConsentAt(data.aiConsentAt);
+      }
+    } catch (error) {
+      console.error("Failed to update AI consent:", error);
+    } finally {
+      setIsTogglingAi(false);
+    }
   };
 
   const handleRestartOnboarding = async () => {
@@ -662,6 +699,39 @@ export default function SettingsPage() {
             </svg>
           </a>
         </div>
+      </div>
+
+      {/* AI Advisor */}
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <div className="flex-1">
+            <h2 className="text-lg font-semibold text-slate-900">{tAi("title")}</h2>
+            <p className="text-sm text-slate-500 mt-0.5">{tAi("description")}</p>
+            {aiConsentAt && (
+              <p className="text-xs text-slate-400 mt-1">
+                {aiEnabled ? tAi("statusEnabled") : tAi("statusDisabled")}
+              </p>
+            )}
+          </div>
+          <button
+            role="switch"
+            aria-checked={aiEnabled}
+            onClick={handleToggleAi}
+            disabled={isTogglingAi}
+            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 disabled:opacity-50 disabled:cursor-not-allowed ${
+              aiEnabled ? "bg-slate-900" : "bg-slate-200"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                aiEnabled ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+        <p className="text-xs text-slate-400 mt-3">
+          {tAi("toggleLabel")}
+        </p>
       </div>
 
       {/* Danger Zone */}

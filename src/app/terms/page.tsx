@@ -6,7 +6,7 @@ export default function TermsPage() {
       <div className="max-w-3xl mx-auto">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Terms of Service</h1>
-          <p className="text-sm text-slate-500 mb-8">Last updated: January 2026</p>
+          <p className="text-sm text-slate-500 mb-8">Last updated: May 2026</p>
 
           <div className="prose prose-slate max-w-none">
             <section className="mb-8">
@@ -58,6 +58,13 @@ export default function TermsPage() {
                 While we take reasonable measures to protect your data, we cannot guarantee absolute
                 security. You should regularly backup your data and not rely solely on this Service
                 for financial record-keeping.
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">5.A AI Advisor (Optional Feature)</h2>
+              <p className="text-slate-600 mb-4">
+                The AI Advisor is an optional feature that you can enable or disable at any time in Settings. When enabled, the application sends pre-aggregated statistics from your workspace to Z.ai (operated by Zhipu AI, based in China) for the purpose of generating monthly retrospectives and bookkeeping suggestions. The data sent includes: monthly totals, category names and totals, top merchant names and totals, expense counts, and month-over-month percentage differences. Raw expense rows, transaction descriptions, account numbers, and other personally identifiable information are not transmitted. You may withdraw consent at any time, after which no further data will be sent and the AI Advisor surfaces will be hidden. Insights generated before withdrawal remain stored locally in your account and can be deleted on request.
               </p>
             </section>
 
