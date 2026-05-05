@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import NudgeProjectCard from "@/components/nudge-project-card";
 
 type Project = {
   id: string;
@@ -15,6 +16,12 @@ type Project = {
   isActive: boolean;
   _count?: { expenses: number };
   totalSpent?: number;
+};
+
+type NudgeCluster = {
+  theme: string;
+  suggestedProjectName: string;
+  expenses: Array<{ id: string; name: string; amount: number; date: string }>;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -38,6 +45,11 @@ export default function ProjectsPage() {
   const router = useRouter();
   const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // AI nudge state
+  const [nudgeClusters, setNudgeClusters] = useState<NudgeCluster[]>([]);
+  const [nudgeProjects, setNudgeProjects] = useState<Array<{ id: string; name: string }>>([]);
+  const [aiEnabled, setAiEnabled] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -52,7 +64,26 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     fetchProjects();
+    fetchNudges();
   }, []);
+
+  const fetchNudges = async () => {
+    try {
+      const [stateRes, nudgeRes] = await Promise.all([
+        fetch("/api/user/advisor-state"),
+        fetch("/api/insights/nudges/project"),
+      ]);
+      if (!stateRes.ok || !nudgeRes.ok) return;
+      const stateData = await stateRes.json();
+      if (!stateData.aiProcessingEnabled) return;
+      setAiEnabled(true);
+      const nudgeData = await nudgeRes.json();
+      setNudgeClusters(nudgeData.clusters ?? []);
+      setNudgeProjects(nudgeData.existingProjects ?? []);
+    } catch {
+      // Silently ignore nudge fetch failures
+    }
+  };
 
   const fetchProjects = async () => {
     setIsLoading(true);
@@ -175,6 +206,23 @@ export default function ProjectsPage() {
           {t("newProject")}
         </button>
       </div>
+
+      {/* AI Nudge Cards */}
+      {aiEnabled && nudgeClusters.length > 0 && (
+        <div className="space-y-3">
+          {nudgeClusters.map((cluster, i) => (
+            <NudgeProjectCard
+              key={`${cluster.theme}-${i}`}
+              cluster={cluster}
+              existingProjects={nudgeProjects}
+              onAccepted={() => {
+                setNudgeClusters((prev) => prev.filter((_, idx) => idx !== i));
+                router.refresh();
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Projects Grid */}
       {isLoading ? (

@@ -11,6 +11,8 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import { effectiveEur, getUserShare } from "@/lib/split-utils";
 import ExportModal from "@/components/export-modal";
+import NudgeCategorizeCard from "@/components/nudge-categorize-card";
+import NudgeCategorizeModal from "@/components/nudge-categorize-modal";
 
 type Expense = {
   id: string;
@@ -107,6 +109,22 @@ export default function ExpensesPage() {
 
   // Export state
   const [showExportModal, setShowExportModal] = useState(false);
+
+  // Nudge — categorize
+  const [nudgeCount, setNudgeCount] = useState(0);
+  const [aiEnabled, setAiEnabled] = useState(false);
+  const [showCategorizeModal, setShowCategorizeModal] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/user/ai-consent")
+      .then((r) => r.json())
+      .then((d) => setAiEnabled(!!d.aiProcessingEnabled))
+      .catch(() => {});
+    fetch("/api/insights/nudges/categorize?countOnly=1")
+      .then((r) => r.json())
+      .then((d) => setNudgeCount(d.count ?? 0))
+      .catch(() => {});
+  }, []);
 
   // Month filter - defaults to current month
   const currentDate = new Date();
@@ -393,6 +411,27 @@ export default function ExpensesPage() {
 
   return (
     <div className="space-y-4 md:space-y-6">
+      {/* Categorize nudge */}
+      {aiEnabled && nudgeCount >= 5 && (
+        <NudgeCategorizeCard
+          count={nudgeCount}
+          onClick={() => setShowCategorizeModal(true)}
+        />
+      )}
+
+      {/* Categorize modal */}
+      <NudgeCategorizeModal
+        isOpen={showCategorizeModal}
+        onClose={() => {
+          setShowCategorizeModal(false);
+          fetch("/api/insights/nudges/categorize?countOnly=1")
+            .then((r) => r.json())
+            .then((d) => setNudgeCount(d.count ?? 0))
+            .catch(() => {});
+          router.refresh();
+        }}
+      />
+
       {/* Selection Bar */}
       {isSelectionMode && (
         <div className="bg-[#0070f3] text-white rounded-xl p-3 md:p-4 shadow-sm flex items-center justify-between sticky top-0 z-40">

@@ -1701,6 +1701,43 @@
       "archiveSubtitle": "{count} retrospetivas",
       "archiveEmpty": "Sem retrospetivas ainda. A primeira aparecerá quando tiver um mês completo registado.",
       "observationLabel": "Observação"
+    },
+    "nudges": {
+      "common": {
+        "dismiss": "Dispensar",
+        "notNow": "Agora não"
+      },
+      "categorize": {
+        "cardHeading": "{count} despesas precisam de uma categoria",
+        "cardCta": "Rever",
+        "modalTitle": "Categorias sugeridas",
+        "modalSubtitle": "Aprove cada sugestão. As rejeitadas permanecem sem categoria.",
+        "applyButton": "Aplicar {count} aceites",
+        "noChanges": "Fechar",
+        "confidenceHigh": "Alta",
+        "confidenceMedium": "Média",
+        "confidenceLow": "Baixa",
+        "originKeyword": "Regra",
+        "originAi": "IA"
+      },
+      "keyword": {
+        "cardHeading": "Marcou {merchant} como {category} {count} vezes",
+        "cardSubtitle": "Tornar isto uma regra permanente?",
+        "createRule": "Criar regra"
+      },
+      "recurring": {
+        "cardHeading": "{name} (~{amount}) repete-se por volta do dia {day}",
+        "cardSubtitle": "Adicionar como modelo?",
+        "createTemplate": "Criar modelo"
+      },
+      "project": {
+        "cardHeading": "{count} despesas parecem ser um projeto",
+        "themePrefix": "Tema",
+        "merchantsPrefix": "Inclui",
+        "pickProject": "Escolher um projeto",
+        "newProjectPlaceholder": "Ou escreva o nome de um projeto novo",
+        "tagButton": "Etiquetar despesas"
+      }
     }
   }
 }

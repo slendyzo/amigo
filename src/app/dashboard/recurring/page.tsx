@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import NudgeRecurringCard from "@/components/nudge-recurring-card";
 
 type Category = {
   id: string;
@@ -46,11 +48,20 @@ const EXPENSE_TYPE_COLORS: Record<string, string> = {
   PROJECT: "bg-amber-100 text-amber-800",
 };
 
+type NudgeCandidate = {
+  name: string;
+  amount: number;
+  dayOfMonth: number;
+  monthsObserved: number;
+  sampleExpenseIds: string[];
+};
+
 export default function RecurringTemplatesPage() {
   const t = useTranslations("recurring");
   const tCommon = useTranslations("common");
   const tTime = useTranslations("time");
   const { translateCategory } = useCategoryTranslation();
+  const router = useRouter();
 
   const EXPENSE_TYPES = [
     { value: "SURVIVAL_FIXED", label: t("expenseTypes.survivalFixed") },
@@ -81,6 +92,10 @@ export default function RecurringTemplatesPage() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmBulkDelete, setConfirmBulkDelete] = useState(false);
 
+  // Nudge candidates from AI advisor
+  const [nudgeCandidates, setNudgeCandidates] = useState<NudgeCandidate[]>([]);
+  const [aiEnabled, setAiEnabled] = useState(false);
+
   // Generate modal state
   const [showGenerateModal, setShowGenerateModal] = useState(false);
   const [generateMonth, setGenerateMonth] = useState(new Date().getMonth());
@@ -104,12 +119,32 @@ export default function RecurringTemplatesPage() {
     description: "",
   });
 
+  const fetchNudgeCandidates = useCallback(async () => {
+    try {
+      const [stateRes, nudgesRes] = await Promise.all([
+        fetch("/api/user/advisor-state"),
+        fetch("/api/insights/nudges/recurring"),
+      ]);
+      const stateData = await stateRes.json();
+      if (stateData.aiProcessingEnabled) {
+        setAiEnabled(true);
+        const nudgesData = await nudgesRes.json();
+        if (nudgesData.candidates) {
+          setNudgeCandidates(nudgesData.candidates);
+        }
+      }
+    } catch {
+      // silently ignore — nudges are best-effort
+    }
+  }, []);
+
   useEffect(() => {
     fetchTemplates();
     fetchCategories();
     fetchBankAccounts();
     fetchProjects();
-  }, []);
+    fetchNudgeCandidates();
+  }, [fetchNudgeCandidates]);
 
   const fetchTemplates = async () => {
     try {
@@ -474,6 +509,26 @@ export default function RecurringTemplatesPage() {
           )}
         </div>
       </div>
+
+      {/* AI Advisor — Recurring Nudge Cards */}
+      {aiEnabled && nudgeCandidates.length > 0 && (
+        <div className="space-y-2">
+          {nudgeCandidates.map((c, i) => (
+            <NudgeRecurringCard
+              key={`${c.name}-${i}`}
+              name={c.name}
+              amount={c.amount}
+              dayOfMonth={c.dayOfMonth}
+              monthsObserved={c.monthsObserved}
+              sampleExpenseIds={c.sampleExpenseIds}
+              onAccepted={() => {
+                setNudgeCandidates((prev) => prev.filter((_, idx) => idx !== i));
+                router.refresh();
+              }}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

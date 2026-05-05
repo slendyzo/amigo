@@ -1732,6 +1732,43 @@
       "archiveSubtitle": "{count} retrospectives",
       "archiveEmpty": "No retrospectives yet. The first one will appear when you've tracked a full month.",
       "observationLabel": "Observation"
+    },
+    "nudges": {
+      "common": {
+        "dismiss": "Dismiss",
+        "notNow": "Not now"
+      },
+      "categorize": {
+        "cardHeading": "{count} expenses need a category",
+        "cardCta": "Review",
+        "modalTitle": "Suggested categories",
+        "modalSubtitle": "Approve each guess. Rejected rows stay untagged.",
+        "applyButton": "Apply {count} accepted",
+        "noChanges": "Close",
+        "confidenceHigh": "High",
+        "confidenceMedium": "Medium",
+        "confidenceLow": "Low",
+        "originKeyword": "Rule",
+        "originAi": "AI"
+      },
+      "keyword": {
+        "cardHeading": "You've tagged {merchant} as {category} {count} times",
+        "cardSubtitle": "Make this a permanent rule?",
+        "createRule": "Create rule"
+      },
+      "recurring": {
+        "cardHeading": "{name} (~{amount}) recurs around the {day}",
+        "cardSubtitle": "Add as a template?",
+        "createTemplate": "Create template"
+      },
+      "project": {
+        "cardHeading": "{count} expenses look like a project",
+        "themePrefix": "Theme",
+        "merchantsPrefix": "Includes",
+        "pickProject": "Pick a project",
+        "newProjectPlaceholder": "Or type a new project name",
+        "tagButton": "Tag expenses"
+      }
     }
   }
 }

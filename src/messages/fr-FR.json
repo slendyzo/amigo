@@ -1703,6 +1703,43 @@
       "archiveSubtitle": "{count} rétrospectives",
       "archiveEmpty": "Pas encore de rétrospectives. La première apparaîtra quand vous aurez enregistré un mois complet.",
       "observationLabel": "Observation"
+    },
+    "nudges": {
+      "common": {
+        "dismiss": "Ignorer",
+        "notNow": "Pas maintenant"
+      },
+      "categorize": {
+        "cardHeading": "{count} dépenses sans catégorie",
+        "cardCta": "Vérifier",
+        "modalTitle": "Catégories suggérées",
+        "modalSubtitle": "Approuvez chaque suggestion. Les lignes refusées restent sans catégorie.",
+        "applyButton": "Appliquer {count} acceptées",
+        "noChanges": "Fermer",
+        "confidenceHigh": "Élevée",
+        "confidenceMedium": "Moyenne",
+        "confidenceLow": "Faible",
+        "originKeyword": "Règle",
+        "originAi": "IA"
+      },
+      "keyword": {
+        "cardHeading": "Vous avez étiqueté {merchant} comme {category} {count} fois",
+        "cardSubtitle": "En faire une règle permanente ?",
+        "createRule": "Créer la règle"
+      },
+      "recurring": {
+        "cardHeading": "{name} (~{amount}) revient autour du {day}",
+        "cardSubtitle": "Ajouter comme modèle ?",
+        "createTemplate": "Créer un modèle"
+      },
+      "project": {
+        "cardHeading": "{count} dépenses ressemblent à un projet",
+        "themePrefix": "Thème",
+        "merchantsPrefix": "Inclut",
+        "pickProject": "Choisir un projet",
+        "newProjectPlaceholder": "Ou tapez un nouveau nom de projet",
+        "tagButton": "Étiqueter les dépenses"
+      }
     }
   }
 }

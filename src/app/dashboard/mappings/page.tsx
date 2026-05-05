@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import NudgeKeywordCard from "@/components/nudge-keyword-card";
 
 type Category = {
   id: string;
@@ -23,10 +25,21 @@ type BuiltinKeyword = {
   category: string;
 };
 
+type NudgeCandidate = {
+  merchantKey: string;
+  categoryId: string;
+  categoryName: string;
+  count: number;
+};
+
 export default function KeywordMappingsPage() {
   const t = useTranslations("mappings");
   const tCommon = useTranslations("common");
   const { translateCategory } = useCategoryTranslation();
+  const router = useRouter();
+
+  const [nudgeCandidates, setNudgeCandidates] = useState<NudgeCandidate[]>([]);
+  const [aiEnabled, setAiEnabled] = useState(false);
 
   const [mappings, setMappings] = useState<KeywordMapping[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -59,7 +72,27 @@ export default function KeywordMappingsPage() {
 
   useEffect(() => {
     fetchData();
+    fetchNudges();
   }, []);
+
+  const fetchNudges = async () => {
+    try {
+      const [advisorRes, nudgesRes] = await Promise.all([
+        fetch("/api/user/advisor-state"),
+        fetch("/api/insights/nudges/keyword"),
+      ]);
+      if (advisorRes.ok) {
+        const data = await advisorRes.json();
+        setAiEnabled(data.aiProcessingEnabled === true);
+      }
+      if (nudgesRes.ok) {
+        const data = await nudgesRes.json();
+        setNudgeCandidates(data.candidates ?? []);
+      }
+    } catch (err) {
+      console.error("Failed to fetch nudges:", err);
+    }
+  };
 
   const fetchData = async () => {
     setIsLoading(true);
@@ -180,6 +213,30 @@ export default function KeywordMappingsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Keyword nudge cards */}
+      {aiEnabled && nudgeCandidates.length > 0 && (
+        <div className="flex flex-col gap-2">
+          {nudgeCandidates.map((c) => (
+            <NudgeKeywordCard
+              key={`${c.merchantKey}::${c.categoryId}`}
+              merchantKey={c.merchantKey}
+              categoryId={c.categoryId}
+              categoryName={c.categoryName}
+              count={c.count}
+              onAccepted={() => {
+                setNudgeCandidates((prev) =>
+                  prev.filter(
+                    (x) =>
+                      !(x.merchantKey === c.merchantKey && x.categoryId === c.categoryId)
+                  )
+                );
+                router.refresh();
+              }}
+            />
+          ))}
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
