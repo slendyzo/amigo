@@ -48,7 +48,7 @@ const DEFAULT_URL =
  * period code used (e.g. "S7A2024T4"). Throws on network or parse failure.
  */
 export async function fetchLatestIneHousingIndex(
-  url: string = process.env.INE_HOUSING_INDEX_URL ?? DEFAULT_URL,
+  url: string = process.env.INE_HOUSING_INDEX_URL || DEFAULT_URL,
 ): Promise<IneFetchResult> {
   const warnings: string[] = [];
   const res = await fetch(url, {
