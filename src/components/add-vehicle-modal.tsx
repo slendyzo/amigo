@@ -44,6 +44,18 @@ type ExpenseCandidate = {
   matchReasons: string[];
 };
 
+type TemplateCandidate = {
+  id: string;
+  name: string;
+  amount: number | null;
+  matchScore: number;
+};
+
+type AutoLinkResult =
+  | { mode: "none" }
+  | { mode: "linked"; templateId: string }
+  | { mode: "candidates"; candidates: TemplateCandidate[] };
+
 type AddVehicleModalProps = {
   isOpen: boolean;
   onClose: () => void;
@@ -59,12 +71,18 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Post-add: surface retroactive expense matches (AMIGO-164).
-  const [phase, setPhase] = useState<"form" | "matching">("form");
+  // Post-add: template-candidate prompt (AMIGO-165) then retroactive expense
+  // match (AMIGO-164). Phases run in order: form → templates? → matching? → close.
+  const [phase, setPhase] = useState<"form" | "templates" | "matching">("form");
   const [matchAssetId, setMatchAssetId] = useState<string | null>(null);
   const [matchCandidates, setMatchCandidates] = useState<ExpenseCandidate[]>([]);
   const [matchSelected, setMatchSelected] = useState<Set<string>>(new Set());
   const [matchSubmitting, setMatchSubmitting] = useState(false);
+
+  const [liabilityId, setLiabilityId] = useState<string | null>(null);
+  const [templateCandidates, setTemplateCandidates] = useState<TemplateCandidate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
+  const [templateSubmitting, setTemplateSubmitting] = useState(false);
 
   // Step 1
   const [brand, setBrand] = useState("");
@@ -129,6 +147,10 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
       setMatchCandidates([]);
       setMatchSelected(new Set());
       setMatchSubmitting(false);
+      setLiabilityId(null);
+      setTemplateCandidates([]);
+      setSelectedTemplateId(null);
+      setTemplateSubmitting(false);
     }
   }, [isOpen, currentYear]);
 
@@ -222,6 +244,8 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
       }
       const { asset } = await assetRes.json();
 
+      let autoLink: AutoLinkResult = { mode: "none" };
+      let createdLiabilityId: string | null = null;
       if (financed && parseFloat(monthlyPayment) > 0) {
         const loanRes = await fetch("/api/liabilities", {
           method: "POST",
@@ -238,38 +262,82 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
             realAssetId: asset.id,
           }),
         });
-        if (!loanRes.ok) {
+        if (loanRes.ok) {
+          const loanJson = (await loanRes.json()) as {
+            liability?: { id: string };
+            autoLink?: AutoLinkResult;
+          };
+          createdLiabilityId = loanJson.liability?.id ?? null;
+          if (loanJson.autoLink) autoLink = loanJson.autoLink;
+        } else {
           const err = await loanRes.json().catch(() => ({}));
           console.warn("[add-vehicle] loan creation failed:", err);
         }
       }
 
-      // After successful create, check for retroactive expense matches.
-      // Failures here are non-blocking — we just close the wizard.
-      try {
-        const matchRes = await fetch(`/api/assets/${asset.id}/match-expenses`);
-        if (matchRes.ok) {
-          const { candidates } = (await matchRes.json()) as { candidates?: ExpenseCandidate[] };
-          if (candidates && candidates.length > 0) {
-            setMatchAssetId(asset.id);
-            setMatchCandidates(candidates);
-            setMatchSelected(new Set(candidates.map((c) => c.id)));
-            setPhase("matching");
-            setSubmitting(false);
-            return;
-          }
-        }
-      } catch (e) {
-        console.warn("[add-vehicle] match-expenses check failed:", e);
+      setMatchAssetId(asset.id);
+
+      // Phase 1: template candidates (only when smart-detect found existing
+      // templates that look like a match — backend already created nothing).
+      if (autoLink.mode === "candidates" && createdLiabilityId) {
+        setLiabilityId(createdLiabilityId);
+        setTemplateCandidates(autoLink.candidates);
+        setSelectedTemplateId(autoLink.candidates[0]?.id ?? null);
+        setPhase("templates");
+        setSubmitting(false);
+        return;
       }
 
-      onSuccess?.();
-      router.refresh();
-      onClose();
+      // Phase 2: retroactive expense matches.
+      await advanceToMatchingOrClose(asset.id);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong");
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const advanceToMatchingOrClose = async (assetId: string) => {
+    try {
+      const matchRes = await fetch(`/api/assets/${assetId}/match-expenses`);
+      if (matchRes.ok) {
+        const { candidates } = (await matchRes.json()) as { candidates?: ExpenseCandidate[] };
+        if (candidates && candidates.length > 0) {
+          setMatchCandidates(candidates);
+          setMatchSelected(new Set(candidates.map((c) => c.id)));
+          setPhase("matching");
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("[add-vehicle] match-expenses check failed:", e);
+    }
+    onSuccess?.();
+    router.refresh();
+    onClose();
+  };
+
+  const finishTemplates = async (link: boolean) => {
+    if (link && liabilityId && selectedTemplateId) {
+      setTemplateSubmitting(true);
+      try {
+        await fetch(`/api/liabilities/${liabilityId}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recurringTemplateId: selectedTemplateId }),
+        });
+      } catch (e) {
+        console.warn("[add-vehicle] template link failed:", e);
+      } finally {
+        setTemplateSubmitting(false);
+      }
+    }
+    if (matchAssetId) {
+      await advanceToMatchingOrClose(matchAssetId);
+    } else {
+      onSuccess?.();
+      router.refresh();
+      onClose();
     }
   };
 
@@ -338,10 +406,14 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
             </div>
             <div>
               <h2 className="text-base font-semibold leading-tight">
-                {phase === "matching" ? t("matchHeader") : t("addVehicle")}
+                {phase === "templates"
+                  ? t("templateHeader")
+                  : phase === "matching"
+                    ? t("matchHeader")
+                    : t("addVehicle")}
               </h2>
               <p className="text-xs text-muted-foreground">
-                {phase === "matching"
+                {phase === "templates" || phase === "matching"
                   ? `${brand} ${model}`
                   : t("stepCountOf", { current: step, total: 3 })}
               </p>
@@ -349,7 +421,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           </div>
           <button
             onClick={onClose}
-            disabled={submitting || matchSubmitting}
+            disabled={submitting || matchSubmitting || templateSubmitting}
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-50"
           >
             <X className="h-4 w-4" />
@@ -363,7 +435,52 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
         )}
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          {phase === "matching" ? (
+          {phase === "templates" ? (
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                {t("templateSubheader", { count: templateCandidates.length })}
+              </p>
+              <ul className="divide-y divide-border/40 rounded-2xl border border-border/60 bg-card/80">
+                {templateCandidates.map((c) => {
+                  const checked = selectedTemplateId === c.id;
+                  return (
+                    <li
+                      key={c.id}
+                      onClick={() => setSelectedTemplateId(c.id)}
+                      className="flex cursor-pointer items-center justify-between gap-3 px-4 py-3 text-sm transition-colors hover:bg-muted/40"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <span
+                          className={cn(
+                            "flex h-4 w-4 shrink-0 items-center justify-center rounded-full border",
+                            checked
+                              ? "border-primary bg-primary"
+                              : "border-border bg-background",
+                          )}
+                          aria-hidden
+                        >
+                          {checked && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-primary-foreground" />
+                          )}
+                        </span>
+                        <p className="truncate font-medium">{c.name}</p>
+                      </div>
+                      {c.amount != null && (
+                        <p className="shrink-0 text-xs text-muted-foreground tabular-nums">
+                          {c.amount.toLocaleString(undefined, {
+                            style: "currency",
+                            currency: purchaseCurrency,
+                            maximumFractionDigits: 0,
+                          })}
+                          {t("monthlySuffix")}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : phase === "matching" ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 {t("matchSubheader", {
@@ -729,7 +846,27 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           )}
         </div>
 
-        {phase === "matching" ? (
+        {phase === "templates" ? (
+          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
+            <button
+              type="button"
+              onClick={() => finishTemplates(false)}
+              disabled={templateSubmitting}
+              className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
+            >
+              {t("matchSkip")}
+            </button>
+            <button
+              type="button"
+              onClick={() => finishTemplates(true)}
+              disabled={templateSubmitting || !selectedTemplateId}
+              className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
+            >
+              {templateSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
+              {templateSubmitting ? t("matchLinking") : t("templateLink")}
+            </button>
+          </footer>
+        ) : phase === "matching" ? (
           <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
             <button
               type="button"

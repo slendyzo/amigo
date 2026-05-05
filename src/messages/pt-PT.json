@@ -1577,6 +1577,9 @@
     "matchClear": "Limpar",
     "matchSkip": "Saltar",
     "matchLink": "Ligar {count}",
-    "matchLinking": "A ligar…"
+    "matchLinking": "A ligar…",
+    "templateHeader": "Ligar a modelo existente?",
+    "templateSubheader": "Encontrámos {count} modelos recorrentes que parecem corresponder a este empréstimo. Escolhe um para evitar duplicados, ou salta para deixar o empréstimo sem ligação.",
+    "templateLink": "Ligar modelo"
   }
 }

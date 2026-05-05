@@ -1608,6 +1608,9 @@
     "matchClear": "Clear",
     "matchSkip": "Skip",
     "matchLink": "Link {count}",
-    "matchLinking": "Linking…"
+    "matchLinking": "Linking…",
+    "templateHeader": "Link to existing template?",
+    "templateSubheader": "We found {count} recurring templates that look like a match for this loan. Pick one to avoid creating a duplicate, or skip to leave the loan unlinked.",
+    "templateLink": "Link template"
   }
 }

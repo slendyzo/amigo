@@ -60,6 +60,29 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     if (typeof body.status === "string" && VALID_STATUSES.includes(body.status as LiabilityStatus)) {
       data.status = body.status as LiabilityStatus;
     }
+
+    // Allow linking/unlinking a recurring template. Validates ownership and
+    // that the target template isn't already attached to a different loan.
+    if (body.recurringTemplateId === null) {
+      data.recurringTemplate = { disconnect: true };
+    } else if (typeof body.recurringTemplateId === "string") {
+      const tmpl = await prisma.recurringTemplate.findFirst({
+        where: { id: body.recurringTemplateId, workspaceId: workspace.id },
+        select: { id: true, liabilities: { select: { id: true }, take: 1 } },
+      });
+      if (!tmpl) {
+        return NextResponse.json({ error: "Template not found" }, { status: 404 });
+      }
+      const linkedToOther = tmpl.liabilities[0] && tmpl.liabilities[0].id !== id;
+      if (linkedToOther) {
+        return NextResponse.json(
+          { error: "Template already linked to another liability" },
+          { status: 409 },
+        );
+      }
+      data.recurringTemplate = { connect: { id: body.recurringTemplateId } };
+    }
+
     if (typeof body.interestRate === "number") data.interestRate = new Prisma.Decimal(body.interestRate);
     if (typeof body.termMonths === "number") data.termMonths = body.termMonths;
     if (typeof body.monthlyPayment === "number")

@@ -1579,6 +1579,9 @@
     "matchClear": "Effacer",
     "matchSkip": "Passer",
     "matchLink": "Lier {count}",
-    "matchLinking": "Liaison…"
+    "matchLinking": "Liaison…",
+    "templateHeader": "Lier à un modèle existant ?",
+    "templateSubheader": "Nous avons trouvé {count} modèles récurrents qui semblent correspondre à ce prêt. Choisissez-en un pour éviter les doublons, ou passez pour laisser le prêt non lié.",
+    "templateLink": "Lier le modèle"
   }
 }
