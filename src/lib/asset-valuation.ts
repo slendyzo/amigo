@@ -1,8 +1,13 @@
-// Heuristic vehicle valuation engine.
+// Heuristic asset valuation engines (vehicle + property).
 //
-// Curve: 15% year 1, 12% year 2, 10% years 3-5, 7% year 6+ (compounded).
-// Mileage adjustment: ±0.5% per 5,000 km vs. a 15k km/year baseline.
-// Floor: 5% of purchase price (junk value).
+// Vehicle curve: 15% year 1, 12% year 2, 10% years 3-5, 7% year 6+ (compounded).
+// Vehicle mileage adjustment: ±0.5% per 5,000 km vs. a 15k km/year baseline.
+// Vehicle floor: 5% of purchase price (junk value).
+//
+// Property: index-ratio model — currentValue = purchasePrice × (currentIndex /
+// purchaseQuarterIndex). Pulls per-concelho data from PropertyValuationIndex
+// (sourced from INE). When the concelho is unknown or has no index data we
+// freeze at the last known value with currentValueSource: "stale".
 
 const ANNUAL_DEPRECIATION = [0.15, 0.12, 0.10, 0.10, 0.10] as const;
 const TAIL_DEPRECIATION = 0.07;
@@ -71,4 +76,44 @@ export function computeVehicleHeuristicValue(input: HeuristicValueInput): Heuris
 
 function round2(n: number): number {
   return Math.round(n * 100) / 100;
+}
+
+// ─── Property ───────────────────────────────────────────────────────────────
+
+export type PropertyValueInput = {
+  purchasePriceEur: number;
+  purchaseDate: Date;
+  currentIndex: number | null; // null = no current concelho data
+  purchaseQuarterIndex: number | null; // null = no anchor data
+  lastKnownValueEur?: number | null;
+};
+
+export type PropertyValueResult = {
+  valueEur: number;
+  source: "heuristic" | "stale";
+  appreciationFactor: number; // 1.0 = flat, 1.06 = +6%, 0.95 = -5%
+};
+
+export function computePropertyHeuristicValue(
+  input: PropertyValueInput,
+): PropertyValueResult {
+  const { purchasePriceEur, currentIndex, purchaseQuarterIndex, lastKnownValueEur } = input;
+
+  // Insufficient data → freeze. Either we never anchored or the concelho is unknown.
+  const haveAnchor = purchaseQuarterIndex != null && purchaseQuarterIndex > 0;
+  const haveCurrent = currentIndex != null && currentIndex > 0;
+  if (!haveAnchor || !haveCurrent) {
+    const fallback = lastKnownValueEur ?? purchasePriceEur;
+    return { valueEur: round2(fallback), source: "stale", appreciationFactor: 1 };
+  }
+
+  const factor = currentIndex! / purchaseQuarterIndex!;
+  // Sanity-clamp the factor: real estate moves slowly, but bad data could cause
+  // wild ratios. Cap at ±50% to keep outliers from poisoning the cron output.
+  const clamped = Math.max(0.5, Math.min(1.5, factor));
+  return {
+    valueEur: round2(purchasePriceEur * clamped),
+    source: "heuristic",
+    appreciationFactor: clamped,
+  };
 }

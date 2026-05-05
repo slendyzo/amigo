@@ -936,6 +936,30 @@ model ValuationHistory {
   @@map("valuation_history")
 }
 
+// Quarterly housing price index by Portuguese concelho (município).
+// Source: INE (Instituto Nacional de Estatística) — quarterly indicator.
+// `concelhoKey` is the lowercased + ASCII-folded concelho name used for matching
+// (e.g. "lisboa", "vila nova de gaia"). `indexValue` is treated as a relative
+// index: only ratios between two rows for the same concelho carry meaning,
+// so the engine works whether the underlying series is "median price per m²"
+// or a unitless index.
+model PropertyValuationIndex {
+  id           String  @id @default(cuid())
+  concelhoKey  String  @db.VarChar(120)
+  concelhoName String  @db.VarChar(120)
+  year         Int
+  quarter      Int // 1..4
+  indexValue   Decimal @db.Decimal(14, 4)
+  source       String  @db.VarChar(50) // "INE", "manual"
+
+  recordedAt DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([concelhoKey, year, quarter])
+  @@index([concelhoKey])
+  @@map("property_valuation_index")
+}
+
 model Liability {
   id                  String  @id @default(cuid())
   workspaceId         String
