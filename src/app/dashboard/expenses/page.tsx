@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import AddExpenseModal from "@/components/add-expense-modal";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
+import AssetLinkPicker from "@/components/asset-link-picker";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import { effectiveEur, getUserShare } from "@/lib/split-utils";
@@ -90,6 +91,12 @@ export default function ExpensesPage() {
   const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const longPressTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Bulk asset-link
+  const tRwa = useTranslations("rwa");
+  const [showBulkLinkModal, setShowBulkLinkModal] = useState(false);
+  const [bulkLinkAssetId, setBulkLinkAssetId] = useState<string | null>(null);
+  const [bulkLinkBusy, setBulkLinkBusy] = useState(false);
 
   // Filters
   const [typeFilter, setTypeFilter] = useState<string>("");
@@ -219,6 +226,31 @@ export default function ExpensesPage() {
   const clearSelection = () => {
     setSelectedIds(new Set());
     setIsSelectionMode(false);
+  };
+
+  const handleBulkLink = async (link: boolean) => {
+    if (selectedIds.size === 0) return;
+    setBulkLinkBusy(true);
+    try {
+      const response = await fetch("/api/expenses/bulk", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ids: Array.from(selectedIds),
+          realAssetId: link ? bulkLinkAssetId : null,
+        }),
+      });
+      if (response.ok) {
+        clearSelection();
+        setShowBulkLinkModal(false);
+        setBulkLinkAssetId(null);
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Failed to bulk-link expenses:", error);
+    } finally {
+      setBulkLinkBusy(false);
+    }
   };
 
   const handleBulkDelete = async () => {
@@ -383,6 +415,16 @@ export default function ExpensesPage() {
               className="px-3 py-1.5 text-sm bg-white/20 hover:bg-white/30 rounded-lg transition-colors"
             >
               {t("selectAll")}
+            </button>
+            <button
+              onClick={() => setShowBulkLinkModal(true)}
+              className="px-3 py-1.5 text-sm bg-white/20 hover:bg-white/30 rounded-lg transition-colors flex items-center gap-1.5"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 17H3v-5l2-5h11l4 5v5h-2M5 17h10M5 12h14" />
+              </svg>
+              {tRwa("bulkLinkAction")}
             </button>
             <button
               onClick={() => setShowBulkDeleteConfirm(true)}
@@ -908,6 +950,48 @@ export default function ExpensesPage() {
                 className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
               >
                 {tCommon("delete")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Bulk Asset Link */}
+      {showBulkLinkModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/50" onClick={() => !bulkLinkBusy && setShowBulkLinkModal(false)} />
+          <div className="relative bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900 mb-1">
+              {tRwa("bulkLinkTitle")}
+            </h3>
+            <p className="text-sm text-slate-500 mb-4">
+              {tRwa("bulkLinkSubtitle", { count: selectedIds.size })}
+            </p>
+            <AssetLinkPicker value={bulkLinkAssetId} onChange={setBulkLinkAssetId} />
+            <div className="mt-5 flex flex-col gap-2">
+              <button
+                onClick={() => handleBulkLink(true)}
+                disabled={bulkLinkBusy || !bulkLinkAssetId}
+                className="w-full px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+              >
+                {bulkLinkBusy ? tRwa("matchLinking") : tRwa("bulkLinkConfirm", { count: selectedIds.size })}
+              </button>
+              <button
+                onClick={() => handleBulkLink(false)}
+                disabled={bulkLinkBusy}
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+              >
+                {tRwa("bulkUnlink")}
+              </button>
+              <button
+                onClick={() => {
+                  setShowBulkLinkModal(false);
+                  setBulkLinkAssetId(null);
+                }}
+                disabled={bulkLinkBusy}
+                className="w-full px-4 py-2 rounded-lg text-slate-500 hover:text-slate-700 disabled:opacity-50"
+              >
+                {tCommon("cancel")}
               </button>
             </div>
           </div>

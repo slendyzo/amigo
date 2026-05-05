@@ -1580,6 +1580,11 @@
     "matchLinking": "A ligar…",
     "templateHeader": "Ligar a modelo existente?",
     "templateSubheader": "Encontrámos {count} modelos recorrentes que parecem corresponder a este empréstimo. Escolhe um para evitar duplicados, ou salta para deixar o empréstimo sem ligação.",
-    "templateLink": "Ligar modelo"
+    "templateLink": "Ligar modelo",
+    "bulkLinkAction": "Ligar a veículo",
+    "bulkLinkTitle": "Ligar despesas a um veículo",
+    "bulkLinkSubtitle": "Escolhe um veículo para anexar as {count} despesas selecionadas. Vão contar para o TCO.",
+    "bulkLinkConfirm": "Ligar {count} despesas",
+    "bulkUnlink": "Desligar de qualquer veículo"
   }
 }

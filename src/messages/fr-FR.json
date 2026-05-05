@@ -1582,6 +1582,11 @@
     "matchLinking": "Liaison…",
     "templateHeader": "Lier à un modèle existant ?",
     "templateSubheader": "Nous avons trouvé {count} modèles récurrents qui semblent correspondre à ce prêt. Choisissez-en un pour éviter les doublons, ou passez pour laisser le prêt non lié.",
-    "templateLink": "Lier le modèle"
+    "templateLink": "Lier le modèle",
+    "bulkLinkAction": "Lier à un véhicule",
+    "bulkLinkTitle": "Lier les dépenses à un véhicule",
+    "bulkLinkSubtitle": "Choisissez un véhicule auquel rattacher les {count} dépenses sélectionnées. Elles compteront dans le coût total.",
+    "bulkLinkConfirm": "Lier {count} dépenses",
+    "bulkUnlink": "Détacher de tout véhicule"
   }
 }

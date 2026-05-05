@@ -93,3 +93,65 @@ export async function DELETE(request: NextRequest) {
     );
   }
 }
+
+// PATCH /api/expenses/bulk — bulk-link or unlink expenses to a RealAsset.
+// Body: { ids: string[], realAssetId: string | null }.
+export async function PATCH(request: NextRequest) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const membership = await prisma.workspaceMember.findFirst({
+      where: { userId: session.user.id },
+      include: { workspace: true },
+    });
+    if (!membership) {
+      return NextResponse.json({ error: "No workspace found" }, { status: 404 });
+    }
+    const workspaceId = membership.workspaceId;
+
+    const body = await request.json().catch(() => ({}));
+    const { ids, realAssetId } = body as { ids?: unknown; realAssetId?: unknown };
+
+    if (!Array.isArray(ids) || ids.length === 0) {
+      return NextResponse.json({ error: "ids array required" }, { status: 400 });
+    }
+    const validIds = ids.filter((x): x is string => typeof x === "string");
+    if (validIds.length === 0) {
+      return NextResponse.json({ error: "ids array required" }, { status: 400 });
+    }
+
+    if (realAssetId !== null && typeof realAssetId !== "string") {
+      return NextResponse.json(
+        { error: "realAssetId must be a string or null" },
+        { status: 400 },
+      );
+    }
+
+    // Validate the target asset belongs to this workspace (when linking).
+    if (typeof realAssetId === "string") {
+      const owns = await prisma.realAsset.findFirst({
+        where: { id: realAssetId, workspaceId },
+        select: { id: true },
+      });
+      if (!owns) {
+        return NextResponse.json({ error: "Asset not found" }, { status: 404 });
+      }
+    }
+
+    const result = await prisma.expense.updateMany({
+      where: { id: { in: validIds }, workspaceId },
+      data: { realAssetId },
+    });
+
+    return NextResponse.json({ updated: result.count });
+  } catch (error) {
+    console.error("Failed to bulk-link expenses:", error);
+    return NextResponse.json(
+      { error: "Failed to update expenses" },
+      { status: 500 },
+    );
+  }
+}

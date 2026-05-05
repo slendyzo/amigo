@@ -1611,6 +1611,11 @@
     "matchLinking": "Linking…",
     "templateHeader": "Link to existing template?",
     "templateSubheader": "We found {count} recurring templates that look like a match for this loan. Pick one to avoid creating a duplicate, or skip to leave the loan unlinked.",
-    "templateLink": "Link template"
+    "templateLink": "Link template",
+    "bulkLinkAction": "Link to vehicle",
+    "bulkLinkTitle": "Link expenses to a vehicle",
+    "bulkLinkSubtitle": "Pick a vehicle to attach the {count} selected expenses to. They'll count toward TCO.",
+    "bulkLinkConfirm": "Link {count} expenses",
+    "bulkUnlink": "Unlink from any vehicle"
   }
 }
