@@ -44,6 +44,36 @@ function normalize(s: string | null | undefined): string {
   return (s ?? "").trim();
 }
 
+// PT addresses commonly include floor + apartment descriptors that Nominatim
+// can't resolve (it indexes the building, not the unit). "Rua X 10, 2º Esq"
+// returns 0 results; "Rua X 10" returns the street. Strip the unit tail
+// before geocoding — we still keep the original in the address column so
+// the user sees their full input.
+const UNIT_PATTERNS = [
+  /,\s*\d+\s*[ºo°]?\s*(esq|esquerdo|dto|dir|direito|frt|frente|tras|traseiras)\.?$/i,
+  /,\s*[ºo°]?\s*(esq|esquerdo|dto|dir|direito|frt|frente)\.?$/i,
+  /,\s*\d+\s*[ºo°]\s*(andar|piso)\.?$/i,
+  /,\s*r\/?c\s*(esq|dto|frt)?\.?$/i,
+  /,\s*[a-z]\s*-\s*\d+\s*[ºo°]?$/i, // "Bloco A - 2º"
+];
+
+function stripUnitDescriptors(address: string): string {
+  let s = address.trim();
+  // Multiple passes — strip iteratively (some addresses chain two patterns).
+  for (let i = 0; i < 3; i++) {
+    let changed = false;
+    for (const re of UNIT_PATTERNS) {
+      const next = s.replace(re, "").trim().replace(/,\s*$/, "");
+      if (next !== s) {
+        s = next;
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+  return s;
+}
+
 function cacheKey(input: GeocodeInput): string {
   const country = normalize(input.country) || "PT";
   return [
@@ -110,25 +140,29 @@ export async function geocodeAddress(input: GeocodeInput): Promise<GeocodeResult
   // 1) Full free-text query — best chance at rooftop accuracy. We only run
   //    this when there's a real street address; otherwise it degrades to
   //    just the postal centroid anyway, so skip the round-trip.
+  //    We try the address first as-stored, then a cleaned variant with PT
+  //    floor/unit descriptors stripped (Nominatim indexes buildings, not
+  //    units, so "Rua X 10, 2º Esq" returns 0 results but "Rua X 10" works).
   if (address) {
-    const queryParts = [address, postalCode, city].filter(Boolean);
-    const q = queryParts.join(", ");
-    const params = new URLSearchParams();
-    params.set("q", q);
-    params.set("countrycodes", country.toLowerCase());
-    const full = await nominatimQuery(params);
-    if ("lat" in full) {
-      const result: GeocodeResult = { ok: true, lat: full.lat, lon: full.lon, precision: "address" };
-      rememberResult(key, result);
-      return result;
+    const cleaned = stripUnitDescriptors(address);
+    const variants = cleaned !== address ? [address, cleaned] : [address];
+    for (const variant of variants) {
+      const q = [variant, postalCode, city].filter(Boolean).join(", ");
+      const params = new URLSearchParams();
+      params.set("q", q);
+      params.set("countrycodes", country.toLowerCase());
+      const full = await nominatimQuery(params);
+      if ("lat" in full) {
+        const result: GeocodeResult = { ok: true, lat: full.lat, lon: full.lon, precision: "address" };
+        rememberResult(key, result);
+        return result;
+      }
+      if (full.error === "RATE_LIMITED" || full.error === "TIMEOUT" || full.error === "NETWORK") {
+        // Don't fall back on transient failures — bubble up.
+        return { ok: false, error: full.error };
+      }
+      // NOT_FOUND → try next variant, or fall through to postal-only below.
     }
-    if (full.error === "RATE_LIMITED" || full.error === "TIMEOUT" || full.error === "NETWORK") {
-      // Don't fall back on transient failures — bubble up.
-      const result: GeocodeResult = { ok: false, error: full.error };
-      // Don't cache transient errors.
-      return result;
-    }
-    // NOT_FOUND on the full query → fall through to postal-only.
   }
 
   // 2) Postal-code fallback — preserves the previous behavior (postal-area
