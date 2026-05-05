@@ -23,6 +23,7 @@ export type VehicleCardData = {
     brand: string;
     model: string;
     year: number;
+    vehicleClass?: "CAR" | "MOTORCYCLE";
   } | null;
 };
 
@@ -42,6 +43,7 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
   const delta = cost > 0 ? ((current - cost) / cost) * 100 : 0;
   const deltaSign = delta > 0.1 ? "up" : delta < -0.1 ? "down" : "flat";
   const sold = vehicle.status === "SOLD";
+  const isMoto = vehicle.vehicle?.vehicleClass === "MOTORCYCLE";
 
   return (
     <Link href={link} className="group block">
@@ -55,7 +57,7 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
           className
         )}
       >
-        <VehicleImage src={vehicle.imageUrl} alt={vehicle.name} />
+        <VehicleImage src={vehicle.imageUrl} alt={vehicle.name} isMoto={isMoto} />
 
         <div className="space-y-3 p-4">
           <header className="flex items-start justify-between gap-2">
@@ -119,11 +121,15 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
   );
 }
 
-function VehicleImage({ src, alt }: { src: string | null; alt: string }) {
+function VehicleImage({ src, alt, isMoto }: { src: string | null; alt: string; isMoto?: boolean }) {
   if (!src) {
     return (
       <div className="flex aspect-[16/9] max-h-[200px] w-full items-center justify-center bg-gradient-to-br from-muted/40 to-muted/10">
-        <Car className="h-10 w-10 text-muted-foreground/50" strokeWidth={1.5} />
+        {isMoto ? (
+          <span className="text-4xl opacity-50" aria-hidden>🏍️</span>
+        ) : (
+          <Car className="h-10 w-10 text-muted-foreground/50" strokeWidth={1.5} />
+        )}
       </div>
     );
   }

@@ -765,7 +765,13 @@ enum VehicleFuelType {
   OTHER
 }
 
+enum VehicleClass {
+  CAR
+  MOTORCYCLE
+}
+
 enum VehicleBodyType {
+  // Cars
   SEDAN
   HATCHBACK
   SUV
@@ -773,6 +779,14 @@ enum VehicleBodyType {
   COUPE
   CONVERTIBLE
   TRUCK
+  // Motorcycles
+  NAKED
+  SPORT
+  CRUISER
+  TOURING
+  ADVENTURE
+  SCOOTER
+  OFF_ROAD
   OTHER
 }
 
@@ -863,6 +877,8 @@ model RealAsset {
 
 model Vehicle {
   realAssetId String @id
+
+  vehicleClass VehicleClass @default(CAR)
 
   brand      String  @db.VarChar(100)
   model      String  @db.VarChar(100)

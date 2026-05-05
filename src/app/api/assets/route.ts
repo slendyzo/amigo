@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
 import { computeVehicleHeuristicValue } from "@/lib/asset-valuation";
-import { geocodePostalCode } from "@/lib/geocode";
+import { geocodeAddress } from "@/lib/geocode";
 import { enqueueBackfill } from "@/lib/asset-backfill";
 import {
   requireActiveWorkspace,
@@ -17,8 +17,10 @@ type RealAssetType = (typeof VALID_TYPES)[number];
 const VALID_STATUSES = ["ACTIVE", "SOLD"] as const;
 type RealAssetStatus = (typeof VALID_STATUSES)[number];
 
+const VALID_VEHICLE_CLASS = ["CAR", "MOTORCYCLE"] as const;
 const VALID_FUEL = ["PETROL", "DIESEL", "HYBRID", "EV", "OTHER"] as const;
 const VALID_BODY = [
+  // Cars
   "SEDAN",
   "HATCHBACK",
   "SUV",
@@ -26,6 +28,14 @@ const VALID_BODY = [
   "COUPE",
   "CONVERTIBLE",
   "TRUCK",
+  // Motorcycles
+  "NAKED",
+  "SPORT",
+  "CRUISER",
+  "TOURING",
+  "ADVENTURE",
+  "SCOOTER",
+  "OFF_ROAD",
   "OTHER",
 ] as const;
 
@@ -151,6 +161,14 @@ export async function POST(request: Request) {
         );
       }
 
+      const vehicleClass =
+        typeof vehicleInput.vehicleClass === "string" &&
+        VALID_VEHICLE_CLASS.includes(
+          vehicleInput.vehicleClass as (typeof VALID_VEHICLE_CLASS)[number],
+        )
+          ? (vehicleInput.vehicleClass as (typeof VALID_VEHICLE_CLASS)[number])
+          : "CAR";
+
       const mileage = typeof vehicleInput.mileage === "number" ? vehicleInput.mileage : null;
       const fuelType =
         typeof vehicleInput.fuelType === "string" && VALID_FUEL.includes(vehicleInput.fuelType as (typeof VALID_FUEL)[number])
@@ -174,6 +192,7 @@ export async function POST(request: Request) {
       }
 
       vehicleData = {
+        vehicleClass,
         brand,
         model,
         generation: typeof vehicleInput.generation === "string" ? vehicleInput.generation : null,
@@ -225,13 +244,20 @@ export async function POST(request: Request) {
 
       const postalCode = strOrNull("postalCode");
       const country = strOrNull("country") ?? "PT";
+      const address = strOrNull("address");
+      const concelho = strOrNull("concelho");
 
       let latitude: Prisma.Decimal | null = null;
       let longitude: Prisma.Decimal | null = null;
       let geocodedAt: Date | null = null;
       let geocodeError: string | null = null;
-      if (postalCode) {
-        const geocode = await geocodePostalCode({ postalCode, country });
+      if (address || postalCode) {
+        const geocode = await geocodeAddress({
+          address,
+          postalCode,
+          city: concelho,
+          country,
+        });
         if (geocode.ok) {
           latitude = new Prisma.Decimal(geocode.lat);
           longitude = new Prisma.Decimal(geocode.lon);
@@ -243,10 +269,10 @@ export async function POST(request: Request) {
 
       propertyData = {
         propertyType: propertyType as (typeof VALID_PROPERTY_TYPES)[number],
-        address: strOrNull("address"),
+        address,
         postalCode,
         distrito: strOrNull("distrito"),
-        concelho: strOrNull("concelho"),
+        concelho,
         freguesia: strOrNull("freguesia"),
         country,
         livableAreaM2: intOrNull("livableAreaM2"),

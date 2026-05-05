@@ -24,7 +24,12 @@ type RealAsset = {
   currentValueUpdatedAt: string | null;
   salePriceEur: number | null;
   soldAt: string | null;
-  vehicle: { brand: string; model: string; year: number } | null;
+  vehicle: {
+    brand: string;
+    model: string;
+    year: number;
+    vehicleClass?: "CAR" | "MOTORCYCLE";
+  } | null;
   property: {
     propertyType: string;
     concelho: string | null;

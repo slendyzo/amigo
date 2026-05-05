@@ -3,7 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
 import { computeVehicleHeuristicValue } from "@/lib/asset-valuation";
-import { geocodePostalCode } from "@/lib/geocode";
+import { geocodeAddress } from "@/lib/geocode";
 import { regeneratePropertyValuationHistory } from "@/lib/property-valuation-regen";
 import { enqueueBackfill } from "@/lib/asset-backfill";
 import {
@@ -14,6 +14,7 @@ import {
 
 const VALID_FUEL = ["PETROL", "DIESEL", "HYBRID", "EV", "OTHER"] as const;
 const VALID_BODY = [
+  // Cars
   "SEDAN",
   "HATCHBACK",
   "SUV",
@@ -21,6 +22,14 @@ const VALID_BODY = [
   "COUPE",
   "CONVERTIBLE",
   "TRUCK",
+  // Motorcycles
+  "NAKED",
+  "SPORT",
+  "CRUISER",
+  "TOURING",
+  "ADVENTURE",
+  "SCOOTER",
+  "OFF_ROAD",
   "OTHER",
 ] as const;
 
@@ -294,7 +303,17 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       if (value !== undefined) propertyData[key] = value;
     };
 
-    setIfDefined("address", strField("address"));
+    // Address — change here also triggers re-geocode (handled below alongside postalCode).
+    let addressChanged = false;
+    let nextAddress = existing.property.address;
+    if ("address" in propertyInput) {
+      const next = strField("address");
+      if (next !== undefined) {
+        propertyData.address = next;
+        nextAddress = next;
+        addressChanged = (next ?? null) !== (existing.property.address ?? null);
+      }
+    }
     setIfDefined("distrito", strField("distrito"));
     setIfDefined("freguesia", strField("freguesia"));
     setIfDefined("country", strField("country") ?? undefined);
@@ -343,12 +362,22 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       }
     }
 
-    if (postalCodeChanged && nextPostalCode) {
+    const needsRegeocode = (addressChanged || postalCodeChanged) && (nextAddress || nextPostalCode);
+    if (needsRegeocode) {
       const country =
         (propertyData.country as string | undefined) ??
         existing.property.country ??
         "PT";
-      const geocode = await geocodePostalCode({ postalCode: nextPostalCode, country });
+      const concelho =
+        (propertyData.concelho as string | undefined) ??
+        existing.property.concelho ??
+        null;
+      const geocode = await geocodeAddress({
+        address: nextAddress,
+        postalCode: nextPostalCode,
+        city: concelho,
+        country,
+      });
       if (geocode.ok) {
         propertyData.latitude = new Prisma.Decimal(geocode.lat);
         propertyData.longitude = new Prisma.Decimal(geocode.lon);
@@ -361,8 +390,8 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
         propertyData.geocodeError = geocode.error;
         geocodeFailureReason = geocode.error;
       }
-    } else if (postalCodeChanged && !nextPostalCode) {
-      // Cleared the postal code — drop the cached coords too.
+    } else if ((addressChanged || postalCodeChanged) && !nextAddress && !nextPostalCode) {
+      // Cleared both location fields — drop the cached coords too.
       propertyData.latitude = null;
       propertyData.longitude = null;
       propertyData.geocodedAt = null;

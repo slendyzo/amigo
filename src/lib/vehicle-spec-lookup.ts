@@ -7,6 +7,11 @@
 //   - generation (e.g. "ND" for the 4th-gen Miata)
 //   - imageHint (an image-search query string)
 //
+// Two flavors via `vehicleClass`:
+//   - CAR (default): car body-type enum + car prompt
+//   - MOTORCYCLE: bike body-type enum + bike prompt (no FUEL diesel/hybrid;
+//     bikes are mostly petrol/EV, so we still reuse the fuel enum)
+//
 // Returns null on any failure (missing API key, rate limit, network error,
 // invalid model output) so callers degrade to manual entry.
 //
@@ -18,7 +23,8 @@ const ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions";
 const MODEL = "glm-4.6";
 
 const FUEL_TYPES = ["PETROL", "DIESEL", "HYBRID", "EV", "OTHER"] as const;
-const BODY_TYPES = [
+
+const CAR_BODY_TYPES = [
   "SEDAN",
   "HATCHBACK",
   "SUV",
@@ -29,14 +35,30 @@ const BODY_TYPES = [
   "OTHER",
 ] as const;
 
+const MOTO_BODY_TYPES = [
+  "NAKED",
+  "SPORT",
+  "CRUISER",
+  "TOURING",
+  "ADVENTURE",
+  "SCOOTER",
+  "OFF_ROAD",
+  "OTHER",
+] as const;
+
+const ALL_BODY_TYPES = [...new Set([...CAR_BODY_TYPES, ...MOTO_BODY_TYPES])] as const;
+
 export type VehicleFuelType = (typeof FUEL_TYPES)[number];
-export type VehicleBodyType = (typeof BODY_TYPES)[number];
+export type VehicleBodyType = (typeof ALL_BODY_TYPES)[number];
+
+export type VehicleClass = "CAR" | "MOTORCYCLE";
 
 export type VehicleSpecLookup = {
   brand: string;
   model: string;
   year: number;
   trim?: string | null;
+  vehicleClass?: VehicleClass;
 };
 
 export type VehicleSpecResult = {
@@ -47,48 +69,63 @@ export type VehicleSpecResult = {
   imageHint: string | null;
 };
 
-const SYSTEM_PROMPT = `You are a vehicle spec lookup assistant. Given a brand, model, year, and optional trim, invoke the record_vehicle_spec tool with your best estimate of the original MSRP in EUR (when new), fuel type, body type, manufacturer generation code (e.g. "ND" for 4th-gen Mazda MX-5), and an image search query that would surface a clean press photo of the model.
+const CAR_SYSTEM_PROMPT = `You are a vehicle spec lookup assistant. Given a brand, model, year, and optional trim, invoke the record_vehicle_spec tool with your best estimate of the original MSRP in EUR (when new), fuel type, body type, manufacturer generation code (e.g. "ND" for 4th-gen Mazda MX-5), and an image search query that would surface a clean press photo of the model.
 
 Be honest about uncertainty: if you don't know the MSRP for a specific market or trim, set it to null. Use European pricing (EUR, when-new) where possible. Prefer the manufacturer's standardized generation code when one exists.
 
 Always invoke the tool — never reply with prose.`;
 
-const TOOL = {
-  type: "function" as const,
-  function: {
-    name: "record_vehicle_spec",
-    description: "Record the vehicle specs derived from the user's input.",
-    parameters: {
-      type: "object" as const,
-      properties: {
-        originalMsrpEur: {
-          type: ["number", "null"],
-          description: "Original MSRP in EUR when the vehicle was new. Null if unknown.",
+const MOTO_SYSTEM_PROMPT = `You are a motorcycle spec lookup assistant. Given a brand, model, year, and optional trim, invoke the record_vehicle_spec tool with your best estimate of the original MSRP in EUR (when new), fuel type, motorcycle body type, manufacturer generation code where one exists, and an image search query that would surface a clean side-profile press photo of the model.
+
+Body type guidance: NAKED = streetfighters/standards (MT-07, Z900); SPORT = supersport/superbike (R6, CBR1000RR, Panigale); CRUISER = low-slung relaxed-stance bikes (Harley, Bonneville Bobber); TOURING = full fairings + luggage (Goldwing, K1600); ADVENTURE = dual-sport/ADV (GS, Africa Twin, Tiger); SCOOTER = step-through with CVT (Vespa, X-Max); OFF_ROAD = enduro/motocross/dirt (CRF, EXC, KX). Use OTHER only when nothing fits.
+
+Fuel: most bikes are PETROL; use EV for electric (LiveWire, Zero); HYBRID is rare but valid (Honda PCX-Hybrid).
+
+Be honest about uncertainty: if you don't know the MSRP for a specific market or trim, set it to null. Use European pricing (EUR, when-new) where possible.
+
+Always invoke the tool — never reply with prose.`;
+
+function buildTool(bodyTypes: readonly string[]) {
+  return {
+    type: "function" as const,
+    function: {
+      name: "record_vehicle_spec",
+      description: "Record the vehicle specs derived from the user's input.",
+      parameters: {
+        type: "object" as const,
+        properties: {
+          originalMsrpEur: {
+            type: ["number", "null"],
+            description: "Original MSRP in EUR when the vehicle was new. Null if unknown.",
+          },
+          fuelType: {
+            type: "string",
+            enum: [...FUEL_TYPES],
+            description: "Engine type. Use HYBRID for plug-in or full hybrid, EV for fully electric.",
+          },
+          bodyType: {
+            type: "string",
+            enum: [...bodyTypes],
+            description: "Body shape. Use OTHER if it doesn't fit cleanly.",
+          },
+          generation: {
+            type: ["string", "null"],
+            description:
+              "Manufacturer generation code (e.g. 'ND' for 4th-gen Miata, 'F30' for BMW 3-series). Null if not standardized.",
+          },
+          imageHint: {
+            type: ["string", "null"],
+            description: "Search query that would return a clean front-3/4 press photo of this model.",
+          },
         },
-        fuelType: {
-          type: "string",
-          enum: [...FUEL_TYPES],
-          description: "Engine type. Use HYBRID for plug-in or full hybrid, EV for fully electric.",
-        },
-        bodyType: {
-          type: "string",
-          enum: [...BODY_TYPES],
-          description: "Body shape. Use OTHER if it doesn't fit cleanly.",
-        },
-        generation: {
-          type: ["string", "null"],
-          description:
-            "Manufacturer generation code (e.g. 'ND' for 4th-gen Miata, 'F30' for BMW 3-series). Null if not standardized.",
-        },
-        imageHint: {
-          type: ["string", "null"],
-          description: "Search query that would return a clean front-3/4 press photo of this model.",
-        },
+        required: ["originalMsrpEur", "fuelType", "bodyType", "generation", "imageHint"],
       },
-      required: ["originalMsrpEur", "fuelType", "bodyType", "generation", "imageHint"],
     },
-  },
-};
+  };
+}
+
+const CAR_TOOL = buildTool(CAR_BODY_TYPES);
+const MOTO_TOOL = buildTool(MOTO_BODY_TYPES);
 
 type ChatCompletionResponse = {
   choices?: Array<{
@@ -109,6 +146,11 @@ export async function lookupVehicleSpec(
   const apiKey = process.env.ZAI_API_KEY;
   if (!apiKey) return null;
 
+  const isMoto = input.vehicleClass === "MOTORCYCLE";
+  const systemPrompt = isMoto ? MOTO_SYSTEM_PROMPT : CAR_SYSTEM_PROMPT;
+  const tool = isMoto ? MOTO_TOOL : CAR_TOOL;
+  const allowedBodyTypes = isMoto ? MOTO_BODY_TYPES : CAR_BODY_TYPES;
+
   const userText =
     `Brand: ${input.brand}\nModel: ${input.model}\nYear: ${input.year}` +
     (input.trim ? `\nTrim: ${input.trim}` : "");
@@ -125,11 +167,11 @@ export async function lookupVehicleSpec(
         thinking: { type: "disabled" },
         max_tokens: 512,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userText },
         ],
-        tools: [TOOL],
-        tool_choice: { type: "function", function: { name: TOOL.function.name } },
+        tools: [tool],
+        tool_choice: { type: "function", function: { name: tool.function.name } },
       }),
     });
 
@@ -149,7 +191,7 @@ export async function lookupVehicleSpec(
         ? (out.fuelType as VehicleFuelType)
         : null;
     const bodyType =
-      typeof out.bodyType === "string" && (BODY_TYPES as readonly string[]).includes(out.bodyType)
+      typeof out.bodyType === "string" && (allowedBodyTypes as readonly string[]).includes(out.bodyType)
         ? (out.bodyType as VehicleBodyType)
         : null;
 

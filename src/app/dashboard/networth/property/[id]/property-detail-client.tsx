@@ -22,6 +22,7 @@ import {
   Ruler,
   Building2,
   Zap,
+  MapPin,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/currencies";
 import { buildStaticMap, type StaticMap } from "@/lib/static-map";
@@ -252,6 +253,22 @@ export default function PropertyDetailClient({
       >
         <ArrowLeft className="h-4 w-4" /> {t("backToNetWorth")}
       </Link>
+
+      {!property.address && (
+        <button
+          type="button"
+          onClick={() => setShowEdit(true)}
+          className="flex w-full items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-left text-sm transition-colors hover:bg-amber-500/10"
+        >
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-500">
+            <MapPin className="h-4 w-4" />
+          </span>
+          <span className="min-w-0 flex-1 text-amber-100/90">{t("missingAddressBanner")}</span>
+          <span className="shrink-0 rounded-md bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-400">
+            {t("missingAddressCta")}
+          </span>
+        </button>
+      )}
 
       {/* Hero — capped image left, packed info + stats right */}
       <div className="overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-sm">

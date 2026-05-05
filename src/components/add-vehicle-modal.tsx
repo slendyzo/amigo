@@ -12,7 +12,7 @@ import { CascadingVehiclePicker } from "@/components/cascading-vehicle-picker";
 const EASE = [0.16, 1, 0.3, 1] as const;
 
 const FUEL_OPTIONS = ["PETROL", "DIESEL", "HYBRID", "EV", "OTHER"] as const;
-const BODY_OPTIONS = [
+const CAR_BODY_OPTIONS = [
   "SEDAN",
   "HATCHBACK",
   "SUV",
@@ -22,9 +22,22 @@ const BODY_OPTIONS = [
   "TRUCK",
   "OTHER",
 ] as const;
+const MOTO_BODY_OPTIONS = [
+  "NAKED",
+  "SPORT",
+  "CRUISER",
+  "TOURING",
+  "ADVENTURE",
+  "SCOOTER",
+  "OFF_ROAD",
+  "OTHER",
+] as const;
 
+type VehicleClass = "CAR" | "MOTORCYCLE";
 type FuelType = (typeof FUEL_OPTIONS)[number];
-type BodyType = (typeof BODY_OPTIONS)[number];
+type BodyType =
+  | (typeof CAR_BODY_OPTIONS)[number]
+  | (typeof MOTO_BODY_OPTIONS)[number];
 
 type SpecResult = {
   originalMsrpEur: number | null;
@@ -68,7 +81,8 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   const t = useTranslations("rwa");
   const tCommon = useTranslations("common");
   const currentYear = new Date().getUTCFullYear();
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [vehicleClass, setVehicleClass] = useState<VehicleClass | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -85,19 +99,34 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateSubmitting, setTemplateSubmitting] = useState(false);
 
-  // Step 1 — cascading dropdown picker (Year → Make → Model → Trim).
-  // `pick` is the canonical state; legacy `brand`/`model`/`year`/`trim`
-  // string state derived for the rest of the wizard + submit payload.
+  // Step 1 — cascading dropdown picker (Year → Make → Model → Trim) for cars.
+  // `pick` is the canonical car state; for motorcycles we use the freeText
+  // state below since the taxonomy table is car-only.
   const [pick, setPick] = useState<{
     year?: number;
     make?: string;
     model?: string;
     trim?: string | null;
   }>({});
-  const brand = pick.make ?? "";
-  const model = pick.model ?? "";
-  const year = pick.year != null ? String(pick.year) : "";
-  const trim = pick.trim ?? "";
+  // Step 1 — free-text fields for motorcycles (no taxonomy data to seed a
+  // cascading picker, so user types brand + model + year directly).
+  const [freeText, setFreeText] = useState<{ brand: string; model: string; year: string; trim: string }>({
+    brand: "",
+    model: "",
+    year: "",
+    trim: "",
+  });
+  const isMoto = vehicleClass === "MOTORCYCLE";
+  const brand = isMoto ? freeText.brand.trim() : (pick.make ?? "");
+  const model = isMoto ? freeText.model.trim() : (pick.model ?? "");
+  const year = isMoto
+    ? freeText.year
+    : pick.year != null
+      ? String(pick.year)
+      : "";
+  const trim = isMoto ? freeText.trim.trim() : (pick.trim ?? "");
+  const yearAsNumber = isMoto ? parseInt(freeText.year, 10) : pick.year ?? NaN;
+  const BODY_OPTIONS: readonly BodyType[] = isMoto ? MOTO_BODY_OPTIONS : CAR_BODY_OPTIONS;
   const [fuelType, setFuelType] = useState<FuelType | "">("");
   const [bodyType, setBodyType] = useState<BodyType | "">("");
   const [generation, setGeneration] = useState("");
@@ -130,8 +159,10 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
 
   useEffect(() => {
     if (!isOpen) {
-      setStep(1);
+      setStep(0);
+      setVehicleClass(null);
       setPick({});
+      setFreeText({ brand: "", model: "", year: "", trim: "" });
       setFuelType("");
       setBodyType("");
       setGeneration("");
@@ -160,7 +191,14 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
     }
   }, [isOpen, currentYear]);
 
-  const yearNum = pick.year ?? NaN;
+  // Reset bodyType when class changes — moto bodies aren't valid for cars
+  // and vice versa.
+  useEffect(() => {
+    setBodyType("");
+    setSpec(null);
+  }, [vehicleClass]);
+
+  const yearNum = yearAsNumber;
   const canLookup = !!brand && !!model && Number.isFinite(yearNum);
   const step1Ok = canLookup;
   const step2Ok = step1Ok && parseFloat(purchasePrice) > 0 && purchaseDate;
@@ -175,7 +213,13 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
       const res = await fetch("/api/vehicle/lookup", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand, model, year: yearNum, trim: trim || null }),
+        body: JSON.stringify({
+        brand,
+        model,
+        year: yearNum,
+        trim: trim || null,
+        vehicleClass: vehicleClass ?? "CAR",
+      }),
       });
       const data = await res.json();
       const s: SpecResult | null = data.spec ?? null;
@@ -231,6 +275,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           purchaseDate,
           imageUrl: imageData?.url ?? null,
           vehicle: {
+            vehicleClass: vehicleClass ?? "CAR",
             brand,
             model,
             year: yearNum,
@@ -408,7 +453,11 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
         <header className="flex items-center justify-between border-b border-border/50 px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
-              <Car className="h-5 w-5 text-primary" />
+              {isMoto ? (
+                <span className="text-lg leading-none" aria-hidden>🏍️</span>
+              ) : (
+                <Car className="h-5 w-5 text-primary" />
+              )}
             </div>
             <div>
               <h2 className="text-base font-semibold leading-tight">
@@ -416,12 +465,16 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                   ? t("templateHeader")
                   : phase === "matching"
                     ? t("matchHeader")
-                    : t("addVehicle")}
+                    : isMoto
+                      ? t("addMotorcycle")
+                      : t("addVehicle")}
               </h2>
               <p className="text-xs text-muted-foreground">
                 {phase === "templates" || phase === "matching"
                   ? `${brand} ${model}`
-                  : t("stepCountOf", { current: step, total: 3 })}
+                  : step === 0
+                    ? t("vehicleClassChoiceTitle")
+                    : t("stepCountOf", { current: step, total: 3 })}
               </p>
             </div>
           </div>
@@ -434,9 +487,9 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           </button>
         </header>
 
-        {phase === "form" && (
+        {phase === "form" && step > 0 && (
           <div className="px-5 pt-3">
-            <StepDots step={step} />
+            <StepDots step={step as 1 | 2 | 3} />
           </div>
         )}
 
@@ -560,18 +613,98 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
               transition={{ duration: 0.3, ease: EASE }}
               className="space-y-4"
             >
+              {step === 0 && (
+                <div className="space-y-3">
+                  <p className="text-sm text-muted-foreground">{t("vehicleClassChoiceTitle")}</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVehicleClass("CAR");
+                        setStep(1);
+                      }}
+                      className="flex flex-col items-start gap-2 rounded-2xl border border-border/60 bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                        <Car className="h-5 w-5" />
+                      </span>
+                      <span className="font-semibold leading-tight">{t("vehicleClassCar")}</span>
+                      <span className="text-xs text-muted-foreground">{t("vehicleClassCarDescription")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVehicleClass("MOTORCYCLE");
+                        setStep(1);
+                      }}
+                      className="flex flex-col items-start gap-2 rounded-2xl border border-border/60 bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-2xl leading-none" aria-hidden>
+                        🏍️
+                      </span>
+                      <span className="font-semibold leading-tight">{t("vehicleClassMotorcycle")}</span>
+                      <span className="text-xs text-muted-foreground">{t("vehicleClassMotorcycleDescription")}</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {step === 1 && (
                 <>
-                  <CascadingVehiclePicker
-                    value={pick}
-                    onChange={setPick}
-                    copy={{
-                      year: t("year"),
-                      make: t("brand"),
-                      model: t("model"),
-                      trim: t("trim"),
-                    }}
-                  />
+                  {isMoto ? (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label={t("brand")}>
+                        <input
+                          type="text"
+                          value={freeText.brand}
+                          onChange={(e) => setFreeText((f) => ({ ...f, brand: e.target.value }))}
+                          placeholder="Yamaha"
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field label={t("model")}>
+                        <input
+                          type="text"
+                          value={freeText.model}
+                          onChange={(e) => setFreeText((f) => ({ ...f, model: e.target.value }))}
+                          placeholder="MT-07"
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field label={t("year")}>
+                        <input
+                          type="number"
+                          inputMode="numeric"
+                          min={1900}
+                          max={currentYear + 1}
+                          value={freeText.year}
+                          onChange={(e) => setFreeText((f) => ({ ...f, year: e.target.value }))}
+                          placeholder={String(currentYear)}
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field label={t("trim")}>
+                        <input
+                          type="text"
+                          value={freeText.trim}
+                          onChange={(e) => setFreeText((f) => ({ ...f, trim: e.target.value }))}
+                          placeholder="ABS, World GP…"
+                          className={inputClass}
+                        />
+                      </Field>
+                    </div>
+                  ) : (
+                    <CascadingVehiclePicker
+                      value={pick}
+                      onChange={setPick}
+                      copy={{
+                        year: t("year"),
+                        make: t("brand"),
+                        model: t("model"),
+                        trim: t("trim"),
+                      }}
+                    />
+                  )}
 
                   <button
                     type="button"
@@ -876,17 +1009,27 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
             <button
               type="button"
-              onClick={() => (step === 1 ? onClose() : setStep((s) => (s === 3 ? 2 : 1)))}
+              onClick={() => {
+                if (step === 0) {
+                  onClose();
+                } else if (step === 1) {
+                  // Back from step 1 returns to the class picker so the user
+                  // can change their mind without losing the rest of the form.
+                  setStep(0);
+                } else {
+                  setStep((s) => (s === 3 ? 2 : 1));
+                }
+              }}
               disabled={submitting}
               className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground disabled:opacity-50"
             >
-              {step === 1 ? tCommon("cancel") : (
+              {step === 0 ? tCommon("cancel") : (
                 <>
                   <ChevronLeft className="h-4 w-4" /> {t("back")}
                 </>
               )}
             </button>
-            {step < 3 ? (
+            {step === 0 ? null : step < 3 ? (
               <button
                 type="button"
                 disabled={(step === 1 && !step1Ok) || (step === 2 && !step2Ok)}
@@ -903,7 +1046,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                 className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {submitting ? t("saving") : t("addVehicle")}
+                {submitting ? t("saving") : isMoto ? t("addMotorcycle") : t("addVehicle")}
               </button>
             )}
           </footer>

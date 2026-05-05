@@ -47,6 +47,7 @@ type Asset = {
 };
 
 type Vehicle = {
+  vehicleClass?: "CAR" | "MOTORCYCLE";
   brand: string;
   model: string;
   year: number;
@@ -220,6 +221,10 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
             {asset.imageUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img src={asset.imageUrl} alt={asset.name} className="h-full w-full object-cover" />
+            ) : vehicle.vehicleClass === "MOTORCYCLE" ? (
+              <div className="flex h-full w-full items-center justify-center">
+                <span className="text-7xl opacity-50" aria-hidden>🏍️</span>
+              </div>
             ) : (
               <div className="flex h-full w-full items-center justify-center">
                 <Car className="h-16 w-16 text-muted-foreground/40" strokeWidth={1.5} />

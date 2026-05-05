@@ -11,12 +11,14 @@ export async function POST(request: Request) {
     const model = typeof body.model === "string" ? body.model.trim() : "";
     const year = typeof body.year === "number" ? body.year : NaN;
     const trim = typeof body.trim === "string" ? body.trim.trim() : null;
+    const vehicleClass =
+      body.vehicleClass === "MOTORCYCLE" ? "MOTORCYCLE" : "CAR";
 
     if (!brand || !model || !Number.isFinite(year)) {
       return NextResponse.json({ error: "brand, model, year required" }, { status: 400 });
     }
 
-    const spec = await lookupVehicleSpec({ brand, model, year, trim });
+    const spec = await lookupVehicleSpec({ brand, model, year, trim, vehicleClass });
     return NextResponse.json({ spec });
   } catch (error) {
     if (error instanceof WorkspaceAccessError) {

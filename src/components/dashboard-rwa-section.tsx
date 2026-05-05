@@ -26,6 +26,7 @@ type ApiAsset = {
     brand: string;
     model: string;
     year: number;
+    vehicleClass?: "CAR" | "MOTORCYCLE";
   } | null;
   property: {
     propertyType: string;
@@ -96,7 +97,12 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
             data: {
               ...common,
               vehicle: a.vehicle
-                ? { brand: a.vehicle.brand, model: a.vehicle.model, year: a.vehicle.year }
+                ? {
+                    brand: a.vehicle.brand,
+                    model: a.vehicle.model,
+                    year: a.vehicle.year,
+                    vehicleClass: a.vehicle.vehicleClass,
+                  }
                 : null,
             },
           };
