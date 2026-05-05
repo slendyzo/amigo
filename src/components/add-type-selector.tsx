@@ -8,6 +8,7 @@ const AddExpenseModal = lazy(() => import("./add-expense-modal"));
 const AddIncomeModal = lazy(() => import("./add-income-modal"));
 const ReceiptScannerModal = lazy(() => import("./receipt-scanner-modal"));
 const AddVehicleModal = lazy(() => import("./add-vehicle-modal"));
+const AddPropertyModal = lazy(() => import("./add-property-modal"));
 
 type CreatedExpense = {
   id: string;
@@ -41,11 +42,12 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showReceiptScanner, setShowReceiptScanner] = useState(false);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
 
   // Only return null if not open AND no modals are showing
   // This prevents unmounting the modals when the selector closes
-  const showSelector = isOpen && !showExpenseModal && !showIncomeModal && !showReceiptScanner && !showVehicleModal;
-  const isActive = isOpen || showExpenseModal || showIncomeModal || showReceiptScanner || showVehicleModal;
+  const showSelector = isOpen && !showExpenseModal && !showIncomeModal && !showReceiptScanner && !showVehicleModal && !showPropertyModal;
+  const isActive = isOpen || showExpenseModal || showIncomeModal || showReceiptScanner || showVehicleModal || showPropertyModal;
 
   if (!isActive) return null;
 
@@ -65,11 +67,16 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
     setShowVehicleModal(true);
   };
 
+  const handlePropertyClick = () => {
+    setShowPropertyModal(true);
+  };
+
   const handleModalClose = () => {
     setShowExpenseModal(false);
     setShowIncomeModal(false);
     setShowReceiptScanner(false);
     setShowVehicleModal(false);
+    setShowPropertyModal(false);
     onClose();
     // Don't call onSuccess here - modals call router.refresh() which
     // triggers server re-render. The parent syncs via useEffect on prop changes.
@@ -185,6 +192,25 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
+
+                {/* Property Option */}
+                <button
+                  onClick={handlePropertyClick}
+                  className="w-full flex items-center gap-4 p-4 rounded-xl border-2 border-slate-200 hover:border-[#0070f3] hover:bg-blue-50 transition-all tap-none active:scale-[0.98]"
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-full bg-violet-100 flex items-center justify-center">
+                    <svg className="w-6 h-6 text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l9-9 9 9M5 10v10h14V10" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-slate-900">{tRwa("addProperty")}</h4>
+                    <p className="text-sm text-slate-500">{tRwa("addPropertyDescription")}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
               </div>
 
               {/* Safe area padding for mobile */}
@@ -224,6 +250,15 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
         <Suspense fallback={null}>
           <AddVehicleModal
             isOpen={showVehicleModal}
+            onClose={handleModalClose}
+            onSuccess={handleModalClose}
+          />
+        </Suspense>
+      )}
+      {showPropertyModal && (
+        <Suspense fallback={null}>
+          <AddPropertyModal
+            isOpen={showPropertyModal}
             onClose={handleModalClose}
             onSuccess={handleModalClose}
           />

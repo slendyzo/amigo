@@ -1587,6 +1587,26 @@
     "bulkLinkTitle": "Lier les dépenses à un véhicule",
     "bulkLinkSubtitle": "Choisissez un véhicule auquel rattacher les {count} dépenses sélectionnées. Elles compteront dans le coût total.",
     "bulkLinkConfirm": "Lier {count} dépenses",
-    "bulkUnlink": "Détacher de tout véhicule"
+    "bulkUnlink": "Détacher de tout véhicule",
+    "addProperty": "Ajouter un bien",
+    "addPropertyDescription": "Suivre l'immobilier dans votre patrimoine",
+    "propertyType": "Type",
+    "propertyTypeOption": {
+      "APARTMENT": "Appartement",
+      "HOUSE": "Maison",
+      "LAND": "Terrain",
+      "COMMERCIAL": "Commercial",
+      "OTHER": "Autre"
+    },
+    "address": "Adresse",
+    "concelho": "Concelho",
+    "freguesia": "Freguesia",
+    "postalCode": "Code postal",
+    "yearBuilt": "Année de construction",
+    "livableAreaM2": "Surface habitable (m²)",
+    "energyRatingLabel": "Classe énergétique",
+    "bedrooms": "Chambres",
+    "bathrooms": "Salles de bain",
+    "financedToggleDescription": "Suivre un prêt hypothécaire actif sur ce bien"
   }
 }

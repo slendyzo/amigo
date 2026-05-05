@@ -1616,6 +1616,26 @@
     "bulkLinkTitle": "Link expenses to a vehicle",
     "bulkLinkSubtitle": "Pick a vehicle to attach the {count} selected expenses to. They'll count toward TCO.",
     "bulkLinkConfirm": "Link {count} expenses",
-    "bulkUnlink": "Unlink from any vehicle"
+    "bulkUnlink": "Unlink from any vehicle",
+    "addProperty": "Add property",
+    "addPropertyDescription": "Track real estate in your net worth",
+    "propertyType": "Type",
+    "propertyTypeOption": {
+      "APARTMENT": "Apartment",
+      "HOUSE": "House",
+      "LAND": "Land",
+      "COMMERCIAL": "Commercial",
+      "OTHER": "Other"
+    },
+    "address": "Address",
+    "concelho": "Concelho",
+    "freguesia": "Freguesia",
+    "postalCode": "Postal code",
+    "yearBuilt": "Year built",
+    "livableAreaM2": "Living area (m²)",
+    "energyRatingLabel": "Energy rating",
+    "bedrooms": "Bedrooms",
+    "bathrooms": "Bathrooms",
+    "financedToggleDescription": "Track an active mortgage on this property"
   }
 }

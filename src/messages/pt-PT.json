@@ -1585,6 +1585,26 @@
     "bulkLinkTitle": "Ligar despesas a um veículo",
     "bulkLinkSubtitle": "Escolhe um veículo para anexar as {count} despesas selecionadas. Vão contar para o TCO.",
     "bulkLinkConfirm": "Ligar {count} despesas",
-    "bulkUnlink": "Desligar de qualquer veículo"
+    "bulkUnlink": "Desligar de qualquer veículo",
+    "addProperty": "Adicionar imóvel",
+    "addPropertyDescription": "Acompanhar imóveis no teu património",
+    "propertyType": "Tipo",
+    "propertyTypeOption": {
+      "APARTMENT": "Apartamento",
+      "HOUSE": "Moradia",
+      "LAND": "Terreno",
+      "COMMERCIAL": "Comercial",
+      "OTHER": "Outro"
+    },
+    "address": "Morada",
+    "concelho": "Concelho",
+    "freguesia": "Freguesia",
+    "postalCode": "Código postal",
+    "yearBuilt": "Ano de construção",
+    "livableAreaM2": "Área útil (m²)",
+    "energyRatingLabel": "Certificação energética",
+    "bedrooms": "Quartos",
+    "bathrooms": "Casas de banho",
+    "financedToggleDescription": "Acompanhar um crédito habitação ativo neste imóvel"
   }
 }
