@@ -28,10 +28,10 @@ import {
   type ParsedVehicleListing,
 } from "./listing-html-parser";
 import {
-  standvirtualSearchUrl,
-  olxCarsSearchUrl,
-  idealistaSearchUrl,
-  imovirtualSearchUrl,
+  standvirtualArchiveUrls,
+  olxArchiveUrls,
+  idealistaArchiveUrls,
+  imovirtualArchiveUrls,
 } from "./scrapers/target-urls";
 import { scrapeWebArchiveVehicle, scrapeWebArchiveProperty } from "./scrapers/web-archive";
 
@@ -158,12 +158,12 @@ async function runVehicleBackfill(
   const today = new Date();
   const projectMileage = makeMileageProjector(purchaseDate, today, vehicle.mileage);
 
-  const standvirtualUrl = standvirtualSearchUrl({
+  const standvirtualUrls = standvirtualArchiveUrls({
     make: vehicle.brand,
     model: vehicle.model,
     year: vehicle.year,
   });
-  const olxUrl = olxCarsSearchUrl({
+  const olxUrls = olxArchiveUrls({
     make: vehicle.brand,
     model: vehicle.model,
     year: vehicle.year,
@@ -171,51 +171,62 @@ async function runVehicleBackfill(
 
   const realDots: Array<{ recordedAt: Date; valueEur: number; sampleSize: number; meta: Record<string, unknown> }> = [];
 
-  // Standvirtual snapshots
-  try {
-    const snaps = await scrapeWebArchiveVehicle({
-      targetUrl: standvirtualUrl,
-      fromDate: purchaseDate,
-      toDate: today,
-      source: "standvirtual",
-    });
-    for (const snap of snaps) {
-      const dot = await medianFromVehicleSnapshot(snap.listings, projectMileage(snap.archiveDate));
-      if (dot) {
-        realDots.push({
-          recordedAt: snap.archiveDate,
-          valueEur: dot.valueEur,
-          sampleSize: dot.sampleSize,
-          meta: { source: "standvirtual", archiveDate: snap.archiveDate.toISOString(), inferredMileage: projectMileage(snap.archiveDate) },
-        });
+  // Standvirtual snapshots — try each URL variant, stop after the first
+  // that returns any usable data (no need to scrape both mx5 and mx-5).
+  for (const url of standvirtualUrls) {
+    try {
+      const snaps = await scrapeWebArchiveVehicle({
+        targetUrl: url,
+        fromDate: purchaseDate,
+        toDate: today,
+        source: "standvirtual",
+      });
+      let added = false;
+      for (const snap of snaps) {
+        const dot = await medianFromVehicleSnapshot(snap.listings, projectMileage(snap.archiveDate));
+        if (dot) {
+          realDots.push({
+            recordedAt: snap.archiveDate,
+            valueEur: dot.valueEur,
+            sampleSize: dot.sampleSize,
+            meta: { source: "standvirtual", archiveUrl: url, archiveDate: snap.archiveDate.toISOString(), inferredMileage: projectMileage(snap.archiveDate) },
+          });
+          added = true;
+        }
       }
+      if (added) break;
+    } catch (err) {
+      console.warn(`[asset-backfill] standvirtual archive failed for ${url}:`, err);
     }
-  } catch (err) {
-    console.warn("[asset-backfill] standvirtual archive failed:", err);
   }
   await bumpProgress(realAssetId, 50);
 
-  // OLX snapshots
-  try {
-    const snaps = await scrapeWebArchiveVehicle({
-      targetUrl: olxUrl,
-      fromDate: purchaseDate,
-      toDate: today,
-      source: "olx",
-    });
-    for (const snap of snaps) {
-      const dot = await medianFromVehicleSnapshot(snap.listings, projectMileage(snap.archiveDate));
-      if (dot) {
-        realDots.push({
-          recordedAt: snap.archiveDate,
-          valueEur: dot.valueEur,
-          sampleSize: dot.sampleSize,
-          meta: { source: "olx", archiveDate: snap.archiveDate.toISOString(), inferredMileage: projectMileage(snap.archiveDate) },
-        });
+  // OLX snapshots — same variant strategy.
+  for (const url of olxUrls) {
+    try {
+      const snaps = await scrapeWebArchiveVehicle({
+        targetUrl: url,
+        fromDate: purchaseDate,
+        toDate: today,
+        source: "olx",
+      });
+      let added = false;
+      for (const snap of snaps) {
+        const dot = await medianFromVehicleSnapshot(snap.listings, projectMileage(snap.archiveDate));
+        if (dot) {
+          realDots.push({
+            recordedAt: snap.archiveDate,
+            valueEur: dot.valueEur,
+            sampleSize: dot.sampleSize,
+            meta: { source: "olx", archiveUrl: url, archiveDate: snap.archiveDate.toISOString(), inferredMileage: projectMileage(snap.archiveDate) },
+          });
+          added = true;
+        }
       }
+      if (added) break;
+    } catch (err) {
+      console.warn(`[asset-backfill] olx archive failed for ${url}:`, err);
     }
-  } catch (err) {
-    console.warn("[asset-backfill] olx archive failed:", err);
   }
   await bumpProgress(realAssetId, 80);
 
@@ -326,51 +337,57 @@ async function runPropertyBackfill(
   }
 
   const today = new Date();
-  const idealistaUrl = idealistaSearchUrl({
+  const idealistaUrls = idealistaArchiveUrls({
     concelho,
     propertyType: property.propertyType,
     livableAreaM2: property.livableAreaM2,
     bedrooms: property.bedrooms,
   });
-  const imovirtualUrl = imovirtualSearchUrl({
+  const imovirtualUrls = imovirtualArchiveUrls({
     concelho,
     propertyType: property.propertyType,
     livableAreaM2: property.livableAreaM2,
     bedrooms: property.bedrooms,
   });
 
-  for (const [source, targetUrl, progressTo] of [
-    ["idealista", idealistaUrl, 50] as const,
-    ["imovirtual", imovirtualUrl, 90] as const,
+  for (const [source, urls, progressTo] of [
+    ["idealista", idealistaUrls, 50] as const,
+    ["imovirtual", imovirtualUrls, 90] as const,
   ]) {
-    try {
-      const snaps = await scrapeWebArchiveProperty({
-        targetUrl,
-        fromDate: purchaseDate,
-        toDate: today,
-        source: source as "idealista" | "imovirtual",
-      });
-      for (const snap of snaps) {
-        const dot = medianFromPropertySnapshot(snap.listings, property.livableAreaM2);
-        if (!dot) continue;
-        await prisma.valuationHistory.create({
-          data: {
-            realAssetId,
-            value: new Prisma.Decimal(dot.valueEur),
-            valueEur: new Prisma.Decimal(dot.valueEur),
-            currency: "EUR",
-            source: "web_archive",
-            sampleSize: dot.sampleSize,
-            metadata: {
-              source,
-              archiveDate: snap.archiveDate.toISOString(),
-            } satisfies Prisma.InputJsonValue,
-            recordedAt: snap.archiveDate,
-          },
+    for (const url of urls) {
+      try {
+        const snaps = await scrapeWebArchiveProperty({
+          targetUrl: url,
+          fromDate: purchaseDate,
+          toDate: today,
+          source: source as "idealista" | "imovirtual",
         });
+        let added = false;
+        for (const snap of snaps) {
+          const dot = medianFromPropertySnapshot(snap.listings, property.livableAreaM2);
+          if (!dot) continue;
+          await prisma.valuationHistory.create({
+            data: {
+              realAssetId,
+              value: new Prisma.Decimal(dot.valueEur),
+              valueEur: new Prisma.Decimal(dot.valueEur),
+              currency: "EUR",
+              source: "web_archive",
+              sampleSize: dot.sampleSize,
+              metadata: {
+                source,
+                archiveUrl: url,
+                archiveDate: snap.archiveDate.toISOString(),
+              } satisfies Prisma.InputJsonValue,
+              recordedAt: snap.archiveDate,
+            },
+          });
+          added = true;
+        }
+        if (added) break;
+      } catch (err) {
+        console.warn(`[asset-backfill] ${source} archive failed for ${url}:`, err);
       }
-    } catch (err) {
-      console.warn(`[asset-backfill] ${source} archive failed:`, err);
     }
     await bumpProgress(realAssetId, progressTo);
   }
