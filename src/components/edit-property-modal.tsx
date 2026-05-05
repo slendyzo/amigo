@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import { Home, Loader2, X, AlertCircle } from "lucide-react";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { detectSuspiciousAmount, formatEuro } from "@/lib/parse-amount";
-import { buildStaticMapUrl } from "@/lib/static-map";
+import { buildStaticMap } from "@/lib/static-map";
+import { StaticMapView } from "@/components/ui/static-map-view";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -111,9 +112,9 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
     setPriceConfirmed(null);
   }, [purchasePrice]);
 
-  const mapUrl =
+  const map =
     property.latitude != null && property.longitude != null
-      ? buildStaticMapUrl({ lat: property.latitude, lon: property.longitude })
+      ? buildStaticMap({ lat: property.latitude, lon: property.longitude })
       : null;
 
   const submit = async () => {
@@ -408,14 +409,10 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
             {/* Media (read-only map preview) */}
             <Section title={t("editSectionMedia")}>
               <div className="overflow-hidden rounded-xl border border-border/60 bg-muted/40">
-                {mapUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={mapUrl}
-                    alt=""
-                    loading="lazy"
-                    className="aspect-[16/9] w-full object-cover"
-                  />
+                {map ? (
+                  <div className="relative aspect-[16/9] w-full">
+                    <StaticMapView map={map} />
+                  </div>
                 ) : (
                   <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-violet-500/10 to-violet-500/5">
                     <Home className="h-10 w-10 text-violet-500/50" strokeWidth={1.5} />

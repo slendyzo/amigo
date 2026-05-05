@@ -6,7 +6,8 @@ import { useTranslations } from "next-intl";
 import { Home, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currencies";
-import { buildStaticMapUrl } from "@/lib/static-map";
+import { buildStaticMap, type StaticMap } from "@/lib/static-map";
+import { StaticMapView } from "@/components/ui/static-map-view";
 import { ValueSourceHint } from "@/components/ui/value-source-hint";
 
 export type PropertyCardData = {
@@ -49,9 +50,9 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
   const sold = property.status === "SOLD";
 
   const subtitle = property.property?.concelho ?? property.property?.address ?? null;
-  const mapUrl =
+  const map =
     property.property?.latitude != null && property.property?.longitude != null
-      ? buildStaticMapUrl({
+      ? buildStaticMap({
           lat: property.property.latitude,
           lon: property.property.longitude,
         })
@@ -70,9 +71,9 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
         )}
       >
         <PropertyImage
-          src={property.imageUrl ?? mapUrl}
+          src={property.imageUrl}
+          map={!property.imageUrl ? map : null}
           alt={property.name}
-          isMap={!property.imageUrl && !!mapUrl}
         />
 
         <div className="space-y-3 p-4">
@@ -139,46 +140,36 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
 
 function PropertyImage({
   src,
+  map,
   alt,
-  isMap,
 }: {
   src: string | null;
+  map: StaticMap | null;
   alt: string;
-  isMap: boolean;
 }) {
-  if (!src) {
+  if (src) {
     return (
-      <div className="flex aspect-[16/9] max-h-[200px] w-full items-center justify-center bg-gradient-to-br from-violet-500/10 to-violet-500/5">
-        <Home className="h-10 w-10 text-violet-500/60" strokeWidth={1.5} />
+      <div className="relative aspect-[16/9] max-h-[200px] w-full overflow-hidden bg-muted/40">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+        />
+      </div>
+    );
+  }
+  if (map) {
+    return (
+      <div className="relative aspect-[16/9] max-h-[200px] w-full overflow-hidden bg-muted/40">
+        <StaticMapView map={map} />
       </div>
     );
   }
   return (
-    <div className="relative aspect-[16/9] max-h-[200px] w-full overflow-hidden bg-muted/40">
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt={alt}
-        loading="lazy"
-        className={cn(
-          "h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]",
-          // Tone down raw OSM tiles so they read as a "location chip" not a debug screen.
-          isMap && "saturate-[0.55] brightness-[0.97] contrast-[0.95]",
-        )}
-      />
-      {isMap && (
-        <>
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/40" />
-          <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="relative">
-              <div className="absolute inset-0 -m-1.5 rounded-full bg-primary/25 blur-md" />
-              <div className="relative flex h-6 w-6 items-center justify-center rounded-full border-2 border-card bg-primary text-primary-foreground shadow-md">
-                <Home className="h-3 w-3" strokeWidth={2.5} />
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+    <div className="flex aspect-[16/9] max-h-[200px] w-full items-center justify-center bg-gradient-to-br from-violet-500/10 to-violet-500/5">
+      <Home className="h-10 w-10 text-violet-500/60" strokeWidth={1.5} />
     </div>
   );
 }

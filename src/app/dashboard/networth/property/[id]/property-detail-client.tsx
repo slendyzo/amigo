@@ -24,7 +24,8 @@ import {
   Zap,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/currencies";
-import { buildStaticMapUrl } from "@/lib/static-map";
+import { buildStaticMap, type StaticMap } from "@/lib/static-map";
+import { StaticMapView } from "@/components/ui/static-map-view";
 import { cn } from "@/lib/utils";
 import EditPropertyModal from "@/components/edit-property-modal";
 import {
@@ -257,9 +258,9 @@ export default function PropertyDetailClient({
         <div className="grid md:grid-cols-[1.4fr_1fr] md:max-h-[360px]">
           <PropertyImage
             src={asset.imageUrl}
-            mapUrl={
-              property.latitude != null && property.longitude != null
-                ? buildStaticMapUrl({ lat: property.latitude, lon: property.longitude })
+            map={
+              !asset.imageUrl && property.latitude != null && property.longitude != null
+                ? buildStaticMap({ lat: property.latitude, lon: property.longitude })
                 : null
             }
             alt={asset.name}
@@ -551,22 +552,19 @@ export default function PropertyDetailClient({
 
 function PropertyImage({
   src,
-  mapUrl,
+  map,
   alt,
   sold,
   soldAt,
   soldLabel,
 }: {
   src: string | null;
-  mapUrl: string | null;
+  map: StaticMap | null;
   alt: string;
   sold: boolean;
   soldAt: string | null;
   soldLabel: string | null;
 }) {
-  const url = src ?? mapUrl;
-  const isMap = !src && !!mapUrl;
-
   return (
     <div
       className={cn(
@@ -574,35 +572,33 @@ function PropertyImage({
         "bg-gradient-to-br from-violet-500/10 to-violet-500/5",
       )}
     >
-      {url ? (
+      {src ? (
         <>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={url}
+            src={src}
             alt={alt}
             loading="lazy"
             className={cn(
               "h-full w-full object-cover",
-              // Tone down raw OSM tiles so they read as a "location chip" not a debug screen.
-              isMap && "saturate-[0.55] brightness-[0.97] contrast-[0.95]",
               sold && "opacity-60 grayscale",
             )}
           />
-          {isMap && (
-            <>
-              {/* Subtle vignette to anchor the eye + soft pin */}
-              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/30" />
-              <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-                <div className="relative">
-                  <div className="absolute inset-0 -m-2 rounded-full bg-primary/25 blur-md" />
-                  <div className="relative flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-card bg-primary text-primary-foreground shadow-lg">
-                    <Home className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  </div>
+        </>
+      ) : map ? (
+        <div className={cn("h-full w-full", sold && "opacity-60 grayscale")}>
+          <StaticMapView
+            map={map}
+            pinIcon={
+              <div className="relative">
+                <div className="absolute inset-0 -m-2 rounded-full bg-primary/30 blur-md" />
+                <div className="relative flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-card bg-primary text-primary-foreground shadow-lg">
+                  <Home className="h-3.5 w-3.5" strokeWidth={2.5} />
                 </div>
               </div>
-            </>
-          )}
-        </>
+            }
+          />
+        </div>
       ) : (
         <div className="flex h-full w-full items-center justify-center">
           <Home className="h-16 w-16 text-violet-500/50" strokeWidth={1.5} />
