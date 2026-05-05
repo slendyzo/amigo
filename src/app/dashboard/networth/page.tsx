@@ -59,6 +59,9 @@ export default async function NetworthPage() {
               address: a.property.address,
               livableAreaM2: a.property.livableAreaM2,
               bedrooms: a.property.bedrooms,
+              latitude: a.property.latitude != null ? Number(a.property.latitude) : null,
+              longitude:
+                a.property.longitude != null ? Number(a.property.longitude) : null,
             }
           : null,
       }))}

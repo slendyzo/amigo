@@ -31,6 +31,8 @@ type ApiAsset = {
     address: string | null;
     livableAreaM2: number | null;
     bedrooms: number | null;
+    latitude: string | number | null;
+    longitude: string | number | null;
   } | null;
 };
 
@@ -68,7 +70,21 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
           if (a.type === "PROPERTY") {
             return {
               kind: "property",
-              data: { ...common, property: a.property },
+              data: {
+                ...common,
+                property: a.property
+                  ? {
+                      propertyType: a.property.propertyType,
+                      concelho: a.property.concelho,
+                      address: a.property.address,
+                      livableAreaM2: a.property.livableAreaM2,
+                      bedrooms: a.property.bedrooms,
+                      latitude: a.property.latitude != null ? Number(a.property.latitude) : null,
+                      longitude:
+                        a.property.longitude != null ? Number(a.property.longitude) : null,
+                    }
+                  : null,
+              },
             };
           }
           return {

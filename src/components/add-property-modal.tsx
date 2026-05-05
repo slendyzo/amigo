@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { Home, ChevronLeft, ChevronRight, X, Loader2, Check } from "lucide-react";
+import { Home, ChevronLeft, ChevronRight, X, Loader2, Check, AlertCircle } from "lucide-react";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
+import { detectSuspiciousAmount, formatEuro } from "@/lib/parse-amount";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -85,6 +86,10 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
   const [interestRate, setInterestRate] = useState<string>("");
   const [loanStart, setLoanStart] = useState<string>(() => new Date().toISOString().slice(0, 10));
 
+  // Did-you-mean state for the price field — catches the 115.000 → 115 trap.
+  const [priceConfirmed, setPriceConfirmed] = useState<number | null>(null);
+  const priceCheck = useMemo(() => detectSuspiciousAmount(purchasePrice), [purchasePrice]);
+
   // Post-add prompts (mirror AddVehicleModal scaffolding from AMIGO-164/165)
   const [phase, setPhase] = useState<"form" | "templates" | "matching">("form");
   const [matchAssetId, setMatchAssetId] = useState<string | null>(null);
@@ -137,11 +142,24 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
       setTemplateCandidates([]);
       setSelectedTemplateId(null);
       setTemplateSubmitting(false);
+      setPriceConfirmed(null);
     }
   }, [isOpen]);
 
+  // If the user retypes the price after accepting a confirmation, drop the
+  // confirmation so a new check runs.
+  useEffect(() => {
+    setPriceConfirmed(null);
+  }, [purchasePrice]);
+
   const step1Ok = !!concelho.trim() && !!propertyType;
-  const step2Ok = step1Ok && parseFloat(purchasePrice) > 0 && !!purchaseDate;
+  const priceBlocked = priceCheck.suspicious && priceConfirmed !== priceCheck.suggestion;
+  const step2Ok =
+    step1Ok &&
+    Number.isFinite(priceCheck.parsed) &&
+    priceCheck.parsed > 0 &&
+    !!purchaseDate &&
+    !priceBlocked;
   const step3Ok =
     !financed || (parseFloat(monthlyPayment) > 0 && !!loanStart);
 
@@ -155,13 +173,14 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
     setSubmitting(true);
     setError(null);
     try {
+      const finalPrice = priceConfirmed ?? priceCheck.parsed;
       const assetRes = await fetch("/api/assets", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           type: "PROPERTY",
           name: buildName(),
-          purchasePrice: parseFloat(purchasePrice),
+          purchasePrice: finalPrice,
           purchaseCurrency,
           purchaseDate,
           property: {
@@ -612,9 +631,8 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
                             {getCurrencySymbol(purchaseCurrency)}
                           </span>
                           <input
-                            type="number"
-                            min={0}
-                            step="0.01"
+                            type="text"
+                            inputMode="decimal"
                             value={purchasePrice}
                             onChange={(e) => setPurchasePrice(e.target.value)}
                             placeholder="250000"
@@ -636,6 +654,19 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
                         </select>
                       </Field>
                     </div>
+                    {priceCheck.suspicious && priceConfirmed !== priceCheck.suggestion && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPurchasePrice(String(priceCheck.suggestion));
+                          setPriceConfirmed(priceCheck.suggestion);
+                        }}
+                        className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-left text-xs text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 transition-colors"
+                      >
+                        <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                        <span>{t("didYouMean", { amount: formatEuro(priceCheck.suggestion) })}</span>
+                      </button>
+                    )}
                   </>
                 )}
 

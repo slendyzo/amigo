@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
 import { computeVehicleHeuristicValue } from "@/lib/asset-valuation";
+import { geocodePostalCode } from "@/lib/geocode";
 import {
   requireActiveWorkspace,
   requirePermission,
@@ -221,14 +222,32 @@ export async function POST(request: Request) {
           ? new Prisma.Decimal(propertyInput.condominiumFeeMonthly)
           : null;
 
+      const postalCode = strOrNull("postalCode");
+      const country = strOrNull("country") ?? "PT";
+
+      let latitude: Prisma.Decimal | null = null;
+      let longitude: Prisma.Decimal | null = null;
+      let geocodedAt: Date | null = null;
+      let geocodeError: string | null = null;
+      if (postalCode) {
+        const geocode = await geocodePostalCode({ postalCode, country });
+        if (geocode.ok) {
+          latitude = new Prisma.Decimal(geocode.lat);
+          longitude = new Prisma.Decimal(geocode.lon);
+          geocodedAt = new Date();
+        } else {
+          geocodeError = geocode.error;
+        }
+      }
+
       propertyData = {
         propertyType: propertyType as (typeof VALID_PROPERTY_TYPES)[number],
         address: strOrNull("address"),
-        postalCode: strOrNull("postalCode"),
+        postalCode,
         distrito: strOrNull("distrito"),
         concelho: strOrNull("concelho"),
         freguesia: strOrNull("freguesia"),
-        country: strOrNull("country") ?? "PT",
+        country,
         livableAreaM2: intOrNull("livableAreaM2"),
         totalAreaM2: intOrNull("totalAreaM2"),
         bedrooms: intOrNull("bedrooms"),
@@ -238,6 +257,10 @@ export async function POST(request: Request) {
         parkingSpaces: intOrNull("parkingSpaces"),
         energyRating,
         condominiumFeeMonthly: condoFee,
+        latitude,
+        longitude,
+        geocodedAt,
+        geocodeError,
       };
       // No INE-driven heuristic yet (AMIGO-169/170). Initial value = purchase
       // price; daily cron will refresh once the index is wired.

@@ -3,6 +3,8 @@ import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
 import { computeVehicleHeuristicValue } from "@/lib/asset-valuation";
+import { geocodePostalCode } from "@/lib/geocode";
+import { regeneratePropertyValuationHistory } from "@/lib/property-valuation-regen";
 import {
   requireActiveWorkspace,
   requirePermission,
@@ -21,6 +23,25 @@ const VALID_BODY = [
   "OTHER",
 ] as const;
 
+const VALID_PROPERTY_TYPES = [
+  "APARTMENT",
+  "HOUSE",
+  "LAND",
+  "COMMERCIAL",
+  "OTHER",
+] as const;
+
+const VALID_ENERGY = [
+  "A_PLUS",
+  "A",
+  "B",
+  "B_MINUS",
+  "C",
+  "D",
+  "E",
+  "F",
+] as const;
+
 function errorResponse(error: unknown) {
   if (error instanceof WorkspaceAccessError) {
     const status = error.code === "UNAUTHORIZED" ? 401 : 403;
@@ -32,6 +53,7 @@ function errorResponse(error: unknown) {
 
 const detailInclude = {
   vehicle: true,
+  property: true,
   liabilities: true,
   valuationHistory: { orderBy: { recordedAt: "desc" as const }, take: 90 },
   expenses: {
@@ -73,101 +95,289 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const existing = await prisma.realAsset.findFirst({
       where: { id, workspaceId: workspace.id },
-      include: { vehicle: true },
+      include: { vehicle: true, property: true },
     });
     if (!existing) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
     const body = (await request.json()) as Record<string, unknown>;
-    const vehicleInput = (body.vehicle ?? {}) as Record<string, unknown>;
 
+    // ─── Asset-level fields (shared by vehicle + property) ──────────────────
     const assetData: Prisma.RealAssetUpdateInput = {};
-    const vehicleData: Prisma.VehicleUpdateInput = {};
-
     if (typeof body.name === "string") assetData.name = body.name.trim();
     if (typeof body.notes === "string") assetData.notes = body.notes;
     if (typeof body.imageUrl === "string") assetData.imageUrl = body.imageUrl;
 
+    let priceChanged = false;
+    let newPurchasePrice: number | null = null;
+    let newPurchaseCurrency = existing.purchaseCurrency;
+    let newPurchasePriceEur = Number(existing.purchasePriceEur);
     if (typeof body.purchasePrice === "number" && body.purchasePrice > 0) {
       const currency =
-        typeof body.purchaseCurrency === "string" ? body.purchaseCurrency : existing.purchaseCurrency;
+        typeof body.purchaseCurrency === "string"
+          ? body.purchaseCurrency
+          : existing.purchaseCurrency;
       const { amountEur } = await convertToEur(body.purchasePrice, currency);
       assetData.purchasePrice = new Prisma.Decimal(body.purchasePrice);
       assetData.purchaseCurrency = currency;
       assetData.purchasePriceEur = new Prisma.Decimal(amountEur);
-    }
-    if (typeof body.purchaseDate === "string") assetData.purchaseDate = new Date(body.purchaseDate);
-
-    if (typeof vehicleInput.brand === "string") vehicleData.brand = vehicleInput.brand.trim();
-    if (typeof vehicleInput.model === "string") vehicleData.model = vehicleInput.model.trim();
-    if (typeof vehicleInput.generation === "string") vehicleData.generation = vehicleInput.generation;
-    if (typeof vehicleInput.year === "number") vehicleData.year = vehicleInput.year;
-    if (typeof vehicleInput.trim === "string") vehicleData.trim = vehicleInput.trim;
-    if (typeof vehicleInput.vin === "string") vehicleData.vin = vehicleInput.vin;
-    if (typeof vehicleInput.plate === "string") vehicleData.plate = vehicleInput.plate;
-    if (typeof vehicleInput.color === "string") vehicleData.color = vehicleInput.color;
-    if (typeof vehicleInput.fuelType === "string" && VALID_FUEL.includes(vehicleInput.fuelType as (typeof VALID_FUEL)[number])) {
-      vehicleData.fuelType = vehicleInput.fuelType as (typeof VALID_FUEL)[number];
-    }
-    if (typeof vehicleInput.bodyType === "string" && VALID_BODY.includes(vehicleInput.bodyType as (typeof VALID_BODY)[number])) {
-      vehicleData.bodyType = vehicleInput.bodyType as (typeof VALID_BODY)[number];
+      newPurchasePrice = body.purchasePrice;
+      newPurchaseCurrency = currency;
+      newPurchasePriceEur = amountEur;
+      priceChanged = amountEur !== Number(existing.purchasePriceEur);
     }
 
-    let mileageChanged = false;
-    if (typeof vehicleInput.mileage === "number") {
-      vehicleData.mileage = vehicleInput.mileage;
-      vehicleData.mileageUpdatedAt = new Date();
-      mileageChanged = vehicleInput.mileage !== existing.vehicle?.mileage;
+    let dateChanged = false;
+    let newPurchaseDate = existing.purchaseDate;
+    if (typeof body.purchaseDate === "string") {
+      const parsed = new Date(body.purchaseDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        assetData.purchaseDate = parsed;
+        newPurchaseDate = parsed;
+        dateChanged = parsed.getTime() !== existing.purchaseDate.getTime();
+      }
     }
 
-    const updated = await prisma.$transaction(async (tx) => {
-      const a = await tx.realAsset.update({ where: { id }, data: assetData });
-      if (Object.keys(vehicleData).length > 0 && existing.vehicle) {
-        await tx.vehicle.update({ where: { realAssetId: id }, data: vehicleData });
+    // ─── Vehicle branch (unchanged contract for AMIGO-164/165) ──────────────
+    if (existing.type === "VEHICLE") {
+      const vehicleInput = (body.vehicle ?? {}) as Record<string, unknown>;
+      const vehicleData: Prisma.VehicleUpdateInput = {};
+
+      if (typeof vehicleInput.brand === "string") vehicleData.brand = vehicleInput.brand.trim();
+      if (typeof vehicleInput.model === "string") vehicleData.model = vehicleInput.model.trim();
+      if (typeof vehicleInput.generation === "string") vehicleData.generation = vehicleInput.generation;
+      if (typeof vehicleInput.year === "number") vehicleData.year = vehicleInput.year;
+      if (typeof vehicleInput.trim === "string") vehicleData.trim = vehicleInput.trim;
+      if (typeof vehicleInput.vin === "string") vehicleData.vin = vehicleInput.vin;
+      if (typeof vehicleInput.plate === "string") vehicleData.plate = vehicleInput.plate;
+      if (typeof vehicleInput.color === "string") vehicleData.color = vehicleInput.color;
+      if (
+        typeof vehicleInput.fuelType === "string" &&
+        VALID_FUEL.includes(vehicleInput.fuelType as (typeof VALID_FUEL)[number])
+      ) {
+        vehicleData.fuelType = vehicleInput.fuelType as (typeof VALID_FUEL)[number];
+      }
+      if (
+        typeof vehicleInput.bodyType === "string" &&
+        VALID_BODY.includes(vehicleInput.bodyType as (typeof VALID_BODY)[number])
+      ) {
+        vehicleData.bodyType = vehicleInput.bodyType as (typeof VALID_BODY)[number];
       }
 
-      // Recompute heuristic if year or mileage materially changed.
-      const yearAfter = (vehicleData.year as number | undefined) ?? existing.vehicle?.year;
-      const mileageAfter =
-        (vehicleData.mileage as number | undefined) ?? existing.vehicle?.mileage ?? null;
-      const purchasePriceEurAfter = Number(a.purchasePriceEur);
+      let mileageChanged = false;
+      if (typeof vehicleInput.mileage === "number") {
+        vehicleData.mileage = vehicleInput.mileage;
+        vehicleData.mileageUpdatedAt = new Date();
+        mileageChanged = vehicleInput.mileage !== existing.vehicle?.mileage;
+      }
 
-      const heuristic =
-        existing.type === "VEHICLE" &&
-        Number.isFinite(yearAfter) &&
-        purchasePriceEurAfter > 0 &&
-        (mileageChanged || vehicleData.year != null)
-          ? computeVehicleHeuristicValue({
-              purchasePriceEur: purchasePriceEurAfter,
-              year: yearAfter as number,
-              mileage: mileageAfter,
-            })
-          : null;
+      const updated = await prisma.$transaction(async (tx) => {
+        const a = await tx.realAsset.update({ where: { id }, data: assetData });
+        if (Object.keys(vehicleData).length > 0 && existing.vehicle) {
+          await tx.vehicle.update({ where: { realAssetId: id }, data: vehicleData });
+        }
 
-      if (heuristic) {
-        await tx.valuationHistory.create({
-          data: {
-            realAssetId: id,
-            value: new Prisma.Decimal(heuristic.valueEur),
-            valueEur: new Prisma.Decimal(heuristic.valueEur),
-            currency: "EUR",
-            source: "heuristic",
-          },
+        const yearAfter = (vehicleData.year as number | undefined) ?? existing.vehicle?.year;
+        const mileageAfter =
+          (vehicleData.mileage as number | undefined) ?? existing.vehicle?.mileage ?? null;
+        const purchasePriceEurAfter = Number(a.purchasePriceEur);
+
+        const heuristic =
+          Number.isFinite(yearAfter) &&
+          purchasePriceEurAfter > 0 &&
+          (mileageChanged || vehicleData.year != null)
+            ? computeVehicleHeuristicValue({
+                purchasePriceEur: purchasePriceEurAfter,
+                year: yearAfter as number,
+                mileage: mileageAfter,
+              })
+            : null;
+
+        if (heuristic) {
+          await tx.valuationHistory.create({
+            data: {
+              realAssetId: id,
+              value: new Prisma.Decimal(heuristic.valueEur),
+              valueEur: new Prisma.Decimal(heuristic.valueEur),
+              currency: "EUR",
+              source: "heuristic",
+            },
+          });
+          await tx.realAsset.update({
+            where: { id },
+            data: {
+              currentValue: new Prisma.Decimal(heuristic.valueEur),
+              currentValueEur: new Prisma.Decimal(heuristic.valueEur),
+              currentValueUpdatedAt: new Date(),
+              currentValueSource: "heuristic",
+            },
+          });
+        }
+
+        return tx.realAsset.findUnique({ where: { id }, include: detailInclude });
+      });
+
+      return NextResponse.json({ asset: updated });
+    }
+
+    // ─── Property branch ────────────────────────────────────────────────────
+    if (!existing.property) {
+      return NextResponse.json({ error: "Property record missing" }, { status: 500 });
+    }
+
+    const propertyInput = (body.property ?? {}) as Record<string, unknown>;
+    const propertyData: Prisma.PropertyUpdateInput = {};
+
+    const strField = (key: string): string | null | undefined => {
+      if (!(key in propertyInput)) return undefined;
+      const v = propertyInput[key];
+      if (v === null) return null;
+      if (typeof v !== "string") return undefined;
+      const trimmed = v.trim();
+      return trimmed.length > 0 ? trimmed : null;
+    };
+    const intField = (key: string): number | null | undefined => {
+      if (!(key in propertyInput)) return undefined;
+      const v = propertyInput[key];
+      if (v === null) return null;
+      if (typeof v !== "number" || !Number.isFinite(v)) return undefined;
+      return Math.trunc(v);
+    };
+
+    if (
+      typeof propertyInput.propertyType === "string" &&
+      VALID_PROPERTY_TYPES.includes(
+        propertyInput.propertyType as (typeof VALID_PROPERTY_TYPES)[number],
+      )
+    ) {
+      propertyData.propertyType = propertyInput.propertyType as (typeof VALID_PROPERTY_TYPES)[number];
+    }
+
+    const setIfDefined = <K extends keyof Prisma.PropertyUpdateInput>(
+      key: K,
+      value: Prisma.PropertyUpdateInput[K] | undefined,
+    ) => {
+      if (value !== undefined) propertyData[key] = value;
+    };
+
+    setIfDefined("address", strField("address"));
+    setIfDefined("distrito", strField("distrito"));
+    setIfDefined("freguesia", strField("freguesia"));
+    setIfDefined("country", strField("country") ?? undefined);
+    setIfDefined("livableAreaM2", intField("livableAreaM2"));
+    setIfDefined("totalAreaM2", intField("totalAreaM2"));
+    setIfDefined("bedrooms", intField("bedrooms"));
+    setIfDefined("bathrooms", intField("bathrooms"));
+    setIfDefined("yearBuilt", intField("yearBuilt"));
+    setIfDefined("floor", intField("floor"));
+    setIfDefined("parkingSpaces", intField("parkingSpaces"));
+
+    if ("energyRating" in propertyInput) {
+      const v = propertyInput.energyRating;
+      if (v === null || v === "") {
+        propertyData.energyRating = null;
+      } else if (
+        typeof v === "string" &&
+        VALID_ENERGY.includes(v as (typeof VALID_ENERGY)[number])
+      ) {
+        propertyData.energyRating = v as (typeof VALID_ENERGY)[number];
+      }
+    }
+
+    // Concelho — change here triggers INE regen.
+    let concelhoChanged = false;
+    let newConcelho = existing.property.concelho;
+    if ("concelho" in propertyInput) {
+      const next = strField("concelho");
+      if (next !== undefined) {
+        propertyData.concelho = next;
+        newConcelho = next;
+        concelhoChanged = (next ?? null) !== (existing.property.concelho ?? null);
+      }
+    }
+
+    // Postal code — change here triggers re-geocode.
+    let geocodeFailureReason: string | null = null;
+    let postalCodeChanged = false;
+    let nextPostalCode = existing.property.postalCode;
+    if ("postalCode" in propertyInput) {
+      const next = strField("postalCode");
+      if (next !== undefined) {
+        propertyData.postalCode = next;
+        nextPostalCode = next;
+        postalCodeChanged = (next ?? null) !== (existing.property.postalCode ?? null);
+      }
+    }
+
+    if (postalCodeChanged && nextPostalCode) {
+      const country =
+        (propertyData.country as string | undefined) ??
+        existing.property.country ??
+        "PT";
+      const geocode = await geocodePostalCode({ postalCode: nextPostalCode, country });
+      if (geocode.ok) {
+        propertyData.latitude = new Prisma.Decimal(geocode.lat);
+        propertyData.longitude = new Prisma.Decimal(geocode.lon);
+        propertyData.geocodedAt = new Date();
+        propertyData.geocodeError = null;
+      } else {
+        propertyData.latitude = null;
+        propertyData.longitude = null;
+        propertyData.geocodedAt = null;
+        propertyData.geocodeError = geocode.error;
+        geocodeFailureReason = geocode.error;
+      }
+    } else if (postalCodeChanged && !nextPostalCode) {
+      // Cleared the postal code — drop the cached coords too.
+      propertyData.latitude = null;
+      propertyData.longitude = null;
+      propertyData.geocodedAt = null;
+      propertyData.geocodeError = null;
+    }
+
+    const needsRegen = priceChanged || dateChanged || concelhoChanged;
+
+    const updated = await prisma.$transaction(async (tx) => {
+      await tx.realAsset.update({ where: { id }, data: assetData });
+      if (Object.keys(propertyData).length > 0) {
+        await tx.property.update({ where: { realAssetId: id }, data: propertyData });
+      }
+
+      if (needsRegen) {
+        await regeneratePropertyValuationHistory(tx, {
+          realAssetId: id,
+          baselineDate: newPurchaseDate,
+          baselinePrice: newPurchasePrice ?? Number(existing.purchasePrice),
+          baselineEur: newPurchasePriceEur,
+          baselineCurrency: newPurchaseCurrency,
+          concelho: newConcelho,
         });
-        await tx.realAsset.update({
-          where: { id },
-          data: {
-            currentValue: new Prisma.Decimal(heuristic.valueEur),
-            currentValueEur: new Prisma.Decimal(heuristic.valueEur),
-            currentValueUpdatedAt: new Date(),
-            currentValueSource: "heuristic",
-          },
+
+        // Mirror final value into RealAsset (the regen helper wrote
+        // ValuationHistory but doesn't touch the asset's currentValue snapshot).
+        const latest = await tx.valuationHistory.findFirst({
+          where: { realAssetId: id },
+          orderBy: { recordedAt: "desc" },
         });
+        if (latest) {
+          await tx.realAsset.update({
+            where: { id },
+            data: {
+              currentValue: latest.value,
+              currentValueEur: latest.valueEur,
+              currentValueUpdatedAt: new Date(),
+              currentValueSource: latest.source,
+            },
+          });
+        }
       }
 
       return tx.realAsset.findUnique({ where: { id }, include: detailInclude });
     });
 
-    return NextResponse.json({ asset: updated });
+    return NextResponse.json({
+      asset: updated,
+      ...(geocodeFailureReason ? { geocodeError: geocodeFailureReason } : {}),
+    });
   } catch (error) {
     return errorResponse(error);
   }

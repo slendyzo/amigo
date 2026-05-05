@@ -25,7 +25,9 @@ import {
 } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { formatCurrency } from "@/lib/currencies";
+import { buildStaticMapUrl } from "@/lib/static-map";
 import { cn } from "@/lib/utils";
+import EditPropertyModal from "@/components/edit-property-modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -35,6 +37,7 @@ type Asset = {
   status: "ACTIVE" | "SOLD";
   imageUrl: string | null;
   notes: string | null;
+  purchasePrice: number;
   purchasePriceEur: number;
   purchaseCurrency: string;
   purchaseDate: string;
@@ -61,6 +64,8 @@ type Property = {
   parkingSpaces: number | null;
   energyRating: "A_PLUS" | "A" | "B" | "B_MINUS" | "C" | "D" | "E" | "F" | null;
   condominiumFeeMonthly: number | null;
+  latitude: number | null;
+  longitude: number | null;
 };
 
 type Liability = {
@@ -119,6 +124,7 @@ export default function PropertyDetailClient({
   const t = useTranslations("rwa");
   const tDashboard = useTranslations("dashboard");
   const [showSell, setShowSell] = useState(false);
+  const [showEdit, setShowEdit] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -174,7 +180,16 @@ export default function PropertyDetailClient({
       {/* Hero */}
       <div className="overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-sm">
         <div className="grid md:grid-cols-[1.2fr_1fr]">
-          <PropertyImage src={asset.imageUrl} alt={asset.name} sold={sold} />
+          <PropertyImage
+            src={asset.imageUrl}
+            mapUrl={
+              property.latitude != null && property.longitude != null
+                ? buildStaticMapUrl({ lat: property.latitude, lon: property.longitude })
+                : null
+            }
+            alt={asset.name}
+            sold={sold}
+          />
 
           <div className="flex flex-col justify-between p-6">
             <div className="flex items-start justify-between gap-3">
@@ -252,14 +267,16 @@ export default function PropertyDetailClient({
                             {t("markAsSold")}
                           </button>
                         )}
-                        <Link
-                          href={`/dashboard/networth?edit=${asset.id}`}
-                          onClick={() => setMenuOpen(false)}
+                        <button
+                          onClick={() => {
+                            setMenuOpen(false);
+                            setShowEdit(true);
+                          }}
                           className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
                         >
                           <Pencil className="h-4 w-4 text-muted-foreground" />
                           {t("editDetails")}
-                        </Link>
+                        </button>
                         <div className="my-1 h-px bg-border/60" />
                         <button
                           onClick={() => {
@@ -444,6 +461,39 @@ export default function PropertyDetailClient({
             }}
           />
         )}
+        {showEdit && (
+          <EditPropertyModal
+            asset={{
+              id: asset.id,
+              name: asset.name,
+              notes: asset.notes,
+              purchasePrice: asset.purchasePrice,
+              purchasePriceEur: asset.purchasePriceEur,
+              purchaseCurrency: asset.purchaseCurrency,
+              purchaseDate: asset.purchaseDate,
+            }}
+            property={{
+              propertyType: property.propertyType,
+              address: property.address,
+              postalCode: property.postalCode,
+              concelho: property.concelho,
+              freguesia: property.freguesia,
+              country: property.country,
+              livableAreaM2: property.livableAreaM2,
+              bedrooms: property.bedrooms,
+              bathrooms: property.bathrooms,
+              yearBuilt: property.yearBuilt,
+              energyRating: property.energyRating,
+              latitude: property.latitude,
+              longitude: property.longitude,
+            }}
+            onClose={() => setShowEdit(false)}
+            onSaved={() => {
+              setShowEdit(false);
+              router.refresh();
+            }}
+          />
+        )}
       </AnimatePresence>
     </div>
   );
@@ -451,14 +501,17 @@ export default function PropertyDetailClient({
 
 function PropertyImage({
   src,
+  mapUrl,
   alt,
   sold,
 }: {
   src: string | null;
+  mapUrl: string | null;
   alt: string;
   sold: boolean;
 }) {
-  if (!src) {
+  const url = src ?? mapUrl;
+  if (!url) {
     return (
       <div
         className={cn(
@@ -473,8 +526,9 @@ function PropertyImage({
   return (
     /* eslint-disable-next-line @next/next/no-img-element */
     <img
-      src={src}
+      src={url}
       alt={alt}
+      loading="lazy"
       className={cn(
         "aspect-[16/9] w-full object-cover md:aspect-auto",
         sold && "opacity-60 grayscale",

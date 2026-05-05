@@ -29,6 +29,8 @@ type RealAsset = {
     address: string | null;
     livableAreaM2: number | null;
     bedrooms: number | null;
+    latitude: number | null;
+    longitude: number | null;
   } | null;
 };
 
@@ -235,7 +237,17 @@ function toPropertyCardData(a: RealAsset): PropertyCardData {
         : a.currentValueEur ?? a.purchasePriceEur,
     realizedPnLEur:
       a.status === "SOLD" && a.salePriceEur != null ? a.salePriceEur - a.purchasePriceEur : null,
-    property: a.property,
+    property: a.property
+      ? {
+          propertyType: a.property.propertyType,
+          concelho: a.property.concelho,
+          address: a.property.address,
+          livableAreaM2: a.property.livableAreaM2,
+          bedrooms: a.property.bedrooms,
+          latitude: a.property.latitude,
+          longitude: a.property.longitude,
+        }
+      : null,
   };
 }
 

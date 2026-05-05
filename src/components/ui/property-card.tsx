@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { Home, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currencies";
+import { buildStaticMapUrl } from "@/lib/static-map";
 
 export type PropertyCardData = {
   id: string;
@@ -22,6 +23,8 @@ export type PropertyCardData = {
     address: string | null;
     livableAreaM2: number | null;
     bedrooms: number | null;
+    latitude: number | null;
+    longitude: number | null;
   } | null;
 };
 
@@ -43,6 +46,13 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
   const sold = property.status === "SOLD";
 
   const subtitle = property.property?.concelho ?? property.property?.address ?? null;
+  const mapUrl =
+    property.property?.latitude != null && property.property?.longitude != null
+      ? buildStaticMapUrl({
+          lat: property.property.latitude,
+          lon: property.property.longitude,
+        })
+      : null;
 
   return (
     <Link href={link} className="group block">
@@ -56,7 +66,7 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
           className,
         )}
       >
-        <PropertyImage src={property.imageUrl} alt={property.name} />
+        <PropertyImage src={property.imageUrl ?? mapUrl} alt={property.name} />
 
         <div className="space-y-3 p-4">
           <header className="flex items-start justify-between gap-2">

@@ -45,6 +45,7 @@ export default async function PropertyDetailPage({ params }: PageProps) {
         status: asset.status,
         imageUrl: asset.imageUrl,
         notes: asset.notes,
+        purchasePrice: Number(asset.purchasePrice),
         purchasePriceEur: Number(asset.purchasePriceEur),
         purchaseCurrency: asset.purchaseCurrency,
         purchaseDate: asset.purchaseDate.toISOString(),
@@ -74,6 +75,9 @@ export default async function PropertyDetailPage({ params }: PageProps) {
           asset.property.condominiumFeeMonthly != null
             ? Number(asset.property.condominiumFeeMonthly)
             : null,
+        latitude: asset.property.latitude != null ? Number(asset.property.latitude) : null,
+        longitude:
+          asset.property.longitude != null ? Number(asset.property.longitude) : null,
       }}
       liabilities={asset.liabilities.map((l) => ({
         id: l.id,

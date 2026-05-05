@@ -909,6 +909,12 @@ model Property {
   // Recurring fees
   condominiumFeeMonthly Decimal? @db.Decimal(10, 2)
 
+  // Geocode (postal-code → lat/lon via Nominatim, used for OSM static-map thumbnail)
+  latitude     Decimal?  @db.Decimal(9, 6)
+  longitude    Decimal?  @db.Decimal(9, 6)
+  geocodedAt   DateTime?
+  geocodeError String?   @db.VarChar(40)
+
   realAsset RealAsset @relation(fields: [realAssetId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
