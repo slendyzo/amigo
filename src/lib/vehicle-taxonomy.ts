@@ -19,6 +19,71 @@ export type TaxonomyLevel = "makes" | "models" | "trims";
 
 const SOURCE = "ai_glm_4_6";
 
+// Static list of vehicle makes sold (new or via authorised import) in the
+// Portuguese market. The set is essentially year-invariant — using an LLM
+// per-year for this was wasteful and rate-limit-prone. Models and trims still
+// vary by year and stay AI-driven.
+const MAKES_PT: readonly string[] = [
+  "Abarth",
+  "Alfa Romeo",
+  "Alpine",
+  "Aston Martin",
+  "Audi",
+  "Bentley",
+  "BMW",
+  "BYD",
+  "Chery",
+  "Chevrolet",
+  "Citroën",
+  "Cupra",
+  "Dacia",
+  "DS",
+  "Ferrari",
+  "Fiat",
+  "Ford",
+  "Genesis",
+  "Honda",
+  "Hyundai",
+  "Infiniti",
+  "Isuzu",
+  "Jaguar",
+  "Jeep",
+  "Kia",
+  "Lamborghini",
+  "Lancia",
+  "Land Rover",
+  "Lexus",
+  "Lotus",
+  "Lynk & Co",
+  "Maserati",
+  "Maxus",
+  "Mazda",
+  "McLaren",
+  "Mercedes-Benz",
+  "MG",
+  "Mini",
+  "Mitsubishi",
+  "Nissan",
+  "Opel",
+  "Peugeot",
+  "Polestar",
+  "Porsche",
+  "Renault",
+  "Rolls-Royce",
+  "Saab",
+  "SEAT",
+  "Skoda",
+  "Smart",
+  "Ssangyong",
+  "Subaru",
+  "Suzuki",
+  "Tesla",
+  "Toyota",
+  "Volkswagen",
+  "Volvo",
+  "XPeng",
+];
+
 // In-memory dedupe of concurrent cache misses. Keyed by `{level}|{parentKey}`.
 // The window is short — only the time between cache miss and DB write — but
 // long enough that two near-simultaneous wizard openings don't both pay for
@@ -40,9 +105,7 @@ Hard rules:
 
 Always invoke the record_taxonomy tool. Never reply with prose.`;
 
-const PROMPT_BY_LEVEL: Record<TaxonomyLevel, (parts: string[]) => string> = {
-  makes: ([year]) =>
-    `List vehicle MAKES (manufacturers) sold new in Portugal in model year ${year}. Include both mass-market and premium brands. Examples of valid entries: "Toyota", "Mazda", "BMW", "Renault", "Mercedes-Benz", "Audi", "Volkswagen", "Peugeot", "Citroën", "Fiat", "Ford", "Opel", "Hyundai", "Kia", "Volvo", "Skoda", "SEAT", "Porsche", "Tesla", "Mini".`,
+const PROMPT_BY_LEVEL: Record<Exclude<TaxonomyLevel, "makes">, (parts: string[]) => string> = {
   models: ([year, make]) =>
     `List MODELS that ${make} sold new in Portugal in model year ${year}. Use the canonical European model name (e.g. for BMW: "1 Series", "3 Series", "X1", "M2", "i4"; for Mazda: "2", "3", "6", "MX-5", "CX-3", "CX-5", "CX-30"). Do NOT include trim levels yet — that's a separate step.`,
   trims: ([year, make, model]) =>
@@ -88,6 +151,9 @@ export async function fetchTaxonomyLevel(
   level: TaxonomyLevel,
   parentKey: string,
 ): Promise<string[]> {
+  // Makes never go through the AI / cache path — they're a stable static list.
+  if (level === "makes") return [...MAKES_PT];
+
   // 1. Cache hit?
   const cached = await prisma.vehicleTaxonomy.findUnique({
     where: { level_parentKey: { level, parentKey } },
@@ -125,6 +191,8 @@ export async function fetchTaxonomyLevel(
 }
 
 async function callZAI(level: TaxonomyLevel, parentKey: string): Promise<string[]> {
+  if (level === "makes") return [...MAKES_PT]; // defensive — fetchTaxonomyLevel short-circuits first
+
   const apiKey = process.env.ZAI_API_KEY;
   if (!apiKey) {
     console.warn("[vehicle-taxonomy] ZAI_API_KEY missing — returning empty list");
