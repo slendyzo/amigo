@@ -20,6 +20,8 @@ type RealAsset = {
   imageUrl: string | null;
   purchasePriceEur: number;
   currentValueEur: number | null;
+  currentValueSource: string | null;
+  currentValueUpdatedAt: string | null;
   salePriceEur: number | null;
   soldAt: string | null;
   vehicle: { brand: string; model: string; year: number } | null;
@@ -218,6 +220,8 @@ function toVehicleCardData(a: RealAsset): VehicleCardData {
       a.status === "SOLD"
         ? a.salePriceEur ?? a.currentValueEur ?? a.purchasePriceEur
         : a.currentValueEur ?? a.purchasePriceEur,
+    currentValueSource: a.currentValueSource,
+    currentValueUpdatedAt: a.currentValueUpdatedAt,
     realizedPnLEur:
       a.status === "SOLD" && a.salePriceEur != null ? a.salePriceEur - a.purchasePriceEur : null,
     vehicle: a.vehicle,
@@ -235,6 +239,8 @@ function toPropertyCardData(a: RealAsset): PropertyCardData {
       a.status === "SOLD"
         ? a.salePriceEur ?? a.currentValueEur ?? a.purchasePriceEur
         : a.currentValueEur ?? a.purchasePriceEur,
+    currentValueSource: a.currentValueSource,
+    currentValueUpdatedAt: a.currentValueUpdatedAt,
     realizedPnLEur:
       a.status === "SOLD" && a.salePriceEur != null ? a.salePriceEur - a.purchasePriceEur : null,
     property: a.property

@@ -20,6 +20,8 @@ type ApiAsset = {
   imageUrl: string | null;
   purchasePriceEur: string | number;
   currentValueEur: string | number | null;
+  currentValueSource: string | null;
+  currentValueUpdatedAt: string | null;
   vehicle: {
     brand: string;
     model: string;
@@ -66,6 +68,8 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
             imageUrl: a.imageUrl,
             purchasePriceEur: Number(a.purchasePriceEur),
             currentValueEur: a.currentValueEur != null ? Number(a.currentValueEur) : null,
+            currentValueSource: a.currentValueSource ?? null,
+            currentValueUpdatedAt: a.currentValueUpdatedAt ?? null,
           };
           if (a.type === "PROPERTY") {
             return {

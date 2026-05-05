@@ -34,6 +34,7 @@ import {
   type ReferenceLinePoint,
 } from "@/components/ui/value-over-time-chart";
 import { AddValuationModal } from "@/components/add-valuation-modal";
+import { ValueSourceHint } from "@/components/ui/value-source-hint";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -251,9 +252,9 @@ export default function PropertyDetailClient({
         <ArrowLeft className="h-4 w-4" /> {t("backToNetWorth")}
       </Link>
 
-      {/* Hero */}
+      {/* Hero — capped image left, packed info + stats right */}
       <div className="overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-sm">
-        <div className="grid md:grid-cols-[1.2fr_1fr]">
+        <div className="grid md:grid-cols-[1.4fr_1fr] md:max-h-[360px]">
           <PropertyImage
             src={asset.imageUrl}
             mapUrl={
@@ -263,21 +264,24 @@ export default function PropertyDetailClient({
             }
             alt={asset.name}
             sold={sold}
+            soldAt={asset.soldAt}
+            soldLabel={asset.soldAt ? t("soldOnLabel", { date: formatMonthYear(asset.soldAt) }) : null}
           />
 
-          <div className="flex flex-col justify-between p-6">
+          <div className="flex min-w-0 flex-col justify-between p-5 md:p-6">
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">
                   {t(`propertyTypeOption.${property.propertyType}`)}
                   {property.yearBuilt ? ` · ${property.yearBuilt}` : ""}
                 </p>
-                <h1 className="mt-1 text-3xl font-bold leading-tight">{asset.name}</h1>
+                <h1 className="mt-0.5 truncate text-2xl font-bold leading-tight md:text-[26px]">
+                  {asset.name}
+                </h1>
                 {subtitle && (
-                  <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p>
+                  <p className="mt-0.5 truncate text-sm text-muted-foreground">{subtitle}</p>
                 )}
-
-                <div className="mt-4 flex flex-wrap gap-1.5">
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {property.bedrooms != null && (
                     <Chip>
                       <Bed className="h-3 w-3" /> {t("bedroomsCount", { count: property.bedrooms })}
@@ -370,46 +374,49 @@ export default function PropertyDetailClient({
               </div>
             </div>
 
-            {sold && asset.soldAt ? (
-              <div className="mt-6">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-muted px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                  <CheckCircle className="h-3 w-3" />
-                  {t("soldOnLabel", { date: formatMonthYear(asset.soldAt) })}
-                </span>
-              </div>
-            ) : null}
+            {/* Stats grid 2x2, packed inside the hero */}
+            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border/40 pt-4 md:mt-3 md:pt-3">
+              <HeroStat
+                label={t("costBasis")}
+                value={formatCurrency(asset.purchasePriceEur, "EUR")}
+              />
+              <HeroStat
+                label={sold ? t("salePrice") : t("estimatedValue")}
+                value={formatCurrency(sold && asset.salePriceEur != null ? asset.salePriceEur : current, "EUR")}
+                hint={
+                  sold ? null : (
+                    <ValueSourceHint
+                      source={asset.currentValueSource}
+                      updatedAt={null}
+                      assetType="property"
+                    />
+                  )
+                }
+                accent={sold ? null : <DeltaInline delta={delta} />}
+              />
+              {realizedPnL != null ? (
+                <HeroStat
+                  label={t("realizedPnL")}
+                  value={`${realizedPnL > 0 ? "+" : ""}${formatCurrency(realizedPnL, "EUR")}`}
+                  valueClass={realizedPnL > 0 ? "text-emerald-500" : "text-rose-500"}
+                />
+              ) : (
+                <HeroStat
+                  label={t("monthlyTCOLabel")}
+                  value={
+                    expenses.length === 0
+                      ? "—"
+                      : `${formatCurrency(monthlyTCO, "EUR")}${t("monthlySuffix")}`
+                  }
+                />
+              )}
+              <HeroStat
+                label={sold ? t("ownedFor") : t("monthsOwned")}
+                value={String(monthsOwned)}
+              />
+            </div>
           </div>
         </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("costBasis")} value={formatCurrency(asset.purchasePriceEur, "EUR")} />
-        <Stat
-          label={sold ? t("salePrice") : t("estimatedValue")}
-          value={formatCurrency(sold && asset.salePriceEur != null ? asset.salePriceEur : current, "EUR")}
-          accent={sold ? null : <DeltaInline delta={delta} />}
-        />
-        <Stat
-          label={sold ? t("ownedFor") : t("monthsOwned")}
-          value={String(monthsOwned)}
-        />
-        {realizedPnL != null ? (
-          <Stat
-            label={t("realizedPnL")}
-            value={`${realizedPnL > 0 ? "+" : ""}${formatCurrency(realizedPnL, "EUR")}`}
-            valueClass={realizedPnL > 0 ? "text-emerald-500" : "text-rose-500"}
-          />
-        ) : (
-          <Stat
-            label={t("monthlyTCOLabel")}
-            value={
-              expenses.length === 0
-                ? "—"
-                : `${formatCurrency(monthlyTCO, "EUR")}${t("monthlySuffix")}`
-            }
-          />
-        )}
       </div>
 
       {/* Value-over-time chart */}
@@ -547,36 +554,67 @@ function PropertyImage({
   mapUrl,
   alt,
   sold,
+  soldAt,
+  soldLabel,
 }: {
   src: string | null;
   mapUrl: string | null;
   alt: string;
   sold: boolean;
+  soldAt: string | null;
+  soldLabel: string | null;
 }) {
   const url = src ?? mapUrl;
-  if (!url) {
-    return (
-      <div
-        className={cn(
-          "flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-violet-500/10 to-violet-500/5 md:aspect-auto",
-          sold && "opacity-60 grayscale",
-        )}
-      >
-        <Home className="h-16 w-16 text-violet-500/50" strokeWidth={1.5} />
-      </div>
-    );
-  }
+  const isMap = !src && !!mapUrl;
+
   return (
-    /* eslint-disable-next-line @next/next/no-img-element */
-    <img
-      src={url}
-      alt={alt}
-      loading="lazy"
+    <div
       className={cn(
-        "aspect-[16/9] w-full object-cover md:aspect-auto",
-        sold && "opacity-60 grayscale",
+        "relative aspect-[16/10] w-full md:aspect-auto md:h-full",
+        "bg-gradient-to-br from-violet-500/10 to-violet-500/5",
       )}
-    />
+    >
+      {url ? (
+        <>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={url}
+            alt={alt}
+            loading="lazy"
+            className={cn(
+              "h-full w-full object-cover",
+              // Tone down raw OSM tiles so they read as a "location chip" not a debug screen.
+              isMap && "saturate-[0.55] brightness-[0.97] contrast-[0.95]",
+              sold && "opacity-60 grayscale",
+            )}
+          />
+          {isMap && (
+            <>
+              {/* Subtle vignette to anchor the eye + soft pin */}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-card/30" />
+              <div className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                <div className="relative">
+                  <div className="absolute inset-0 -m-2 rounded-full bg-primary/25 blur-md" />
+                  <div className="relative flex h-7 w-7 items-center justify-center rounded-full border-[3px] border-card bg-primary text-primary-foreground shadow-lg">
+                    <Home className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <div className="flex h-full w-full items-center justify-center">
+          <Home className="h-16 w-16 text-violet-500/50" strokeWidth={1.5} />
+        </div>
+      )}
+      {sold && soldAt && soldLabel && (
+        <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-card/95 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground shadow-sm backdrop-blur-sm">
+          <CheckCircle className="h-3 w-3" />
+          {soldLabel}
+        </span>
+      )}
+    </div>
   );
 }
 
@@ -614,22 +652,27 @@ function ChartEmptyState({
   );
 }
 
-function Stat({
+function HeroStat({
   label,
   value,
   accent,
+  hint,
   valueClass,
 }: {
   label: string;
   value: string;
   accent?: React.ReactNode;
+  hint?: React.ReactNode;
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/80 p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <div className="mt-1 flex items-baseline gap-2">
-        <p className={cn("text-xl font-semibold tabular-nums", valueClass)}>{value}</p>
+    <div className="min-w-0">
+      <div className="flex items-center gap-1">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        {hint}
+      </div>
+      <div className="mt-0.5 flex items-baseline gap-1.5">
+        <p className={cn("truncate text-base font-semibold tabular-nums md:text-lg", valueClass)}>{value}</p>
         {accent}
       </div>
     </div>

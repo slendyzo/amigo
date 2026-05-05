@@ -14,6 +14,7 @@ import {
   Trash2,
   CheckCircle,
   Loader2,
+  MoreVertical,
   X,
 } from "lucide-react";
 import { formatCurrency } from "@/lib/currencies";
@@ -24,6 +25,7 @@ import {
   type ValuePointSource,
 } from "@/components/ui/value-over-time-chart";
 import { AddValuationModal } from "@/components/add-valuation-modal";
+import { ValueSourceHint } from "@/components/ui/value-source-hint";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -116,6 +118,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
   const tDashboard = useTranslations("dashboard");
   const [showSell, setShowSell] = useState(false);
   const [showAddValuation, setShowAddValuation] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const sold = asset.status === "SOLD";
@@ -203,77 +206,145 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
         <ArrowLeft className="h-4 w-4" /> {t("backToNetWorth")}
       </Link>
 
-      {/* Hero */}
+      {/* Hero — capped image left, packed info right */}
       <div className="overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-sm">
-        <div className="grid md:grid-cols-[1.2fr_1fr]">
-          {asset.imageUrl ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={asset.imageUrl} alt={asset.name} className="aspect-[16/9] w-full object-cover md:aspect-auto" />
-          ) : (
-            <div className="flex aspect-[16/9] items-center justify-center bg-gradient-to-br from-muted/40 to-muted/10 md:aspect-auto">
-              <Car className="h-16 w-16 text-muted-foreground/40" strokeWidth={1.5} />
-            </div>
-          )}
+        <div className="grid md:grid-cols-[1.4fr_1fr] md:max-h-[360px]">
+          {/* Image */}
+          <div
+            className={cn(
+              "relative aspect-[16/10] w-full md:aspect-auto md:h-full",
+              "bg-gradient-to-br from-muted/40 to-muted/10",
+              sold && "opacity-70 grayscale",
+            )}
+          >
+            {asset.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={asset.imageUrl} alt={asset.name} className="h-full w-full object-cover" />
+            ) : (
+              <div className="flex h-full w-full items-center justify-center">
+                <Car className="h-16 w-16 text-muted-foreground/40" strokeWidth={1.5} />
+              </div>
+            )}
+            {sold && asset.soldAt && (
+              <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-card/95 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground shadow-sm backdrop-blur-sm">
+                <CheckCircle className="h-3 w-3" />
+                {t("soldOnLabel", { date: formatMonthYear(asset.soldAt) })}
+              </span>
+            )}
+          </div>
 
-          <div className="flex flex-col justify-between p-6">
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">{vehicle.year}</p>
-              <h1 className="mt-1 text-3xl font-bold leading-tight">
-                {vehicle.brand} {vehicle.model}
-              </h1>
-              {vehicle.trim && <p className="text-sm text-muted-foreground">{vehicle.trim}</p>}
+          {/* Info column */}
+          <div className="flex min-w-0 flex-col justify-between p-5 md:p-6">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{vehicle.year}</p>
+                <h1 className="mt-0.5 text-2xl font-bold leading-tight md:text-[26px]">
+                  {vehicle.brand} {vehicle.model}
+                </h1>
+                {vehicle.trim && <p className="text-sm text-muted-foreground">{vehicle.trim}</p>}
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {vehicle.fuelType && <Chip>{vehicle.fuelType}</Chip>}
+                  {vehicle.bodyType && <Chip>{vehicle.bodyType}</Chip>}
+                  {vehicle.generation && <Chip>{vehicle.generation}</Chip>}
+                  {vehicle.color && <Chip>{vehicle.color}</Chip>}
+                </div>
+              </div>
 
-              <div className="mt-4 flex flex-wrap gap-1.5">
-                {vehicle.fuelType && <Chip>{vehicle.fuelType}</Chip>}
-                {vehicle.bodyType && <Chip>{vehicle.bodyType}</Chip>}
-                {vehicle.generation && <Chip>{t("generationPrefix")} {vehicle.generation}</Chip>}
-                {vehicle.color && <Chip>{vehicle.color}</Chip>}
+              {/* Kebab menu — sell + delete actions */}
+              <div className="relative shrink-0">
+                <button
+                  onClick={() => setMenuOpen((v) => !v)}
+                  className="rounded-lg border border-border/60 bg-card/60 p-2 text-muted-foreground hover:border-border hover:text-foreground"
+                  aria-label={t("actionsMenu")}
+                >
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+                <AnimatePresence>
+                  {menuOpen && (
+                    <>
+                      <div
+                        className="fixed inset-0 z-30"
+                        onClick={() => setMenuOpen(false)}
+                        aria-hidden
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                        transition={{ duration: 0.18, ease: EASE }}
+                        className="absolute right-0 top-11 z-40 min-w-[200px] rounded-xl border border-border/80 bg-card p-1 shadow-2xl backdrop-blur-md"
+                      >
+                        {!sold && (
+                          <button
+                            onClick={() => {
+                              setMenuOpen(false);
+                              setShowSell(true);
+                            }}
+                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
+                          >
+                            <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                            {t("markAsSold")}
+                          </button>
+                        )}
+                        <div className="my-1 h-px bg-border/60" />
+                        <button
+                          onClick={() => {
+                            setMenuOpen(false);
+                            handleDelete();
+                          }}
+                          disabled={busy}
+                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-rose-500 hover:bg-rose-500/10 disabled:opacity-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          {t("deleteVehicle") ?? "Delete vehicle"}
+                        </button>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
 
-            <div className="mt-6 flex flex-wrap gap-2">
-              {!sold && (
-                <button
-                  onClick={() => setShowSell(true)}
-                  className="rounded-lg bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
-                >
-                  {t("markAsSold")}
-                </button>
+            {/* Stats grid 2x2, packed inside the hero */}
+            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border/40 pt-4 md:mt-3 md:pt-3">
+              <HeroStat
+                label={t("costBasis")}
+                value={formatCurrency(asset.purchasePriceEur, "EUR")}
+              />
+              <HeroStat
+                label={sold ? t("salePrice") : t("estimatedValue")}
+                value={formatCurrency(current, "EUR")}
+                hint={
+                  sold ? null : (
+                    <ValueSourceHint
+                      source={asset.currentValueSource}
+                      updatedAt={null}
+                      assetType="vehicle"
+                    />
+                  )
+                }
+                accent={sold ? null : <DeltaInline delta={delta} />}
+                valueClass={sold ? undefined : undefined}
+              />
+              {realizedPnL != null ? (
+                <HeroStat
+                  label={t("realizedPnL")}
+                  value={`${realizedPnL > 0 ? "+" : ""}${formatCurrency(realizedPnL, "EUR")}`}
+                  valueClass={realizedPnL > 0 ? "text-emerald-500" : "text-rose-500"}
+                />
+              ) : (
+                <HeroStat
+                  label={t("mileage")}
+                  value={vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : "—"}
+                />
               )}
-              <button
-                onClick={handleDelete}
-                disabled={busy}
-                className="rounded-lg border border-border px-3 py-1.5 text-sm text-muted-foreground hover:border-rose-500/40 hover:text-rose-500 disabled:opacity-50"
-              >
-                <Trash2 className="h-4 w-4" />
-              </button>
+              <HeroStat
+                label={t("monthsOwned")}
+                value={String(monthsOwned)}
+              />
             </div>
           </div>
         </div>
-      </div>
-
-      {/* Stats row */}
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <Stat label={t("costBasis")} value={formatCurrency(asset.purchasePriceEur, "EUR")} />
-        <Stat
-          label={sold ? t("salePrice") : t("estimatedValue")}
-          value={formatCurrency(current, "EUR")}
-          accent={
-            sold ? null : (
-              <DeltaInline delta={delta} />
-            )
-          }
-        />
-        <Stat label={t("monthsOwned")} value={String(monthsOwned)} />
-        {realizedPnL != null ? (
-          <Stat
-            label={t("realizedPnL")}
-            value={`${realizedPnL > 0 ? "+" : ""}${formatCurrency(realizedPnL, "EUR")}`}
-            valueClass={realizedPnL > 0 ? "text-emerald-500" : "text-rose-500"}
-          />
-        ) : (
-          <Stat label={t("mileage")} value={vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : "—"} />
-        )}
       </div>
 
       {/* Value-over-time chart */}
@@ -356,26 +427,36 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
   );
 }
 
-function Stat({
+function HeroStat({
   label,
   value,
   accent,
+  hint,
   valueClass,
 }: {
   label: string;
   value: string;
   accent?: React.ReactNode;
+  hint?: React.ReactNode;
   valueClass?: string;
 }) {
   return (
-    <div className="rounded-2xl border border-border/60 bg-card/80 p-4">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <div className="mt-1 flex items-baseline gap-2">
-        <p className={cn("text-xl font-semibold tabular-nums", valueClass)}>{value}</p>
+    <div className="min-w-0">
+      <div className="flex items-center gap-1">
+        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+        {hint}
+      </div>
+      <div className="mt-0.5 flex items-baseline gap-1.5">
+        <p className={cn("truncate text-base font-semibold tabular-nums md:text-lg", valueClass)}>{value}</p>
         {accent}
       </div>
     </div>
   );
+}
+
+function formatMonthYear(iso: string): string {
+  const d = new Date(iso);
+  return d.toLocaleString(undefined, { month: "short", year: "numeric" });
 }
 
 function Chip({ children }: { children: React.ReactNode }) {

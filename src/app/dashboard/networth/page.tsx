@@ -47,6 +47,8 @@ export default async function NetworthPage() {
         imageUrl: a.imageUrl,
         purchasePriceEur: Number(a.purchasePriceEur),
         currentValueEur: a.currentValueEur != null ? Number(a.currentValueEur) : null,
+        currentValueSource: a.currentValueSource,
+        currentValueUpdatedAt: a.currentValueUpdatedAt?.toISOString() ?? null,
         salePriceEur: a.salePriceEur != null ? Number(a.salePriceEur) : null,
         soldAt: a.soldAt?.toISOString() ?? null,
         vehicle: a.vehicle

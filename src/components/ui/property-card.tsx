@@ -7,6 +7,7 @@ import { Home, TrendingDown, TrendingUp, Minus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/lib/currencies";
 import { buildStaticMapUrl } from "@/lib/static-map";
+import { ValueSourceHint } from "@/components/ui/value-source-hint";
 
 export type PropertyCardData = {
   id: string;
@@ -15,6 +16,8 @@ export type PropertyCardData = {
   imageUrl: string | null;
   purchasePriceEur: number;
   currentValueEur: number | null;
+  currentValueSource?: string | null;
+  currentValueUpdatedAt?: string | null;
   realizedPnLEur?: number | null;
   monthlyTCOEur?: number | null;
   property: {
@@ -82,9 +85,18 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
           </header>
 
           <div>
-            <p className="text-xs uppercase tracking-wide text-muted-foreground">
-              {sold ? t("soldFor") : t("estimatedValue")}
-            </p>
+            <div className="flex items-center gap-1">
+              <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                {sold ? t("soldFor") : t("estimatedValue")}
+              </p>
+              {!sold && (
+                <ValueSourceHint
+                  source={property.currentValueSource ?? null}
+                  updatedAt={property.currentValueUpdatedAt ?? null}
+                  assetType="property"
+                />
+              )}
+            </div>
             <div className="mt-0.5 flex items-baseline gap-2">
               <span className="text-2xl font-semibold tabular-nums">
                 {formatCurrency(current, "EUR")}
