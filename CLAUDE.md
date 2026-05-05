@@ -14,6 +14,35 @@ This file provides all context needed to start a new Claude Code session and con
 
 This applies to ALL work — bug fixes, features, refactors, infrastructure changes. No exceptions. Plane is the source of truth. See global CLAUDE.md for full Plane integration details.
 
+## CRITICAL: Deploying
+
+**The only sanctioned deploy command is `bash /root/amigo/deploy.sh` on CT 104.**
+
+Never use `docker compose up -d --build` directly. That command's exit code is 0 even when the build crashes mid-way, which silently leaves the previous container running with a green health check while the new code never ships. We hit this twice on 2026-05-04.
+
+`deploy.sh` does:
+
+1. `git pull --ff-only origin main`
+2. `docker compose build amigo` — exits non-zero on failure (loud)
+3. `docker compose up -d amigo`
+4. `docker image prune -f` (cleans up dangling layers)
+5. Polls `/api/health` for up to 10s
+6. Prints running image SHA + free disk
+
+Run from the local Mac with:
+
+```bash
+ssh -i ~/.ssh/id_ed25519 root@100.110.224.38 'bash /root/amigo/deploy.sh'
+```
+
+If the script fails, **do not** fall back to `docker compose up -d --build` — diagnose the build failure first. Common causes: disk pressure (check `df -h /`, run `docker image prune -af` if needed), TypeScript errors that didn't surface in local `npm run build`, env var mismatch.
+
+Background context (do not need to repeat to user):
+
+- CT 104 rootfs is 32GB. Pool is `local-lvm` on `pc2-sv` (Tailscale `100.127.19.92`). To grow further: `pct resize 104 rootfs +XG` from the Proxmox host.
+- Daily cron at 04:30 prunes dangling images: `30 4 * * * docker image prune -af`.
+- The amigo image is ~372MB (slim multi-stage with `output: "standalone"`). The Dockerfile is fine — don't rewrite it.
+
 ## Quick Reference
 
 | Item | Value |
