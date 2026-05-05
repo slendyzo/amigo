@@ -37,6 +37,8 @@ services:
       - AUTH_TRUST_HOST=true
       - RESEND_API_KEY=${RESEND_API_KEY}
       - EXCHANGE_ENCRYPTION_KEY=${EXCHANGE_ENCRYPTION_KEY}
+      - CRON_SECRET=${CRON_SECRET}
+      - INE_HOUSING_INDEX_URL=${INE_HOUSING_INDEX_URL:-}
     healthcheck:
       test: ["CMD", "wget", "-q", "--spider", "http://localhost:3000/api/health"]
       interval: 30s
