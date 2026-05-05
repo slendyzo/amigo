@@ -27,6 +27,25 @@ const VALID_BODY = [
   "OTHER",
 ] as const;
 
+const VALID_PROPERTY_TYPES = [
+  "APARTMENT",
+  "HOUSE",
+  "LAND",
+  "COMMERCIAL",
+  "OTHER",
+] as const;
+
+const VALID_ENERGY = [
+  "A_PLUS",
+  "A",
+  "B",
+  "B_MINUS",
+  "C",
+  "D",
+  "E",
+  "F",
+] as const;
+
 function errorResponse(error: unknown) {
   if (error instanceof WorkspaceAccessError) {
     const status = error.code === "UNAUTHORIZED" ? 401 : 403;
@@ -38,6 +57,7 @@ function errorResponse(error: unknown) {
 
 const assetInclude = {
   vehicle: true,
+  property: true,
   liabilities: {
     select: {
       id: true,
@@ -90,9 +110,6 @@ export async function POST(request: Request) {
     if (!type || !VALID_TYPES.includes(type)) {
       return NextResponse.json({ error: "Invalid asset type" }, { status: 400 });
     }
-    if (type === "PROPERTY") {
-      return NextResponse.json({ error: "PROPERTY type not yet supported" }, { status: 400 });
-    }
 
     const name = typeof body.name === "string" ? body.name.trim() : "";
     if (!name) return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -112,35 +129,119 @@ export async function POST(request: Request) {
 
     const { amountEur: purchasePriceEur } = await convertToEur(purchasePrice, purchaseCurrency);
 
-    const vehicleInput = (body.vehicle ?? {}) as Record<string, unknown>;
-    const brand = typeof vehicleInput.brand === "string" ? vehicleInput.brand.trim() : "";
-    const model = typeof vehicleInput.model === "string" ? vehicleInput.model.trim() : "";
-    const year = typeof vehicleInput.year === "number" ? vehicleInput.year : NaN;
+    // Type-specific validation + child-payload prep.
+    let initialValueEur = purchasePriceEur;
+    let initialValueSource: string = "manual";
+    let vehicleData: Prisma.VehicleCreateWithoutRealAssetInput | null = null;
+    let propertyData: Prisma.PropertyCreateWithoutRealAssetInput | null = null;
+    let extraValuationLog: { valueEur: number; source: string } | null = null;
 
-    if (!brand || !model || !Number.isFinite(year)) {
-      return NextResponse.json(
-        { error: "vehicle.brand, vehicle.model, and vehicle.year are required" },
-        { status: 400 }
-      );
+    if (type === "VEHICLE") {
+      const vehicleInput = (body.vehicle ?? {}) as Record<string, unknown>;
+      const brand = typeof vehicleInput.brand === "string" ? vehicleInput.brand.trim() : "";
+      const model = typeof vehicleInput.model === "string" ? vehicleInput.model.trim() : "";
+      const year = typeof vehicleInput.year === "number" ? vehicleInput.year : NaN;
+
+      if (!brand || !model || !Number.isFinite(year)) {
+        return NextResponse.json(
+          { error: "vehicle.brand, vehicle.model, and vehicle.year are required" },
+          { status: 400 }
+        );
+      }
+
+      const mileage = typeof vehicleInput.mileage === "number" ? vehicleInput.mileage : null;
+      const fuelType =
+        typeof vehicleInput.fuelType === "string" && VALID_FUEL.includes(vehicleInput.fuelType as (typeof VALID_FUEL)[number])
+          ? (vehicleInput.fuelType as (typeof VALID_FUEL)[number])
+          : null;
+      const bodyType =
+        typeof vehicleInput.bodyType === "string" && VALID_BODY.includes(vehicleInput.bodyType as (typeof VALID_BODY)[number])
+          ? (vehicleInput.bodyType as (typeof VALID_BODY)[number])
+          : null;
+
+      const heuristic =
+        Number.isFinite(year) && purchasePriceEur > 0
+          ? computeVehicleHeuristicValue({ purchasePriceEur, year, mileage })
+          : null;
+      if (heuristic) {
+        initialValueEur = heuristic.valueEur;
+        initialValueSource = "heuristic";
+        if (Math.abs(heuristic.valueEur - purchasePriceEur) > 0.01) {
+          extraValuationLog = { valueEur: heuristic.valueEur, source: "heuristic" };
+        }
+      }
+
+      vehicleData = {
+        brand,
+        model,
+        generation: typeof vehicleInput.generation === "string" ? vehicleInput.generation : null,
+        year,
+        trim: typeof vehicleInput.trim === "string" ? vehicleInput.trim : null,
+        mileage,
+        mileageUpdatedAt: mileage != null ? new Date() : null,
+        vin: typeof vehicleInput.vin === "string" ? vehicleInput.vin : null,
+        plate: typeof vehicleInput.plate === "string" ? vehicleInput.plate : null,
+        color: typeof vehicleInput.color === "string" ? vehicleInput.color : null,
+        fuelType,
+        bodyType,
+      };
+    } else {
+      // PROPERTY
+      const propertyInput = (body.property ?? {}) as Record<string, unknown>;
+      const propertyType = propertyInput.propertyType;
+      if (
+        typeof propertyType !== "string" ||
+        !VALID_PROPERTY_TYPES.includes(propertyType as (typeof VALID_PROPERTY_TYPES)[number])
+      ) {
+        return NextResponse.json(
+          { error: `property.propertyType must be one of ${VALID_PROPERTY_TYPES.join(", ")}` },
+          { status: 400 }
+        );
+      }
+
+      const energyRating =
+        typeof propertyInput.energyRating === "string" &&
+        VALID_ENERGY.includes(propertyInput.energyRating as (typeof VALID_ENERGY)[number])
+          ? (propertyInput.energyRating as (typeof VALID_ENERGY)[number])
+          : null;
+
+      const intOrNull = (key: string) => {
+        const v = propertyInput[key];
+        return typeof v === "number" && Number.isFinite(v) ? Math.trunc(v) : null;
+      };
+      const strOrNull = (key: string) => {
+        const v = propertyInput[key];
+        return typeof v === "string" && v.trim().length > 0 ? v.trim() : null;
+      };
+
+      const condoFee =
+        typeof propertyInput.condominiumFeeMonthly === "number" &&
+        Number.isFinite(propertyInput.condominiumFeeMonthly) &&
+        propertyInput.condominiumFeeMonthly >= 0
+          ? new Prisma.Decimal(propertyInput.condominiumFeeMonthly)
+          : null;
+
+      propertyData = {
+        propertyType: propertyType as (typeof VALID_PROPERTY_TYPES)[number],
+        address: strOrNull("address"),
+        postalCode: strOrNull("postalCode"),
+        distrito: strOrNull("distrito"),
+        concelho: strOrNull("concelho"),
+        freguesia: strOrNull("freguesia"),
+        country: strOrNull("country") ?? "PT",
+        livableAreaM2: intOrNull("livableAreaM2"),
+        totalAreaM2: intOrNull("totalAreaM2"),
+        bedrooms: intOrNull("bedrooms"),
+        bathrooms: intOrNull("bathrooms"),
+        yearBuilt: intOrNull("yearBuilt"),
+        floor: intOrNull("floor"),
+        parkingSpaces: intOrNull("parkingSpaces"),
+        energyRating,
+        condominiumFeeMonthly: condoFee,
+      };
+      // No INE-driven heuristic yet (AMIGO-169/170). Initial value = purchase
+      // price; daily cron will refresh once the index is wired.
     }
-
-    const mileage = typeof vehicleInput.mileage === "number" ? vehicleInput.mileage : null;
-    const fuelType =
-      typeof vehicleInput.fuelType === "string" && VALID_FUEL.includes(vehicleInput.fuelType as (typeof VALID_FUEL)[number])
-        ? (vehicleInput.fuelType as (typeof VALID_FUEL)[number])
-        : null;
-    const bodyType =
-      typeof vehicleInput.bodyType === "string" && VALID_BODY.includes(vehicleInput.bodyType as (typeof VALID_BODY)[number])
-        ? (vehicleInput.bodyType as (typeof VALID_BODY)[number])
-        : null;
-
-    // Initial valuation: heuristic if we can compute (year + mileage available),
-    // else just the purchase price.
-    const heuristic =
-      Number.isFinite(year) && purchasePriceEur > 0
-        ? computeVehicleHeuristicValue({ purchasePriceEur, year, mileage })
-        : null;
-    const initialValueEur = heuristic ? heuristic.valueEur : purchasePriceEur;
 
     const asset = await prisma.$transaction(async (tx) => {
       const created = await tx.realAsset.create({
@@ -156,29 +257,17 @@ export async function POST(request: Request) {
           currentValue: new Prisma.Decimal(initialValueEur),
           currentValueEur: new Prisma.Decimal(initialValueEur),
           currentValueUpdatedAt: new Date(),
-          currentValueSource: heuristic ? "heuristic" : "manual",
+          currentValueSource: initialValueSource,
           imageUrl: typeof body.imageUrl === "string" ? body.imageUrl : null,
           notes: typeof body.notes === "string" ? body.notes : null,
         },
       });
 
-      await tx.vehicle.create({
-        data: {
-          realAssetId: created.id,
-          brand,
-          model,
-          generation: typeof vehicleInput.generation === "string" ? vehicleInput.generation : null,
-          year,
-          trim: typeof vehicleInput.trim === "string" ? vehicleInput.trim : null,
-          mileage,
-          mileageUpdatedAt: mileage != null ? new Date() : null,
-          vin: typeof vehicleInput.vin === "string" ? vehicleInput.vin : null,
-          plate: typeof vehicleInput.plate === "string" ? vehicleInput.plate : null,
-          color: typeof vehicleInput.color === "string" ? vehicleInput.color : null,
-          fuelType,
-          bodyType,
-        },
-      });
+      if (vehicleData) {
+        await tx.vehicle.create({ data: { realAssetId: created.id, ...vehicleData } });
+      } else if (propertyData) {
+        await tx.property.create({ data: { realAssetId: created.id, ...propertyData } });
+      }
 
       // Seed valuation history with the purchase event.
       await tx.valuationHistory.create({
@@ -192,15 +281,14 @@ export async function POST(request: Request) {
         },
       });
 
-      // If we computed a heuristic that differs from the purchase, log it too.
-      if (heuristic && Math.abs(heuristic.valueEur - purchasePriceEur) > 0.01) {
+      if (extraValuationLog) {
         await tx.valuationHistory.create({
           data: {
             realAssetId: created.id,
-            value: new Prisma.Decimal(heuristic.valueEur),
-            valueEur: new Prisma.Decimal(heuristic.valueEur),
+            value: new Prisma.Decimal(extraValuationLog.valueEur),
+            valueEur: new Prisma.Decimal(extraValuationLog.valueEur),
             currency: "EUR",
-            source: "heuristic",
+            source: extraValuationLog.source,
           },
         });
       }
