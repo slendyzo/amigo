@@ -160,11 +160,13 @@ export function parseInePayload(payload: unknown, warnings: string[]): IneIndexR
         const row = e as Record<string, unknown>;
         const name = typeof row.geodsg === "string" ? row.geodsg.trim() : null;
 
-        // Drop Novos / Existentes splits — keep Total only. Series without
-        // a dim_3 (e.g. legacy 0011784) are passed through unchanged.
-        const dim3Code = typeof row.dim_3 === "string" ? row.dim_3 : null;
+        // Drop Novos / Existentes splits — keep Total only. The dim_3 code
+        // varies by indicator ("T" in some, "H1" in 0011370, etc) so we
+        // filter on the human-readable label dim_3_t === "Total" instead.
+        // Rows without a dim_3_t (e.g. legacy 0011784, single-dimensional
+        // series) pass through unchanged.
         const dim3Text = typeof row.dim_3_t === "string" ? row.dim_3_t : null;
-        if ((dim3Code !== null && dim3Code !== "T") || (dim3Text !== null && dim3Text !== "Total")) {
+        if (dim3Text !== null && dim3Text !== "Total") {
           continue;
         }
 
