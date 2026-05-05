@@ -14,7 +14,7 @@ export default async function NetworthPage() {
     prisma.realAsset.findMany({
       where: { workspaceId: workspace.id },
       orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-      include: { vehicle: true },
+      include: { vehicle: true, property: true },
     }),
     prisma.liability.findMany({
       where: { workspaceId: workspace.id },
@@ -51,6 +51,15 @@ export default async function NetworthPage() {
         soldAt: a.soldAt?.toISOString() ?? null,
         vehicle: a.vehicle
           ? { brand: a.vehicle.brand, model: a.vehicle.model, year: a.vehicle.year }
+          : null,
+        property: a.property
+          ? {
+              propertyType: a.property.propertyType,
+              concelho: a.property.concelho,
+              address: a.property.address,
+              livableAreaM2: a.property.livableAreaM2,
+              bedrooms: a.property.bedrooms,
+            }
           : null,
       }))}
       liabilities={liabilities.map((l) => ({

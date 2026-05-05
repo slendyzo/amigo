@@ -221,7 +221,7 @@ export default function PropertyDetailClient({
                 <button
                   onClick={() => setMenuOpen((v) => !v)}
                   className="rounded-lg border border-border/60 bg-card/60 p-2 text-muted-foreground hover:border-border hover:text-foreground"
-                  aria-label="Actions"
+                  aria-label={t("actionsMenu")}
                 >
                   <MoreVertical className="h-4 w-4" />
                 </button>

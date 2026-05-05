@@ -1622,6 +1622,11 @@
     "mortgage": "Prêt hypothécaire",
     "costOfOwnership": "Coût de détention",
     "noLinkedShort": "Aucune dépense liée",
-    "noLinkedExpensesProperty": "Aucune dépense liée pour l'instant. Liez les charges, l'IMI, les utilities et l'entretien pour suivre le coût de détention."
+    "noLinkedExpensesProperty": "Aucune dépense liée pour l'instant. Liez les charges, l'IMI, les utilities et l'entretien pour suivre le coût de détention.",
+    "linkedAsset": "Actif lié (optionnel)",
+    "linkedAssetNone": "— Aucun —",
+    "unlinkAsset": "Délier l'actif",
+    "noActiveAssets": "Aucun actif pour l'instant. Ajoute un véhicule ou un bien depuis le tableau de bord.",
+    "actionsMenu": "Actions"
   }
 }

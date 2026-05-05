@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { TrendingUp, TrendingDown, Wallet, Car, Building2, CreditCard, ArrowRight } from "lucide-react";
 import { VehicleCard, type VehicleCardData } from "@/components/ui/vehicle-card";
+import { PropertyCard, type PropertyCardData } from "@/components/ui/property-card";
 import { formatCurrency } from "@/lib/currencies";
 import { cn } from "@/lib/utils";
 
@@ -22,6 +23,13 @@ type RealAsset = {
   salePriceEur: number | null;
   soldAt: string | null;
   vehicle: { brand: string; model: string; year: number } | null;
+  property: {
+    propertyType: string;
+    concelho: string | null;
+    address: string | null;
+    livableAreaM2: number | null;
+    bedrooms: number | null;
+  } | null;
 };
 
 type Liability = {
@@ -114,7 +122,7 @@ export default function NetworthClient({ realAssets, liabilities, portfolioAsset
 
       {tab === "active" && (
         <div className="space-y-6">
-          <Section title={t("realWorldAssets")} emptyText={t("noVehicles")}>
+          <Section title={t("realWorldAssets")} emptyText={t("noActiveAssets")}>
             {activeAssets.length > 0 && (
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                 {activeAssets.map((a, i) => (
@@ -124,7 +132,7 @@ export default function NetworthClient({ realAssets, liabilities, portfolioAsset
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.35, ease: EASE, delay: i * 0.05 }}
                   >
-                    <VehicleCard vehicle={toCardData(a)} />
+                    <AssetCard asset={a} />
                   </motion.div>
                 ))}
               </div>
@@ -179,7 +187,7 @@ export default function NetworthClient({ realAssets, liabilities, portfolioAsset
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.35, ease: EASE, delay: i * 0.05 }}
                 >
-                  <VehicleCard vehicle={toCardData(a)} />
+                  <AssetCard asset={a} />
                 </motion.div>
               ))}
             </div>
@@ -190,7 +198,14 @@ export default function NetworthClient({ realAssets, liabilities, portfolioAsset
   );
 }
 
-function toCardData(a: RealAsset): VehicleCardData {
+function AssetCard({ asset }: { asset: RealAsset }) {
+  if (asset.type === "PROPERTY") {
+    return <PropertyCard property={toPropertyCardData(asset)} />;
+  }
+  return <VehicleCard vehicle={toVehicleCardData(asset)} />;
+}
+
+function toVehicleCardData(a: RealAsset): VehicleCardData {
   return {
     id: a.id,
     name: a.name,
@@ -204,6 +219,23 @@ function toCardData(a: RealAsset): VehicleCardData {
     realizedPnLEur:
       a.status === "SOLD" && a.salePriceEur != null ? a.salePriceEur - a.purchasePriceEur : null,
     vehicle: a.vehicle,
+  };
+}
+
+function toPropertyCardData(a: RealAsset): PropertyCardData {
+  return {
+    id: a.id,
+    name: a.name,
+    status: a.status,
+    imageUrl: a.imageUrl,
+    purchasePriceEur: a.purchasePriceEur,
+    currentValueEur:
+      a.status === "SOLD"
+        ? a.salePriceEur ?? a.currentValueEur ?? a.purchasePriceEur
+        : a.currentValueEur ?? a.purchasePriceEur,
+    realizedPnLEur:
+      a.status === "SOLD" && a.salePriceEur != null ? a.salePriceEur - a.purchasePriceEur : null,
+    property: a.property,
   };
 }
 

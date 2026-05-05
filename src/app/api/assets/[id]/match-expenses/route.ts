@@ -23,7 +23,11 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
 
     const asset = await prisma.realAsset.findFirst({
       where: { id, workspaceId: workspace.id },
-      include: { vehicle: true, liabilities: { where: { status: "ACTIVE" }, take: 1 } },
+      include: {
+        vehicle: true,
+        property: true,
+        liabilities: { where: { status: "ACTIVE" }, take: 1 },
+      },
     });
     if (!asset) return NextResponse.json({ error: "Not found" }, { status: 404 });
 
@@ -32,11 +36,17 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
     const candidates = await findCandidateExpenses(prisma, {
       workspaceId: workspace.id,
       realAssetId: asset.id,
+      assetType: asset.type,
       monthlyPayment: loan?.monthlyPayment ? Number(loan.monthlyPayment) : null,
-      vehicleHints: {
+      hints: {
+        name: asset.name,
+        // Vehicle hints
         brand: asset.vehicle?.brand ?? null,
         model: asset.vehicle?.model ?? null,
-        name: asset.name,
+        // Property hints
+        address: asset.property?.address ?? null,
+        concelho: asset.property?.concelho ?? null,
+        freguesia: asset.property?.freguesia ?? null,
       },
       recurringTemplateId: loan?.recurringTemplateId ?? null,
     });

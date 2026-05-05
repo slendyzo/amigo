@@ -1651,6 +1651,11 @@
     "mortgage": "Mortgage",
     "costOfOwnership": "Cost of ownership",
     "noLinkedShort": "No linked expenses",
-    "noLinkedExpensesProperty": "No linked expenses yet. Link condo fees, IMI, utilities and maintenance to track cost of ownership."
+    "noLinkedExpensesProperty": "No linked expenses yet. Link condo fees, IMI, utilities and maintenance to track cost of ownership.",
+    "linkedAsset": "Linked asset (optional)",
+    "linkedAssetNone": "— None —",
+    "unlinkAsset": "Unlink asset",
+    "noActiveAssets": "No assets yet. Add a vehicle or property from the dashboard.",
+    "actionsMenu": "Actions"
   }
 }

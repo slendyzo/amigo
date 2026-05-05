@@ -1,21 +1,77 @@
 // Find historical expenses that look like they should be linked to a RealAsset.
 //
-// Heuristic:
+// Heuristic (per asset type):
 //   - Amount within ±€5 of monthlyPayment (when monthlyPayment is known)
-//   - Name contains a vehicle keyword (brand, model, generic loan terms)
+//   - Name contains a type-specific keyword (vehicle: brand/model/fuel/loan;
+//     property: condo/IMI/utilities/water/electricity/gas etc.)
 //   - Already linked to a RecurringTemplate that's now loan-linked
 // Returns ranked candidates; UI prompts user to bulk-link.
 
 import { Prisma, type PrismaClient } from "@prisma/client";
 
 const AMOUNT_TOLERANCE_EUR = 5;
-const GENERIC_KEYWORDS = ["loan", "lease", "finance", "auto", "car", "vehicle", "fuel", "gas", "petrol", "diesel"];
+
+const VEHICLE_GENERIC_KEYWORDS = [
+  "loan",
+  "lease",
+  "finance",
+  "auto",
+  "car",
+  "vehicle",
+  "fuel",
+  "gas",
+  "petrol",
+  "diesel",
+  "iuc",
+];
+
+const PROPERTY_GENERIC_KEYWORDS = [
+  // EN
+  "rent",
+  "mortgage",
+  "condo",
+  "condominium",
+  "utilities",
+  "water",
+  "electricity",
+  "gas",
+  "internet",
+  "broadband",
+  "property tax",
+  "imi",
+  // PT
+  "renda",
+  "credito habitacao",
+  "crédito habitação",
+  "condominio",
+  "condomínio",
+  "agua",
+  "água",
+  "luz",
+  "edp",
+  "galp gas",
+  "natural gas",
+  "gas natural",
+  "gás natural",
+];
+
+export type AssetType = "VEHICLE" | "PROPERTY";
 
 export type ExpenseMatchInput = {
   workspaceId: string;
   realAssetId: string;
+  assetType: AssetType;
   monthlyPayment?: number | null;
-  vehicleHints: { brand?: string | null; model?: string | null; name?: string | null };
+  hints: {
+    name?: string | null;
+    // Vehicle
+    brand?: string | null;
+    model?: string | null;
+    // Property
+    address?: string | null;
+    concelho?: string | null;
+    freguesia?: string | null;
+  };
   recurringTemplateId?: string | null;
 };
 
@@ -30,10 +86,14 @@ export type ExpenseCandidate = {
 
 export async function findCandidateExpenses(
   prisma: PrismaClient,
-  input: ExpenseMatchInput
+  input: ExpenseMatchInput,
 ): Promise<ExpenseCandidate[]> {
-  const { workspaceId, realAssetId, monthlyPayment, vehicleHints, recurringTemplateId } = input;
-  const keywords = collectKeywords(vehicleHints);
+  const { workspaceId, realAssetId, assetType, monthlyPayment, hints, recurringTemplateId } = input;
+
+  const genericKeywords =
+    assetType === "PROPERTY" ? PROPERTY_GENERIC_KEYWORDS : VEHICLE_GENERIC_KEYWORDS;
+  const specificKeywords = collectSpecificKeywords(assetType, hints);
+  const allKeywords = Array.from(new Set([...genericKeywords, ...specificKeywords]));
 
   // Build OR conditions for the SQL query: amount-window OR template-link OR keyword.
   const orClauses: Prisma.ExpenseWhereInput[] = [];
@@ -46,7 +106,7 @@ export async function findCandidateExpenses(
     });
   }
   if (recurringTemplateId) orClauses.push({ recurringTemplateId });
-  for (const kw of keywords) {
+  for (const kw of allKeywords) {
     orClauses.push({ name: { contains: kw, mode: "insensitive" } });
   }
 
@@ -87,11 +147,12 @@ export async function findCandidateExpenses(
         reasons.push("template");
       }
       const lower = e.name.toLowerCase();
-      for (const kw of keywords) {
+      const specificSet = new Set(specificKeywords);
+      for (const kw of allKeywords) {
         if (lower.includes(kw)) {
-          const generic = GENERIC_KEYWORDS.includes(kw);
-          score += generic ? 1 : 4;
-          reasons.push(generic ? "keyword" : "model");
+          const isSpecific = specificSet.has(kw);
+          score += isSpecific ? 4 : 1;
+          reasons.push(isSpecific ? "name" : "keyword");
           break; // one keyword match is enough to count
         }
       }
@@ -110,12 +171,20 @@ export async function findCandidateExpenses(
     .slice(0, 50);
 }
 
-function collectKeywords(hints: ExpenseMatchInput["vehicleHints"]): string[] {
+function collectSpecificKeywords(
+  assetType: AssetType,
+  hints: ExpenseMatchInput["hints"],
+): string[] {
+  const candidates: (string | null | undefined)[] =
+    assetType === "PROPERTY"
+      ? [hints.name, hints.concelho, hints.freguesia, hints.address]
+      : [hints.brand, hints.model, hints.name];
+
   return Array.from(
     new Set(
-      [...GENERIC_KEYWORDS, hints.brand, hints.model, hints.name]
+      candidates
         .filter((s): s is string => typeof s === "string" && s.length > 2)
-        .map((s) => s.toLowerCase())
-    )
+        .map((s) => s.toLowerCase()),
+    ),
   );
 }

@@ -133,10 +133,11 @@ function PropertyImage({ src, alt }: { src: string | null; alt: string }) {
 }
 
 function StatusPill({ status }: { status: "ACTIVE" | "SOLD" }) {
+  const t = useTranslations("rwa");
   if (status === "SOLD") {
     return (
       <span className="rounded-full bg-muted px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
-        Sold
+        {t("sold")}
       </span>
     );
   }

@@ -1620,6 +1620,11 @@
     "mortgage": "Crédito habitação",
     "costOfOwnership": "Custo de posse",
     "noLinkedShort": "Sem despesas associadas",
-    "noLinkedExpensesProperty": "Ainda sem despesas associadas. Liga condomínio, IMI, utilities e manutenção para acompanhar o custo de posse."
+    "noLinkedExpensesProperty": "Ainda sem despesas associadas. Liga condomínio, IMI, utilities e manutenção para acompanhar o custo de posse.",
+    "linkedAsset": "Ativo associado (opcional)",
+    "linkedAssetNone": "— Nenhum —",
+    "unlinkAsset": "Remover ativo",
+    "noActiveAssets": "Ainda sem ativos. Adiciona um veículo ou imóvel a partir do dashboard.",
+    "actionsMenu": "Ações"
   }
 }
