@@ -80,7 +80,6 @@ export async function GET(request: Request) {
           imageUrls: true,
           splitCount: true,
           splitData: true,
-          payerMemberId: true,
           description: true,
           category: { include: { parent: true } },
           bankAccount: true,
@@ -88,6 +87,7 @@ export async function GET(request: Request) {
           createdAt: true,
           ...(includeSplit
             ? {
+                payerMemberId: true,
                 participants: {
                   select: {
                     id: true,
