@@ -60,6 +60,18 @@ const LOCALE_NAMES: Record<string, string> = {
   "fr-FR": "French (France)",
 };
 
+// Positive locale guidance — concrete forms to USE rather than negations.
+// LLMs follow positive constraints more reliably than "do not X", especially
+// for dialect-sensitive locales (pt-PT vs pt-BR is the load-bearing one here).
+const LOCALE_GUIDE: Record<string, string> = {
+  "en-GB":
+    "Plain, sober register. British spellings (organise, optimisation, colour). Avoid intensifiers like 'really' or 'very'.",
+  "pt-PT":
+    "Use português europeu de Portugal: 'estou a fazer' (não 'estou fazendo'); 'utilizador' (não 'usuário'); 'fatura' (não 'nota fiscal'); 'subscrição' (não 'assinatura'); 'autocarro' (não 'ônibus'); 'comboio' (não 'trem'). Vocabulário financeiro: 'despesas', 'orçamento', 'recorrente', 'comerciante', 'aceites' (não 'aceitos'). Registo impessoal — evite 'você'; prefira formas sem pronome ('gastou X em Y') ou impessoais ('os gastos foram...').",
+  "fr-FR":
+    "Français standard de France. Adressez-vous au 'vous' formel. Vocabulaire financier : 'dépenses', 'budget', 'récurrent', 'catégorie', 'commerçant', 'mensuel'. Registre factuel et sobre, sans exclamations ni superlatifs.",
+};
+
 type ChatCompletionResponse = {
   choices?: Array<{
     message?: {
@@ -110,7 +122,15 @@ export async function generateInsight<T>(opts: {
   }
 
   const localeName = LOCALE_NAMES[locale] ?? locale;
-  const baseSystem = `You are a sharp, dry analyst. Numbers-first. No moralizing, no emojis, no encouragement, no celebrations. Respond in ${localeName}. When the locale is European Portuguese, never use Brazilian Portuguese constructions or vocabulary.`;
+  const localeGuide = LOCALE_GUIDE[locale] ?? "";
+  const baseSystem = [
+    "You are a sharp, dry analyst. Numbers-first. No moralising, no encouragement, no celebrations.",
+    "Output zero emoji characters — if you are about to output an emoji, output nothing in its place.",
+    `Respond in ${localeName}.`,
+    localeGuide,
+  ]
+    .filter(Boolean)
+    .join("\n\n");
   const systemPrompt = systemPromptExtra
     ? `${baseSystem}\n\n${systemPromptExtra}`
     : baseSystem;
