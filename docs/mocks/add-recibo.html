@@ -1,0 +1,1367 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>amigo · Add · Recibo · IA · Mock</title>
+<link rel="stylesheet" href="../../claude design/colors_and_type.css"/>
+<link rel="stylesheet" href="../../claude design/screens/screens.css"/>
+<style>
+  body { margin: 0; background: var(--paper); }
+  .stage-page {
+    min-height: 100vh;
+    padding: 56px 40px 80px;
+    display: flex;
+    flex-direction: column;
+    gap: 64px;
+    max-width: 1240px;
+    margin: 0 auto;
+  }
+  .stage-head { display: flex; flex-direction: column; gap: 10px; max-width: 760px; }
+  .stage-eyebrow { color: var(--gilt-deep); }
+  .stage-title {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 36px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .stage-title em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--gilt-deep);
+  }
+  .stage-sub {
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: 16px;
+    color: var(--ink-mute);
+    margin: 0;
+  }
+
+  .state-block { display: flex; flex-direction: column; gap: 20px; }
+  .state-label {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .state-label em {
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-weight: 400;
+    color: var(--ink-mute);
+    letter-spacing: 0;
+    text-transform: none;
+    font-size: 14px;
+    margin-left: 6px;
+  }
+
+  /* The faded Painel underlay + scrim, contained per-block */
+  .scrim-stage {
+    position: relative;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--paper);
+    min-height: 720px;
+  }
+  .underlay {
+    position: absolute;
+    inset: 0;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    filter: blur(0.5px);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .u-row { display: flex; gap: 16px; }
+  .u-card {
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 18px 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .u-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .u-amount {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 30px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+  }
+  .u-bar {
+    height: 4px;
+    background: var(--paper-soft);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 6px;
+  }
+  .u-bar > span { display: block; height: 100%; background: var(--forest); }
+  .u-rows { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .u-rows .u-line {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--ink-mute);
+    padding: 6px 0;
+    border-bottom: 1px dotted var(--rule);
+  }
+
+  .scrim {
+    position: absolute;
+    inset: 0;
+    background: rgba(18, 42, 31, 0.42);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+  }
+
+  /* ---------- Modal (Recibo · IA) ---------- */
+  .recibo-modal {
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    border-radius: 6px;
+    width: 720px;
+    max-width: 100%;
+    box-shadow: 0 28px 80px rgba(20, 30, 22, 0.30), 0 6px 18px rgba(20,20,15,0.10);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+  }
+  .recibo-modal::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: 16px; right: 16px;
+    height: 1px;
+    background: var(--gilt);
+  }
+
+  .modal-head {
+    padding: 22px 28px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+  }
+  .modal-head .eyebrow { color: var(--gilt-deep); }
+  .modal-title {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 28px;
+    letter-spacing: -0.02em;
+    margin: 6px 0 0;
+    color: var(--ink);
+  }
+  .modal-title em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--gilt-deep);
+  }
+  .modal-close {
+    background: var(--paper);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    width: 30px;
+    height: 30px;
+    cursor: pointer;
+    color: var(--ink-mute);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-close:hover { background: var(--paper-soft); color: var(--ink); }
+
+  .mode-row {
+    padding: 14px 28px 0;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .modal-body {
+    padding: 22px 28px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .modal-foot {
+    padding: 16px 28px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin-top: 10px;
+  }
+  .modal-foot .hint {
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: 12px;
+    color: var(--ink-mute);
+  }
+  .modal-foot .hint .mono {
+    font-family: var(--font-mono);
+    font-style: normal;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    color: var(--ink-soft);
+    background: var(--paper-deep);
+    padding: 2px 6px;
+    border-radius: 3px;
+    border: 1px solid var(--rule);
+    margin-left: 4px;
+  }
+
+  /* ---------- Receipt body two-col ---------- */
+  .recibo-grid {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    gap: 24px;
+  }
+
+  /* Image preview frame with gilt corner ticks */
+  .preview-frame {
+    position: relative;
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    padding: 14px;
+  }
+  .preview-tick {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-color: var(--gilt);
+    border-style: solid;
+    border-width: 0;
+  }
+  .preview-tick.tl { top: 4px; left: 4px;  border-top-width: 1.5px; border-left-width: 1.5px; }
+  .preview-tick.tr { top: 4px; right: 4px; border-top-width: 1.5px; border-right-width: 1.5px; }
+  .preview-tick.bl { bottom: 4px; left: 4px; border-bottom-width: 1.5px; border-left-width: 1.5px; }
+  .preview-tick.br { bottom: 4px; right: 4px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+
+  .receipt-paper {
+    width: 100%;
+    aspect-ratio: 3/4.4;
+    background: #f6efe1;
+    border: 1px solid var(--rule);
+    border-radius: 2px;
+    padding: 12px 14px;
+    box-shadow: inset 0 0 0 1px rgba(216, 205, 177, 0.4);
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    color: #5a503e;
+    line-height: 1.5;
+    letter-spacing: 0.02em;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow: hidden;
+  }
+  .receipt-paper .r-brand {
+    font-family: var(--font-display);
+    font-size: 13px;
+    letter-spacing: 0.12em;
+    text-align: center;
+    color: #3d3a30;
+    font-weight: 500;
+  }
+  .receipt-paper .r-meta {
+    text-align: center;
+    font-size: 8px;
+    color: #6b6655;
+  }
+  .receipt-paper .r-rule {
+    border-top: 1px dashed #b8ad91;
+    margin: 2px 0;
+  }
+  .receipt-paper .r-line {
+    display: flex; justify-content: space-between;
+    gap: 6px;
+  }
+  .receipt-paper .r-line .num { font-variant-numeric: tabular-nums; }
+  .receipt-paper .r-total {
+    display: flex; justify-content: space-between;
+    font-weight: 500;
+    color: #14140f;
+    font-size: 10px;
+    margin-top: 4px;
+  }
+  .receipt-paper .r-foot {
+    text-align: center;
+    font-size: 7.5px;
+    margin-top: auto;
+    color: #8c8770;
+  }
+
+  .preview-meta {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .preview-filename {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--ink);
+    letter-spacing: 0.04em;
+  }
+  .preview-size {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .preview-swap {
+    margin-top: 4px;
+    align-self: flex-start;
+    background: transparent;
+    border: 1px solid var(--rule-strong);
+    color: var(--ink-soft);
+    padding: 6px 10px;
+    border-radius: 3px;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .preview-swap:hover { background: var(--paper-soft); }
+
+  /* Right column — extracted fields */
+  .ai-col { display: flex; flex-direction: column; gap: 16px; }
+  .ai-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .ai-head .eyebrow { color: var(--gilt-deep); }
+  .ai-engine {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+
+  .ai-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 10px;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .ai-field:last-child { border-bottom: 0; }
+  .ai-field-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .ai-field-label {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    font-weight: 500;
+  }
+  .ai-field-value {
+    font-family: var(--font-display);
+    font-size: 17px;
+    font-weight: 400;
+    color: var(--ink);
+    letter-spacing: -0.005em;
+    flex: 1;
+    text-align: right;
+  }
+  .ai-field-value.is-amount {
+    font-feature-settings: "tnum","lnum","ss01";
+  }
+  .ai-field-value.is-mono {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    color: var(--ink-soft);
+  }
+
+  .ai-field.is-editing .ai-field-input {
+    margin-top: 4px;
+    width: 100%;
+    background: var(--paper);
+    border: 1px solid var(--forest);
+    box-shadow: 0 0 0 3px var(--forest-ring);
+    border-radius: 3px;
+    padding: 8px 10px;
+    font-family: var(--font-display);
+    font-size: 17px;
+    color: var(--ink);
+    outline: none;
+    position: relative;
+  }
+  .ai-field.is-editing .ai-field-input::after {
+    content: "|";
+    color: var(--forest);
+  }
+  .ai-cursor {
+    display: inline-block;
+    width: 1px;
+    height: 18px;
+    background: var(--forest);
+    vertical-align: -3px;
+    margin-left: 2px;
+    animation: blink 1s steps(2, start) infinite;
+  }
+  @keyframes blink { to { visibility: hidden; } }
+
+  /* Confidence chips */
+  .conf {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 8px 2px 7px;
+    border-radius: 999px;
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    border: 1px solid transparent;
+  }
+  .conf::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: currentColor;
+    opacity: 0.85;
+  }
+  .conf.is-high   { background: var(--moss-tint);    color: var(--moss-deep);    border-color: rgba(74,107,63,0.25); }
+  .conf.is-medium { background: var(--amber-tint);   color: var(--amber);        border-color: rgba(176,109,26,0.25); }
+  .conf.is-low    { background: var(--crimson-tint); color: var(--crimson-deep); border-color: rgba(122,40,32,0.25); }
+
+  /* Lower fields row (Categoria · Conta · Projetos) */
+  .lower-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 14px;
+    padding-top: 18px;
+    border-top: 1px dotted var(--rule);
+  }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field-input.is-row {
+    display: flex; align-items: center; gap: 10px;
+    cursor: pointer;
+  }
+  .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 8px 3px 7px;
+    border-radius: 999px;
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    font-size: 11.5px;
+    color: var(--ink-soft);
+  }
+  .tag-dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* ---------- Empty state · drop zone ---------- */
+  .dropzone {
+    border: 1px dashed var(--gilt);
+    background: var(--paper-deep);
+    border-radius: 4px;
+    height: 280px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 24px;
+    text-align: center;
+    position: relative;
+  }
+  .dropzone::before,
+  .dropzone::after {
+    content: "";
+    position: absolute;
+    width: 18px; height: 18px;
+    border-color: var(--gilt);
+    border-style: solid;
+    border-width: 0;
+  }
+  .dropzone::before { top: 8px; left: 8px; border-top-width: 1.5px; border-left-width: 1.5px; }
+  .dropzone::after  { bottom: 8px; right: 8px; border-bottom-width: 1.5px; border-right-width: 1.5px; }
+  .dropzone-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--gilt-deep);
+    font-weight: 500;
+  }
+  .dropzone-italic {
+    font-family: var(--font-sans);
+    font-style: normal;
+    font-size: 17px;
+    color: var(--ink-mute);
+  }
+  .dropzone-mono {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.14em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .dropzone-icon {
+    width: 44px; height: 44px;
+    border: 1px solid var(--gilt);
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gilt-deep);
+    margin-bottom: 4px;
+  }
+
+  /* ---------- Processing skeletons ---------- */
+  .progress-track {
+    height: 3px;
+    background: var(--paper-deep);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .progress-fill {
+    height: 100%;
+    width: 62%;
+    background: var(--forest);
+    background-image: linear-gradient(90deg, var(--forest) 0%, var(--forest-soft) 60%, var(--gilt) 100%);
+    animation: slide 1.6s var(--ease-out) infinite;
+  }
+  @keyframes slide {
+    0%   { transform: translateX(-30%); width: 35%; }
+    50%  { width: 65%; }
+    100% { transform: translateX(120%); width: 30%; }
+  }
+  .skeleton-row {
+    display: flex; flex-direction: column; gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .skeleton-row:last-child { border-bottom: 0; }
+  .sk-bar {
+    background: var(--paper-soft);
+    border-radius: 2px;
+    height: 10px;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+  .sk-bar.sk-label { width: 96px; height: 8px; }
+  .sk-bar.sk-value { width: 60%; height: 14px; align-self: flex-end; }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.55; }
+    50%      { opacity: 1; }
+  }
+
+  /* ---------- Low-confidence amber banner ---------- */
+  .ai-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--amber-tint);
+    border: 1px solid rgba(176,109,26,0.30);
+    border-radius: 4px;
+    color: var(--amber);
+    font-size: 13px;
+  }
+  .ai-banner .seal {
+    background: var(--paper);
+    border: 1px solid var(--amber);
+    color: var(--amber);
+  }
+
+  /* ---------- Footer cross-link ---------- */
+  .footer-nav {
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    display: flex; flex-wrap: wrap; gap: 12px 18px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .footer-nav a {
+    color: var(--ink-mute);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1px;
+  }
+  .footer-nav a:hover { color: var(--forest); border-color: var(--forest); }
+  .footer-nav a.is-current {
+    color: var(--gilt-deep);
+    border-color: var(--gilt);
+    border-bottom-width: 1.5px;
+  }
+
+  /* Mode tab refinement */
+  .mode-tab .mode-tab-icon svg { width: 16px; height: 16px; }
+
+  /* Disabled state for processing footer */
+  .is-disabled { opacity: 0.5; pointer-events: none; }
+</style>
+</head>
+<body>
+
+<section class="stage-page">
+
+  <header class="stage-head">
+    <div class="eyebrow stage-eyebrow">ADD &middot; RECIBO &middot; IA</div>
+    <h1 class="stage-title">A IA <em>lê o talão</em>, tu confirmas.</h1>
+    <p class="stage-sub">Arrasta um JPG, PNG ou PDF. O Tesseract.js corre no browser, extrai estabelecimento, total, data e moeda &mdash; cada campo com a sua confiança. Tu revês e guardas.</p>
+  </header>
+
+  <!-- ============================================================
+       STATE 01 — Main (campos extraídos com sucesso)
+       ============================================================ -->
+  <article class="state-block">
+    <div class="state-label">ESTADO &middot; PRINCIPAL <em>campos lidos com confiança alta</em></div>
+
+    <div class="scrim-stage">
+
+      <!-- Faded Painel underlay -->
+      <div class="underlay" aria-hidden="true">
+        <div class="u-row">
+          <div class="u-card" style="flex: 2;">
+            <span class="u-eyebrow">SALDO DO M&Ecirc;S</span>
+            <span class="u-amount">&euro;1&thinsp;842,40</span>
+            <div class="u-bar"><span style="width: 62%;"></span></div>
+            <span class="u-eyebrow" style="margin-top: 6px;">62% DO OR&Ccedil;AMENTO</span>
+          </div>
+          <div class="u-card">
+            <span class="u-eyebrow">VELOCIDADE DE GASTO</span>
+            <span class="u-amount">&euro;31,80<span style="font-family: var(--font-mono); font-size: 11px; color: var(--ink-mute); letter-spacing: 0; margin-left: 6px;">/ DIA</span></span>
+            <span class="u-eyebrow" style="color: var(--moss-deep);">&minus;8.2% vs M&Ecirc;S ANTERIOR</span>
+          </div>
+          <div class="u-card">
+            <span class="u-eyebrow">CAIXA LIVRE</span>
+            <span class="u-amount">&euro;3&thinsp;420,18</span>
+          </div>
+        </div>
+        <div class="u-card">
+          <span class="u-eyebrow">DESPESAS RECENTES</span>
+          <div class="u-rows">
+            <div class="u-line"><span>SPOTIFY FAMILY &middot; Subscri&ccedil;&atilde;o</span><span class="mono">&minus;&euro;19,99</span></div>
+            <div class="u-line"><span>EDP &middot; Eletricidade</span><span class="mono">&minus;&euro;84,12</span></div>
+            <div class="u-line"><span>Pingo Doce Telheiras</span><span class="mono">&minus;&euro;42,80</span></div>
+            <div class="u-line"><span>Lidl Carnide</span><span class="mono">&minus;&euro;28,40</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scrim + modal -->
+      <div class="scrim">
+        <div class="recibo-modal" role="dialog" aria-label="Adicionar despesa por recibo">
+
+          <header class="modal-head">
+            <div>
+              <span class="eyebrow">NOVO LAN&Ccedil;AMENTO</span>
+              <h2 class="modal-title">Adicionar <em>despesa</em></h2>
+            </div>
+            <button class="modal-close" aria-label="Fechar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </header>
+
+          <!-- Mode selector tabs -->
+          <div class="mode-row">
+            <button class="mode-tab" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Manual</span>
+                <span class="mode-tab-sub">Uma despesa, do zero</span>
+              </span>
+            </button>
+            <button class="mode-tab is-active" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Recibo &middot; IA</span>
+                <span class="mode-tab-sub">Foto ou PDF &middot; lemos os campos</span>
+              </span>
+            </button>
+            <button class="mode-tab" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Dividir</span>
+                <span class="mode-tab-sub">Entre amigos ou fam&iacute;lia</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <!-- Two-column receipt layout -->
+            <div class="recibo-grid">
+
+              <!-- LEFT — image preview -->
+              <div>
+                <div class="preview-frame">
+                  <span class="preview-tick tl"></span>
+                  <span class="preview-tick tr"></span>
+                  <span class="preview-tick bl"></span>
+                  <span class="preview-tick br"></span>
+
+                  <div class="receipt-paper" aria-hidden="true">
+                    <div class="r-brand">CONTINENTE</div>
+                    <div class="r-meta">COLOMBO &middot; LISBOA</div>
+                    <div class="r-meta">NIF&nbsp;500&nbsp;829&nbsp;993</div>
+                    <div class="r-rule"></div>
+                    <div class="r-meta" style="text-align: left;">14/10/2026 &middot; 18:42</div>
+                    <div class="r-meta" style="text-align: left;">OP&nbsp;42218 &middot; CX&nbsp;07</div>
+                    <div class="r-rule"></div>
+                    <div class="r-line"><span>BANANA KG</span><span class="num">3,20</span></div>
+                    <div class="r-line"><span>BACALHAU 500G</span><span class="num">14,80</span></div>
+                    <div class="r-line"><span>VINHO RES. DOURO</span><span class="num">9,99</span></div>
+                    <div class="r-line"><span>QUEIJO SERRA</span><span class="num">12,40</span></div>
+                    <div class="r-line"><span>PAO ALENTEJANO</span><span class="num">2,15</span></div>
+                    <div class="r-line"><span>AZEITE 0.75L</span><span class="num">8,90</span></div>
+                    <div class="r-line"><span>CAFE DELTA 250G</span><span class="num">5,49</span></div>
+                    <div class="r-line"><span>FRUTAS DIVERSAS</span><span class="num">11,20</span></div>
+                    <div class="r-line"><span>LATICINIOS</span><span class="num">7,60</span></div>
+                    <div class="r-line"><span>OUTROS</span><span class="num">8,59</span></div>
+                    <div class="r-rule"></div>
+                    <div class="r-total"><span>TOTAL EUR</span><span class="num">84,32</span></div>
+                    <div class="r-meta" style="text-align: left;">CART&Atilde;O ****4218</div>
+                    <div class="r-foot">OBRIGADO &middot; AMIGO DA CASA</div>
+                  </div>
+                </div>
+
+                <div class="preview-meta">
+                  <span class="preview-filename">IMG_4218.jpg</span>
+                  <span class="preview-size">JPG &middot; 1.4 MB &middot; 1242&times;2208</span>
+                  <button class="preview-swap" type="button">Trocar imagem</button>
+                </div>
+              </div>
+
+              <!-- RIGHT — extracted fields -->
+              <div class="ai-col">
+                <div class="ai-head">
+                  <span class="eyebrow">LIDO PELA IA</span>
+                  <span class="ai-engine">TESSERACT.JS &middot; PT-PT</span>
+                </div>
+
+                <div class="ai-field">
+                  <div class="ai-field-row">
+                    <span class="ai-field-label">Comerciante</span>
+                    <span class="conf is-high">Alto</span>
+                  </div>
+                  <div class="ai-field-row">
+                    <span class="ai-field-value">Continente Colombo</span>
+                  </div>
+                </div>
+
+                <!-- Field in edit state -->
+                <div class="ai-field is-editing">
+                  <div class="ai-field-row">
+                    <span class="ai-field-label">Total</span>
+                    <span class="conf is-high">Alto</span>
+                  </div>
+                  <div class="ai-field-input" style="text-align: right;">
+                    <span style="font-family: var(--font-display); color: var(--ink-mute); font-size: 14px; margin-right: 4px;">&euro;</span>84,32<span class="ai-cursor"></span>
+                  </div>
+                </div>
+
+                <div class="ai-field">
+                  <div class="ai-field-row">
+                    <span class="ai-field-label">Data</span>
+                    <span class="conf is-high">Alto</span>
+                  </div>
+                  <div class="ai-field-row">
+                    <span class="ai-field-value is-mono">14 OUT 2026 &middot; 18:42</span>
+                  </div>
+                </div>
+
+                <div class="ai-field">
+                  <div class="ai-field-row">
+                    <span class="ai-field-label">Moeda</span>
+                    <span class="conf is-medium">M&eacute;dio</span>
+                  </div>
+                  <div class="ai-field-row">
+                    <span class="ai-field-value is-mono">EUR &middot; &euro;</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Lower: Categoria · Conta · Projetos -->
+            <div class="lower-fields">
+              <div class="field">
+                <span class="field-label">Categoria</span>
+                <div class="field-input is-row">
+                  <span class="cat-swatch" style="background: var(--cat-ochre);"></span>
+                  <span style="flex: 1;">Mercearia</span>
+                  <span class="muted" style="font-size: 11px;">&#9662;</span>
+                </div>
+                <span class="field-help" style="color: var(--ink-mute);">Sugerida pela IA &middot; aceitas?</span>
+              </div>
+
+              <div class="field">
+                <span class="field-label">Conta</span>
+                <div class="field-input is-row">
+                  <span style="width: 18px; height: 12px; background: var(--forest); border-radius: 2px;"></span>
+                  <span style="flex: 1;">Millennium &middot; D&eacute;bito &middot;&middot;&middot; 4218</span>
+                  <span class="muted" style="font-size: 11px;">&#9662;</span>
+                </div>
+              </div>
+
+              <div class="field">
+                <span class="field-label">Projetos &middot; opcional</span>
+                <div class="field-input is-row" style="flex-wrap: wrap; gap: 6px; padding: 6px 10px;">
+                  <span class="tag"><span class="tag-dot" style="background: var(--cat-forest);"></span>Casa</span>
+                  <span style="flex: 1; color: var(--ink-faint); font-size: 12px;">+ adicionar</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer class="modal-foot">
+            <span class="hint">Atalho<span class="mono">&#8984; + ENTER</span> para guardar</span>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-ghost btn-md">Cancelar</button>
+              <button class="btn btn-primary btn-md">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Guardar despesa
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+  </article>
+
+
+  <!-- ============================================================
+       STATE 02 — Empty (drop zone, antes do upload)
+       ============================================================ -->
+  <article class="state-block">
+    <div class="state-label">ESTADO &middot; VAZIO <em>antes do upload</em></div>
+
+    <div class="scrim-stage">
+      <div class="underlay" aria-hidden="true">
+        <div class="u-row">
+          <div class="u-card" style="flex: 2;">
+            <span class="u-eyebrow">SALDO DO M&Ecirc;S</span>
+            <span class="u-amount">&euro;1&thinsp;842,40</span>
+            <div class="u-bar"><span style="width: 62%;"></span></div>
+          </div>
+          <div class="u-card">
+            <span class="u-eyebrow">VELOCIDADE</span>
+            <span class="u-amount">&euro;31,80</span>
+          </div>
+          <div class="u-card">
+            <span class="u-eyebrow">CAIXA LIVRE</span>
+            <span class="u-amount">&euro;3&thinsp;420</span>
+          </div>
+        </div>
+        <div class="u-card">
+          <span class="u-eyebrow">RECENTES</span>
+          <div class="u-rows">
+            <div class="u-line"><span>EDP</span><span class="mono">&minus;&euro;84,12</span></div>
+            <div class="u-line"><span>Pingo Doce</span><span class="mono">&minus;&euro;42,80</span></div>
+            <div class="u-line"><span>Lidl</span><span class="mono">&minus;&euro;28,40</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="scrim">
+        <div class="recibo-modal">
+          <header class="modal-head">
+            <div>
+              <span class="eyebrow">NOVO LAN&Ccedil;AMENTO</span>
+              <h2 class="modal-title">Adicionar <em>despesa</em></h2>
+            </div>
+            <button class="modal-close" aria-label="Fechar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </header>
+
+          <div class="mode-row">
+            <button class="mode-tab" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Manual</span>
+                <span class="mode-tab-sub">Uma despesa, do zero</span>
+              </span>
+            </button>
+            <button class="mode-tab is-active" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Recibo &middot; IA</span>
+                <span class="mode-tab-sub">Foto ou PDF &middot; lemos os campos</span>
+              </span>
+            </button>
+            <button class="mode-tab" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Dividir</span>
+                <span class="mode-tab-sub">Entre amigos ou fam&iacute;lia</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div class="dropzone">
+              <span class="dropzone-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </span>
+              <span class="dropzone-eyebrow">ARRASTA O TEU RECIBO AQUI</span>
+              <span class="dropzone-italic">ou clica para escolher</span>
+              <button class="preview-swap" style="margin-top: 8px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                  Tirar fotografia
+                </span>
+              </button>
+              <span class="dropzone-mono" style="margin-top: 6px;">SUPORTAMOS JPG, PNG E PDF &middot; AT&Eacute; 10 MB</span>
+            </div>
+
+            <!-- Lower fields placeholder, dimmed -->
+            <div class="lower-fields" style="opacity: 0.4;">
+              <div class="field">
+                <span class="field-label">Categoria</span>
+                <div class="field-input is-row">
+                  <span style="flex: 1; color: var(--ink-faint); font-size: 13px;">&mdash;</span>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Conta</span>
+                <div class="field-input is-row">
+                  <span style="flex: 1; color: var(--ink-faint); font-size: 13px;">&mdash;</span>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Projetos</span>
+                <div class="field-input is-row">
+                  <span style="flex: 1; color: var(--ink-faint); font-size: 13px;">&mdash;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer class="modal-foot">
+            <span class="hint">Esperamos pelo teu recibo&hellip;</span>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-ghost btn-md">Cancelar</button>
+              <button class="btn btn-primary btn-md is-disabled">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Guardar despesa
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+  </article>
+
+
+  <!-- ============================================================
+       STATE 03 — Processing
+       ============================================================ -->
+  <article class="state-block">
+    <div class="state-label">ESTADO &middot; A PROCESSAR <em>Tesseract.js a ler</em></div>
+
+    <div class="scrim-stage">
+      <div class="underlay" aria-hidden="true">
+        <div class="u-row">
+          <div class="u-card" style="flex: 2;">
+            <span class="u-eyebrow">SALDO DO M&Ecirc;S</span>
+            <span class="u-amount">&euro;1&thinsp;842,40</span>
+            <div class="u-bar"><span style="width: 62%;"></span></div>
+          </div>
+          <div class="u-card">
+            <span class="u-eyebrow">VELOCIDADE</span>
+            <span class="u-amount">&euro;31,80</span>
+          </div>
+          <div class="u-card">
+            <span class="u-eyebrow">CAIXA LIVRE</span>
+            <span class="u-amount">&euro;3&thinsp;420</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scrim">
+        <div class="recibo-modal">
+          <header class="modal-head">
+            <div>
+              <span class="eyebrow">NOVO LAN&Ccedil;AMENTO</span>
+              <h2 class="modal-title">Adicionar <em>despesa</em></h2>
+            </div>
+            <button class="modal-close" aria-label="Fechar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </header>
+
+          <div class="mode-row">
+            <button class="mode-tab" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Manual</span>
+                <span class="mode-tab-sub">Uma despesa, do zero</span>
+              </span>
+            </button>
+            <button class="mode-tab is-active" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Recibo &middot; IA</span>
+                <span class="mode-tab-sub">A ler&hellip;</span>
+              </span>
+            </button>
+            <button class="mode-tab" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Dividir</span>
+                <span class="mode-tab-sub">Entre amigos ou fam&iacute;lia</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+            <div class="recibo-grid">
+
+              <!-- LEFT — image preview -->
+              <div>
+                <div class="preview-frame">
+                  <span class="preview-tick tl"></span>
+                  <span class="preview-tick tr"></span>
+                  <span class="preview-tick bl"></span>
+                  <span class="preview-tick br"></span>
+
+                  <div class="receipt-paper" aria-hidden="true">
+                    <div class="r-brand">CONTINENTE</div>
+                    <div class="r-meta">COLOMBO &middot; LISBOA</div>
+                    <div class="r-rule"></div>
+                    <div class="r-meta" style="text-align: left;">14/10/2026 &middot; 18:42</div>
+                    <div class="r-rule"></div>
+                    <div class="r-line"><span>BANANA KG</span><span class="num">3,20</span></div>
+                    <div class="r-line"><span>BACALHAU 500G</span><span class="num">14,80</span></div>
+                    <div class="r-line"><span>VINHO RES.</span><span class="num">9,99</span></div>
+                    <div class="r-line"><span>QUEIJO SERRA</span><span class="num">12,40</span></div>
+                    <div class="r-line"><span>PAO ALENTEJANO</span><span class="num">2,15</span></div>
+                    <div class="r-line"><span>AZEITE 0.75L</span><span class="num">8,90</span></div>
+                    <div class="r-line"><span>CAFE DELTA</span><span class="num">5,49</span></div>
+                    <div class="r-line"><span>OUTROS</span><span class="num">27,39</span></div>
+                    <div class="r-rule"></div>
+                    <div class="r-total"><span>TOTAL EUR</span><span class="num">84,32</span></div>
+                    <div class="r-foot">OBRIGADO</div>
+                  </div>
+                </div>
+
+                <div class="preview-meta">
+                  <span class="preview-filename">IMG_4218.jpg</span>
+                  <span class="preview-size">JPG &middot; 1.4 MB</span>
+                </div>
+              </div>
+
+              <!-- RIGHT — progress + skeletons -->
+              <div class="ai-col">
+                <div class="ai-head">
+                  <span class="eyebrow" style="color: var(--gilt-deep);">A LER COM IA</span>
+                  <span class="ai-engine">62%</span>
+                </div>
+
+                <div class="progress-track" aria-hidden="true">
+                  <div class="progress-fill"></div>
+                </div>
+
+                <p style="font-size: 13px; color: var(--ink-soft); margin: 0;">A ler com Tesseract.js&hellip;</p>
+
+                <div class="skeleton-row">
+                  <div class="sk-bar sk-label"></div>
+                  <div class="sk-bar sk-value" style="width: 70%;"></div>
+                </div>
+                <div class="skeleton-row">
+                  <div class="sk-bar sk-label" style="width: 60px;"></div>
+                  <div class="sk-bar sk-value" style="width: 40%;"></div>
+                </div>
+                <div class="skeleton-row">
+                  <div class="sk-bar sk-label" style="width: 80px;"></div>
+                  <div class="sk-bar sk-value" style="width: 55%;"></div>
+                </div>
+                <div class="skeleton-row">
+                  <div class="sk-bar sk-label" style="width: 70px;"></div>
+                  <div class="sk-bar sk-value" style="width: 30%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer class="modal-foot is-disabled">
+            <span class="hint">A IA est&aacute; a trabalhar&hellip;</span>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-ghost btn-md">Cancelar</button>
+              <button class="btn btn-primary btn-md">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Guardar despesa
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+  </article>
+
+
+  <!-- ============================================================
+       STATE 04 — Low-confidence
+       ============================================================ -->
+  <article class="state-block">
+    <div class="state-label">ESTADO &middot; CONFIAN&Ccedil;A BAIXA <em>verifica antes de guardar</em></div>
+
+    <div class="scrim-stage">
+      <div class="underlay" aria-hidden="true">
+        <div class="u-row">
+          <div class="u-card" style="flex: 2;">
+            <span class="u-eyebrow">SALDO DO M&Ecirc;S</span>
+            <span class="u-amount">&euro;1&thinsp;842,40</span>
+            <div class="u-bar"><span style="width: 62%;"></span></div>
+          </div>
+          <div class="u-card">
+            <span class="u-eyebrow">VELOCIDADE</span>
+            <span class="u-amount">&euro;31,80</span>
+          </div>
+          <div class="u-card">
+            <span class="u-eyebrow">CAIXA LIVRE</span>
+            <span class="u-amount">&euro;3&thinsp;420</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="scrim">
+        <div class="recibo-modal">
+          <header class="modal-head">
+            <div>
+              <span class="eyebrow">NOVO LAN&Ccedil;AMENTO</span>
+              <h2 class="modal-title">Adicionar <em>despesa</em></h2>
+            </div>
+            <button class="modal-close" aria-label="Fechar">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </header>
+
+          <div class="mode-row">
+            <button class="mode-tab" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4v16h16v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Manual</span>
+                <span class="mode-tab-sub">Uma despesa, do zero</span>
+              </span>
+            </button>
+            <button class="mode-tab is-active" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Recibo &middot; IA</span>
+                <span class="mode-tab-sub">Foto ou PDF &middot; lemos os campos</span>
+              </span>
+            </button>
+            <button class="mode-tab" type="button">
+              <span class="mode-tab-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+              </span>
+              <span class="mode-tab-text">
+                <span class="mode-tab-label">Dividir</span>
+                <span class="mode-tab-sub">Entre amigos ou fam&iacute;lia</span>
+              </span>
+            </button>
+          </div>
+
+          <div class="modal-body">
+
+            <div class="ai-banner">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              <span style="flex: 1;">A IA n&atilde;o tem a certeza. Verifica cada campo antes de guardar.</span>
+              <span class="seal">REVER</span>
+            </div>
+
+            <div class="recibo-grid">
+              <!-- LEFT — same preview, blurry/dark suggested -->
+              <div>
+                <div class="preview-frame" style="filter: contrast(0.85) brightness(0.92);">
+                  <span class="preview-tick tl"></span>
+                  <span class="preview-tick tr"></span>
+                  <span class="preview-tick bl"></span>
+                  <span class="preview-tick br"></span>
+
+                  <div class="receipt-paper" aria-hidden="true" style="opacity: 0.78;">
+                    <div class="r-brand" style="filter: blur(0.4px);">CONTI##NTE</div>
+                    <div class="r-meta">COLO###O &middot; LISBOA</div>
+                    <div class="r-rule"></div>
+                    <div class="r-meta" style="text-align: left;">14/10/26 &middot; 18:?2</div>
+                    <div class="r-rule"></div>
+                    <div class="r-line"><span>BANANA</span><span class="num">3,??</span></div>
+                    <div class="r-line"><span>BACA####</span><span class="num">14,80</span></div>
+                    <div class="r-line"><span>VI###</span><span class="num">9,99</span></div>
+                    <div class="r-line"><span>QUEIJO</span><span class="num">12,4?</span></div>
+                    <div class="r-line"><span>PAO ALEN.</span><span class="num">2,1#</span></div>
+                    <div class="r-line"><span>AZEITE</span><span class="num">8,9?</span></div>
+                    <div class="r-line"><span>CAFE</span><span class="num">5,49</span></div>
+                    <div class="r-line"><span>OUTROS</span><span class="num">2#,#9</span></div>
+                    <div class="r-rule"></div>
+                    <div class="r-total"><span>TOTAL ?UR</span><span class="num">8?,32</span></div>
+                  </div>
+                </div>
+
+                <div class="preview-meta">
+                  <span class="preview-filename">IMG_4221.jpg</span>
+                  <span class="preview-size">JPG &middot; 0.8 MB &middot; talo desfocado</span>
+                  <button class="preview-swap" type="button">Trocar imagem</button>
+                </div>
+              </div>
+
+              <!-- RIGHT — same fields, all low confidence -->
+              <div class="ai-col">
+                <div class="ai-head">
+                  <span class="eyebrow">LIDO PELA IA</span>
+                  <span class="ai-engine" style="color: var(--crimson-deep);">CONFIAN&Ccedil;A 38%</span>
+                </div>
+
+                <div class="ai-field">
+                  <div class="ai-field-row">
+                    <span class="ai-field-label">Comerciante</span>
+                    <span class="conf is-low">Baixo</span>
+                  </div>
+                  <div class="ai-field-row">
+                    <span class="ai-field-value" style="color: var(--ink-soft);">Continente <span style="color: var(--crimson); font-family: var(--font-mono); font-size: 13px;">(?)</span></span>
+                  </div>
+                </div>
+
+                <div class="ai-field">
+                  <div class="ai-field-row">
+                    <span class="ai-field-label">Total</span>
+                    <span class="conf is-low">Baixo</span>
+                  </div>
+                  <div class="ai-field-row">
+                    <span class="ai-field-value is-amount" style="color: var(--ink-soft);">&euro;8?,32</span>
+                  </div>
+                </div>
+
+                <div class="ai-field">
+                  <div class="ai-field-row">
+                    <span class="ai-field-label">Data</span>
+                    <span class="conf is-low">Baixo</span>
+                  </div>
+                  <div class="ai-field-row">
+                    <span class="ai-field-value is-mono" style="color: var(--ink-soft);">14 OUT 2026 &middot; 18:?2</span>
+                  </div>
+                </div>
+
+                <div class="ai-field">
+                  <div class="ai-field-row">
+                    <span class="ai-field-label">Moeda</span>
+                    <span class="conf is-low">Baixo</span>
+                  </div>
+                  <div class="ai-field-row">
+                    <span class="ai-field-value is-mono" style="color: var(--ink-soft);">EUR? &middot; &euro;</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="lower-fields">
+              <div class="field">
+                <span class="field-label">Categoria</span>
+                <div class="field-input is-row">
+                  <span class="cat-swatch" style="background: var(--cat-stone);"></span>
+                  <span style="flex: 1; color: var(--ink-mute);">Sem sugest&atilde;o</span>
+                  <span class="muted" style="font-size: 11px;">&#9662;</span>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Conta</span>
+                <div class="field-input is-row">
+                  <span style="width: 18px; height: 12px; background: var(--forest); border-radius: 2px;"></span>
+                  <span style="flex: 1;">Millennium &middot; D&eacute;bito &middot;&middot;&middot; 4218</span>
+                  <span class="muted" style="font-size: 11px;">&#9662;</span>
+                </div>
+              </div>
+              <div class="field">
+                <span class="field-label">Projetos</span>
+                <div class="field-input is-row">
+                  <span style="flex: 1; color: var(--ink-faint); font-size: 12px;">Sem projeto</span>
+                  <span class="muted" style="font-size: 11px;">&#9662;</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <footer class="modal-foot">
+            <span class="hint">Atalho<span class="mono">&#8984; + ENTER</span> para guardar</span>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn btn-ghost btn-md">Cancelar</button>
+              <button class="btn btn-primary btn-md">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                Guardar mesmo assim
+              </button>
+            </div>
+          </footer>
+        </div>
+      </div>
+    </div>
+  </article>
+
+
+  <!-- ============================================================
+       Cross-link footer
+       ============================================================ -->
+  <nav class="footer-nav">
+    <span>WAVE 1 &middot;</span>
+    <a href="shell.html">Shell</a>
+    <a href="painel.html">Painel</a>
+    <a href="add-manual.html">Add &middot; Manual</a>
+    <a href="add-recibo.html" class="is-current">Add &middot; Recibo</a>
+    <a href="add-dividir.html">Add &middot; Dividir</a>
+    <a href="mobile-painel.html">Mobile &middot; Painel</a>
+    <a href="mobile-add-sheet.html">Mobile &middot; Bottom Sheet</a>
+  </nav>
+
+</section>
+
+</body>
+</html>

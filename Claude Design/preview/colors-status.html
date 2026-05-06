@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>amigo — status colors</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin:0; padding:24px; background:var(--paper); display:grid; grid-template-columns: 1fr 1fr 1fr; gap:0; box-sizing:border-box; border:1px solid var(--ink); }
+  .swatch { padding:20px; display:flex; flex-direction:column; gap:14px; min-height:160px; border-right:1px solid var(--ink); }
+  .swatch:last-child { border-right: none; }
+  .label {
+    font: var(--w-medium) 10px/1.4 var(--font-mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+  }
+  .row { display:flex; align-items:center; gap:10px; }
+  .chip { padding: 4px 10px; border-radius: 4px; font: var(--w-medium) 12px/1 var(--font-sans); border:1px solid currentColor; }
+  .num { font-family: var(--font-num); font-size: 28px; font-weight: 380; letter-spacing: -0.025em; font-variant-numeric: tabular-nums; }
+  .gain   { background: var(--moss-tint);    color: var(--moss); }
+  .loss   { background: var(--crimson-tint); color: var(--crimson); }
+  .warn   { background: var(--amber-tint);   color: var(--amber); }
+</style>
+</head>
+<body>
+  <div class="swatch gain">
+    <div class="label">Gain · Positive</div>
+    <div class="num">+$5,840.22</div>
+    <div class="row">
+      <span class="chip">+2.41%</span>
+      <span style="font:var(--w-regular) 12px/1.4 var(--font-sans);">Moss · #4A6B3F</span>
+    </div>
+  </div>
+  <div class="swatch loss">
+    <div class="label">Loss · Destructive</div>
+    <div class="num">−$1,420.00</div>
+    <div class="row">
+      <span class="chip">−0.83%</span>
+      <span style="font:var(--w-regular) 12px/1.4 var(--font-sans);">Crimson · #7A2820</span>
+    </div>
+  </div>
+  <div class="swatch warn">
+    <div class="label">Warn · Over Threshold</div>
+    <div class="num">88<span style="opacity:.6">%</span></div>
+    <div class="row">
+      <span class="chip">11 days left</span>
+      <span style="font:var(--w-regular) 12px/1.4 var(--font-sans);">Amber · #B06D1A</span>
+    </div>
+  </div>
+</body>
+</html>

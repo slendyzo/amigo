@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <defs>
+    
+  </defs>
+  <rect x="0" y="0" width="192" height="192" rx="42.24" ry="42.24" fill="#1e3a2c"></rect>
+  <text x="66.048" y="119.9616" font-family="Instrument Serif, Times New Roman, serif" font-style="italic" font-size="202.176" fill="#f1ebdd" text-anchor="middle">(</text>
+  <circle cx="96" cy="96" r="6.3648" fill="#c9a85a"></circle>
+  <text x="125.952" y="119.9616" font-family="Instrument Serif, Times New Roman, serif" font-style="italic" font-size="202.176" fill="#f1ebdd" text-anchor="middle">)</text>
+</svg>

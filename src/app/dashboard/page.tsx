@@ -77,6 +77,13 @@ export default async function DashboardPage({
   const startOfPrevMonth = new Date(prevYear, prevMonth, 1);
   const endOfPrevMonth = new Date(prevYear, prevMonth + 1, 0, 23, 59, 59);
 
+  // 12 months ago (start of) — for the Painel B income/expense bars
+  const startOf12mAgo = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+
+  // Same month, previous year — for YoY delta on the saldo do mês
+  const startOfYearAgoSameMonth = new Date(now.getFullYear() - 1, now.getMonth(), 1);
+  const endOfYearAgoSameMonth = new Date(now.getFullYear() - 1, now.getMonth() + 1, 0, 23, 59, 59);
+
   // Run ALL queries in parallel for maximum performance
   const [
     projects,
@@ -88,6 +95,15 @@ export default async function DashboardPage({
     recurringIncomes,
     exchangeConnections,
     portfolioAssets,
+    // Painel B — net-worth right column: property + vehicle + liabilities totals
+    realAssets,
+    liabilities,
+    // Painel B — 12-month bars: aggregated income + expense for the last 12 months
+    last12mExpenses,
+    last12mIncomes,
+    // Painel B — YoY delta: same-calendar-month one year ago
+    yearAgoSameMonthExpenses,
+    yearAgoSameMonthIncomes,
   ] = await Promise.all([
     // Projects for filter dropdown
     prisma.project.findMany({
@@ -230,6 +246,48 @@ export default async function DashboardPage({
         },
       },
     }),
+    // Real-world assets (active, with current value) — split into property + vehicle on the client side
+    prisma.realAsset.findMany({
+      where: { workspaceId: workspace.id, status: "ACTIVE" },
+      select: { type: true, currentValueEur: true, purchasePriceEur: true },
+    }),
+    // Active liabilities for net-worth offset
+    prisma.liability.findMany({
+      where: { workspaceId: workspace.id, status: "ACTIVE" },
+      select: { currentBalanceEur: true },
+    }),
+    // 12-month expenses aggregation (raw — group in JS to avoid raw SQL)
+    prisma.expense.findMany({
+      where: {
+        workspaceId: workspace.id,
+        date: { gte: startOf12mAgo, lte: endOfMonth },
+      },
+      select: { date: true, amountEur: true, excludeFromBudget: true },
+    }),
+    // 12-month incomes aggregation
+    prisma.income.findMany({
+      where: {
+        workspaceId: workspace.id,
+        date: { gte: startOf12mAgo, lte: endOfMonth },
+      },
+      select: { date: true, amountEur: true },
+    }),
+    // YoY: same calendar month one year ago — expenses
+    prisma.expense.findMany({
+      where: {
+        workspaceId: workspace.id,
+        date: { gte: startOfYearAgoSameMonth, lte: endOfYearAgoSameMonth },
+      },
+      select: { amountEur: true, excludeFromBudget: true },
+    }),
+    // YoY: same calendar month one year ago — incomes
+    prisma.income.findMany({
+      where: {
+        workspaceId: workspace.id,
+        date: { gte: startOfYearAgoSameMonth, lte: endOfYearAgoSameMonth },
+      },
+      select: { amountEur: true },
+    }),
   ]);
 
   const tQueries = performance.now();
@@ -341,6 +399,57 @@ export default async function DashboardPage({
     },
   }));
 
+  // ---- Painel B: net-worth right column totals ----
+  const propertyTotalEur = realAssets
+    .filter((a) => a.type === "PROPERTY")
+    .reduce((s, a) => s + Number(a.currentValueEur ?? a.purchasePriceEur), 0);
+  const vehiclesTotalEur = realAssets
+    .filter((a) => a.type === "VEHICLE")
+    .reduce((s, a) => s + Number(a.currentValueEur ?? a.purchasePriceEur), 0);
+  const liabilitiesTotalEur = liabilities.reduce(
+    (s, l) => s + Number(l.currentBalanceEur),
+    0,
+  );
+
+  // ---- Painel B: 12-month income/expense aggregation ----
+  // Build a map keyed by "YYYY-MM" from the raw rows, then materialize the
+  // last 12 months in order so the client doesn't have to know the calendar.
+  const monthKey = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()).padStart(2, "0")}`;
+  const monthlyMap = new Map<string, { income: number; expense: number }>();
+  const ensure = (key: string) => {
+    if (!monthlyMap.has(key)) monthlyMap.set(key, { income: 0, expense: 0 });
+    return monthlyMap.get(key)!;
+  };
+  for (const e of last12mExpenses) {
+    if (e.excludeFromBudget) continue;
+    ensure(monthKey(e.date)).expense += Number(e.amountEur);
+  }
+  for (const i of last12mIncomes) {
+    ensure(monthKey(i.date)).income += Number(i.amountEur);
+  }
+  const monthlyAggregates: { year: number; month: number; income: number; expense: number }[] = [];
+  for (let i = 11; i >= 0; i--) {
+    const y = new Date(now.getFullYear(), now.getMonth() - i, 1).getFullYear();
+    const m = new Date(now.getFullYear(), now.getMonth() - i, 1).getMonth();
+    const key = `${y}-${String(m).padStart(2, "0")}`;
+    const cell = monthlyMap.get(key) ?? { income: 0, expense: 0 };
+    monthlyAggregates.push({
+      year: y,
+      month: m,
+      income: Math.round(cell.income * 100) / 100,
+      expense: Math.round(cell.expense * 100) / 100,
+    });
+  }
+
+  // ---- Painel B: YoY delta (same calendar month, previous year) ----
+  const yearAgoExpensesTotal = yearAgoSameMonthExpenses
+    .filter((e) => !e.excludeFromBudget)
+    .reduce((s, e) => s + Number(e.amountEur), 0);
+  const yearAgoIncomesTotal = yearAgoSameMonthIncomes.reduce(
+    (s, i) => s + Number(i.amountEur),
+    0,
+  );
+
   // Use username (nickname) if set, otherwise fall back to name or "User"
   const displayName = user?.username || user?.name || session.user.name || "User";
 
@@ -366,6 +475,12 @@ export default async function DashboardPage({
       defaultCurrency={workspace.defaultCurrency ?? "EUR"}
       exchangeConnections={connectionsForDashboard}
       portfolioAssets={assetsForDashboard}
+      propertyTotalEur={propertyTotalEur}
+      vehiclesTotalEur={vehiclesTotalEur}
+      liabilitiesTotalEur={liabilitiesTotalEur}
+      monthlyAggregates={monthlyAggregates}
+      yearAgoExpensesTotal={yearAgoExpensesTotal}
+      yearAgoIncomesTotal={yearAgoIncomesTotal}
     />
   );
 }

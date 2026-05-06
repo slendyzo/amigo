@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>amigo — elevation</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin:0; padding:28px; background:var(--paper); box-sizing:border-box; display:grid; grid-template-columns: repeat(4, 1fr); gap:0; border:1px solid var(--ink); }
+  .card {
+    background: var(--paper-deep);
+    padding: 18px;
+    min-height: 140px;
+    display: flex; flex-direction: column; justify-content: space-between;
+    border-right: 1px solid var(--ink);
+  }
+  .card:last-child { border-right: none; }
+  .name { font-family: var(--font-display); font-size: 24px; font-weight: 380; letter-spacing: -0.02em; color: var(--ink); line-height: 1; }
+  .name em { font-family: var(--font-italic); font-style: italic; }
+  .meta { font: var(--w-medium) 10px/1.4 var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); }
+  .demo { display: flex; align-items: center; justify-content: center; flex: 1; padding: 20px 0; }
+  .e1 { border: 1px solid var(--rule); padding: 14px 22px; background: var(--paper); font-family: var(--font-num); font-size: 18px; color: var(--ink); }
+  .e2 { border: 1px solid var(--ink); padding: 14px 22px; background: var(--paper); font-family: var(--font-num); font-size: 18px; color: var(--ink); }
+  .e3 { border: 1px solid var(--ink); border-top: 1px solid var(--gilt); border-bottom: 4px double var(--ink); padding: 14px 22px; background: var(--paper); font-family: var(--font-num); font-size: 18px; color: var(--ink); }
+  .e4 { padding: 14px 22px; background: var(--paper); font-family: var(--font-num); font-size: 18px; color: var(--ink); border: 1px solid var(--ink); box-shadow: 0 18px 40px -16px rgba(28,38,32,0.35); }
+  .note { font: var(--w-regular) 11px/1.4 var(--font-sans); color: var(--ink-mute); font-style: italic; }
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="meta">Rule · Hairline</div>
+    <div class="demo"><span class="e1">$1,240</span></div>
+    <div>
+      <div class="name">Rule</div>
+      <div class="note">1px gilt rule. Default divider.</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="meta">Frame · Card</div>
+    <div class="demo"><span class="e2">$1,240</span></div>
+    <div>
+      <div class="name">Frame</div>
+      <div class="note">1px ink. Cards & ledgers.</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="meta">Statement · Total</div>
+    <div class="demo"><span class="e3">$27,270.65</span></div>
+    <div>
+      <div class="name">Statement</div>
+      <div class="note">Gilt above, double-rule below.</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="meta">Float · Modal</div>
+    <div class="demo"><span class="e4">$42.00</span></div>
+    <div>
+      <div class="name"><em>Float</em></div>
+      <div class="note">Sole permitted shadow — modals only.</div>
+    </div>
+  </div>
+</body>
+</html>

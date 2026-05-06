@@ -227,6 +227,10 @@ model WorkspaceMember {
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  // Forest & Bracket — splits ledger
+  paidExpenses    Expense[]          @relation("ExpensePayer")
+  splitShares     SplitParticipant[] @relation("SplitMember")
+
   createdAt DateTime @default(now())
 
   @@unique([workspaceId, userId])
@@ -373,9 +377,12 @@ model Expense {
   imageUrls         String?   @db.Text // JSON array of compressed WebP base64 data URLs
   categorizedAt     DateTime? // When this expense was categorized via tidy-up page
 
-  // Split expense data
+  // Split expense data — Forest & Bracket upgrades to SplitParticipant rows.
+  // Legacy splitData kept as a safety net during migration; new code reads
+  // from `participants` if present, falls back to splitData if not.
   splitCount        Int?              // Number of people splitting (null = not split)
-  splitData         String?   @db.Text // JSON array of {label, amount, locked} per person
+  splitData         String?   @db.Text // LEGACY JSON array of {label, amount, locked}
+  payerMemberId     String?           // Which workspace member fronted the bill
 
   // Real-world asset linkage (vehicle TCO, etc.)
   realAssetId       String?
@@ -388,6 +395,8 @@ model Expense {
   recurringTemplate RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
   importLog         ImportLog?         @relation(fields: [importLogId], references: [id], onDelete: SetNull)
   realAsset         RealAsset?         @relation(fields: [realAssetId], references: [id], onDelete: SetNull)
+  payer             WorkspaceMember?   @relation("ExpensePayer", fields: [payerMemberId], references: [id], onDelete: SetNull)
+  participants      SplitParticipant[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -397,7 +406,37 @@ model Expense {
   @@index([workspaceId, categoryId])
   @@index([importLogId])
   @@index([realAssetId])
+  @@index([payerMemberId])
   @@map("expenses")
+}
+
+// ============================================================================
+// SPLIT PARTICIPANTS (Forest & Bracket — upgraded split model)
+// ============================================================================
+
+model SplitParticipant {
+  id        String  @id @default(cuid())
+  expenseId String
+
+  // Either a workspace member (settles via balances) or an ad-hoc name
+  // (label only, never reaches balances). Exactly one must be set.
+  memberId   String?
+  adHocName  String?  @db.VarChar(120)
+
+  share     Decimal   @db.Decimal(12, 2) // Amount in expense currency
+  paid      Boolean   @default(false)
+  settledAt DateTime?
+  locked    Boolean   @default(false) // Per-row lock when amounts diverge from "Igualmente"
+
+  expense   Expense          @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  member    WorkspaceMember? @relation("SplitMember", fields: [memberId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([expenseId])
+  @@index([memberId])
+  @@map("split_participants")
 }
 
 // ============================================================================

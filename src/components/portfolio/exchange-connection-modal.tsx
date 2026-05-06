@@ -22,7 +22,7 @@ const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; 
   {
     id: "KRAKEN",
     name: "Kraken",
-    accent: "border-amber-500 bg-amber-50 dark:bg-amber-950/30",
+    accent: "border-amber-500 bg-amber-50",
     badgeBg: "bg-amber-500",
     badgeText: "text-white",
     badgeLetter: "K",
@@ -30,7 +30,7 @@ const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; 
   {
     id: "TRADING212",
     name: "Trading 212",
-    accent: "border-blue-500 bg-blue-50 dark:bg-blue-950/30",
+    accent: "border-blue-500 bg-blue-50",
     badgeBg: "bg-blue-500",
     badgeText: "text-white",
     badgeLetter: "T",
@@ -38,7 +38,7 @@ const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; 
   {
     id: "BINANCE",
     name: "Binance",
-    accent: "border-yellow-400 bg-yellow-50 dark:bg-yellow-950/30",
+    accent: "border-yellow-400 bg-yellow-50",
     badgeBg: "bg-yellow-400",
     badgeText: "text-slate-900",
     badgeLetter: "B",
@@ -46,7 +46,7 @@ const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; 
   {
     id: "BYBIT",
     name: "Bybit",
-    accent: "border-orange-500 bg-orange-50 dark:bg-orange-950/30",
+    accent: "border-orange-500 bg-orange-50",
     badgeBg: "bg-orange-500",
     badgeText: "text-white",
     badgeLetter: "B",
@@ -54,7 +54,7 @@ const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; 
   {
     id: "BYBIT_EU",
     name: "Bybit.EU",
-    accent: "border-orange-500 bg-orange-50 dark:bg-orange-950/30",
+    accent: "border-orange-500 bg-orange-50",
     badgeBg: "bg-orange-500",
     badgeText: "text-white",
     badgeLetter: "EU",
@@ -209,10 +209,10 @@ export default function ExchangeConnectionModal({
       className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         {/* Header */}
-        <div className="px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+        <div className="px-6 pt-6 pb-4 border-b border-slate-100">
+          <h2 className="text-lg font-semibold text-slate-900">
             {isEditing ? t("editConnection") : t("addExchange")}
           </h2>
         </div>
@@ -220,7 +220,7 @@ export default function ExchangeConnectionModal({
         <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
           {/* Provider selector */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="text-sm font-medium text-slate-700">
               {t("provider")}
             </label>
             <div className="grid grid-cols-2 gap-3">
@@ -234,7 +234,7 @@ export default function ExchangeConnectionModal({
                     "flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left transition-all",
                     provider === p.id
                       ? p.accent
-                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 hover:border-slate-300 dark:hover:border-slate-600",
+                      : "border-slate-200 bg-white hover:border-slate-300",
                     isEditing ? "opacity-50 cursor-not-allowed" : "cursor-pointer",
                   ].join(" ")}
                 >
@@ -248,7 +248,7 @@ export default function ExchangeConnectionModal({
                   >
                     {p.badgeLetter}
                   </span>
-                  <span className="text-sm font-medium text-slate-800 dark:text-slate-200 truncate">
+                  <span className="text-sm font-medium text-slate-800 truncate">
                     {p.name}
                   </span>
                 </button>
@@ -258,7 +258,7 @@ export default function ExchangeConnectionModal({
 
           {/* Label */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="text-sm font-medium text-slate-700">
               {t("connectionLabel")}
             </label>
             <input
@@ -266,16 +266,16 @@ export default function ExchangeConnectionModal({
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder={t("connectionLabelPlaceholder")}
-              className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
 
           {/* API Key */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="text-sm font-medium text-slate-700">
               {t("apiKey")}
               {isEditing && (
-                <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
+                <span className="ml-1.5 text-xs font-normal text-slate-400">
                   — leave blank to keep existing
                 </span>
               )}
@@ -287,12 +287,12 @@ export default function ExchangeConnectionModal({
                 onChange={(e) => { setApiKey(e.target.value); setTestResult(null); }}
                 placeholder={isEditing ? "••••••••••••" : t("apiKey")}
                 autoComplete="off"
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
               <button
                 type="button"
                 onClick={() => setShowApiKey((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
                 tabIndex={-1}
               >
                 {showApiKey ? (
@@ -311,10 +311,10 @@ export default function ExchangeConnectionModal({
 
           {/* API Secret */}
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-slate-700 dark:text-slate-300">
+            <label className="text-sm font-medium text-slate-700">
               {t("apiSecret")}
               {isEditing && (
-                <span className="ml-1.5 text-xs font-normal text-slate-400 dark:text-slate-500">
+                <span className="ml-1.5 text-xs font-normal text-slate-400">
                   — leave blank to keep existing
                 </span>
               )}
@@ -326,12 +326,12 @@ export default function ExchangeConnectionModal({
                 onChange={(e) => { setApiSecret(e.target.value); setTestResult(null); }}
                 placeholder={isEditing ? "••••••••••••" : t("apiSecret")}
                 autoComplete="off"
-                className="w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2.5 pr-10 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
               <button
                 type="button"
                 onClick={() => setShowApiSecret((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition"
                 tabIndex={-1}
               >
                 {showApiSecret ? (
@@ -349,11 +349,11 @@ export default function ExchangeConnectionModal({
           </div>
 
           {/* Setup help collapsible */}
-          <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden">
+          <div className="rounded-xl border border-slate-200 overflow-hidden">
             <button
               type="button"
               onClick={() => setShowHelp((v) => !v)}
-              className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+              className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-slate-600 hover:bg-slate-50 transition"
             >
               <span className="flex items-center gap-2">
                 <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -369,7 +369,7 @@ export default function ExchangeConnectionModal({
               </svg>
             </button>
             {showHelp && (
-              <div className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-800/50 border-t border-slate-200 dark:border-slate-700">
+              <div className="px-4 py-3 text-sm text-slate-600 bg-slate-50/50 border-t border-slate-200">
                 {helpText}
               </div>
             )}
@@ -381,8 +381,8 @@ export default function ExchangeConnectionModal({
               className={[
                 "rounded-lg px-4 py-3 text-sm font-medium",
                 testResult.success
-                  ? "bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
-                  : "bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-800",
+                  ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                  : "bg-red-50 text-red-700 border border-red-200",
               ].join(" ")}
             >
               {testResult.message}
@@ -391,14 +391,14 @@ export default function ExchangeConnectionModal({
 
           {/* Save error */}
           {error && (
-            <div className="rounded-lg bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 px-4 py-3 text-sm text-red-700 dark:text-red-400">
+            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
               {error}
             </div>
           )}
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-100 dark:border-slate-800 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
+        <div className="px-6 py-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-between gap-3">
           {/* Test button (only when creating) */}
           <div className="flex gap-2">
             {!isEditing && (
@@ -406,7 +406,7 @@ export default function ExchangeConnectionModal({
                 type="button"
                 onClick={handleTest}
                 disabled={!canTest || isTesting || isSaving}
-                className="flex items-center gap-2 rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                className="flex items-center gap-2 rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
               >
                 {isTesting && (
                   <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -425,7 +425,7 @@ export default function ExchangeConnectionModal({
               type="button"
               onClick={onClose}
               disabled={isSaving || isTesting}
-              className="rounded-lg border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 transition"
+              className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-40 transition"
             >
               {tCommon("cancel")}
             </button>

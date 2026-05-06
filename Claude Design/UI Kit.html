@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>amigo — UI Kit</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,0..100,0..1&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://api.fontshare.com/v2/css?f[]=general-sans@400,500,600,700&display=swap" rel="stylesheet" />
+
+<style>
+  html, body { margin: 0; padding: 0; background: #2a2622; }
+  body { font-family: 'General Sans', system-ui, sans-serif; }
+  .ab-frame {
+    width: 100%; height: 100%;
+    border: none; display: block;
+    background: transparent;
+  }
+</style>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" src="design-canvas.jsx"></script>
+
+<script type="text/babel">
+  const { DesignCanvas, DCSection, DCArtboard } = window;
+
+  // Frame helper — every artboard is a sandboxed iframe of one preview file.
+  function Frame({ src }) {
+    return <iframe className="ab-frame" src={src} loading="lazy" title={src} />;
+  }
+
+  function App() {
+    return (
+      <DesignCanvas
+        title="amigo · UI Kit"
+        subtitle="Forest paper · bracket mark · Fraunces numerals · gilt 1pt rules"
+      >
+        {/* ───────── Brand ───────── */}
+        <DCSection
+          id="brand"
+          title="Brand"
+          subtitle="Mark, lockup, app icon"
+        >
+          <DCArtboard id="logo" label="Logo & app icon" width={760} height={260}>
+            <Frame src="preview/brand-logo.html" />
+          </DCArtboard>
+        </DCSection>
+
+        {/* ───────── Colour ───────── */}
+        <DCSection
+          id="color"
+          title="Colour"
+          subtitle="Forest · Gilt · Bone Paper · Ink"
+        >
+          <DCArtboard id="brand-color" label="Brand · Forest & Gilt" width={760} height={200}>
+            <Frame src="preview/colors-brand.html" />
+          </DCArtboard>
+          <DCArtboard id="paper-ink" label="Paper & Ink ramp" width={760} height={190}>
+            <Frame src="preview/colors-slate.html" />
+          </DCArtboard>
+          <DCArtboard id="status-color" label="Status · Moss / Crimson / Amber" width={760} height={220}>
+            <Frame src="preview/colors-status.html" />
+          </DCArtboard>
+        </DCSection>
+
+        {/* ───────── Type ───────── */}
+        <DCSection
+          id="type"
+          title="Type"
+          subtitle="Fraunces display + numerals · General Sans body · Instrument Serif italic"
+        >
+          <DCArtboard id="type-display" label="Display · Fraunces" width={760} height={460}>
+            <Frame src="preview/type-display.html" />
+          </DCArtboard>
+          <DCArtboard id="type-body" label="Body · General Sans" width={760} height={320}>
+            <Frame src="preview/type-body.html" />
+          </DCArtboard>
+          <DCArtboard id="type-numerals" label="Numerals · tabular Fraunces" width={760} height={380}>
+            <Frame src="preview/type-numerals.html" />
+          </DCArtboard>
+        </DCSection>
+
+        {/* ───────── Spacing ───────── */}
+        <DCSection
+          id="spacing"
+          title="Spacing & Material"
+          subtitle="Rules over shadows · ledger paper, not iOS"
+        >
+          <DCArtboard id="spacing-radii" label="Spacing & radii" width={760} height={420}>
+            <Frame src="preview/spacing-radii.html" />
+          </DCArtboard>
+          <DCArtboard id="elevation" label="Elevation · rules" width={760} height={240}>
+            <Frame src="preview/shadows.html" />
+          </DCArtboard>
+          <DCArtboard id="iconography" label="Iconography · Lucide 1.25" width={760} height={460}>
+            <Frame src="preview/iconography.html" />
+          </DCArtboard>
+        </DCSection>
+
+        {/* ───────── Components ───────── */}
+        <DCSection
+          id="components"
+          title="Components"
+          subtitle="Buttons · inputs · cards · gauges · ledger rows"
+        >
+          <DCArtboard id="buttons" label="Buttons & pills" width={760} height={280}>
+            <Frame src="preview/components-buttons.html" />
+          </DCArtboard>
+          <DCArtboard id="inputs" label="Inputs · gilt focus underline" width={760} height={300}>
+            <Frame src="preview/components-inputs.html" />
+          </DCArtboard>
+          <DCArtboard id="badges" label="Chips · pills · seals" width={760} height={260}>
+            <Frame src="preview/components-badges.html" />
+          </DCArtboard>
+          <DCArtboard id="card" label="Statement cards" width={760} height={240}>
+            <Frame src="preview/components-card.html" />
+          </DCArtboard>
+          <DCArtboard id="gauge" label="Living gauge · 3 states" width={760} height={300}>
+            <Frame src="preview/components-living-gauge.html" />
+          </DCArtboard>
+          <DCArtboard id="modal" label="Modal · Add expense" width={760} height={500}>
+            <Frame src="preview/components-modal.html" />
+          </DCArtboard>
+          <DCArtboard id="sidebar" label="Sidebar nav · gilt active rule" width={420} height={620}>
+            <Frame src="preview/components-sidebar.html" />
+          </DCArtboard>
+          <DCArtboard id="ledger-row" label="Ledger · transaction rows" width={760} height={420}>
+            <Frame src="preview/components-transaction-row.html" />
+          </DCArtboard>
+        </DCSection>
+      </DesignCanvas>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>

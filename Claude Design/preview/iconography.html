@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>amigo — iconography</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin:0; padding:24px; background:var(--paper-deep); box-sizing:border-box; border:1px solid var(--rule); }
+  h4 { font: var(--w-medium) 10px/1 var(--font-mono); letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-mute); margin: 0 0 14px; padding-bottom: 8px; border-bottom: 1px solid var(--gilt); }
+  .grid { display:grid; grid-template-columns: repeat(8, 1fr); gap: 0; border: 1px solid var(--ink); background: var(--paper); }
+  .ic {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+    padding: 14px 6px; min-height: 78px;
+    border-right: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+  }
+  .ic:nth-child(8n) { border-right: none; }
+  .ic:nth-last-child(-n+8) { border-bottom: none; }
+  .ic svg { width: 18px; height: 18px; stroke: var(--ink-soft); stroke-width: 1.25; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  .ic span { font: var(--w-regular) 10px/1 var(--font-mono); letter-spacing: 0.06em; color: var(--ink-mute); }
+  .note { margin-top: 16px; font-family: var(--font-italic); font-style: italic; font-size: 13px; color: var(--ink-mute); }
+  .note b { font-family: var(--font-sans); font-style: normal; font-weight: 500; color: var(--ink); }
+</style>
+</head>
+<body>
+  <h4>Lucide · 1.25 stroke · 18 px · ink-soft</h4>
+  <div class="grid">
+    <div class="ic"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span>dashboard</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg><span>ledger</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg><span>portfolio</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg><span>income</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>folder</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/></svg><span>tag</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg><span>card</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg><span>upload</span></div>
+
+    <div class="ic"><svg viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6"/></svg><span>archive</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h11a2 2 0 0 0 2-2v-5"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg><span>edit</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>plus</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><span>search</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg><span>check</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg><span>close</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 10v6m11-11h-6M7 12H1m15.5-7.5l-4.2 4.2m-4.6 4.6l-4.2 4.2m0-13l4.2 4.2m4.6 4.6l4.2 4.2"/></svg><span>settings</span></div>
+    <div class="ic"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg><span>vault</span></div>
+  </div>
+  <div class="note">
+    <b>System:</b> Lucide line set · <b>Stroke:</b> 1.25 (lighter than default — paper, not screens) · <b>Sizes:</b> 14 · 16 · 18 · 20 · <b>Colour:</b> ink-soft default, gilt for the active state · <b>Never</b> emoji.
+  </div>
+</body>
+</html>

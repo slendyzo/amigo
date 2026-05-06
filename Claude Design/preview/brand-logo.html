@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>amigo — logo & wordmark</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin:0; padding:32px; background:var(--paper); display:flex; align-items:center; gap:32px; min-height:200px; box-sizing:border-box; border:1px solid var(--rule); }
+  .mark-wrap { display:flex; align-items:center; }
+  .bracket { font-family: var(--font-italic); font-style: italic; line-height: 1; color: var(--ink); }
+  .dot { background: var(--gilt); border-radius: 50%; display: inline-block; }
+  .wordmark {
+    font-family: var(--font-display);
+    font-weight: 360;
+    letter-spacing: -0.045em;
+    color: var(--ink);
+    line-height: 0.9;
+    font-variation-settings: "opsz" 144, "SOFT" 30;
+  }
+  .divider { width:1px; align-self:stretch; background:var(--rule); }
+  .stack { display:flex; flex-direction:column; gap:10px; }
+  .label {
+    font: var(--w-medium) 10px/1.4 var(--font-mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .icon { width:88px; height:88px; border-radius:20px; background: var(--forest); display:flex; align-items:center; justify-content:center; border:1px solid var(--forest-deep); }
+  .icon .bracket { color: var(--paper); font-size: 92px; }
+  .icon .dot { width: 6.5px; height: 6.5px; background: var(--gilt-soft); margin: 0 1px; }
+  .small-icons { display:flex; gap:10px; align-items:flex-end; }
+  .si { background: var(--forest); display:flex; align-items:center; justify-content:center; border:1px solid var(--forest-deep); }
+  .si.s48 { width:48px; height:48px; border-radius:11px; }
+  .si.s32 { width:32px; height:32px; border-radius:8px; }
+  .si.s20 { width:20px; height:20px; border-radius:5px; }
+  .si .b { font-family: var(--font-italic); font-style: italic; color: var(--paper); line-height: 1; }
+  .si .d { background: var(--gilt-soft); border-radius:50%; display:inline-block; }
+  .si.s48 .b { font-size: 50px; }
+  .si.s48 .d { width: 3.6px; height: 3.6px; }
+  .si.s32 .b { font-size: 33px; }
+  .si.s32 .d { width: 2.4px; height: 2.4px; }
+  .si.s20 .d { width: 4px; height: 4px; }
+</style>
+</head>
+<body>
+  <!-- Mark only -->
+  <div class="mark-wrap" style="font-size: 110px;">
+    <span class="bracket" style="font-size:110px;">(</span>
+    <span class="dot" style="width:8px;height:8px;margin:0 2px;"></span>
+    <span class="bracket" style="font-size:110px;">)</span>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- Lockup -->
+  <div class="stack">
+    <div class="mark-wrap" style="gap:10px;">
+      <div class="mark-wrap" style="font-size:50px;">
+        <span class="bracket" style="font-size:50px;">(</span>
+        <span class="dot" style="width:3.5px;height:3.5px;margin:0 1px;"></span>
+        <span class="bracket" style="font-size:50px;">)</span>
+      </div>
+      <span class="wordmark" style="font-size: 44px;">amigo</span>
+    </div>
+    <div class="label">Lockup · bracket mark + Fraunces 360 / -0.045em</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- App icon + sizes -->
+  <div class="stack">
+    <div class="label">App icon · sizes</div>
+    <div class="small-icons">
+      <div class="icon">
+        <span class="bracket">(</span>
+        <span class="dot"></span>
+        <span class="bracket">)</span>
+      </div>
+      <div class="si s48"><span class="b">(</span><span class="d"></span><span class="b">)</span></div>
+      <div class="si s32"><span class="b">(</span><span class="d"></span><span class="b">)</span></div>
+      <div class="si s20"><span class="d"></span></div>
+    </div>
+  </div>
+</body>
+</html>

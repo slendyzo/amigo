@@ -45,17 +45,17 @@ const ASSET_TYPE_CONFIG: Record<string, { label: string; className: string }> = 
   CRYPTO: {
     label: "Crypto",
     className:
-      "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-700/30",
+      "bg-amber-50 text-amber-700 border border-amber-200/60",
   },
   ETF: {
     label: "ETF",
     className:
-      "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200/60 dark:border-blue-700/30",
+      "bg-blue-50 text-blue-700 border border-blue-200/60",
   },
   STOCK: {
     label: "Stock",
     className:
-      "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border border-purple-200/60 dark:border-purple-700/30",
+      "bg-purple-50 text-purple-700 border border-purple-200/60",
   },
 };
 
@@ -101,7 +101,7 @@ export default function SymbolDetailClient({
   const assetConfig = ASSET_TYPE_CONFIG[assetType] ?? {
     label: assetType,
     className:
-      "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
+      "bg-slate-100 text-slate-600 border border-slate-200",
   };
 
   return (
@@ -110,7 +110,7 @@ export default function SymbolDetailClient({
       <div className="flex items-center justify-between gap-3">
         <Link
           href="/dashboard/portfolio"
-          className="inline-flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -121,11 +121,11 @@ export default function SymbolDetailClient({
       </div>
 
       {/* Hero card */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-6">
+      <div className="bg-white border border-slate-200/50 rounded-2xl p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">
           <div>
             <div className="flex items-center gap-2.5 flex-wrap">
-              <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
                 {symbol}
               </h1>
               <span
@@ -133,13 +133,13 @@ export default function SymbolDetailClient({
               >
                 {assetConfig.label}
               </span>
-              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/30">
+              <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-medium bg-slate-100 text-slate-500 border border-slate-200/60/30">
                 {positions.length === 1
                   ? positions[0].exchange.label
                   : `${positions.length} exchanges`}
               </span>
               {totalLocked > 0 && (
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 border border-violet-200/60 dark:border-violet-700/30">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-medium bg-violet-50 text-violet-700 border border-violet-200/60">
                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                   </svg>
@@ -147,31 +147,31 @@ export default function SymbolDetailClient({
                 </span>
               )}
             </div>
-            <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{name}</p>
+            <p className="text-sm text-slate-500 mt-1">{name}</p>
           </div>
         </div>
 
         <div className="mt-6 flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500 font-medium mb-1">
+            <p className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1">
               {t("currentValue")}
             </p>
-            <p className="text-3xl font-bold text-slate-900 dark:text-slate-100 tabular-nums tracking-tight">
+            <p className="text-3xl font-bold text-slate-900 tabular-nums tracking-tight">
               {formatAmount(totalValueEur)}
             </p>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 tabular-nums">
+            <p className="text-xs text-slate-500 mt-1 tabular-nums">
               {formatQuantity(totalQty)} {symbol} @ {formatPrice(currentPriceEur)}
             </p>
           </div>
           <div className="text-right">
-            <p className="text-xs uppercase tracking-wide text-slate-400 dark:text-slate-500 font-medium mb-1">
+            <p className="text-xs uppercase tracking-wide text-slate-400 font-medium mb-1">
               {t("unrealizedPnl")}
             </p>
             <p
               className={`text-xl font-bold tabular-nums ${
                 isPnlPositive
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-500 dark:text-red-400"
+                  ? "text-emerald-600"
+                  : "text-red-500"
               }`}
             >
               {isPnlPositive ? "+" : ""}
@@ -180,15 +180,15 @@ export default function SymbolDetailClient({
             <p
               className={`text-sm font-semibold tabular-nums ${
                 isPnlPositive
-                  ? "text-emerald-500 dark:text-emerald-500"
-                  : "text-red-400 dark:text-red-500"
+                  ? "text-emerald-500"
+                  : "text-red-400"
               }`}
             >
               {isPnlPositive ? "+" : ""}
               {totalPnlPct.toFixed(2)}%
             </p>
             {hasRealized && (
-              <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-1">
+              <p className="text-[10px] text-slate-400 mt-1">
                 Realized: {totalRealized >= 0 ? "+" : ""}
                 {formatAmount(totalRealized)}
               </p>
@@ -207,8 +207,8 @@ export default function SymbolDetailClient({
 
       {/* Per-exchange breakdown — only when there's more than one position */}
       {positions.length > 1 && (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5">
-          <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100 mb-4">
+        <div className="bg-white border border-slate-200/50 rounded-2xl p-5">
+          <h3 className="text-sm font-semibold text-slate-900 mb-4">
             Across {positions.length} exchanges
           </h3>
           <div className="space-y-2">
@@ -220,21 +220,21 @@ export default function SymbolDetailClient({
                 <Link
                   key={p.id}
                   href={`/dashboard/portfolio/${p.id}`}
-                  className="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800/70 transition-colors"
+                  className="flex items-center gap-3 px-3 py-3 rounded-xl bg-slate-50/40 hover:bg-slate-100 transition-colors"
                 >
-                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 uppercase tracking-wide shrink-0 min-w-[70px] justify-center">
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-200 text-slate-700 uppercase tracking-wide shrink-0 min-w-[70px] justify-center">
                     {p.exchange.label}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs text-slate-700 dark:text-slate-300 tabular-nums">
+                    <p className="text-xs text-slate-700 tabular-nums">
                       {formatQuantity(p.quantity)} {symbol}
                       {p.lockedQuantity && p.lockedQuantity > 0 && (
-                        <span className="ml-1.5 text-violet-600 dark:text-violet-400 text-[10px]">
+                        <span className="ml-1.5 text-violet-600 text-[10px]">
                           ({formatQuantity(p.lockedQuantity)} staked)
                         </span>
                       )}
                     </p>
-                    <div className="h-1 mt-1 rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                    <div className="h-1 mt-1 rounded-full bg-slate-200 overflow-hidden">
                       <div
                         className="h-full rounded-full bg-[#0070f3]"
                         style={{ width: `${sharePct}%` }}
@@ -242,14 +242,14 @@ export default function SymbolDetailClient({
                     </div>
                   </div>
                   <div className="text-right shrink-0 min-w-[100px]">
-                    <p className="text-sm font-medium text-slate-800 dark:text-slate-200 tabular-nums">
+                    <p className="text-sm font-medium text-slate-800 tabular-nums">
                       {formatAmount(p.currentValueEur)}
                     </p>
                     <p
                       className={`text-[11px] font-medium tabular-nums ${
                         posPnlPositive
-                          ? "text-emerald-600 dark:text-emerald-400"
-                          : "text-red-500 dark:text-red-400"
+                          ? "text-emerald-600"
+                          : "text-red-500"
                       }`}
                     >
                       {posPnlPositive ? "+" : ""}
@@ -268,11 +268,11 @@ export default function SymbolDetailClient({
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl p-3.5">
-      <p className="text-[10px] uppercase tracking-wide text-slate-400 dark:text-slate-500 font-medium mb-1">
+    <div className="bg-white border border-slate-200/50 rounded-xl p-3.5">
+      <p className="text-[10px] uppercase tracking-wide text-slate-400 font-medium mb-1">
         {label}
       </p>
-      <p className="text-sm font-bold text-slate-900 dark:text-slate-100 tabular-nums">
+      <p className="text-sm font-bold text-slate-900 tabular-nums">
         {value}
       </p>
     </div>

@@ -120,13 +120,13 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
   });
 
   return (
-    <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur border border-slate-200/50 dark:border-slate-700/50 rounded-2xl shadow-sm p-6 space-y-5">
+    <div className="bg-white/80 backdrop-blur border border-slate-200/50 rounded-2xl shadow-sm p-6 space-y-5">
       {/* Hero: total portfolio value */}
       <div>
-        <p className="text-xs font-medium uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
+        <p className="text-xs font-medium uppercase tracking-widest text-slate-400 mb-1">
           {t("totalValue")}
         </p>
-        <p className="text-4xl font-bold tabular-nums text-slate-900 dark:text-slate-50 tracking-tight">
+        <p className="text-4xl font-bold tabular-nums text-slate-900 tracking-tight">
           {formatAmount(totalValueEur)}
         </p>
       </div>
@@ -136,8 +136,8 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
         <div
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-sm font-semibold tabular-nums ${
             isPnlPositive
-              ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400"
-              : "bg-red-50 dark:bg-red-900/20 text-red-500 dark:text-red-400"
+              ? "bg-emerald-50 text-emerald-600"
+              : "bg-red-50 text-red-500"
           }`}
         >
           {isPnlPositive ? (
@@ -153,13 +153,13 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
           <span className="opacity-75">({formatPct(totalPnlPct)})</span>
         </div>
 
-        <div className="text-xs text-slate-500 dark:text-slate-400">
+        <div className="text-xs text-slate-500">
           {t("unrealizedPnl")}
         </div>
 
         {totalFreeCashEur > 0 && (
           <>
-            <div className="w-px h-4 bg-slate-200 dark:bg-slate-700" />
+            <div className="w-px h-4 bg-slate-200" />
             <FreeCashChip
               totalEur={totalFreeCashEur}
               cashCurrencies={cashCurrencies}
@@ -172,18 +172,18 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
 
       {/* Divider */}
       {exchangeBreakdown.length > 1 && (
-        <div className="border-t border-slate-100 dark:border-slate-800 pt-4 space-y-2">
+        <div className="border-t border-slate-100 pt-4 space-y-2">
           {exchangeBreakdown.map(({ conn, connValue, connPnl, connPct }) => {
             const isConnPositive = connPnl >= 0;
             return (
               <div key={conn.id} className="flex items-center gap-3">
                 {/* Provider badge */}
-                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 uppercase tracking-wide shrink-0 w-24 justify-center">
+                <span className="inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold bg-slate-100 text-slate-600 uppercase tracking-wide shrink-0 w-24 justify-center">
                   {conn.label}
                 </span>
 
                 {/* Value */}
-                <span className="text-sm font-medium tabular-nums text-slate-800 dark:text-slate-200 flex-1">
+                <span className="text-sm font-medium tabular-nums text-slate-800 flex-1">
                   {formatAmount(connValue)}
                 </span>
 
@@ -191,8 +191,8 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
                 <span
                   className={`text-xs font-semibold tabular-nums ${
                     isConnPositive
-                      ? "text-emerald-600 dark:text-emerald-400"
-                      : "text-red-500 dark:text-red-400"
+                      ? "text-emerald-600"
+                      : "text-red-500"
                   }`}
                 >
                   {isConnPositive ? "+" : ""}
@@ -238,11 +238,11 @@ function FreeCashChip({
     <div className="relative group inline-flex">
       <button
         type="button"
-        className="text-xs text-slate-500 dark:text-slate-400 cursor-default focus:outline-none focus:ring-2 focus:ring-[#0070f3]/40 rounded-md px-1 -mx-1"
+        className="text-xs text-slate-500 cursor-default focus:outline-none focus:ring-2 focus:ring-[#0070f3]/40 rounded-md px-1 -mx-1"
         aria-describedby={showTooltip ? "freecash-tooltip" : undefined}
       >
         {label}:{" "}
-        <span className="font-medium text-slate-700 dark:text-slate-300 tabular-nums">
+        <span className="font-medium text-slate-700 tabular-nums">
           {formatAmount(totalEur)}
         </span>
       </button>
@@ -253,14 +253,14 @@ function FreeCashChip({
           role="tooltip"
           className={[
             "pointer-events-none absolute left-0 top-full mt-2 z-20 min-w-[240px]",
-            "rounded-xl border border-slate-200/60 dark:border-slate-700/60",
-            "bg-white/95 dark:bg-slate-900/95 backdrop-blur shadow-lg p-3",
+            "rounded-xl border border-slate-200/60",
+            "bg-white/95 backdrop-blur shadow-lg p-3",
             "opacity-0 translate-y-1 transition-all duration-300 ease-out",
             "group-hover:opacity-100 group-hover:translate-y-0",
             "group-focus-within:opacity-100 group-focus-within:translate-y-0",
           ].join(" ")}
         >
-          <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-slate-400 mb-2">
             Native breakdown
           </p>
           <div className="space-y-1.5">
@@ -271,28 +271,28 @@ function FreeCashChip({
                   key={currency}
                   className="flex items-center justify-between gap-3 text-xs tabular-nums"
                 >
-                  <span className="font-medium text-slate-700 dark:text-slate-200">
+                  <span className="font-medium text-slate-700">
                     {formatNative(native, currency)}
                   </span>
-                  <span className="text-slate-500 dark:text-slate-400">
+                  <span className="text-slate-500">
                     {eur !== null ? `≈ ${formatAmount(eur)}` : "—"}
                   </span>
                 </div>
               );
             })}
           </div>
-          <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 space-y-0.5">
+          <div className="mt-2 pt-2 border-t border-slate-100 space-y-0.5">
             {cashCurrencies
               .filter(([cur, { rate }]) => cur !== "EUR" && rate !== null)
               .map(([cur, { rate }]) => (
                 <p
                   key={cur}
-                  className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums"
+                  className="text-[10px] text-slate-400 tabular-nums"
                 >
                   1 {cur} = {rate!.toFixed(4)} EUR
                 </p>
               ))}
-            <p className="text-[10px] text-slate-400 dark:text-slate-500">
+            <p className="text-[10px] text-slate-400">
               Source: {fxLabel}
             </p>
           </div>

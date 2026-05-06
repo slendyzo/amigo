@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    
+  </defs>
+  <text x="60" y="132" font-family="Instrument Serif, Times New Roman, serif" font-style="italic" font-size="270" fill="#f1ebdd" text-anchor="middle">(</text>
+  <circle cx="100" cy="100" r="8.5" fill="#c9a85a"></circle>
+  <text x="140" y="132" font-family="Instrument Serif, Times New Roman, serif" font-style="italic" font-size="270" fill="#f1ebdd" text-anchor="middle">)</text>
+</svg>

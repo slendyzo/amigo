@@ -1,5 +1,7 @@
 # Dashboard Redesign — 60/40 Portfolio/Expenses Hub
 
+> **⚠️ Superseded — 2026-05-06.** This document captured an earlier redesign attempt under the old Electric Blue identity. The active plan is `REDESIGN-FOREST-BRACKET.md`, which restructures navigation around a unified **Património** group (absorbing the old Portfolio + Networth surfaces) and replaces the Living Gauge with the new Painel B treatment. Kept here for history only.
+
 ## Problem
 
 The current UI is an expense tracker with portfolio bolted on. The sidebar lists everything flat — portfolio feels secondary. For a user who cares about investments AND daily spending, neither view has the right emphasis.

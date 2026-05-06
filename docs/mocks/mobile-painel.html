@@ -1,0 +1,1124 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>amigo · Mobile Painel · Mock</title>
+<link rel="stylesheet" href="../../claude design/colors_and_type.css"/>
+<link rel="stylesheet" href="../../claude design/screens/screens.css"/>
+<style>
+  body {
+    margin: 0;
+    background: var(--paper-deep);
+    min-height: 100vh;
+  }
+  .stage {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 56px 32px 48px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+  .stage-eyebrow { color: var(--gilt-deep); }
+  .stage-title {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 36px;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .stage-title em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--gilt-deep);
+  }
+  .stage-sub {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    color: var(--ink-mute);
+    max-width: 620px;
+    margin: 0;
+  }
+
+  /* Phone canvas — gallery row */
+  .phones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 48px;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 24px 0 8px;
+  }
+  .phone-slot {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+  .phone-caption {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .phone-caption::before {
+    content: "";
+    width: 14px;
+    height: 1px;
+    background: var(--gilt);
+  }
+
+  /* iPhone frame — 402×874 */
+  .iphone {
+    width: 402px;
+    height: 874px;
+    border-radius: 56px;
+    background: var(--paper);
+    border: 1px solid var(--rule-strong);
+    box-shadow:
+      0 32px 64px rgba(20,20,15,0.18),
+      0 6px 16px rgba(20,20,15,0.08),
+      inset 0 0 0 6px var(--ink),
+      inset 0 0 0 8px var(--paper-deep);
+    overflow: hidden;
+    position: relative;
+  }
+  /* Notch */
+  .iphone::before {
+    content: "";
+    position: absolute;
+    top: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 116px;
+    height: 32px;
+    background: var(--ink);
+    border-radius: 9999px;
+    z-index: 4;
+  }
+  .iphone-inner {
+    position: absolute;
+    inset: 8px;
+    border-radius: 48px;
+    overflow: hidden;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Status bar (10:24 · 5G · 89%) */
+  .status-bar {
+    height: 48px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 28px 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--ink);
+    letter-spacing: 0.02em;
+    position: relative;
+    z-index: 5;
+  }
+  .status-bar .sb-time { font-weight: 500; }
+  .status-bar .sb-r { display: flex; gap: 6px; align-items: center; }
+  .status-bar .sb-bars {
+    display: inline-flex; gap: 1.5px; align-items: flex-end;
+  }
+  .status-bar .sb-bars span {
+    width: 3px; background: var(--ink); border-radius: 0.5px;
+  }
+  .status-bar .sb-bars span:nth-child(1) { height: 4px; }
+  .status-bar .sb-bars span:nth-child(2) { height: 6px; }
+  .status-bar .sb-bars span:nth-child(3) { height: 8px; }
+  .status-bar .sb-bars span:nth-child(4) { height: 10px; }
+  .status-bar .sb-batt {
+    width: 22px; height: 11px;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
+    position: relative;
+    padding: 1px;
+    box-sizing: border-box;
+  }
+  .status-bar .sb-batt::after {
+    content: ""; position: absolute;
+    right: -3px; top: 50%; transform: translateY(-50%);
+    width: 1.5px; height: 5px;
+    background: var(--ink); border-radius: 0 1px 1px 0;
+  }
+  .status-bar .sb-batt-fill {
+    height: 100%; width: 89%;
+    background: var(--ink); border-radius: 1px;
+  }
+
+  /* Page interior — beneath status bar */
+  .m-page {
+    flex: 1;
+    background: var(--paper);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+  }
+  .m-scroll {
+    flex: 1;
+    overflow: hidden;
+    padding-bottom: 96px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Pull-to-refresh affordance */
+  .ptr {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 0 6px;
+  }
+  .ptr-eyebrow {
+    font-family: var(--font-mono);
+    font-size: 8.5px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .ptr-row {
+    display: flex; align-items: center; gap: 8px;
+  }
+  .ptr-spinner {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    border: 1.5px solid var(--paper-deep);
+    border-top-color: var(--gilt);
+    animation: spin 1s linear infinite;
+  }
+  .ptr-text {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--gilt-deep);
+    letter-spacing: 0.06em;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Header */
+  .m-head {
+    padding: 8px 22px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .m-greet {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .m-title {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 26px;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    line-height: 1.1;
+    margin: 4px 0 0;
+  }
+  .m-title em {
+    font-style: normal;
+    font-weight: 400;
+    color: var(--gilt-deep);
+  }
+  .m-avatar {
+    width: 40px; height: 40px;
+    border-radius: 9999px;
+    background: var(--forest);
+    color: var(--gilt-soft);
+    display: grid; place-items: center;
+    font-family: var(--font-display);
+    font-size: 16px;
+    border: 1px solid var(--forest-deep);
+    flex-shrink: 0;
+  }
+
+  /* Sections */
+  .m-section { padding: 0 20px; }
+  .m-section + .m-section { margin-top: 14px; }
+
+  /* Cards */
+  .m-card {
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 18px;
+    position: relative;
+  }
+  .m-card.is-feature {
+    background: var(--forest);
+    color: var(--paper);
+    border-color: var(--forest-deep);
+    padding: 22px 22px 20px;
+  }
+  .m-card.is-feature::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: 18px; right: 18px;
+    height: 1px;
+    background: var(--gilt-soft);
+    opacity: 0.55;
+  }
+
+  /* Eyebrow on feature card */
+  .m-eb {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    font-weight: 500;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    display: inline-flex; align-items: center; gap: 8px;
+  }
+  .m-eb::before {
+    content: "";
+    width: 14px; height: 1px;
+    background: var(--gilt);
+    display: inline-block;
+  }
+  .m-eb.on-forest { color: var(--gilt-soft); }
+  .m-eb.on-forest::before { background: var(--gilt-soft); }
+
+  /* Hero amount */
+  .hero-amt-row {
+    display: flex; align-items: baseline; gap: 12px;
+    margin-top: 10px;
+  }
+  .hero-amt {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: 38px;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    color: var(--paper);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .hero-amt .cur {
+    font-size: 0.62em;
+    color: rgba(241,235,221,0.6);
+    margin-right: 0.18em;
+    vertical-align: 0.1em;
+    font-weight: 400;
+  }
+  .hero-amt .cents {
+    font-size: 0.5em;
+    color: rgba(241,235,221,0.6);
+    vertical-align: 0.55em;
+    margin-left: 0.04em;
+  }
+  .delta-up {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--gilt-soft);
+    font-weight: 500;
+  }
+  .delta-up .ar { font-size: 9px; }
+
+  /* Hero split row (Receitas/Despesas) */
+  .hero-split {
+    display: flex; gap: 14px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(241,235,221,0.16);
+  }
+  .hero-split-col { flex: 1; display: flex; flex-direction: column; gap: 4px; }
+  .hero-split-sep { width: 1px; background: rgba(241,235,221,0.16); }
+  .hero-split-eb {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gilt-soft);
+  }
+  .hero-split-amt {
+    font-family: var(--font-display);
+    font-size: 18px;
+    color: var(--paper);
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .hero-split-amt .cur { font-size: 0.66em; opacity: 0.7; margin-right: 0.14em; }
+
+  /* 30-day cashflow micro line */
+  .cashflow {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(241,235,221,0.12);
+  }
+  .cashflow-eb {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gilt-soft);
+    margin-bottom: 6px;
+    display: block;
+  }
+  .cashflow-line {
+    display: block;
+    width: 100%;
+    height: 28px;
+  }
+
+  /* Stat row (Receitas / Despesas tiles) */
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 14px;
+  }
+  .stat-tile {
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: flex; flex-direction: column; gap: 6px;
+    position: relative;
+  }
+  .stat-tile::before {
+    content: "";
+    position: absolute;
+    top: 14px; left: 0;
+    width: 2px; height: 18px;
+  }
+  .stat-tile.is-moss::before { background: var(--moss); }
+  .stat-tile.is-crimson::before { background: var(--crimson); }
+  .stat-tile-eb {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .stat-tile-amt {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--ink);
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .stat-tile-amt.is-crim { color: var(--crimson); }
+  .stat-tile-amt .cur { font-size: 0.6em; color: var(--ink-mute); margin-right: 0.16em; vertical-align: 0.1em; }
+  .stat-tile-amt.is-crim .cur { color: var(--crimson); opacity: 0.75; }
+  .stat-tile-foot {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+
+  /* Section title row */
+  .sec-head {
+    display: flex; align-items: center; justify-content: space-between;
+    margin: 16px 20px 10px;
+  }
+  .sec-link {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    color: var(--gilt-deep);
+    text-decoration: none;
+  }
+
+  /* Category breakdown */
+  .cat-card { padding: 16px; }
+  .cat-bar {
+    display: flex;
+    height: 8px;
+    background: var(--paper);
+    border-radius: 999px;
+    overflow: hidden;
+    border: 1px solid var(--rule);
+    margin-bottom: 14px;
+  }
+  .cat-bar-seg { height: 100%; }
+  .cat-row {
+    display: grid;
+    grid-template-columns: 12px 1fr auto auto;
+    gap: 10px;
+    align-items: center;
+    padding: 7px 0;
+    border-bottom: 1px dotted var(--rule);
+    font-size: 13px;
+    color: var(--ink-soft);
+  }
+  .cat-row:last-child { border-bottom: 0; }
+  .cat-swatch-sm {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+  }
+  .cat-pct {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--ink-mute);
+    letter-spacing: 0.04em;
+  }
+  .cat-amt {
+    font-family: var(--font-display);
+    font-size: 14px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+
+  /* Recent ledger */
+  .led-card { padding: 6px 16px; }
+  .led-row {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px dotted var(--rule);
+  }
+  .led-row:last-child { border-bottom: 0; }
+  .led-date {
+    font-family: var(--font-mono);
+    font-size: 9.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+    width: 44px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .led-mid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .led-name {
+    font-size: 13.5px;
+    color: var(--ink);
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .led-cat {
+    font-family: var(--font-sans);
+    font-size: 11.5px;
+    color: var(--ink-mute);
+    display: inline-flex; align-items: center; gap: 6px;
+  }
+  .led-cat .sw { width: 6px; height: 6px; border-radius: 2px; }
+  .led-amt {
+    font-family: var(--font-display);
+    font-size: 15px;
+    color: var(--ink);
+    font-variant-numeric: tabular-nums lining-nums;
+    flex-shrink: 0;
+  }
+  .led-amt.is-in { color: var(--moss); }
+  .led-amt.is-out { color: var(--ink); }
+  .led-amt .cur { font-size: 0.62em; color: var(--ink-mute); margin-right: 0.14em; vertical-align: 0.08em; }
+  .led-amt.is-in .cur { color: var(--moss); opacity: 0.75; }
+  .led-foot {
+    padding: 12px 0 6px;
+    text-align: center;
+  }
+  .led-foot a {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    color: var(--gilt-deep);
+    text-decoration: none;
+    border-bottom: 1px solid var(--gilt);
+    padding-bottom: 1px;
+  }
+
+  /* Bottom tab bar — pinned */
+  .m-tabbar {
+    border-top: 1px solid var(--rule);
+    background: var(--paper);
+    padding: 10px 12px 8px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: end;
+    gap: 4px;
+    position: absolute;
+    left: 0; right: 0; bottom: 0;
+    z-index: 3;
+  }
+  .m-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 4px 2px;
+    font-family: var(--font-sans);
+    font-size: 10px;
+    letter-spacing: 0.02em;
+    color: var(--ink-faint);
+    cursor: pointer;
+  }
+  .m-tab .lbl {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 11px;
+    letter-spacing: 0;
+    color: inherit;
+  }
+  .m-tab.is-active { color: var(--gilt-deep); }
+  .m-tab .m-tab-dot {
+    width: 4px; height: 4px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+  }
+  .m-tab.is-active .m-tab-dot { background: var(--gilt); }
+  .m-tab.is-fab-spacer { visibility: hidden; }
+
+  /* Centered FAB — 56×56, 6px radius, lifted */
+  .m-fab {
+    position: absolute;
+    left: 50%;
+    bottom: 30px;
+    transform: translateX(-50%);
+    width: 56px;
+    height: 56px;
+    border-radius: 6px;
+    background: var(--forest);
+    color: var(--paper);
+    border: 1px solid var(--forest-deep);
+    display: grid; place-items: center;
+    cursor: pointer;
+    box-shadow:
+      0 8px 22px rgba(20,40,30,0.32),
+      0 2px 6px rgba(20,40,30,0.18);
+    z-index: 6;
+  }
+  .m-fab::after {
+    content: "";
+    position: absolute;
+    inset: 5px;
+    border: 1px solid var(--gilt-soft);
+    border-radius: 3px;
+    opacity: 0.55;
+    pointer-events: none;
+  }
+  .m-fab svg { stroke: var(--paper); }
+
+  /* Safe-area inset hint below tab bar */
+  .safe-hint {
+    position: absolute;
+    left: 0; right: 0;
+    bottom: 0;
+    height: 6px;
+    background: var(--paper-deep);
+    z-index: 2;
+  }
+  .home-indicator {
+    position: absolute;
+    left: 50%;
+    bottom: 8px;
+    transform: translateX(-50%);
+    width: 124px;
+    height: 4px;
+    border-radius: 2px;
+    background: var(--ink);
+    opacity: 0.85;
+    z-index: 7;
+  }
+
+  /* Empty state pieces */
+  .empty-zero {
+    font-family: var(--font-display);
+    font-size: 56px;
+    font-weight: 400;
+    color: var(--paper);
+    letter-spacing: -0.02em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums lining-nums;
+  }
+  .empty-zero .cur {
+    font-size: 0.5em;
+    color: rgba(241,235,221,0.55);
+    margin-right: 0.16em;
+    vertical-align: 0.18em;
+  }
+  .empty-pull {
+    font-family: var(--font-sans);
+    color: rgba(241,235,221,0.78);
+    font-size: 16px;
+    margin-top: 14px;
+    line-height: 1.4;
+  }
+  .empty-cta {
+    margin-top: 18px;
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 9px 14px;
+    background: transparent;
+    border: 1px solid var(--gilt-soft);
+    border-radius: 6px;
+    color: var(--gilt-soft);
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .empty-cta:hover { background: rgba(168,133,58,0.08); }
+  .empty-stat-tile {
+    background: var(--paper-deep);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    padding: 22px 16px;
+    text-align: center;
+    display: flex; flex-direction: column; gap: 6px;
+    align-items: center;
+  }
+  .empty-stat-tile .em-eb {
+    font-family: var(--font-mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--ink-faint);
+  }
+  .empty-stat-tile .em-dash {
+    font-family: var(--font-display);
+    font-size: 26px;
+    color: var(--ink-faint);
+    line-height: 1;
+  }
+  .empty-block {
+    padding: 28px 20px;
+    text-align: center;
+    border: 1px dashed var(--rule-strong);
+    border-radius: 6px;
+    background: var(--paper);
+    margin-top: 14px;
+  }
+  .empty-block-it {
+    font-family: var(--font-sans);
+    color: var(--ink-mute);
+    font-size: 14px;
+    line-height: 1.5;
+  }
+
+  /* Footer cross-link */
+  .footer-nav {
+    margin-top: 20px;
+    padding-top: 32px;
+    border-top: 1px solid var(--rule);
+    display: flex; flex-wrap: wrap; gap: 12px 18px;
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    letter-spacing: 0.16em;
+    color: var(--ink-faint);
+    text-transform: uppercase;
+  }
+  .footer-nav a {
+    color: var(--ink-mute);
+    text-decoration: none;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 1px;
+  }
+  .footer-nav a:hover { color: var(--forest); border-color: var(--forest); }
+  .footer-nav a.is-current {
+    color: var(--gilt-deep);
+    border-color: var(--gilt);
+  }
+
+  @media (max-width: 920px) {
+    .phones { gap: 32px; }
+    .iphone { transform: scale(0.86); transform-origin: top center; }
+    .phone-slot { margin-bottom: -120px; }
+  }
+</style>
+</head>
+<body>
+
+<section class="stage">
+
+  <header style="display: flex; flex-direction: column; gap: 8px; max-width: 720px;">
+    <div class="eyebrow stage-eyebrow">MOBILE · PAINEL</div>
+    <h1 class="stage-title">O ledger no bolso, <em>recolhido em paper.</em></h1>
+    <p class="stage-sub">Cinco abas em baixo, FAB central em forest com regra dourada. O painel respira em paper, com saldo do mês em forest fill, micro-cashflow de 30 dias e ledger recente. Estado vazio mostra a mesma moldura — só com um sussurro em itálico.</p>
+  </header>
+
+  <div class="phones">
+
+    <!-- ============================================
+         PHONE 1 · Active dashboard
+         ============================================ -->
+    <div class="phone-slot">
+      <span class="phone-caption">Estado · com despesas</span>
+
+      <div class="iphone">
+        <div class="iphone-inner">
+
+          <!-- Status bar -->
+          <div class="status-bar">
+            <span class="sb-time">10:24</span>
+            <span class="sb-r">
+              <span class="sb-bars"><span></span><span></span><span></span><span></span></span>
+              <span style="font-weight: 500; font-size: 11px;">5G</span>
+              <span class="sb-batt"><span class="sb-batt-fill"></span></span>
+              <span style="font-weight: 500; font-size: 11px;">89%</span>
+            </span>
+          </div>
+
+          <!-- Page -->
+          <div class="m-page">
+            <div class="m-scroll">
+
+              <!-- Pull-to-refresh affordance -->
+              <div class="ptr">
+                <span class="ptr-eyebrow">ESTADO · PULL-TO-REFRESH</span>
+                <div class="ptr-row">
+                  <span class="ptr-spinner"></span>
+                  <span class="ptr-text">A atualizar&hellip;</span>
+                </div>
+              </div>
+
+              <!-- Header -->
+              <div class="m-head">
+                <div>
+                  <div class="m-greet">14 OUT · QUARTA</div>
+                  <h1 class="m-title">Bom dia, <em>Francisco</em></h1>
+                </div>
+                <div class="m-avatar">F</div>
+              </div>
+
+              <!-- Hero card · Saldo do mês -->
+              <div class="m-section">
+                <div class="m-card is-feature">
+                  <span class="m-eb on-forest">SALDO DO MÊS</span>
+                  <div class="hero-amt-row">
+                    <span class="hero-amt"><span class="cur">€</span>1&thinsp;842<span class="cents">,40</span></span>
+                    <span class="delta-up"><span class="ar">▲</span>+12,4%</span>
+                  </div>
+
+                  <div class="hero-split">
+                    <div class="hero-split-col">
+                      <span class="hero-split-eb">RECEITAS</span>
+                      <span class="hero-split-amt"><span class="cur">€</span>2&thinsp;840</span>
+                    </div>
+                    <div class="hero-split-sep"></div>
+                    <div class="hero-split-col">
+                      <span class="hero-split-eb">DESPESAS</span>
+                      <span class="hero-split-amt"><span class="cur">€</span>998</span>
+                    </div>
+                  </div>
+
+                  <!-- 30-day micro-cashflow -->
+                  <div class="cashflow">
+                    <span class="cashflow-eb">CASHFLOW · 30 DIAS</span>
+                    <svg class="cashflow-line" viewBox="0 0 320 28" preserveAspectRatio="none">
+                      <defs>
+                        <linearGradient id="cf-fade" x1="0" x2="0" y1="0" y2="1">
+                          <stop offset="0" stop-color="#c9a85a" stop-opacity="0.32"/>
+                          <stop offset="1" stop-color="#c9a85a" stop-opacity="0"/>
+                        </linearGradient>
+                      </defs>
+                      <path d="M0,18 L14,16 L28,19 L42,14 L56,17 L70,12 L84,15 L98,11 L112,14 L126,9 L140,13 L154,8 L168,12 L182,7 L196,11 L210,6 L224,10 L238,5 L252,9 L266,4 L280,8 L294,5 L308,7 L320,4 L320,28 L0,28 Z" fill="url(#cf-fade)"/>
+                      <path d="M0,18 L14,16 L28,19 L42,14 L56,17 L70,12 L84,15 L98,11 L112,14 L126,9 L140,13 L154,8 L168,12 L182,7 L196,11 L210,6 L224,10 L238,5 L252,9 L266,4 L280,8 L294,5 L308,7 L320,4" fill="none" stroke="#c9a85a" stroke-width="1.4" stroke-linejoin="round" stroke-linecap="round"/>
+                      <circle cx="320" cy="4" r="2.4" fill="#c9a85a"/>
+                    </svg>
+                  </div>
+                </div>
+
+                <!-- Stat row · Receitas + Despesas tiles -->
+                <div class="stat-row">
+                  <div class="stat-tile is-moss">
+                    <span class="stat-tile-eb">RECEITAS · MÊS</span>
+                    <span class="stat-tile-amt"><span class="cur">€</span>2&thinsp;840</span>
+                    <span class="stat-tile-foot">+8,2% vs setembro</span>
+                  </div>
+                  <div class="stat-tile is-crimson">
+                    <span class="stat-tile-eb">DESPESAS · MÊS</span>
+                    <span class="stat-tile-amt is-crim"><span class="cur">€</span>998</span>
+                    <span class="stat-tile-foot">−4,1% vs setembro</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Category breakdown -->
+              <div class="sec-head">
+                <span class="m-eb">ONDE FOI O DINHEIRO</span>
+                <span style="font-family: var(--font-sans); font-size: 11.5px; color: var(--ink-mute);">Outubro</span>
+              </div>
+              <div class="m-section">
+                <div class="m-card cat-card">
+                  <div class="cat-bar">
+                    <div class="cat-bar-seg" style="width: 49%; background: var(--cat-forest);"></div>
+                    <div class="cat-bar-seg" style="width: 17%; background: var(--cat-ochre);"></div>
+                    <div class="cat-bar-seg" style="width: 10%; background: var(--cat-clay);"></div>
+                    <div class="cat-bar-seg" style="width: 7%;  background: var(--cat-bronze);"></div>
+                    <div class="cat-bar-seg" style="width: 9%;  background: var(--cat-fog);"></div>
+                    <div class="cat-bar-seg" style="width: 8%;  background: var(--cat-sage);"></div>
+                  </div>
+                  <div class="cat-row">
+                    <span class="cat-swatch-sm" style="background: var(--cat-forest);"></span>
+                    <span>Casa</span>
+                    <span class="cat-pct">49%</span>
+                    <span class="cat-amt">€1&thinsp;180</span>
+                  </div>
+                  <div class="cat-row">
+                    <span class="cat-swatch-sm" style="background: var(--cat-ochre);"></span>
+                    <span>Mercearia</span>
+                    <span class="cat-pct">17%</span>
+                    <span class="cat-amt">€412</span>
+                  </div>
+                  <div class="cat-row">
+                    <span class="cat-swatch-sm" style="background: var(--cat-bronze);"></span>
+                    <span>Restaurantes</span>
+                    <span class="cat-pct">7%</span>
+                    <span class="cat-amt">€168</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Recent ledger -->
+              <div class="sec-head">
+                <span class="m-eb">MOVIMENTOS RECENTES</span>
+                <a href="#" class="sec-link">esta semana</a>
+              </div>
+              <div class="m-section">
+                <div class="m-card led-card">
+                  <div class="led-row">
+                    <span class="led-date">HOJE<br/>18:42</span>
+                    <div class="led-mid">
+                      <span class="led-name">Continente Colombo</span>
+                      <span class="led-cat"><span class="sw" style="background: var(--cat-ochre);"></span>Mercearia</span>
+                    </div>
+                    <span class="led-amt is-out"><span class="cur">€</span>84,32</span>
+                  </div>
+                  <div class="led-row">
+                    <span class="led-date">HOJE<br/>13:10</span>
+                    <div class="led-mid">
+                      <span class="led-name">Galp · A1 Santarém</span>
+                      <span class="led-cat"><span class="sw" style="background: var(--cat-clay);"></span>Carro</span>
+                    </div>
+                    <span class="led-amt is-out"><span class="cur">€</span>65,00</span>
+                  </div>
+                  <div class="led-row">
+                    <span class="led-date">ONTEM<br/>09:00</span>
+                    <div class="led-mid">
+                      <span class="led-name">Salário · Outubro</span>
+                      <span class="led-cat"><span class="sw" style="background: var(--moss);"></span>Receita</span>
+                    </div>
+                    <span class="led-amt is-in"><span class="cur">€</span>2&thinsp;840,00</span>
+                  </div>
+                  <div class="led-row">
+                    <span class="led-date">ONTEM<br/>21:33</span>
+                    <div class="led-mid">
+                      <span class="led-name">Tasca do Chico</span>
+                      <span class="led-cat"><span class="sw" style="background: var(--cat-bronze);"></span>Restaurantes</span>
+                    </div>
+                    <span class="led-amt is-out"><span class="cur">€</span>42,50</span>
+                  </div>
+                  <div class="led-row">
+                    <span class="led-date">12 OUT<br/>08:00</span>
+                    <div class="led-mid">
+                      <span class="led-name">Renda · Casa Lapa</span>
+                      <span class="led-cat"><span class="sw" style="background: var(--cat-forest);"></span>Casa</span>
+                    </div>
+                    <span class="led-amt is-out"><span class="cur">€</span>1&thinsp;180,00</span>
+                  </div>
+                  <div class="led-foot">
+                    <a href="#">Ver todas →</a>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Centered FAB -->
+            <button class="m-fab" aria-label="Adicionar despesa">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+
+            <!-- Bottom tab bar -->
+            <nav class="m-tabbar">
+              <div class="m-tab is-active">
+                <span class="lbl">Painel</span>
+                <span class="m-tab-dot"></span>
+              </div>
+              <div class="m-tab">
+                <span class="lbl">Património</span>
+                <span class="m-tab-dot"></span>
+              </div>
+              <div class="m-tab is-fab-spacer">
+                <span class="lbl">+</span>
+                <span class="m-tab-dot"></span>
+              </div>
+              <div class="m-tab">
+                <span class="lbl">Despesas</span>
+                <span class="m-tab-dot"></span>
+              </div>
+              <div class="m-tab">
+                <span class="lbl">Ferramentas</span>
+                <span class="m-tab-dot"></span>
+              </div>
+            </nav>
+
+            <!-- Safe-area + home indicator -->
+            <div class="safe-hint"></div>
+            <div class="home-indicator"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- ============================================
+         PHONE 2 · Empty state
+         ============================================ -->
+    <div class="phone-slot">
+      <span class="phone-caption">Estado · sem despesas</span>
+
+      <div class="iphone">
+        <div class="iphone-inner">
+
+          <!-- Status bar -->
+          <div class="status-bar">
+            <span class="sb-time">10:24</span>
+            <span class="sb-r">
+              <span class="sb-bars"><span></span><span></span><span></span><span></span></span>
+              <span style="font-weight: 500; font-size: 11px;">5G</span>
+              <span class="sb-batt"><span class="sb-batt-fill"></span></span>
+              <span style="font-weight: 500; font-size: 11px;">89%</span>
+            </span>
+          </div>
+
+          <div class="m-page">
+            <div class="m-scroll">
+
+              <!-- No PTR — fresh empty -->
+              <div style="height: 14px;"></div>
+
+              <!-- Header -->
+              <div class="m-head">
+                <div>
+                  <div class="m-greet">14 OUT · QUARTA</div>
+                  <h1 class="m-title">Bom dia, <em>Francisco</em></h1>
+                </div>
+                <div class="m-avatar">F</div>
+              </div>
+
+              <!-- Hero card · Empty -->
+              <div class="m-section">
+                <div class="m-card is-feature" style="text-align: left;">
+                  <span class="m-eb on-forest">SALDO DO MÊS</span>
+                  <div class="hero-amt-row" style="margin-top: 14px;">
+                    <span class="empty-zero"><span class="cur">€</span>0,00</span>
+                  </div>
+                  <p class="empty-pull">Sem despesas este mês.</p>
+                  <button class="empty-cta">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"/>
+                      <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
+                    Adicionar a primeira
+                  </button>
+                </div>
+
+                <!-- Stat row — empty dashes -->
+                <div class="stat-row">
+                  <div class="empty-stat-tile">
+                    <span class="em-eb">RECEITAS</span>
+                    <span class="em-dash">—</span>
+                  </div>
+                  <div class="empty-stat-tile">
+                    <span class="em-eb">DESPESAS</span>
+                    <span class="em-dash">—</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty category block -->
+              <div class="sec-head">
+                <span class="m-eb">ONDE FOI O DINHEIRO</span>
+                <span style="font-family: var(--font-sans); font-size: 11.5px; color: var(--ink-mute);">Outubro</span>
+              </div>
+              <div class="m-section">
+                <div class="empty-block">
+                  <div class="empty-block-it">Ainda nada para mostrar.<br/>Adiciona a primeira despesa para veres a tua composição do mês.</div>
+                </div>
+              </div>
+
+              <!-- Empty ledger block -->
+              <div class="sec-head">
+                <span class="m-eb">MOVIMENTOS RECENTES</span>
+              </div>
+              <div class="m-section">
+                <div class="empty-block">
+                  <div class="empty-block-it">O ledger está em branco. Toca no <span style="font-family: var(--font-display); font-weight: 500; color: var(--gilt-deep);">+</span> para escrever a primeira linha.</div>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Centered FAB -->
+            <button class="m-fab" aria-label="Adicionar despesa">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+              </svg>
+            </button>
+
+            <!-- Bottom tab bar -->
+            <nav class="m-tabbar">
+              <div class="m-tab is-active">
+                <span class="lbl">Painel</span>
+                <span class="m-tab-dot"></span>
+              </div>
+              <div class="m-tab">
+                <span class="lbl">Património</span>
+                <span class="m-tab-dot"></span>
+              </div>
+              <div class="m-tab is-fab-spacer">
+                <span class="lbl">+</span>
+                <span class="m-tab-dot"></span>
+              </div>
+              <div class="m-tab">
+                <span class="lbl">Despesas</span>
+                <span class="m-tab-dot"></span>
+              </div>
+              <div class="m-tab">
+                <span class="lbl">Ferramentas</span>
+                <span class="m-tab-dot"></span>
+              </div>
+            </nav>
+
+            <div class="safe-hint"></div>
+            <div class="home-indicator"></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Cross-link footer -->
+  <nav class="footer-nav">
+    <span>WAVE 1 ·</span>
+    <a href="shell.html">Shell</a>
+    <a href="painel.html">Painel</a>
+    <a href="add-manual.html">Add · Manual</a>
+    <a href="add-recibo.html">Add · Recibo</a>
+    <a href="add-dividir.html">Add · Dividir</a>
+    <a href="mobile-painel.html" class="is-current">Mobile · Painel</a>
+    <a href="mobile-add-sheet.html">Mobile · Bottom Sheet</a>
+  </nav>
+
+</section>
+
+</body>
+</html>

@@ -179,26 +179,26 @@ export default function SignUpPage() {
 
   if (step === "verify") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
+      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white relative">
         {/* Language Switcher */}
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
 
         <div className="w-full max-w-md">
-          <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">
             {t("verifyYourEmail")}
           </h1>
-          <p className="text-center text-slate-600 dark:text-slate-400 mb-2">
+          <p className="text-center text-slate-600 mb-2">
             {t("weSentCode")}
           </p>
-          <p className="text-center text-slate-900 dark:text-white font-medium mb-8">
+          <p className="text-center text-slate-900 font-medium mb-8">
             {email}
           </p>
 
           <div className="space-y-6">
             {error && (
-              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+              <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
                 {error}
               </div>
             )}
@@ -215,7 +215,7 @@ export default function SignUpPage() {
                   onChange={(e) => handleCodeChange(index, e.target.value)}
                   onKeyDown={(e) => handleCodeKeyDown(index, e)}
                   disabled={isLoading}
-                  className="w-12 h-14 text-center text-2xl font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent disabled:opacity-50"
+                  className="w-12 h-14 text-center text-2xl font-bold rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent disabled:opacity-50"
                 />
               ))}
             </div>
@@ -229,10 +229,10 @@ export default function SignUpPage() {
             </button>
 
             <div className="text-center space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-slate-600">
                 {t("didntReceiveCode")}{" "}
                 {resendCooldown > 0 ? (
-                  <span className="text-slate-400 dark:text-slate-500">
+                  <span className="text-slate-400">
                     {t("resendIn", { seconds: resendCooldown })}
                   </span>
                 ) : (
@@ -249,7 +249,7 @@ export default function SignUpPage() {
               <button
                 onClick={handleBackToForm}
                 disabled={isLoading}
-                className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                className="text-sm text-slate-600 hover:text-slate-900"
               >
                 ← {t("changeEmailAddress")}
               </button>
@@ -261,23 +261,23 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white relative">
       {/* Language Switcher */}
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
 
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">
           Amigo
         </h1>
-        <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
+        <p className="text-center text-slate-600 mb-8">
           {t("createYourAccount")}
         </p>
 
         <form onSubmit={handleSendVerification} className="space-y-4">
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
               {error}
             </div>
           )}
@@ -285,7 +285,7 @@ export default function SignUpPage() {
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("name")}
             </label>
@@ -295,7 +295,7 @@ export default function SignUpPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder={t("namePlaceholder")}
             />
           </div>
@@ -303,7 +303,7 @@ export default function SignUpPage() {
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("username")}
             </label>
@@ -315,7 +315,7 @@ export default function SignUpPage() {
               required
               minLength={3}
               maxLength={20}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder="johndoe"
             />
             <p className="mt-1 text-xs text-slate-500">
@@ -326,7 +326,7 @@ export default function SignUpPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("email")}
             </label>
@@ -336,7 +336,7 @@ export default function SignUpPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder={t("emailPlaceholder")}
             />
           </div>
@@ -344,7 +344,7 @@ export default function SignUpPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("password")}
             </label>
@@ -355,7 +355,7 @@ export default function SignUpPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder="••••••••"
             />
             <p className="mt-1 text-xs text-slate-500">
@@ -372,7 +372,7 @@ export default function SignUpPage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
+        <p className="mt-6 text-center text-sm text-slate-600">
           {t("alreadyHaveAccount")}{" "}
           <a
             href="/signin"

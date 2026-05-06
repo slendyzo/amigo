@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>amigo — numerals</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin:0; padding:28px; background:var(--paper-deep); box-sizing:border-box; border:1px solid var(--rule); }
+  table { width:100%; border-collapse:collapse; }
+  th, td {
+    padding: 10px 12px;
+    text-align: right;
+    border-bottom: 1px solid var(--rule);
+    font-variant-numeric: tabular-nums lining-nums;
+    font-family: var(--font-num);
+    font-weight: 400;
+    font-size: 18px;
+    color: var(--ink);
+    letter-spacing: -0.01em;
+  }
+  th {
+    font: var(--w-medium) 10px/1.4 var(--font-mono);
+    color: var(--ink-mute);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    text-align: right;
+    border-bottom: 1px solid var(--ink);
+  }
+  th:first-child, td:first-child { text-align: left; font-family: var(--font-display); font-size: 17px; font-weight: 380; letter-spacing: -0.01em; }
+  .cat { font-family: var(--font-mono); color: var(--ink-mute); font-size: 11px; font-weight: 500; letter-spacing: 0.18em; text-transform: uppercase; }
+  .gain { color: var(--moss); }
+  .loss { color: var(--crimson); }
+  .total td {
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--ink);
+    border-bottom: none;
+    border-top: 4px double var(--ink);
+    padding-top: 14px;
+  }
+  .total td:first-child {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 380;
+    letter-spacing: -0.01em;
+  }
+  .note { margin-top: 16px; font: var(--w-regular) 12px/1.5 var(--font-sans); color: var(--ink-mute); border-top: 1px solid var(--gilt); padding-top: 12px; }
+  .note b { color: var(--ink); font-weight: 600; }
+</style>
+</head>
+<body>
+  <table>
+    <tr><th>Asset</th><th>Quantity</th><th>Value</th><th>P&amp;L</th></tr>
+    <tr><td>Bitcoin</td><td class="cat">btc</td><td>$18,420.10</td><td class="gain">+2.41%</td></tr>
+    <tr><td>Ethereum</td><td class="cat">eth</td><td>$7,108.55</td><td class="gain">+1.02%</td></tr>
+    <tr><td>VWCE.DE</td><td class="cat">etf</td><td>$1,742.00</td><td class="loss">−0.83%</td></tr>
+    <tr class="total"><td>Total</td><td></td><td>$27,270.65</td><td class="gain">+1.78%</td></tr>
+  </table>
+  <div class="note">All numerals set in <b>Fraunces</b> with <b>tabular-nums lining-nums</b> · currency leads · negatives use the proper minus glyph · sign always shown on percentages.</div>
+</body>
+</html>

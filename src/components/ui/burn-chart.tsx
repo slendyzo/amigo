@@ -89,12 +89,12 @@ export function BurnChart({
       <div className="w-full">
         {/* Compact header */}
         <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">{t("chart.spendingVelocity")}</p>
+          <p className="text-[11px] font-semibold text-ink-mute uppercase tracking-wider">{t("chart.spendingVelocity")}</p>
           <div className="text-right">
-            <span className={`text-[12px] font-bold ${difference > 0 ? "text-red-500" : "text-green-500"}`}>
+            <span className={`text-[12px] font-bold ${difference > 0 ? "text-crimson" : "text-moss"}`}>
               {difference > 0 ? "+" : ""}€{difference.toFixed(2)}
             </span>
-            <p className="text-[10px] text-slate-400">
+            <p className="text-[10px] text-ink-faint">
               {t("chart.vsLastMonth", { percent: `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}` })}
             </p>
           </div>
@@ -103,20 +103,20 @@ export function BurnChart({
         <div className="h-24 w-full">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={chartData} margin={{ top: 2, right: 4, left: 4, bottom: 2 }}>
-              <Line type="monotone" dataKey="previous" stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="previous" />
-              <Line type="monotone" dataKey="current" stroke="#0070f3" strokeWidth={2} dot={false} name="current" />
+              <Line type="monotone" dataKey="previous" stroke="var(--ink-faint)" strokeWidth={1.5} strokeDasharray="4 4" dot={false} name="previous" />
+              <Line type="monotone" dataKey="current" stroke="var(--forest)" strokeWidth={2} dot={false} name="current" />
             </LineChart>
           </ResponsiveContainer>
         </div>
         {/* Compact legend */}
         <div className="flex items-center justify-center gap-4 mt-1">
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 bg-[#0070f3] rounded" />
-            <span className="text-[10px] text-slate-500">{currentMonthLabel}: €{currentTotal.toFixed(2)}</span>
+            <div className="w-3 h-0.5 bg-forest rounded" />
+            <span className="text-[10px] text-ink-mute">{currentMonthLabel}: €{currentTotal.toFixed(2)}</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-3 h-0.5 bg-slate-400 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg, #94a3b8, #94a3b8 3px, transparent 3px, transparent 6px)" }} />
-            <span className="text-[10px] text-slate-500">{previousMonthLabel}: €{previousTotal.toFixed(2)}</span>
+            <div className="w-3 h-0.5 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg, var(--ink-faint), var(--ink-faint) 3px, transparent 3px, transparent 6px)" }} />
+            <span className="text-[10px] text-ink-mute">{previousMonthLabel}: €{previousTotal.toFixed(2)}</span>
           </div>
         </div>
       </div>
@@ -128,14 +128,14 @@ export function BurnChart({
       {/* Summary */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-semibold text-slate-900">{t("chart.spendingVelocity")}</h3>
-          <p className="text-sm text-slate-500">{t("chart.cumulativeComparison")}</p>
+          <h3 className="font-semibold text-ink">{t("chart.spendingVelocity")}</h3>
+          <p className="text-sm text-ink-mute">{t("chart.cumulativeComparison")}</p>
         </div>
         <div className="text-right">
-          <p className={`text-lg font-semibold ${difference > 0 ? "text-red-500" : "text-green-500"}`}>
+          <p className={`text-lg font-semibold ${difference > 0 ? "text-crimson" : "text-moss"}`}>
             {difference > 0 ? "+" : ""}€{difference.toFixed(2)}
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-ink-mute">
             {t("chart.vsLastMonth", { percent: `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}` })}
           </p>
         </div>
@@ -145,24 +145,24 @@ export function BurnChart({
       <div className="h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--rule)" />
             <XAxis
               dataKey="day"
-              tick={{ fontSize: 12, fill: "#64748b" }}
+              tick={{ fontSize: 12, fill: "var(--ink-mute)" }}
               tickLine={false}
-              axisLine={{ stroke: "#e2e8f0" }}
+              axisLine={{ stroke: "var(--rule)" }}
             />
             <YAxis
-              tick={{ fontSize: 12, fill: "#64748b" }}
+              tick={{ fontSize: 12, fill: "var(--ink-mute)" }}
               tickLine={false}
-              axisLine={{ stroke: "#e2e8f0" }}
+              axisLine={{ stroke: "var(--rule)" }}
               tickFormatter={(value) => `€${value}`}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
+                backgroundColor: "var(--paper-deep)",
+                border: "1px solid var(--rule)",
+                borderRadius: "10px",
                 boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
               }}
               formatter={(value, name) => [
@@ -179,7 +179,7 @@ export function BurnChart({
             <Line
               type="monotone"
               dataKey="previous"
-              stroke="#94a3b8"
+              stroke="var(--ink-faint)"
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}
@@ -188,11 +188,11 @@ export function BurnChart({
             <Line
               type="monotone"
               dataKey="current"
-              stroke="#0070f3"
+              stroke="var(--forest)"
               strokeWidth={3}
               dot={false}
               name="current"
-              activeDot={{ r: 6, fill: "#0070f3" }}
+              activeDot={{ r: 6, fill: "var(--forest)" }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -201,12 +201,12 @@ export function BurnChart({
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-2">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-1 bg-[#0070f3] rounded" />
-          <span className="text-sm text-slate-600">{currentMonthLabel}: €{currentTotal.toFixed(2)}</span>
+          <div className="w-4 h-1 bg-forest rounded" />
+          <span className="text-sm text-ink-soft">{currentMonthLabel}: €{currentTotal.toFixed(2)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-1 bg-slate-400 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg, #94a3b8, #94a3b8 4px, transparent 4px, transparent 8px)" }} />
-          <span className="text-sm text-slate-600">{previousMonthLabel}: €{previousTotal.toFixed(2)}</span>
+          <div className="w-4 h-1 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg, var(--ink-faint), var(--ink-faint) 4px, transparent 4px, transparent 8px)" }} />
+          <span className="text-sm text-ink-soft">{previousMonthLabel}: €{previousTotal.toFixed(2)}</span>
         </div>
       </div>
     </div>

@@ -58,21 +58,21 @@ export default function NudgeKeywordCard({
   };
 
   return (
-    <div className="relative w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5">
+    <div className="relative w-full rounded-lg border border-slate-200 bg-white px-4 py-3.5">
       <button
         onClick={handleDismiss}
         aria-label={t("nudges.common.dismiss")}
-        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
 
-      <p className="text-sm font-medium text-slate-900 dark:text-white pr-6">
+      <p className="text-sm font-medium text-slate-900 pr-6">
         {t("nudges.keyword.cardHeading", { merchant: merchantKey, category: categoryName, count })}
       </p>
-      <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+      <p className="text-xs text-slate-500 mt-1 leading-relaxed">
         {t("nudges.keyword.cardSubtitle")}
       </p>
 
@@ -80,13 +80,13 @@ export default function NudgeKeywordCard({
         <button
           onClick={handleAccept}
           disabled={loading}
-          className="text-xs font-medium px-3 py-1.5 rounded-md bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:opacity-80 disabled:opacity-50 transition-opacity"
+          className="text-xs font-medium px-3 py-1.5 rounded-md bg-slate-900 text-white hover:opacity-80 disabled:opacity-50 transition-opacity"
         >
           {t("nudges.keyword.createRule")}
         </button>
         <button
           onClick={handleDismiss}
-          className="text-xs font-medium px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+          className="text-xs font-medium px-3 py-1.5 rounded-md border border-slate-200 text-slate-600 hover:bg-slate-50 transition-colors"
         >
           {t("nudges.common.notNow")}
         </button>

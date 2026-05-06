@@ -637,7 +637,7 @@ function SellModal({
           </label>
 
           {willCloseLoan && activeLoan && (
-            <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-400">
+            <p className="rounded-lg bg-emerald-500/10 px-3 py-2 text-xs text-emerald-700">
               {t("willCloseLoan", {
                 name: activeLoan.name,
                 balance: formatCurrency(activeLoan.currentBalanceEur, "EUR"),

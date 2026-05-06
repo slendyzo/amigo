@@ -22,6 +22,8 @@ export async function GET(request: Request) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
     const projectId = searchParams.get("projectId");
+    const includeParam = searchParams.get("include") ?? "";
+    const includeSplit = includeParam.split(",").includes("split");
 
     // Build where clause
     type WhereClause = {
@@ -78,11 +80,39 @@ export async function GET(request: Request) {
           imageUrls: true,
           splitCount: true,
           splitData: true,
+          payerMemberId: true,
           description: true,
           category: { include: { parent: true } },
           bankAccount: true,
           projects: true,
           createdAt: true,
+          ...(includeSplit
+            ? {
+                participants: {
+                  select: {
+                    id: true,
+                    memberId: true,
+                    adHocName: true,
+                    share: true,
+                    paid: true,
+                    settledAt: true,
+                    locked: true,
+                    member: {
+                      select: {
+                        id: true,
+                        user: { select: { name: true, email: true } },
+                      },
+                    },
+                  },
+                },
+                payer: {
+                  select: {
+                    id: true,
+                    user: { select: { name: true, email: true } },
+                  },
+                },
+              }
+            : {}),
         },
       }),
       prisma.expense.count({ where }),
@@ -106,7 +136,17 @@ export async function POST(request: Request) {
     const { workspace } = context;
 
     const body = await request.json();
-    const { quickAdd, name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData, description, realAssetId } = body;
+    const { quickAdd, name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData, description, realAssetId, payerMemberId, participants } = body;
+
+    // Forest & Bracket — split participants payload
+    type SplitParticipantInput = {
+      memberId?: string | null;
+      adHocName?: string | null;
+      share: number | string;
+      paid?: boolean;
+      locked?: boolean;
+    };
+    const participantInputs: SplitParticipantInput[] = Array.isArray(participants) ? participants : [];
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToConnect: string[] = projectIds || (projectId ? [projectId] : []);
@@ -254,6 +294,28 @@ export async function POST(request: Request) {
     const expenseDate = date ? new Date(date) : new Date();
     const expenseDueDate = dueDate ? new Date(dueDate) : null;
 
+    // Forest & Bracket — normalize participants payload to Prisma createMany shape.
+    // Each row must have either memberId or adHocName, and a numeric share > 0.
+    const participantsCreate = participantInputs
+      .map((p) => {
+        const share = typeof p.share === "string" ? parseFloat(p.share) : p.share;
+        if (!Number.isFinite(share) || share <= 0) return null;
+        const memberId = typeof p.memberId === "string" && p.memberId ? p.memberId : null;
+        const adHocName = typeof p.adHocName === "string" ? p.adHocName.trim() || null : null;
+        if (!memberId && !adHocName) return null;
+        return {
+          memberId,
+          adHocName: memberId ? null : adHocName,
+          share,
+          paid: p.paid === true,
+          locked: p.locked === true,
+        };
+      })
+      .filter(<T,>(v: T | null): v is T => v !== null);
+
+    const resolvedPayerMemberId =
+      typeof payerMemberId === "string" && payerMemberId ? payerMemberId : null;
+
     const expense = await prisma.expense.create({
       data: {
         workspaceId: workspace.id,
@@ -272,18 +334,23 @@ export async function POST(request: Request) {
         bankAccountId: expenseData.bankAccountId,
         excludeFromBudget: excludeFromBudget || false,
         imageUrls: imageUrls || null,
-        splitCount: splitCount || null,
+        splitCount: splitCount || (participantsCreate.length || null),
         splitData: splitData || null,
         description: description || null,
         realAssetId: typeof realAssetId === "string" && realAssetId ? realAssetId : null,
+        payerMemberId: resolvedPayerMemberId,
         projects: projectIdsToConnect.length > 0
           ? { connect: projectIdsToConnect.map(id => ({ id })) }
+          : undefined,
+        participants: participantsCreate.length > 0
+          ? { create: participantsCreate }
           : undefined,
       },
       include: {
         category: { include: { parent: true } },
         bankAccount: true,
         projects: true,
+        participants: true,
       },
     });
 

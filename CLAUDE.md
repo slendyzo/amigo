@@ -14,6 +14,25 @@ This file provides all context needed to start a new Claude Code session and con
 
 This applies to ALL work — bug fixes, features, refactors, infrastructure changes. No exceptions. Plane is the source of truth. See global CLAUDE.md for full Plane integration details.
 
+## CRITICAL: Design System — Forest & Bracket
+
+**The brand is Forest & Bracket.** Bone paper `#f1ebdd`, forest green `#1e3a2c`, gilt accent `#a8853a`, Fraunces serif numerals, General Sans body, Instrument Serif italic accents, JetBrains Mono eyebrows. **There is no dark mode.** This system replaces the old "Electric Blue + Slate + Inter" identity entirely.
+
+- **Source of truth:** `claude design/colors_and_type.css` (tokens) + `claude design/README.md` (rules) + `docs/DESIGN.md` (codebase implementation conventions).
+- **Active redesign plan:** `docs/REDESIGN-FOREST-BRACKET.md`.
+- **Mocks:** `docs/mocks/` — one static HTML per surface, PT-PT only, approved in waves before code lands.
+- **Workflow rule:** No production component edits to a surface before its static mock is signed off.
+
+Anti-patterns that will get a PR rejected:
+
+- Pure white surfaces (use `--paper` / `--paper-deep`)
+- Drop shadows on cards (use rules)
+- Saturated status fills (use `-tint` backgrounds)
+- Gilt as a fill colour (gilt is rules and dots only)
+- Inter, system-ui, or fallback sans for body
+- `dark:` Tailwind variants
+- Emoji in product UI
+
 ## CRITICAL: Deploying
 
 **The only sanctioned deploy command is `bash /root/amigo/deploy.sh` on CT 104.**
@@ -60,9 +79,10 @@ Background context (do not need to repeat to user):
 - **Framework:** Next.js 15 (App Router + Turbopack)
 - **Database:** Prisma 7 + PostgreSQL 17 (self-hosted Docker)
 - **Auth:** NextAuth v5 (credentials + OAuth)
-- **Styling:** Tailwind CSS 4
-- **UI Components:** Shadcn UI (Electric Blue theme)
+- **Styling:** Tailwind CSS 4 with Forest & Bracket tokens (`@theme inline` in `globals.css`, sourced from `claude design/colors_and_type.css`)
+- **UI Components:** Shadcn UI (style: `new-york`, base: `neutral` — retokenized to Forest & Bracket; old Electric Blue tokens removed)
 - **Charts:** Recharts (React 19 compatible)
+- **Fonts:** Fraunces (display + numerals), General Sans (body), JetBrains Mono (eyebrows) — all self-hosted via `next/font`. Plus Instrument Serif **scoped to the logo mark only** (do not use for body, names, subtitles, hints, or microcopy). Inter is removed.
 - **Email:** Resend (for verification codes, password reset, invitations)
 - **Language:** TypeScript 5.7, React 19
 - **i18n:** next-intl (en, pt-PT, fr-FR)
@@ -134,18 +154,29 @@ src/
 │   ├── auth-error/             # Auth error page
 │   ├── dashboard/              # Main app pages
 │   │   ├── page.tsx            # Server component wrapper
-│   │   ├── overview-client.tsx # Client with filters/charts
-│   │   ├── expenses/           # Full expense list (sortable, exportable)
-│   │   ├── projects/           # Project management
-│   │   ├── categories/         # Category management
-│   │   ├── accounts/           # Bank account management
-│   │   ├── mappings/           # Keyword mappings
-│   │   ├── recurring/          # Recurring templates
-│   │   ├── incomes/            # Income tracking
-│   │   ├── import/             # 3-step import wizard
-│   │   ├── imports/            # Import history
-│   │   ├── inbox/              # Admin feedback inbox
-│   │   ├── settings/           # User settings
+│   │   ├── overview-client.tsx # Painel — Burn Chart + recents (Living Gauge being retired)
+│   │   ├── expenses/           # Despesas — full list, sortable, exportable, bulk-delete
+│   │   ├── incomes/            # Receitas — income tracking
+│   │   ├── recurring/          # Recorrentes — recurring templates
+│   │   ├── projects/           # Projetos — tag-style grouping (Casa, Vacation, …)
+│   │   ├── categories/         # Categorias — CRUD
+│   │   ├── mappings/           # Mapeamentos — keyword auto-categorization rules
+│   │   ├── accounts/           # Contas Bancárias — bank account management
+│   │   ├── import/             # Importar — 3-step import wizard
+│   │   ├── imports/            # Imports history with rollback
+│   │   ├── tidy-up/            # Arrumar — bookkeeping nudges queue
+│   │   ├── insights/           # Retrospetiva — AI Advisor monthly retrospective
+│   │   ├── portfolio/          # Carteira (will live under Património)
+│   │   │   ├── page.tsx        #   Main asset list + allocation
+│   │   │   ├── [assetId]/      #   Asset detail
+│   │   │   ├── exchanges/      #   Exchange connections (Bybit, Binance)
+│   │   │   └── symbol/         #   Symbol-level views
+│   │   ├── networth/           # Património — parent for portfolio + property + vehicles
+│   │   │   ├── networth-client.tsx
+│   │   │   ├── property/[id]/  #   Real-estate detail (mortgage, equity)
+│   │   │   └── vehicle/[id]/   #   Vehicle TCO (linked via Expense.realAssetId)
+│   │   ├── inbox/              # Caixa de Entrada — admin feedback inbox
+│   │   ├── settings/           # Definições — user settings
 │   │   └── workspace/          # Workspace management page
 │   ├── invitations/            # Accept invitation page
 │   │   └── [token]/            # Dynamic route for invitation tokens
@@ -195,23 +226,47 @@ messages/
 
 ## Database Models (Prisma)
 
-### Main Models
+### Auth & Workspace
 
-- **User** - Auth, subscription status, password (hashed), seenAnnouncements
-- **Workspace** - Multi-tenancy, budget settings, language (PERSONAL or SHARED)
-- **WorkspaceMember** - Links users to workspaces with roles (OWNER/ADMIN/MEMBER)
-- **WorkspaceInvitation** - Email invitations to join workspaces
-- **BankAccount** - User's bank accounts
-- **Category** - Expense categories
-- **Project** - Tags for grouping expenses
-- **Expense** - Core expense with type, amount, date
-- **Income** - Income tracking
-- **RecurringTemplate** - Auto-generate monthly expenses
-- **KeywordMapping** - Auto-categorization rules
-- **ImportLog** - Track import batches
-- **Feedback** - Bug reports and feature requests
-- **VerificationToken** - Password reset tokens
-- **EmailVerificationToken** - Registration OTP codes with pending user data
+- **User** — Auth, subscription status, password (hashed), `seenAnnouncements`, `activeWorkspaceId`
+- **Account / Session** — NextAuth OAuth tables
+- **VerificationToken** — Password reset tokens
+- **EmailVerificationToken** — Registration OTP codes with pending user data
+- **Workspace** — Multi-tenancy, budget settings, language (PERSONAL or SHARED)
+- **WorkspaceMember** — Links users to workspaces with roles (OWNER/ADMIN/MEMBER)
+- **WorkspaceInvitation** — Email invitations to join workspaces
+
+### Money (expenses, income, recurring)
+
+- **Expense** — Core expense (type, amount, date, currency, `splitCount`, `splitData`, `realAssetId`)
+- **Income** — Income tracking (recurring salary support)
+- **RecurringTemplate** — Auto-generate monthly expenses
+- **BankAccount** — Bank account management
+- **Category** — Expense categories
+- **Project** — Tags for grouping expenses (many-to-many with Expense)
+- **KeywordMapping** — Auto-categorization rules
+- **PurchaseReceipt** — Receipt OCR captures
+- **ImportLog** — Track import batches (rollback support)
+
+### Património (portfolio + real-world assets)
+
+- **ExchangeConnection** — Bybit/Binance/etc. exchange API connections
+- **PortfolioAsset** — Crypto + ETF holdings
+- **Trade** — Individual trade history
+- **PortfolioSnapshot** — Daily portfolio value snapshots
+- **ExchangeDeposit** — Deposit tracking from exchanges
+- **RealAsset** — Vehicle / property parent record (links Expense via `realAssetId` for TCO)
+- **Vehicle** — Vehicle detail (linked to RealAsset)
+- **Property** — Real-estate detail (mortgage, equity, valuation)
+- **ValuationHistory** — Time-series valuations for properties / vehicles
+- **VehicleTaxonomy** / **SpecMarketSnapshot** — Vehicle make/model + market data
+- **PropertyValuationIndex** — Property index data for automatic revaluation
+- **Liability** — Loans, mortgages (offsets net worth)
+
+### Advisor & misc
+
+- **Insight** — AI Advisor monthly retrospective records
+- **Feedback** — Bug reports and feature requests
 
 ### Key Relations
 
@@ -219,8 +274,15 @@ messages/
 - Expense → Category (optional)
 - Expense → BankAccount (optional)
 - Expense → ImportLog (for batch operations)
+- Expense → RealAsset (optional, for vehicle TCO)
 - User → WorkspaceMember → Workspace (many-to-many through membership)
 - Workspace → WorkspaceInvitation (one-to-many)
+- Workspace → ExchangeConnection → PortfolioAsset → Trade
+- Workspace → RealAsset → (Vehicle | Property) + ValuationHistory
+
+### Split mechanics (under redesign)
+
+The current `Expense.splitData` is a JSON blob `{label, amount, locked}[]` with no link to people. **Forest & Bracket redesign upgrades this** to a real `SplitParticipant` model: workspace member or ad-hoc name, share amount, paid bool, settled timestamp. See `docs/REDESIGN-FOREST-BRACKET.md`.
 
 ## Authentication Flow
 
@@ -448,14 +510,41 @@ npx prisma studio     # Open database GUI
 - **60+ Built-in Keywords** - Dining, Transport, Subscriptions, Utilities, etc.
 - **Custom Mappings** - Create your own keyword rules
 
-### Dashboard & Visualizations
+### Painel — Dashboard & Visualizations
 
-- **Overview Page** - Stats cards, recent expenses, charts
-- **Living Gauge** - Circular survival budget progress indicator
-- **Burn Chart** - Monthly spending comparison (current vs previous)
-- **Category Breakdown** - Stacked bar chart showing spending by category
-- **View Modes** - Month, Quarter, Year, All
-- **Filters** - Project filter, type filter, date selectors
+- **Painel** — Forest & Bracket dashboard B: hero saldo, category donut, 30-day cashflow line, 12-month income/expense bars, recent ledger preview
+- **Living Gauge** — Retired under Forest & Bracket (still in code while redesign in flight; see `docs/REDESIGN-FOREST-BRACKET.md`)
+- **Burn Chart** — Monthly spending comparison (being replaced by the cashflow line + monthly bars)
+- **Category Breakdown** — Donut with earth-tone category palette
+- **View Modes** — Month, Quarter, Year, All
+- **Filters** — Project filter, type filter, date selectors
+
+### Património — Net Worth & Portfolio
+
+- **Resumo** — Top-level networth view: Cash + Portfolio + Property + Vehicles − Liabilities
+- **Ativos (Portfolio)** — Crypto + ETF holdings, allocation donut, P&L per asset
+- **Corretoras** — Exchange API connections (Bybit, Binance, …); auto-sync trades + balances
+- **Imóveis (Property)** — Real-estate detail with mortgage, equity, valuation history; auto-revaluation via PropertyValuationIndex
+- **Veículos (Vehicle)** — Vehicle TCO; expenses with `realAssetId` link to a vehicle for full cost-of-ownership
+- **Liabilities** — Loans / mortgages netted off net worth
+
+### Splits — Bill splitting (under upgrade)
+
+- **Current** — JSON blob `{label, amount, locked}[]` on Expense, no people linkage
+- **Forest & Bracket upgrade** — `SplitParticipant` model: workspace member or ad-hoc name, share, paid bool, settled timestamp; "who owes me" balances per workspace
+
+### Retrospetiva (AI Advisor)
+
+- **Monthly Retrospective** — AI-generated headline + 3 observations + month-over-month category highlights
+- **Cold-Start Card** — Shown until enough data exists for a real retrospective
+- **Bookkeeping Nudges** — Categorize, keyword, recurring, project nudges with durable dismiss/snooze
+- **Locale Hardening** — Proactive locale prompt hardening for pt-PT and fr-FR
+- **Storage** — `Insight` model (one row per period)
+
+### Arrumar (Tidy-up)
+
+- **Bookkeeping Queue** — Surfaces expenses needing attention (uncategorized, unmapped, no project)
+- **Sidebar Badge** — Count badge in sidebar when nudges are pending
 
 ### Onboarding
 

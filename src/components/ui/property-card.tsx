@@ -64,8 +64,8 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
         whileHover={sold ? undefined : { y: -2, scale: 1.005 }}
         transition={SPRING}
         className={cn(
-          "relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm transition-colors",
-          "hover:border-border hover:shadow-md",
+          "relative overflow-hidden rounded-md border border-rule bg-card transition-colors",
+          "hover:border-rule-strong",
           sold && "opacity-70",
           className,
         )}
@@ -119,7 +119,7 @@ export function PropertyCard({ property, className, href }: PropertyCardProps) {
                 <span
                   className={cn(
                     "font-medium tabular-nums",
-                    property.realizedPnLEur > 0 ? "text-emerald-500" : "text-rose-500",
+                    property.realizedPnLEur > 0 ? "text-moss" : "text-crimson",
                   )}
                 >
                   {t("realizedPnL")} {property.realizedPnLEur > 0 ? "+" : ""}
@@ -168,8 +168,8 @@ function PropertyImage({
     );
   }
   return (
-    <div className="flex aspect-[16/9] max-h-[200px] w-full items-center justify-center bg-gradient-to-br from-violet-500/10 to-violet-500/5">
-      <Home className="h-10 w-10 text-violet-500/60" strokeWidth={1.5} />
+    <div className="flex aspect-[16/9] max-h-[200px] w-full items-center justify-center bg-gradient-to-br from-forest-tint to-paper-soft">
+      <Home className="h-10 w-10 text-forest/60" strokeWidth={1.5} />
     </div>
   );
 }
@@ -199,9 +199,9 @@ function DeltaBadge({
   const Icon = sign === "up" ? TrendingUp : sign === "down" ? TrendingDown : Minus;
   const color =
     sign === "up"
-      ? "text-emerald-500"
+      ? "text-moss"
       : sign === "down"
-        ? "text-rose-500"
+        ? "text-crimson"
         : "text-muted-foreground";
   return (
     <span className={cn("inline-flex items-center gap-1 text-xs font-medium tabular-nums", color)}>

@@ -404,7 +404,7 @@ export default function EditExpenseModal({
             <AssetLinkPicker
               value={linkedRealAssetId}
               onChange={setLinkedRealAssetId}
-              className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700/50"
+              className="mt-3 border-t border-slate-100 pt-3"
             />
           </div>
 

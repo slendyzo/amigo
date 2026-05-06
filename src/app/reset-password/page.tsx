@@ -89,14 +89,14 @@ function ResetPasswordForm() {
   // Loading state
   if (isValidating) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 px-4 relative">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4 relative">
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
         <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-slate-900/50 p-8 text-center border border-slate-200 dark:border-slate-800">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-200">
             <div className="w-12 h-12 border-4 border-[#0070f3] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-600 dark:text-slate-400">{t("validatingResetLink")}</p>
+            <p className="text-slate-600">{t("validatingResetLink")}</p>
           </div>
         </div>
       </div>
@@ -106,19 +106,19 @@ function ResetPasswordForm() {
   // Invalid token
   if (!tokenValid) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 px-4 relative">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4 relative">
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
         <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-slate-900/50 p-8 text-center border border-slate-200 dark:border-slate-800">
-            <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-200">
+            <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t("invalidResetLinkTitle")}</h1>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">{tokenError}</p>
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">{t("invalidResetLinkTitle")}</h1>
+            <p className="text-slate-600 mb-6">{tokenError}</p>
             <Link
               href="/forgot-password"
               className="inline-block px-6 py-3 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] transition-colors"
@@ -134,19 +134,19 @@ function ResetPasswordForm() {
   // Success state
   if (success) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 px-4 relative">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4 relative">
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
         <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-slate-900/50 p-8 text-center border border-slate-200 dark:border-slate-800">
-            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-200">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t("passwordResetSuccess")}</h1>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">{t("passwordResetSuccess")}</h1>
+            <p className="text-slate-600 mb-6">
               {t("passwordResetSuccessMessage")}
             </p>
             <Link
@@ -163,28 +163,28 @@ function ResetPasswordForm() {
 
   // Reset form
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 px-4 relative">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 relative">
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
       <div className="w-full max-w-md">
-        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-slate-900/50 p-8 border border-slate-200 dark:border-slate-800">
+        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t("createNewPassword")}</h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <h1 className="text-2xl font-bold text-slate-900 mb-2">{t("createNewPassword")}</h1>
+            <p className="text-slate-600">
               {t("enterNewPasswordBelow")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-1">
                 {t("newPassword")}
               </label>
               <input
@@ -192,7 +192,7 @@ function ResetPasswordForm() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#0070f3] focus:border-[#0070f3] outline-none transition-colors"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-[#0070f3] focus:border-[#0070f3] outline-none transition-colors"
                 placeholder={t("atLeast8Characters")}
                 required
                 minLength={8}
@@ -200,7 +200,7 @@ function ResetPasswordForm() {
             </div>
 
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-1">
                 {t("confirmPassword")}
               </label>
               <input
@@ -208,7 +208,7 @@ function ResetPasswordForm() {
                 type="password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#0070f3] focus:border-[#0070f3] outline-none transition-colors"
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-[#0070f3] focus:border-[#0070f3] outline-none transition-colors"
                 placeholder={t("reenterPassword")}
                 required
               />
@@ -217,7 +217,7 @@ function ResetPasswordForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 px-4 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">
@@ -249,11 +249,11 @@ export default function ResetPasswordPage() {
 
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 px-4">
+      <div className="min-h-screen flex items-center justify-center bg-white px-4">
         <div className="w-full max-w-md">
-          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-slate-900/50 p-8 text-center border border-slate-200 dark:border-slate-800">
+          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-200">
             <div className="w-12 h-12 border-4 border-[#0070f3] border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-            <p className="text-slate-600 dark:text-slate-400">{t("loading")}</p>
+            <p className="text-slate-600">{t("loading")}</p>
           </div>
         </div>
       </div>

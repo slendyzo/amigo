@@ -41,16 +41,21 @@
   "nav": {
     "dashboard": "Tableau de Bord",
     "holdings": "Avoirs",
-    "networth": "Patrimoine",
+    "networth": "Résumé",
     "exchanges": "Plateformes",
-    "sectionPortfolio": "Portefeuille",
+    "property": "Immobilier",
+    "vehicles": "Véhicules",
+    "sectionVision": "Vision",
+    "sectionPatrimonio": "Patrimoine",
+    "sectionPortfolio": "Patrimoine",
     "sectionFinances": "Finances",
     "sectionTools": "Outils",
-    "overview": "Aperçu",
+    "sectionAccount": "Compte",
+    "overview": "Résumé",
     "expenses": "Dépenses",
     "incomes": "Revenus",
     "recurring": "Récurrents",
-    "portfolio": "Portefeuille",
+    "portfolio": "Patrimoine",
     "projects": "Projets",
     "categories": "Catégories",
     "tidyUp": "Ranger",
@@ -65,10 +70,12 @@
     "menu": "Menu",
     "inbox": "Boîte de Réception",
     "whatsNew": "Nouveautés",
+    "workspace": "Espace",
     "sectionMoney": "Argent",
     "sectionOrganize": "Organiser",
     "sectionData": "Données",
-    "insights": "Analyses"
+    "insights": "Rétrospective",
+    "retrospective": "Rétrospective"
   },
   "auth": {
     "signIn": "Connexion",
@@ -216,6 +223,63 @@
       "invested": "Investi",
       "pnl": "P&L",
       "freeCash": "Solde Libre"
+    }
+  },
+  "painel": {
+    "eyebrow": "Tableau de bord · {month} {year} · Personnel",
+    "greeting": "Bonjour, {name}.",
+    "sub": "Vue complète : solde du mois, trésorerie, répartition par catégorie et patrimoine.",
+    "addExpense": "Nouvelle dépense",
+    "hero": {
+      "balanceEyebrow": "Solde {month} {year}",
+      "vsPrev": "vs mois précédent",
+      "vsYearAgo": "vs même mois année dernière",
+      "income": "Revenus",
+      "expenses": "Dépenses",
+      "pending": "En attente",
+      "netWorthEyebrow": "Patrimoine Net",
+      "cash": "Cash & Comptes",
+      "assets": "Actifs · Crypto et ETF",
+      "property": "Immobilier",
+      "vehicles": "Véhicules",
+      "liabilities": "− Passifs"
+    },
+    "cashflow": {
+      "eyebrow": "Flux · 30 jours",
+      "title": "Trésorerie de {month}",
+      "today": "Aujourd'hui · {day} {month}"
+    },
+    "donut": {
+      "eyebrow": "Répartition",
+      "title": "Dépenses par catégorie",
+      "total": "Total dépensé"
+    },
+    "bars": {
+      "eyebrow": "Flux · 12 mois",
+      "title": "Revenus vs Dépenses",
+      "income": "Revenus",
+      "expense": "Dépenses",
+      "net": "net"
+    },
+    "ledger": {
+      "eyebrow": "Mouvements · Récents",
+      "title": "Écritures récentes",
+      "seeAll": "Voir tout",
+      "date": "Date",
+      "description": "Description",
+      "category": "Catégorie",
+      "amount": "Montant"
+    },
+    "empty": {
+      "eyebrow": "Vide",
+      "headline": "Aucune dépense ce mois.",
+      "body": "La première que tu ajouteras apparaîtra ici — avec graphique, totaux et le reste.",
+      "cta": "Ajouter la première"
+    },
+    "error": {
+      "eyebrow": "Erreur",
+      "headline": "Impossible de charger.",
+      "body": "Un problème est survenu lors de la lecture des mouvements du mois. C'est peut-être temporaire — réessaie dans quelques secondes."
     }
   },
   "expenses": {
@@ -1198,6 +1262,110 @@
     "moreItems": "autres éléments",
     "invalidFileType": "Veuillez sélectionner un fichier image",
     "ocrFailed": "Échec de la lecture du reçu. Veuillez réessayer avec une image plus claire."
+  },
+  "addExpense": {
+    "eyebrow": "NOUVELLE ÉCRITURE",
+    "title": "Ajouter une dépense",
+    "save": "Enregistrer",
+    "savingShort": "Enregistrement…",
+    "savingHint": "Écriture dans le livre…",
+    "shortcutHint": "Raccourci",
+    "saveFailed": "Impossible d'enregistrer la dépense.",
+    "offlineUnavailable": "Le stockage hors ligne n'est pas disponible.",
+    "modes": {
+      "manual": {
+        "label": "Manuel",
+        "sub": "Une dépense, depuis zéro"
+      },
+      "recibo": {
+        "label": "Reçu · IA",
+        "sub": "Photo ou PDF · l'IA lit les champs"
+      },
+      "dividir": {
+        "label": "Partager",
+        "sub": "Entre amis ou famille"
+      }
+    },
+    "manual": {
+      "description": "Description",
+      "descriptionPlaceholder": "ex : Carrefour Place d'Italie",
+      "descriptionMissing": "Description manquante",
+      "amountInvalid": "Montant invalide",
+      "date": "Date",
+      "today": "AUJOURD'HUI",
+      "type": "Type",
+      "types": {
+        "fixed": "Subsist. fixe",
+        "variable": "Subsist. variable",
+        "lifestyle": "Confort",
+        "project": "Projet"
+      },
+      "category": "Catégorie",
+      "bankAccount": "Compte bancaire",
+      "projects": "Étiquettes · Projets",
+      "notes": "Notes",
+      "notesPlaceholder": "Détails optionnels sur cette dépense.",
+      "allCurrencies": "Toutes les devises"
+    },
+    "recibo": {
+      "dropEyebrow": "DÉPOSE TON REÇU ICI",
+      "dropOrClick": "ou clique pour choisir",
+      "dropSupport": "JPG, PNG, PDF · JUSQU'À 10 MO",
+      "swap": "Changer l'image",
+      "imagePreviewAlt": "Aperçu du reçu",
+      "readEyebrow": "LU PAR L'IA",
+      "readingEyebrow": "LECTURE EN COURS",
+      "processingHint": "Lecture avec Tesseract.js…",
+      "lowConfidenceBanner": "L'IA hésite. Vérifie chaque champ avant d'enregistrer.",
+      "invalidFile": "Choisis une image.",
+      "ocrFailed": "Impossible de lire le reçu. Essaie avec une image plus nette.",
+      "fields": {
+        "merchant": "Commerçant",
+        "total": "Total",
+        "date": "Date",
+        "currency": "Devise"
+      },
+      "confidence": {
+        "high": "Élevée",
+        "medium": "Moyenne",
+        "low": "Faible"
+      }
+    },
+    "dividir": {
+      "total": "Total",
+      "descriptionPlaceholder": "ex : Dîner · Le Petit Bistrot",
+      "whoPaid": "Qui a payé",
+      "you": "Moi",
+      "youTag": "toi",
+      "dividedAmong": "PARTAGÉ ENTRE {count, plural, one {# PERSONNE} other {# PERSONNES}}",
+      "noParticipantsEyebrow": "AUCUN PARTICIPANT",
+      "modes": {
+        "equal": "Également",
+        "amount": "Par montant",
+        "percent": "Par pourcentage"
+      },
+      "mismatchEyebrow": "LA SOMME NE COLLE PAS",
+      "short": "MANQUE",
+      "over": "EN TROP",
+      "mismatchSave": "Ajuste les parts pour qu'elles couvrent le total avant d'enregistrer.",
+      "noParticipants": "Ajoute au moins une personne pour partager.",
+      "subPaid": "a payé l'addition",
+      "subOwes": "doit",
+      "subSettled": "a remboursé",
+      "paid": "Payé",
+      "unpaid": "Non payé",
+      "lockedTitle": "Verrouillé en mode également",
+      "remove": "Retirer",
+      "addPerson": "Ajouter une personne",
+      "workspaceMembers": "MEMBRES DU WORKSPACE",
+      "addAdHoc": "Ajouter un nom libre…",
+      "adHocPlaceholder": "Nom",
+      "adHocAdd": "Ajouter",
+      "emptyPrompt": "Ajoute quelqu'un pour partager.",
+      "settleYouOwe": "Tu dois à {payer} {currency}{amount}.",
+      "owesYouLine": "{name} te doit {currency}{amount}.",
+      "settledLine": "{name} t'a déjà payé {currency}{amount}."
+    }
   },
   "categoryNames": {
     "Groceries": "Courses",

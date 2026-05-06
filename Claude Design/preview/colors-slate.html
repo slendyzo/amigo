@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>amigo — paper & ink ramp</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin:0; padding:0; background:var(--paper); box-sizing:border-box; }
+  .grid { display:grid; grid-template-columns: repeat(8, 1fr); border:1px solid var(--ink); }
+  .swatch { padding:18px 14px; min-height:130px; display:flex; flex-direction:column; justify-content:space-between; border-right:1px solid var(--ink); }
+  .swatch:last-child { border-right: none; }
+  .label {
+    font: var(--w-medium) 10px/1.4 var(--font-mono);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.85;
+  }
+  .name { font-family: var(--font-display); font-size: 16px; font-weight: 400; letter-spacing: -0.01em; }
+  .hex  { font: var(--w-medium) 11px/1 var(--font-mono); letter-spacing: 0.04em; opacity: 0.75; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <div class="grid">
+    <div class="swatch" style="background:#f1ebdd; color:#14140f;"><div class="label">Page</div><div><div class="name">Bone</div><div class="hex">#F1EBDD</div></div></div>
+    <div class="swatch" style="background:#ece5d4; color:#14140f;"><div class="label">Hover row</div><div><div class="name">Paper Soft</div><div class="hex">#ECE5D4</div></div></div>
+    <div class="swatch" style="background:#e8e0cc; color:#14140f;"><div class="label">Card</div><div><div class="name">Bone Deep</div><div class="hex">#E8E0CC</div></div></div>
+    <div class="swatch" style="background:#d8cdb1; color:#14140f;"><div class="label">Rule</div><div><div class="name">Rule</div><div class="hex">#D8CDB1</div></div></div>
+    <div class="swatch" style="background:#8c8770; color:#f1ebdd;"><div class="label">Eyebrow</div><div><div class="name">Ink Faint</div><div class="hex">#8C8770</div></div></div>
+    <div class="swatch" style="background:#6b6655; color:#f1ebdd;"><div class="label">Secondary</div><div><div class="name">Ink Mute</div><div class="hex">#6B6655</div></div></div>
+    <div class="swatch" style="background:#3d3a30; color:#f1ebdd;"><div class="label">Body</div><div><div class="name">Ink Soft</div><div class="hex">#3D3A30</div></div></div>
+    <div class="swatch" style="background:#14140f; color:#f1ebdd; border-right:none;"><div class="label">Display</div><div><div class="name">Ink</div><div class="hex">#14140F</div></div></div>
+  </div>
+</body>
+</html>

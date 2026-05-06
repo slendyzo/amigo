@@ -183,7 +183,7 @@ export function ValueOverTimeChart({
     return (
       <Card>
         <Header title={copy.title} chip={referenceLabel} />
-        <div className="mt-1 rounded-2xl bg-muted/30 px-5 py-8 text-center">
+        <div className="mt-1 rounded-md bg-muted/30 px-5 py-8 text-center">
           <p className="text-sm font-medium">{copy.emptyTitle}</p>
           <p className="mt-1 text-xs text-muted-foreground">{copy.emptyBody}</p>
           {onAddValuation && (
@@ -293,7 +293,7 @@ function Card({ children }: { children: React.ReactNode }) {
       initial={{ opacity: 0, y: 4 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: EASE }}
-      className="rounded-2xl border border-border/60 bg-card/80 p-5 backdrop-blur-sm"
+      className="rounded-md border border-rule bg-card p-5"
     >
       {children}
     </motion.section>

@@ -57,11 +57,11 @@ export default function InsightsPage() {
     <div className="max-w-2xl mx-auto space-y-6">
       {/* Page heading */}
       <div>
-        <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
+        <h1 className="text-2xl font-semibold text-slate-900">
           {t("retrospective.archiveTitle")}
         </h1>
         {!isLoading && insights.length > 0 && (
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-sm text-slate-500 mt-1">
             {t("retrospective.archiveSubtitle", { count: insights.length })}
           </p>
         )}
@@ -73,16 +73,16 @@ export default function InsightsPage() {
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="animate-pulse rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4"
+              className="animate-pulse rounded-lg border border-slate-200 bg-white p-4"
             >
-              <div className="h-4 w-32 bg-slate-200 dark:bg-slate-700 rounded mb-2" />
-              <div className="h-3 w-64 bg-slate-100 dark:bg-slate-800 rounded" />
+              <div className="h-4 w-32 bg-slate-200 rounded mb-2" />
+              <div className="h-3 w-64 bg-slate-100 rounded" />
             </div>
           ))}
         </div>
       ) : insights.length === 0 ? (
-        <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-8 text-center">
-          <p className="text-sm text-slate-500 dark:text-slate-400 leading-relaxed max-w-sm mx-auto">
+        <div className="rounded-lg border border-slate-200 bg-white px-5 py-8 text-center">
+          <p className="text-sm text-slate-500 leading-relaxed max-w-sm mx-auto">
             {t("retrospective.archiveEmpty")}
           </p>
         </div>
@@ -92,18 +92,18 @@ export default function InsightsPage() {
             <button
               key={insight.id}
               onClick={() => setSelectedInsight(insight)}
-              className="w-full text-left rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-5 py-4 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="w-full text-left rounded-lg border border-slate-200 bg-white px-5 py-4 hover:bg-slate-50 transition-colors"
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <div className="text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
+                  <div className="text-xs font-medium uppercase tracking-wider text-slate-400 mb-1">
                     {formatPeriod(insight.periodYear, insight.periodMonth)}
                   </div>
-                  <p className="text-sm font-medium text-slate-900 dark:text-white truncate">
+                  <p className="text-sm font-medium text-slate-900 truncate">
                     {insight.content.headline}
                   </p>
                 </div>
-                <div className="shrink-0 text-xs text-slate-400 dark:text-slate-500 mt-0.5 whitespace-nowrap">
+                <div className="shrink-0 text-xs text-slate-400 mt-0.5 whitespace-nowrap">
                   {formatGeneratedDate(insight.generatedAt)}
                 </div>
               </div>

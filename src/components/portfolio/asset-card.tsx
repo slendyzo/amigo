@@ -28,17 +28,17 @@ const ASSET_TYPE_CONFIG: Record<
   CRYPTO: {
     label: "Crypto",
     className:
-      "bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 border border-amber-200/60 dark:border-amber-700/30",
+      "bg-amber-50 text-amber-700 border border-amber-200/60",
   },
   ETF: {
     label: "ETF",
     className:
-      "bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-400 border border-blue-200/60 dark:border-blue-700/30",
+      "bg-blue-50 text-blue-700 border border-blue-200/60",
   },
   STOCK: {
     label: "Stock",
     className:
-      "bg-purple-50 dark:bg-purple-900/20 text-purple-700 dark:text-purple-400 border border-purple-200/60 dark:border-purple-700/30",
+      "bg-purple-50 text-purple-700 border border-purple-200/60",
   },
 };
 
@@ -52,7 +52,7 @@ export default function AssetCard({ asset, t }: Props) {
   const assetConfig = ASSET_TYPE_CONFIG[asset.assetType] ?? {
     label: asset.assetType,
     className:
-      "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700",
+      "bg-slate-100 text-slate-600 border border-slate-200",
   };
 
   // Source badge: single exchange label, or "N exchanges" when aggregated
@@ -71,14 +71,14 @@ export default function AssetCard({ asset, t }: Props) {
   return (
     <Link
       href={detailHref}
-      className="block bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-xl p-4 hover:shadow-md transition-shadow"
+      className="block bg-white border border-slate-200/50 rounded-xl p-4 hover:shadow-md transition-shadow"
     >
       {/* Main row */}
       <div className="flex items-start gap-3">
         {/* Left: Symbol + exchange */}
         <div className="flex-shrink-0 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-base font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+            <span className="text-base font-bold text-slate-900 tracking-tight">
               {asset.symbol}
             </span>
             <span
@@ -86,12 +86,12 @@ export default function AssetCard({ asset, t }: Props) {
             >
               {assetConfig.label}
             </span>
-            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/30">
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200/60/30">
               {exchangeBadgeText}
             </span>
             {asset.totalLockedQuantity > 0 && (
               <span
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-50 dark:bg-violet-900/20 text-violet-700 dark:text-violet-400 border border-violet-200/60 dark:border-violet-700/30"
+                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium bg-violet-50 text-violet-700 border border-violet-200/60"
                 title={`${formatQuantity(asset.totalLockedQuantity)} ${asset.symbol} staked / locked`}
               >
                 <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -101,7 +101,7 @@ export default function AssetCard({ asset, t }: Props) {
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 truncate max-w-[180px]">
+          <p className="text-xs text-slate-500 mt-0.5 truncate max-w-[180px]">
             {asset.name}
           </p>
         </div>
@@ -114,8 +114,8 @@ export default function AssetCard({ asset, t }: Props) {
           <p
             className={`text-sm font-bold tabular-nums ${
               isPnlPositive
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-red-500 dark:text-red-400"
+                ? "text-emerald-600"
+                : "text-red-500"
             }`}
           >
             {isPnlPositive ? "+" : ""}
@@ -124,8 +124,8 @@ export default function AssetCard({ asset, t }: Props) {
           <p
             className={`text-xs font-medium tabular-nums ${
               isPnlPositive
-                ? "text-emerald-500 dark:text-emerald-500"
-                : "text-red-400 dark:text-red-500"
+                ? "text-emerald-500"
+                : "text-red-400"
             }`}
           >
             {isPnlPositive ? "+" : ""}
@@ -135,30 +135,30 @@ export default function AssetCard({ asset, t }: Props) {
       </div>
 
       {/* Center row: Qty · Price · Value */}
-      <div className="mt-3 flex items-center gap-4 text-xs text-slate-500 dark:text-slate-400 flex-wrap">
+      <div className="mt-3 flex items-center gap-4 text-xs text-slate-500 flex-wrap">
         <div>
-          <span className="uppercase tracking-wide text-[10px] font-medium text-slate-400 dark:text-slate-500 block">
+          <span className="uppercase tracking-wide text-[10px] font-medium text-slate-400 block">
             {t("quantity")}
           </span>
-          <span className="tabular-nums font-medium text-slate-700 dark:text-slate-300">
+          <span className="tabular-nums font-medium text-slate-700">
             {formatQuantity(asset.totalQuantity)}
           </span>
         </div>
-        <div className="w-px h-8 bg-slate-100 dark:bg-slate-800" />
+        <div className="w-px h-8 bg-slate-100" />
         <div>
-          <span className="uppercase tracking-wide text-[10px] font-medium text-slate-400 dark:text-slate-500 block">
+          <span className="uppercase tracking-wide text-[10px] font-medium text-slate-400 block">
             {t("currentPrice")}
           </span>
-          <span className="tabular-nums font-medium text-slate-700 dark:text-slate-300">
+          <span className="tabular-nums font-medium text-slate-700">
             {formatPrice(asset.currentPriceEur)}
           </span>
         </div>
-        <div className="w-px h-8 bg-slate-100 dark:bg-slate-800" />
+        <div className="w-px h-8 bg-slate-100" />
         <div>
-          <span className="uppercase tracking-wide text-[10px] font-medium text-slate-400 dark:text-slate-500 block">
+          <span className="uppercase tracking-wide text-[10px] font-medium text-slate-400 block">
             {t("currentValue")}
           </span>
-          <span className="tabular-nums font-medium text-slate-700 dark:text-slate-300">
+          <span className="tabular-nums font-medium text-slate-700">
             {formatAmount(asset.currentValueEur)}
           </span>
         </div>
@@ -166,18 +166,18 @@ export default function AssetCard({ asset, t }: Props) {
 
       {/* P&L bar */}
       <div className="mt-3 space-y-1">
-        <div className="h-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+        <div className="h-1 rounded-full bg-slate-100 overflow-hidden">
           <div
             className={`h-full rounded-full transition-all ${
               isPnlPositive
-                ? "bg-emerald-400 dark:bg-emerald-500"
-                : "bg-red-400 dark:bg-red-500"
+                ? "bg-emerald-400"
+                : "bg-red-400"
             }`}
             style={{ width: `${pnlBarWidthPct}%` }}
           />
         </div>
         {/* DCA Average */}
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+        <p className="text-[10px] text-slate-400 tabular-nums">
           {t("dcaAverage")}: {formatPrice(asset.averageBuyPriceEur)}
         </p>
       </div>

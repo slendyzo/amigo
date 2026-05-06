@@ -37,18 +37,18 @@ export default function SetupUsernamePage() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white">
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
+        <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">
           Choose a Username
         </h1>
-        <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
+        <p className="text-center text-slate-600 mb-8">
           Welcome back! Please set up a username for easier login.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
               {error}
             </div>
           )}
@@ -56,7 +56,7 @@ export default function SetupUsernamePage() {
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               Username
             </label>
@@ -68,7 +68,7 @@ export default function SetupUsernamePage() {
               required
               minLength={3}
               maxLength={20}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder="johndoe"
               autoFocus
             />
@@ -88,7 +88,7 @@ export default function SetupUsernamePage() {
           <button
             type="button"
             onClick={() => router.push("/dashboard?skipUsername=true")}
-            className="w-full text-sm text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+            className="w-full text-sm text-slate-500 hover:text-slate-700"
           >
             Skip for now
           </button>

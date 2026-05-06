@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>amigo — inputs</title>
+<link rel="stylesheet" href="../colors_and_type.css" />
+<style>
+  body { margin:0; padding:28px; background:var(--paper-deep); box-sizing:border-box; display:grid; grid-template-columns: 1fr 1fr; gap: 22px 28px; border:1px solid var(--rule); }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  label { font: var(--w-medium) 10px/1.4 var(--font-mono); letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-mute); }
+  .input {
+    font: var(--w-regular) 16px/1 var(--font-sans);
+    height: 40px;
+    padding: 0 14px;
+    border: none;
+    border-bottom: 1px solid var(--ink);
+    background: transparent;
+    color: var(--ink);
+    transition: all 200ms var(--ease-out);
+  }
+  .input:focus { outline: none; border-bottom-color: var(--gilt); border-bottom-width: 2px; padding-bottom: 0; }
+  .input.focused { border-bottom: 2px solid var(--gilt); }
+  .input.error { border-bottom-color: var(--crimson); }
+  .helper { font: var(--w-regular) 12px/1.4 var(--font-sans); color: var(--ink-mute); }
+  .helper.err { color: var(--crimson); }
+  .with-currency { display: flex; align-items: baseline; border-bottom: 1px solid var(--ink); padding-bottom: 4px; }
+  .with-currency.focused { border-bottom: 2px solid var(--gilt); padding-bottom: 3px; }
+  .with-currency .currency { font-family: var(--font-num); font-size: 22px; font-weight: 380; color: var(--ink-mute); margin-right: 6px; }
+  .with-currency input {
+    font-family: var(--font-num); font-size: 28px; font-weight: 380; letter-spacing: -0.02em;
+    border: none; background: transparent; flex: 1; color: var(--ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .with-currency input:focus { outline: none; }
+</style>
+</head>
+<body>
+  <div class="field">
+    <label>Email</label>
+    <input class="input" placeholder="you@email.com" />
+    <span class="helper">We'll send a 6-digit code.</span>
+  </div>
+  <div class="field">
+    <label>Amount</label>
+    <div class="with-currency focused">
+      <span class="currency">$</span>
+      <input value="42.50" />
+    </div>
+    <span class="helper">Focused · gilt 2px underline</span>
+  </div>
+  <div class="field">
+    <label>Description</label>
+    <input class="input" value="Mercato Centrale" />
+  </div>
+  <div class="field">
+    <label>Password</label>
+    <input class="input error" type="password" value="****" />
+    <span class="helper err">Must be at least 8 characters.</span>
+  </div>
+</body>
+</html>

@@ -34,9 +34,9 @@ export function LivingGauge({ current, budget, label }: LivingGaugeProps) {
 
   // Color based on percentage
   const getColor = () => {
-    if (isOverBudget) return "#ef4444"; // red
-    if (percentage > 80) return "#f59e0b"; // amber
-    return "#0070f3"; // electric blue
+    if (isOverBudget) return "var(--crimson)";
+    if (percentage > 80) return "var(--amber)";
+    return "var(--forest)";
   };
 
   return (
@@ -53,7 +53,7 @@ export function LivingGauge({ current, budget, label }: LivingGaugeProps) {
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke="#e2e8f0"
+            stroke="var(--rule)"
             strokeWidth={strokeWidth}
           />
           {/* Progress circle */}
@@ -73,20 +73,20 @@ export function LivingGauge({ current, budget, label }: LivingGaugeProps) {
 
         {/* Center content */}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-3xl font-bold text-slate-900">
+          <span className="text-3xl font-bold text-ink">
             {percentage.toFixed(0)}%
           </span>
-          <span className="text-sm text-slate-500">{t("used")}</span>
+          <span className="text-sm text-ink-mute">{t("used")}</span>
         </div>
       </div>
 
       {/* Legend */}
       <div className="mt-4 text-center">
-        <p className="text-sm font-medium text-slate-700">{displayLabel}</p>
+        <p className="text-sm font-medium text-ink-soft">{displayLabel}</p>
         <p className="text-lg font-semibold" style={{ color: getColor() }}>
-          €{safeCurrent.toFixed(2)} <span className="text-slate-400 font-normal">/ €{safeBudget.toFixed(2)}</span>
+          €{safeCurrent.toFixed(2)} <span className="text-ink-faint font-normal">/ €{safeBudget.toFixed(2)}</span>
         </p>
-        <p className={`text-sm mt-1 ${isOverBudget ? "text-red-500" : "text-slate-500"}`}>
+        <p className={`text-sm mt-1 ${isOverBudget ? "text-crimson" : "text-ink-mute"}`}>
           {isOverBudget
             ? t("overBudget", { amount: Math.abs(remaining).toFixed(2) })
             : t("remainingBudget", { amount: remaining.toFixed(2) })}

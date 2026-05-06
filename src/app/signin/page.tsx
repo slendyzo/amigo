@@ -55,7 +55,7 @@ function SignInForm() {
   };
 
   return (
-    <main className="flex min-h-screen flex-col md:flex-row items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
+    <main className="flex min-h-screen flex-col md:flex-row items-center justify-center p-6 bg-white relative">
       {/* Language Switcher */}
       <div className="absolute top-4 right-4 z-10">
         <LanguageSwitcher />
@@ -63,10 +63,10 @@ function SignInForm() {
 
       {/* Left side - Info (hidden on mobile, shown on desktop) */}
       <div className="hidden md:flex md:flex-col md:items-center md:justify-center md:flex-1 md:pr-12 md:max-w-md">
-        <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-3">
+        <h1 className="text-4xl font-bold text-slate-900 mb-3">
           Amigo
         </h1>
-        <p className="text-lg text-slate-600 dark:text-slate-400 mb-8 text-center">
+        <p className="text-lg text-slate-600 mb-8 text-center">
           {t("tagline")}
         </p>
 
@@ -75,44 +75,44 @@ function SignInForm() {
           <div className="flex items-start gap-3">
             <div className="text-2xl">📊</div>
             <div>
-              <div className="font-medium text-slate-900 dark:text-white">{t("infoTrack")}</div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">{t("infoTrackDesc")}</div>
+              <div className="font-medium text-slate-900">{t("infoTrack")}</div>
+              <div className="text-sm text-slate-500">{t("infoTrackDesc")}</div>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <div className="text-2xl">🔒</div>
             <div>
-              <div className="font-medium text-slate-900 dark:text-white">{t("infoPrivate")}</div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">{t("infoPrivateDesc")}</div>
+              <div className="font-medium text-slate-900">{t("infoPrivate")}</div>
+              <div className="text-sm text-slate-500">{t("infoPrivateDesc")}</div>
             </div>
           </div>
           <div className="flex items-start gap-3">
             <div className="text-2xl">🌐</div>
             <div>
-              <div className="font-medium text-slate-900 dark:text-white">{t("infoOpenSource")}</div>
-              <div className="text-sm text-slate-500 dark:text-slate-400">{t("infoOpenSourceDesc")}</div>
+              <div className="font-medium text-slate-900">{t("infoOpenSource")}</div>
+              <div className="text-sm text-slate-500">{t("infoOpenSourceDesc")}</div>
             </div>
           </div>
         </div>
       </div>
 
       {/* Vertical divider (desktop only) */}
-      <div className="hidden md:block w-px h-96 bg-slate-200 dark:bg-slate-800 mx-8" />
+      <div className="hidden md:block w-px h-96 bg-slate-200 mx-8" />
 
       {/* Right side - Login form */}
       <div className="w-full max-w-md md:flex-1 md:max-w-sm md:pl-4">
         {/* Mobile header */}
         <div className="md:hidden text-center mb-6">
-          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">
             Amigo
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-slate-600">
             {t("tagline")}
           </p>
         </div>
 
         {/* Desktop header */}
-        <h2 className="hidden md:block text-2xl font-bold text-slate-900 dark:text-white mb-6">
+        <h2 className="hidden md:block text-2xl font-bold text-slate-900 mb-6">
           {t("signInToAccount")}
         </h2>
 
@@ -121,7 +121,7 @@ function SignInForm() {
           <button
             type="button"
             disabled
-            className="w-full flex items-center justify-center gap-3 rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 px-4 py-3 text-slate-400 dark:text-slate-500 font-medium cursor-not-allowed relative"
+            className="w-full flex items-center justify-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-slate-400 font-medium cursor-not-allowed relative"
           >
             <svg className="w-5 h-5 opacity-50" viewBox="0 0 24 24">
               <path
@@ -142,7 +142,7 @@ function SignInForm() {
               />
             </svg>
             <span>{t("continueWithGoogle")}</span>
-            <span className="absolute -top-2 -right-2 px-2 py-0.5 text-xs font-medium bg-amber-100 dark:bg-amber-900/50 text-amber-700 dark:text-amber-400 rounded-full">
+            <span className="absolute -top-2 -right-2 px-2 py-0.5 text-xs font-medium bg-amber-100 text-amber-700 rounded-full">
               {t("comingSoon")}
             </span>
           </button>
@@ -150,10 +150,10 @@ function SignInForm() {
 
         <div className="relative mb-6">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-300 dark:border-slate-700"></div>
+            <div className="w-full border-t border-slate-300"></div>
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white dark:bg-slate-950 text-slate-500">
+            <span className="px-2 bg-white text-slate-500">
               {t("orContinueWithCredentials")}
             </span>
           </div>
@@ -162,13 +162,13 @@ function SignInForm() {
         {/* Credentials Form */}
         <form onSubmit={handleCredentialsSignIn} className="space-y-4">
           {(verified || registered) && (
-            <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400 text-sm">
+            <div className="p-3 rounded-lg bg-green-50 text-green-600 text-sm">
               {verified ? t("emailVerifiedSuccess") : t("accountCreatedSuccess")}
             </div>
           )}
 
           {error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
+            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
               {error}
             </div>
           )}
@@ -176,7 +176,7 @@ function SignInForm() {
           <div>
             <label
               htmlFor="identifier"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("usernameOrEmail")}
             </label>
@@ -186,7 +186,7 @@ function SignInForm() {
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder={t("usernameOrEmailPlaceholder")}
             />
           </div>
@@ -195,7 +195,7 @@ function SignInForm() {
             <div className="flex justify-between items-center mb-1">
               <label
                 htmlFor="password"
-                className="block text-sm font-medium text-slate-700 dark:text-slate-300"
+                className="block text-sm font-medium text-slate-700"
               >
                 {t("password")}
               </label>
@@ -212,7 +212,7 @@ function SignInForm() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder="••••••••"
             />
           </div>
@@ -226,7 +226,7 @@ function SignInForm() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
+        <p className="mt-6 text-center text-sm text-slate-600">
           {t("noAccount")}{" "}
           <a
             href="/signup"
@@ -243,7 +243,7 @@ function SignInForm() {
 export default function SignInPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-screen items-center justify-center bg-white dark:bg-slate-950">
+      <div className="flex min-h-screen items-center justify-center bg-white">
         <div className="w-8 h-8 border-4 border-[#0070f3] border-t-transparent rounded-full animate-spin" />
       </div>
     }>

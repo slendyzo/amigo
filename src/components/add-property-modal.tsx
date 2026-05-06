@@ -661,7 +661,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
                           setPurchasePrice(String(priceCheck.suggestion));
                           setPriceConfirmed(priceCheck.suggestion);
                         }}
-                        className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-left text-xs text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 transition-colors"
+                        className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-left text-xs text-amber-700 hover:bg-amber-500/15 transition-colors"
                       >
                         <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                         <span>{t("didYouMean", { amount: formatEuro(priceCheck.suggestion) })}</span>
