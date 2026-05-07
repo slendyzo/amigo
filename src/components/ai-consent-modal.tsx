@@ -39,7 +39,7 @@ export default function AiConsentModal({ isOpen, onClose }: AiConsentModalProps)
       <div className="w-full max-w-md bg-white rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-300">
         <div className="p-6 space-y-5">
           {/* Title */}
-          <h2 className="text-2xl font-semibold text-ink">
+          <h2 className="text-2xl font-semibold text-slate-900">
             {t("consent.title")}
           </h2>
 

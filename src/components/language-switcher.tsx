@@ -40,7 +40,7 @@ export default function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-rule bg-paper-deep text-ink-soft hover:bg-paper-soft transition-colors text-sm"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors text-sm"
       >
         <span>{currentLanguage.flag}</span>
         <span className="hidden sm:inline">{currentLanguage.name}</span>
@@ -55,15 +55,15 @@ export default function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-40 rounded-lg border border-rule bg-paper-deep shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-40 rounded-lg border border-slate-200 bg-white shadow-lg z-50">
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-paper-soft first:rounded-t-lg last:rounded-b-lg transition-colors ${
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 first:rounded-t-lg last:rounded-b-lg transition-colors ${
                 lang.code === locale
-                  ? "text-forest font-medium"
-                  : "text-ink-soft"
+                  ? "text-[#0070f3] font-medium"
+                  : "text-slate-700"
               }`}
             >
               <span>{lang.flag}</span>

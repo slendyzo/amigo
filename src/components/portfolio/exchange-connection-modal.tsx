@@ -40,7 +40,7 @@ const PROVIDERS: { id: Provider; name: string; accent: string; badgeBg: string; 
     name: "Binance",
     accent: "border-yellow-400 bg-yellow-50",
     badgeBg: "bg-yellow-400",
-    badgeText: "text-ink",
+    badgeText: "text-slate-900",
     badgeLetter: "B",
   },
   {
@@ -212,7 +212,7 @@ export default function ExchangeConnectionModal({
       <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden">
         {/* Header */}
         <div className="px-6 pt-6 pb-4 border-b border-slate-100">
-          <h2 className="text-lg font-semibold text-ink">
+          <h2 className="text-lg font-semibold text-slate-900">
             {isEditing ? t("editConnection") : t("addExchange")}
           </h2>
         </div>
@@ -266,7 +266,7 @@ export default function ExchangeConnectionModal({
               value={label}
               onChange={(e) => setLabel(e.target.value)}
               placeholder={t("connectionLabelPlaceholder")}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
           </div>
 
@@ -287,7 +287,7 @@ export default function ExchangeConnectionModal({
                 onChange={(e) => { setApiKey(e.target.value); setTestResult(null); }}
                 placeholder={isEditing ? "••••••••••••" : t("apiKey")}
                 autoComplete="off"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-10 text-sm text-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
               <button
                 type="button"
@@ -326,7 +326,7 @@ export default function ExchangeConnectionModal({
                 onChange={(e) => { setApiSecret(e.target.value); setTestResult(null); }}
                 placeholder={isEditing ? "••••••••••••" : t("apiSecret")}
                 autoComplete="off"
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-10 text-sm text-ink placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-10 text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
               />
               <button
                 type="button"

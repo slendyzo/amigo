@@ -109,7 +109,7 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-slate-200">
-              <p className="text-sm font-semibold text-ink">
+              <p className="text-sm font-semibold text-slate-900">
                 {t("nudges.categorize.modalTitle")}
               </p>
               <p className="text-xs text-slate-500 mt-0.5">
@@ -140,7 +140,7 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
                       {/* Expense info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium text-ink truncate max-w-[160px]">
+                          <span className="text-sm font-medium text-slate-900 truncate max-w-[160px]">
                             {row.expenseName}
                           </span>
                           <span className="text-xs text-slate-400">{formatDate(row.expenseDate)}</span>
@@ -164,7 +164,7 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
                         value={overrides[row.expenseId] ?? ""}
                         onChange={(e) => setOverride(row.expenseId, e.target.value || null)}
                         disabled={state === "rejected"}
-                        className="text-xs rounded-md border border-slate-200 bg-white text-ink px-2 py-1.5 max-w-[130px] focus:outline-none focus:ring-1 focus:ring-slate-400"
+                        className="text-xs rounded-md border border-slate-200 bg-white text-slate-900 px-2 py-1.5 max-w-[130px] focus:outline-none focus:ring-1 focus:ring-slate-400"
                       >
                         <option value="">—</option>
                         {categories.map((c) => (

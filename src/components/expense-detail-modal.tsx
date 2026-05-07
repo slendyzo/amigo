@@ -213,7 +213,7 @@ export default function ExpenseDetailModal({
           <div className="flex flex-col md:flex-row md:items-end md:justify-between md:gap-4">
             <div className="min-w-0 md:flex-1">
               {/* Name */}
-              <p className="text-base font-semibold text-ink pr-8 md:pr-0 mb-1 md:truncate">
+              <p className="text-base font-semibold text-slate-900 pr-8 md:pr-0 mb-1 md:truncate">
                 {e.name}
               </p>
               {/* Forex subtitle (mobile: below name, desktop: below name) */}
@@ -227,7 +227,7 @@ export default function ExpenseDetailModal({
             </div>
             {/* Amount */}
             <div className="flex-shrink-0 text-right mb-1 md:mb-0">
-              <p className={`text-3xl font-extrabold tracking-tight leading-none ${isRefund ? "text-green-600" : "text-ink"}`}>
+              <p className={`text-3xl font-extrabold tracking-tight leading-none ${isRefund ? "text-green-600" : "text-slate-900"}`}>
                 {formatCurrency(displayAmount, e.currency)}
               </p>
               {userShare !== null && (
@@ -269,7 +269,7 @@ export default function ExpenseDetailModal({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
                 <div className="flex items-center gap-1.5 flex-1 justify-end">
-                  <span className="text-xs font-semibold text-ink">
+                  <span className="text-xs font-semibold text-slate-900">
                     {Math.abs(amountEur!).toFixed(2)} EUR
                   </span>
                   <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[9px] font-bold text-blue-600">
@@ -381,7 +381,7 @@ export default function ExpenseDetailModal({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("date")}</p>
-                  <p className="text-sm font-medium text-ink mt-0.5">{formatDate(e.date)}</p>
+                  <p className="text-sm font-medium text-slate-900 mt-0.5">{formatDate(e.date)}</p>
                 </div>
               </div>
 
@@ -417,7 +417,7 @@ export default function ExpenseDetailModal({
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("date")}</p>
-                  <p className="text-sm font-medium text-ink mt-0.5">{formatDate(e.date)}</p>
+                  <p className="text-sm font-medium text-slate-900 mt-0.5">{formatDate(e.date)}</p>
                 </div>
               </div>
 
@@ -429,7 +429,7 @@ export default function ExpenseDetailModal({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("dueDate")}</p>
-                    <p className="text-sm font-medium text-ink mt-0.5">{formatDate(e.dueDate)}</p>
+                    <p className="text-sm font-medium text-slate-900 mt-0.5">{formatDate(e.dueDate)}</p>
                   </div>
                 </div>
               )}
@@ -442,7 +442,7 @@ export default function ExpenseDetailModal({
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("paidAt")}</p>
-                    <p className="text-sm font-medium text-ink mt-0.5">{formatDate(e.paidAt, true)}</p>
+                    <p className="text-sm font-medium text-slate-900 mt-0.5">{formatDate(e.paidAt, true)}</p>
                   </div>
                 </div>
               )}
@@ -573,7 +573,7 @@ function DetailRow({
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{label}</p>
-        <p className="text-sm font-medium text-ink mt-0.5">{value}</p>
+        <p className="text-sm font-medium text-slate-900 mt-0.5">{value}</p>
       </div>
     </div>
   );

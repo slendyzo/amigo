@@ -27,7 +27,7 @@ const INCOME_TYPE_COLORS: Record<string, string> = {
   SALE: "bg-amber-100 text-amber-800",
   GIFT: "bg-pink-100 text-pink-800",
   REFUND: "bg-cyan-100 text-cyan-800",
-  OTHER: "bg-slate-100 text-ink",
+  OTHER: "bg-slate-100 text-slate-800",
 };
 
 const CURRENCIES = [
@@ -223,7 +223,7 @@ export default function IncomesPage() {
   };
 
   const getTypeStyle = (type: string) => {
-    return INCOME_TYPE_COLORS[type] || "bg-slate-100 text-ink";
+    return INCOME_TYPE_COLORS[type] || "bg-slate-100 text-slate-800";
   };
 
   const getTypeLabel = (type: string) => {

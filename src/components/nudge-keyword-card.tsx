@@ -69,7 +69,7 @@ export default function NudgeKeywordCard({
         </svg>
       </button>
 
-      <p className="text-sm font-medium text-ink pr-6">
+      <p className="text-sm font-medium text-slate-900 pr-6">
         {t("nudges.keyword.cardHeading", { merchant: merchantKey, category: categoryName, count })}
       </p>
       <p className="text-xs text-slate-500 mt-1 leading-relaxed">

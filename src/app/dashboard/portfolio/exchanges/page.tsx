@@ -25,7 +25,7 @@ export default async function ExchangesPage() {
   if (!workspace) {
     return (
       <div className="text-center py-12">
-        <p className="text-ink-soft">
+        <p className="text-slate-600">
           No workspace found. Please contact support.
         </p>
       </div>

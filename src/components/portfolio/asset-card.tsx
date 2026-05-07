@@ -78,7 +78,7 @@ export default function AssetCard({ asset, t }: Props) {
         {/* Left: Symbol + exchange */}
         <div className="flex-shrink-0 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-base font-bold text-ink tracking-tight">
+            <span className="text-base font-bold text-slate-900 tracking-tight">
               {asset.symbol}
             </span>
             <span

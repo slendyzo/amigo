@@ -179,20 +179,20 @@ export default function SignUpPage() {
 
   if (step === "verify") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-paper-deep relative">
+      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white relative">
         {/* Language Switcher */}
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
 
         <div className="w-full max-w-md">
-          <h1 className="text-3xl font-bold text-center text-ink mb-2">
+          <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">
             {t("verifyYourEmail")}
           </h1>
-          <p className="text-center text-ink-soft mb-2">
+          <p className="text-center text-slate-600 mb-2">
             {t("weSentCode")}
           </p>
-          <p className="text-center text-ink font-medium mb-8">
+          <p className="text-center text-slate-900 font-medium mb-8">
             {email}
           </p>
 
@@ -215,7 +215,7 @@ export default function SignUpPage() {
                   onChange={(e) => handleCodeChange(index, e.target.value)}
                   onKeyDown={(e) => handleCodeKeyDown(index, e)}
                   disabled={isLoading}
-                  className="w-12 h-14 text-center text-2xl font-bold rounded-lg border border-rule-strong bg-paper-deep text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent disabled:opacity-50"
+                  className="w-12 h-14 text-center text-2xl font-bold rounded-lg border border-slate-300 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent disabled:opacity-50"
                 />
               ))}
             </div>
@@ -223,16 +223,16 @@ export default function SignUpPage() {
             <button
               onClick={handleVerifyCode}
               disabled={isLoading || verificationCode.some(d => d === "")}
-              className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-paper font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? t("verifying") : t("verifyEmail")}
             </button>
 
             <div className="text-center space-y-3">
-              <p className="text-sm text-ink-soft">
+              <p className="text-sm text-slate-600">
                 {t("didntReceiveCode")}{" "}
                 {resendCooldown > 0 ? (
-                  <span className="text-ink-faint">
+                  <span className="text-slate-400">
                     {t("resendIn", { seconds: resendCooldown })}
                   </span>
                 ) : (
@@ -249,7 +249,7 @@ export default function SignUpPage() {
               <button
                 onClick={handleBackToForm}
                 disabled={isLoading}
-                className="text-sm text-ink-soft hover:text-ink"
+                className="text-sm text-slate-600 hover:text-slate-900"
               >
                 ← {t("changeEmailAddress")}
               </button>
@@ -261,17 +261,17 @@ export default function SignUpPage() {
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-paper-deep relative">
+    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white relative">
       {/* Language Switcher */}
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
 
       <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-ink mb-2">
+        <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">
           Amigo
         </h1>
-        <p className="text-center text-ink-soft mb-8">
+        <p className="text-center text-slate-600 mb-8">
           {t("createYourAccount")}
         </p>
 
@@ -285,7 +285,7 @@ export default function SignUpPage() {
           <div>
             <label
               htmlFor="name"
-              className="block text-sm font-medium text-ink-soft mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("name")}
             </label>
@@ -295,7 +295,7 @@ export default function SignUpPage() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full rounded-lg border border-rule-strong bg-paper-deep px-4 py-3 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder={t("namePlaceholder")}
             />
           </div>
@@ -303,7 +303,7 @@ export default function SignUpPage() {
           <div>
             <label
               htmlFor="username"
-              className="block text-sm font-medium text-ink-soft mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("username")}
             </label>
@@ -315,10 +315,10 @@ export default function SignUpPage() {
               required
               minLength={3}
               maxLength={20}
-              className="w-full rounded-lg border border-rule-strong bg-paper-deep px-4 py-3 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder="johndoe"
             />
-            <p className="mt-1 text-xs text-ink-mute">
+            <p className="mt-1 text-xs text-slate-500">
               {t("usernameHint")}
             </p>
           </div>
@@ -326,7 +326,7 @@ export default function SignUpPage() {
           <div>
             <label
               htmlFor="email"
-              className="block text-sm font-medium text-ink-soft mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("email")}
             </label>
@@ -336,7 +336,7 @@ export default function SignUpPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full rounded-lg border border-rule-strong bg-paper-deep px-4 py-3 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder={t("emailPlaceholder")}
             />
           </div>
@@ -344,7 +344,7 @@ export default function SignUpPage() {
           <div>
             <label
               htmlFor="password"
-              className="block text-sm font-medium text-ink-soft mb-1"
+              className="block text-sm font-medium text-slate-700 mb-1"
             >
               {t("password")}
             </label>
@@ -355,10 +355,10 @@ export default function SignUpPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full rounded-lg border border-rule-strong bg-paper-deep px-4 py-3 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+              className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
               placeholder="••••••••"
             />
-            <p className="mt-1 text-xs text-ink-mute">
+            <p className="mt-1 text-xs text-slate-500">
               {t("passwordHint")}
             </p>
           </div>
@@ -366,13 +366,13 @@ export default function SignUpPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-paper font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isLoading ? t("sendingCode") : t("continue")}
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm text-ink-soft">
+        <p className="mt-6 text-center text-sm text-slate-600">
           {t("alreadyHaveAccount")}{" "}
           <a
             href="/signin"

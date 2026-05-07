@@ -59,7 +59,7 @@ function MomTooltip({ active, payload }: any) {
       <div className="text-slate-500 mb-1">{payload[0]?.payload?.category}</div>
       <div className="flex gap-3">
         <span className="text-slate-400">Prev: {formatEur(payload[0]?.payload?.prevTotal ?? 0)}</span>
-        <span className="text-ink font-medium">
+        <span className="text-slate-900 font-medium">
           Now: {formatEur(payload[0]?.payload?.currentTotal ?? 0)}
         </span>
       </div>
@@ -140,7 +140,7 @@ export default function RetrospectiveModal({
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="text-xl font-semibold text-ink leading-snug"
+                className="text-xl font-semibold text-slate-900 leading-snug"
               >
                 {insight.content.headline}
               </motion.h2>

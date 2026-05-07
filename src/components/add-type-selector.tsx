@@ -100,7 +100,7 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
               {/* Header */}
               <div className="px-6 py-4 border-b border-slate-200">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-lg font-semibold text-ink">{t("add")}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">{t("add")}</h3>
                   <button
                     onClick={onClose}
                     className="p-1 text-slate-400 hover:text-slate-600 rounded-lg hover:bg-slate-100 transition-colors"
@@ -126,7 +126,7 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                     </svg>
                   </div>
                   <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-ink">{t("expense")}</h4>
+                    <h4 className="font-semibold text-slate-900">{t("expense")}</h4>
                     <p className="text-sm text-slate-500">{t("expenseDescription")}</p>
                   </div>
                   <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -145,7 +145,7 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                     </svg>
                   </div>
                   <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-ink">{t("income")}</h4>
+                    <h4 className="font-semibold text-slate-900">{t("income")}</h4>
                     <p className="text-sm text-slate-500">{t("incomeDescription")}</p>
                   </div>
                   <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                     </svg>
                   </div>
                   <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-ink">{tScanner("title")}</h4>
+                    <h4 className="font-semibold text-slate-900">{tScanner("title")}</h4>
                     <p className="text-sm text-slate-500">{tScanner("captureDescription")}</p>
                   </div>
                   <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -185,7 +185,7 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                     </svg>
                   </div>
                   <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-ink">{tRwa("addVehicle")}</h4>
+                    <h4 className="font-semibold text-slate-900">{tRwa("addVehicle")}</h4>
                     <p className="text-sm text-slate-500">{tRwa("addVehicleDescription")}</p>
                   </div>
                   <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -204,7 +204,7 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                     </svg>
                   </div>
                   <div className="flex-1 text-left">
-                    <h4 className="font-semibold text-ink">{tRwa("addProperty")}</h4>
+                    <h4 className="font-semibold text-slate-900">{tRwa("addProperty")}</h4>
                     <p className="text-sm text-slate-500">{tRwa("addPropertyDescription")}</p>
                   </div>
                   <svg className="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

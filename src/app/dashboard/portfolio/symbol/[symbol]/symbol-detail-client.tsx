@@ -242,7 +242,7 @@ export default function SymbolDetailClient({
                     </div>
                   </div>
                   <div className="text-right shrink-0 min-w-[100px]">
-                    <p className="text-sm font-medium text-ink tabular-nums">
+                    <p className="text-sm font-medium text-slate-800 tabular-nums">
                       {formatAmount(p.currentValueEur)}
                     </p>
                     <p

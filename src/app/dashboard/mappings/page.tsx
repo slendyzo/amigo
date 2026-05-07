@@ -312,7 +312,7 @@ export default function KeywordMappingsPage() {
               {mappings.map((mapping) => (
                 <tr key={mapping.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3">
-                    <code className="text-sm bg-slate-100 px-2 py-1 rounded text-ink">
+                    <code className="text-sm bg-slate-100 px-2 py-1 rounded text-slate-800">
                       {mapping.keyword}
                     </code>
                   </td>
@@ -387,7 +387,7 @@ export default function KeywordMappingsPage() {
                   <tr key={builtin.keyword} className={`hover:bg-slate-50 ${isOverridden ? "opacity-50" : ""}`}>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2">
-                        <code className={`text-sm px-2 py-1 rounded ${isOverridden ? "bg-slate-50 text-slate-400 line-through" : "bg-slate-100 text-ink"}`}>
+                        <code className={`text-sm px-2 py-1 rounded ${isOverridden ? "bg-slate-50 text-slate-400 line-through" : "bg-slate-100 text-slate-800"}`}>
                           {builtin.keyword}
                         </code>
                         {isOverridden && (

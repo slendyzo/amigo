@@ -192,7 +192,7 @@ export default function OnboardingModal({
             /* Step 1: Monthly Salary + Currency */
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-ink mb-2">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
                   {t("salaryTitle")}
                 </h3>
                 <p className="text-sm text-slate-500 mb-4">
@@ -237,7 +237,7 @@ export default function OnboardingModal({
                       setMonthlySalary(value);
                     }}
                     placeholder="2000.00"
-                    className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-4 text-lg text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-4 text-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 <p className="text-xs text-slate-400 mt-2">
@@ -251,7 +251,7 @@ export default function OnboardingModal({
             /* Step 2: Monthly Budget */
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-ink mb-2">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
                   {t("budgetTitle")}
                 </h3>
                 <p className="text-sm text-slate-500 mb-4">
@@ -289,7 +289,7 @@ export default function OnboardingModal({
                       setMonthlyBudget(value);
                     }}
                     placeholder={monthlySalary || "1500.00"}
-                    className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-4 text-lg text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-4 text-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </div>
                 {monthlySalary && !monthlyBudget && (
@@ -312,7 +312,7 @@ export default function OnboardingModal({
             /* Step 3: Fixed Expenses */
             <div className="space-y-4">
               <div>
-                <h3 className="text-lg font-semibold text-ink mb-2">
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">
                   {t("fixedExpensesTitle")}
                 </h3>
                 <p className="text-sm text-slate-500 mb-4">
@@ -348,7 +348,7 @@ export default function OnboardingModal({
                             handleFixedExpenseChange(index, "name", e.target.value)
                           }
                           placeholder={t("expenseNamePlaceholder")}
-                          className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                         <div className="relative w-24 sm:w-28 flex-shrink-0">
                           <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
@@ -366,7 +366,7 @@ export default function OnboardingModal({
                               handleFixedExpenseChange(index, "amount", value);
                             }}
                             placeholder="0.00"
-                            className="w-full rounded-lg border border-slate-300 bg-white pl-7 pr-2 py-2.5 text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            className="w-full rounded-lg border border-slate-300 bg-white pl-7 pr-2 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
                       </div>
@@ -441,7 +441,7 @@ export default function OnboardingModal({
                 type="button"
                 onClick={() => setStep(step - 1)}
                 disabled={isLoading}
-                className="px-4 py-2 text-slate-600 hover:text-ink"
+                className="px-4 py-2 text-slate-600 hover:text-slate-900"
               >
                 {tCommon("back")}
               </button>
