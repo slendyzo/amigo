@@ -125,24 +125,28 @@ export async function POST(request: Request) {
         mileage: asset.vehicle.mileage,
       });
 
-      // Always append today's heuristic to history for chart continuity, but
-      // pick currentValue based on the most authoritative recent signal.
-      await prisma.valuationHistory.create({
-        data: {
-          realAssetId: asset.id,
-          value: new Prisma.Decimal(result.valueEur),
-          valueEur: new Prisma.Decimal(result.valueEur),
-          currency: "EUR",
-          source: "heuristic",
-        },
-      });
-
       const winner = await pickCurrentValue({
         realAssetId: asset.id,
         heuristicValueEur: result.valueEur,
         heuristicSource: "heuristic",
         marketFreshnessDays: VEHICLE_MARKET_FRESHNESS_DAYS,
       });
+
+      // Only append the heuristic row to history when it actually drives
+      // currentValue. If a market scrape or manual entry won, today's heuristic
+      // adds nothing useful and would just clutter the chart with a divergent
+      // dot every night.
+      if (winner.source === "heuristic") {
+        await prisma.valuationHistory.create({
+          data: {
+            realAssetId: asset.id,
+            value: new Prisma.Decimal(result.valueEur),
+            valueEur: new Prisma.Decimal(result.valueEur),
+            currency: "EUR",
+            source: "heuristic",
+          },
+        });
+      }
 
       await prisma.realAsset.update({
         where: { id: asset.id },
@@ -189,9 +193,18 @@ export async function POST(request: Request) {
           asset.currentValueEur != null ? Number(asset.currentValueEur) : null,
       });
 
-      // Don't append a ValuationHistory row for stale rebuilds — those carry no
-      // new information and would clutter the chart with daily duplicates.
-      if (result.source === "heuristic") {
+      const winner = await pickCurrentValue({
+        realAssetId: asset.id,
+        heuristicValueEur: result.valueEur,
+        heuristicSource: result.source,
+        marketFreshnessDays: PROPERTY_MARKET_FRESHNESS_DAYS,
+      });
+
+      // Only append the heuristic row when it actually drives currentValue.
+      // Stale rebuilds never get a row (they carry no new information). When
+      // a market scrape or manual entry wins, today's heuristic also adds
+      // nothing useful — skipping it keeps the chart line tied to reality.
+      if (winner.source === "heuristic" && result.source === "heuristic") {
         await prisma.valuationHistory.create({
           data: {
             realAssetId: asset.id,
@@ -201,16 +214,9 @@ export async function POST(request: Request) {
             source: "heuristic",
           },
         });
-      } else {
+      } else if (result.source === "stale") {
         propertiesStale++;
       }
-
-      const winner = await pickCurrentValue({
-        realAssetId: asset.id,
-        heuristicValueEur: result.valueEur,
-        heuristicSource: result.source,
-        marketFreshnessDays: PROPERTY_MARKET_FRESHNESS_DAYS,
-      });
 
       await prisma.realAsset.update({
         where: { id: asset.id },
