@@ -25,6 +25,7 @@ import {
   type ValuePointSource,
 } from "@/components/ui/value-over-time-chart";
 import { AddValuationModal } from "@/components/add-valuation-modal";
+import { AssetHero, type HeroStat } from "@/components/ui/asset-hero";
 import { ComparablesModal } from "@/components/ui/comparables-modal";
 import { ValueSourceHint } from "@/components/ui/value-source-hint";
 
@@ -217,152 +218,131 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
         <ArrowLeft className="h-4 w-4" /> {t("backToNetWorth")}
       </Link>
 
-      {/* Hero — capped image left, packed info right */}
-      <div className="overflow-hidden rounded-3xl border border-border/60 bg-card/80 backdrop-blur-sm">
-        <div className="grid md:grid-cols-[1.4fr_1fr] md:max-h-[360px]">
-          {/* Image */}
-          <div
-            className={cn(
-              "relative aspect-[16/10] w-full md:aspect-auto md:h-full",
-              "bg-gradient-to-br from-muted/40 to-muted/10",
-              sold && "opacity-70 grayscale",
-            )}
-          >
-            {asset.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={asset.imageUrl} alt={asset.name} className="h-full w-full object-cover" />
-            ) : vehicle.vehicleClass === "MOTORCYCLE" ? (
-              <div className="flex h-full w-full items-center justify-center">
-                <span className="text-7xl opacity-50" aria-hidden>🏍️</span>
-              </div>
-            ) : (
-              <div className="flex h-full w-full items-center justify-center">
-                <Car className="h-16 w-16 text-muted-foreground/40" strokeWidth={1.5} />
-              </div>
-            )}
-            {sold && asset.soldAt && (
-              <span className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full bg-card/95 px-2.5 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground shadow-sm backdrop-blur-sm">
-                <CheckCircle className="h-3 w-3" />
-                {t("soldOnLabel", { date: formatMonthYear(asset.soldAt) })}
-              </span>
-            )}
-          </div>
-
-          {/* Info column */}
-          <div className="flex min-w-0 flex-col justify-between p-5 md:p-6">
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0 flex-1">
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">{vehicle.year}</p>
-                <h1 className="mt-0.5 truncate text-2xl font-bold leading-tight md:text-[26px]">
-                  {vehicle.brand} {vehicle.model}
-                </h1>
-                {vehicle.trim && <p className="truncate text-sm text-muted-foreground">{vehicle.trim}</p>}
-                <div className="mt-2.5 flex flex-wrap gap-1.5">
-                  {vehicle.fuelType && <Chip>{vehicle.fuelType}</Chip>}
-                  {vehicle.bodyType && <Chip>{vehicle.bodyType}</Chip>}
-                  {vehicle.generation && <Chip>{vehicle.generation}</Chip>}
-                  {vehicle.color && <Chip>{vehicle.color}</Chip>}
-                </div>
-              </div>
-
-              {/* Kebab menu — sell + delete actions */}
-              <div className="relative shrink-0">
-                <button
-                  onClick={() => setMenuOpen((v) => !v)}
-                  className="rounded-lg border border-border/60 bg-card/60 p-2 text-muted-foreground hover:border-border hover:text-foreground"
-                  aria-label={t("actionsMenu")}
-                >
-                  <MoreVertical className="h-4 w-4" />
-                </button>
-                <AnimatePresence>
-                  {menuOpen && (
-                    <>
-                      <div
-                        className="fixed inset-0 z-30"
-                        onClick={() => setMenuOpen(false)}
-                        aria-hidden
-                      />
-                      <motion.div
-                        initial={{ opacity: 0, y: -4, scale: 0.98 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -4, scale: 0.98 }}
-                        transition={{ duration: 0.18, ease: EASE }}
-                        className="absolute right-0 top-11 z-40 min-w-[200px] rounded-xl border border-border/80 bg-card p-1 shadow-2xl backdrop-blur-md"
+      {/* Hero */}
+      <AssetHero
+        sold={sold}
+        imageNode={
+          asset.imageUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={asset.imageUrl} alt={asset.name} className="h-full w-full object-cover" />
+          ) : vehicle.vehicleClass === "MOTORCYCLE" ? (
+            <div className="flex h-full w-full items-center justify-center">
+              <span className="text-7xl opacity-50" aria-hidden>🏍️</span>
+            </div>
+          ) : (
+            <div className="flex h-full w-full items-center justify-center">
+              <Car className="h-16 w-16 text-muted-foreground/40" strokeWidth={1.5} />
+            </div>
+          )
+        }
+        imageBadge={
+          sold && asset.soldAt ? (
+            <>
+              <CheckCircle className="h-3 w-3" />
+              {t("soldOnLabel", { date: formatMonthYear(asset.soldAt) })}
+            </>
+          ) : null
+        }
+        eyebrow={vehicle.year}
+        heading={`${vehicle.brand} ${vehicle.model}`}
+        subtitle={vehicle.trim ?? null}
+        chips={
+          <>
+            {vehicle.fuelType && <Chip>{vehicle.fuelType}</Chip>}
+            {vehicle.bodyType && <Chip>{vehicle.bodyType}</Chip>}
+            {vehicle.generation && <Chip>{vehicle.generation}</Chip>}
+            {vehicle.color && <Chip>{vehicle.color}</Chip>}
+          </>
+        }
+        menu={
+          <>
+            <button
+              onClick={() => setMenuOpen((v) => !v)}
+              className="rounded-lg border border-border/60 bg-card/60 p-2 text-muted-foreground hover:border-border hover:text-foreground"
+              aria-label={t("actionsMenu")}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+            <AnimatePresence>
+              {menuOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-30"
+                    onClick={() => setMenuOpen(false)}
+                    aria-hidden
+                  />
+                  <motion.div
+                    initial={{ opacity: 0, y: -4, scale: 0.98 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -4, scale: 0.98 }}
+                    transition={{ duration: 0.18, ease: EASE }}
+                    className="absolute right-0 top-11 z-40 min-w-[200px] rounded-xl border border-border/80 bg-card p-1 shadow-2xl backdrop-blur-md"
+                  >
+                    {!sold && (
+                      <button
+                        onClick={() => {
+                          setMenuOpen(false);
+                          setShowSell(true);
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
                       >
-                        {!sold && (
-                          <button
-                            onClick={() => {
-                              setMenuOpen(false);
-                              setShowSell(true);
-                            }}
-                            className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-foreground hover:bg-muted"
-                          >
-                            <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                            {t("markAsSold")}
-                          </button>
-                        )}
-                        <div className="my-1 h-px bg-border/60" />
-                        <button
-                          onClick={() => {
-                            setMenuOpen(false);
-                            handleDelete();
-                          }}
-                          disabled={busy}
-                          className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-rose-500 hover:bg-rose-500/10 disabled:opacity-50"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                          {t("deleteVehicle") ?? "Delete vehicle"}
-                        </button>
-                      </motion.div>
-                    </>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-
-            {/* Stats grid 2x2, packed inside the hero */}
-            <div className="mt-4 grid grid-cols-2 gap-3 border-t border-border/40 pt-4 md:mt-3 md:pt-3">
-              <HeroStat
-                label={t("costBasis")}
-                value={formatCurrency(asset.purchasePriceEur, "EUR")}
-              />
-              <HeroStat
-                label={sold ? t("salePrice") : t("estimatedValue")}
-                value={formatCurrency(current, "EUR")}
-                hint={
-                  sold ? null : (
-                    <ValueSourceHint
-                      source={asset.currentValueSource}
-                      updatedAt={null}
-                      assetType="vehicle"
-                    />
-                  )
-                }
-                accent={sold ? null : <DeltaInline delta={delta} />}
-                valueClass={sold ? undefined : undefined}
-                onValueClick={canShowComparables ? () => setShowComparables(true) : undefined}
-                valueAriaLabel={canShowComparables ? t("estimatedValue") : undefined}
-              />
-              {realizedPnL != null ? (
-                <HeroStat
-                  label={t("realizedPnL")}
-                  value={`${realizedPnL > 0 ? "+" : ""}${formatCurrency(realizedPnL, "EUR")}`}
-                  valueClass={realizedPnL > 0 ? "text-emerald-500" : "text-rose-500"}
-                />
-              ) : (
-                <HeroStat
-                  label={t("mileage")}
-                  value={vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : "—"}
-                />
+                        <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                        {t("markAsSold")}
+                      </button>
+                    )}
+                    <div className="my-1 h-px bg-border/60" />
+                    <button
+                      onClick={() => {
+                        setMenuOpen(false);
+                        handleDelete();
+                      }}
+                      disabled={busy}
+                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-rose-500 hover:bg-rose-500/10 disabled:opacity-50"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {t("deleteVehicle") ?? "Delete vehicle"}
+                    </button>
+                  </motion.div>
+                </>
               )}
-              <HeroStat
-                label={t("monthsOwned")}
-                value={String(monthsOwned)}
+            </AnimatePresence>
+          </>
+        }
+        stats={[
+          {
+            label: t("costBasis"),
+            value: formatCurrency(asset.purchasePriceEur, "EUR"),
+          },
+          {
+            label: sold ? t("salePrice") : t("estimatedValue"),
+            value: formatCurrency(current, "EUR"),
+            hint: sold ? undefined : (
+              <ValueSourceHint
+                source={asset.currentValueSource}
+                updatedAt={null}
+                assetType="vehicle"
               />
-            </div>
-          </div>
-        </div>
-      </div>
+            ),
+            accent: sold ? undefined : <DeltaInline delta={delta} />,
+            onValueClick: canShowComparables ? () => setShowComparables(true) : undefined,
+            valueAriaLabel: canShowComparables ? t("estimatedValue") : undefined,
+          },
+          realizedPnL != null
+            ? {
+                label: t("realizedPnL"),
+                value: `${realizedPnL > 0 ? "+" : ""}${formatCurrency(realizedPnL, "EUR")}`,
+                valueClass: realizedPnL > 0 ? "text-emerald-500" : "text-rose-500",
+              }
+            : {
+                label: t("mileage"),
+                value: vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : "—",
+              },
+          {
+            label: t("monthsOwned"),
+            value: String(monthsOwned),
+          },
+        ] satisfies [HeroStat, HeroStat, HeroStat, HeroStat]}
+      />
 
       {/* Value-over-time chart */}
       <ValueOverTimeChart
@@ -450,59 +430,6 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
         isOpen={showComparables}
         onClose={() => setShowComparables(false)}
       />
-    </div>
-  );
-}
-
-function HeroStat({
-  label,
-  value,
-  accent,
-  hint,
-  valueClass,
-  onValueClick,
-  valueAriaLabel,
-}: {
-  label: string;
-  value: string;
-  accent?: React.ReactNode;
-  hint?: React.ReactNode;
-  valueClass?: string;
-  onValueClick?: () => void;
-  valueAriaLabel?: string;
-}) {
-  const valueClasses = cn(
-    "truncate text-base font-semibold tabular-nums md:text-lg",
-    valueClass,
-  );
-  return (
-    <div className="min-w-0">
-      <div className="flex items-center gap-1">
-        <p className="text-[10px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
-        {hint}
-      </div>
-      <div className="mt-0.5 flex items-baseline gap-1.5">
-        {onValueClick ? (
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              onValueClick();
-            }}
-            className={cn(
-              valueClasses,
-              "cursor-pointer rounded-sm decoration-muted-foreground/40 underline-offset-4 transition-all hover:underline hover:decoration-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40",
-            )}
-            aria-label={valueAriaLabel}
-          >
-            {value}
-          </button>
-        ) : (
-          <p className={valueClasses}>{value}</p>
-        )}
-        {accent}
-      </div>
     </div>
   );
 }
