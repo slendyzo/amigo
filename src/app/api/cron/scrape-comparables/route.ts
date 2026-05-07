@@ -170,6 +170,12 @@ export async function POST(request: Request) {
               currentValueEur: new Prisma.Decimal(med),
               currentValueUpdatedAt: new Date(),
               currentValueSource: "live_scrape",
+              // Promote no_data → done. Initial backfill may have come up empty
+              // for this spec (e.g. Web Archive coverage gap), but once a live
+              // scrape lands, the asset has data — flip the flag so the chart
+              // stops showing the empty state.
+              backfillStatus: "done",
+              backfillProgress: 100,
             },
           }),
         ]);
@@ -298,6 +304,12 @@ export async function POST(request: Request) {
               currentValueEur: new Prisma.Decimal(med),
               currentValueUpdatedAt: new Date(),
               currentValueSource: "live_scrape",
+              // Promote no_data → done. Initial backfill may have come up empty
+              // for this spec (e.g. Web Archive coverage gap), but once a live
+              // scrape lands, the asset has data — flip the flag so the chart
+              // stops showing the empty state.
+              backfillStatus: "done",
+              backfillProgress: 100,
             },
           }),
         ]);
