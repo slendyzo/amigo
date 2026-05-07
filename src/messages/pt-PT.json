@@ -1723,6 +1723,34 @@
           "body": "Não temos dados suficientemente recentes para recalcular. A manter o último valor conhecido. Vai atualizar quando chegarem novos dados de mercado."
         }
       }
+    },
+    "comparables": {
+      "title": "Como chegámos a {value}",
+      "subtitle": "Os anúncios que produziram esta estimativa",
+      "medianHeader": "MEDIANA",
+      "summarySampleSize": "{count} anúncios",
+      "summarySources": "de {sources}",
+      "summaryFilterArea": "Filtrado por ±área",
+      "summaryFilterMileage": "Filtrado por ±quilometragem",
+      "summaryFilterNone": "Sem filtro",
+      "summaryDate": "Recolhido {date}",
+      "userReference": "Comparável ao teu {ref}",
+      "listingDead": "anúncio removido",
+      "listingNoUrl": "—",
+      "listingPropertyShape": "{type} · {area}m² · {bedrooms}q",
+      "listingPropertyShapeNoBedrooms": "{type} · {area}m²",
+      "listingPropertyShapeAreaOnly": "{area}m²",
+      "listingPropertyTypeOnly": "{type}",
+      "listingVehicleShape": "{year} · {mileage}km · {trim}",
+      "listingVehicleShapeNoTrim": "{year} · {mileage}km",
+      "listingVehicleShapeYearOnly": "{year}",
+      "loadError": "Erro a carregar comparáveis",
+      "loadRetry": "Tentar novamente",
+      "closeButton": "Fechar",
+      "showAll": "Mostrar todos os {n}",
+      "showLess": "Mostrar menos",
+      "empty": "Sem comparáveis para mostrar",
+      "openListing": "Abrir anúncio"
     }
   },
   "aiAdvisor": {

@@ -1754,6 +1754,34 @@
           "body": "We don't have fresh enough data to recompute. Keeping the last known value. Will refresh when new market data lands."
         }
       }
+    },
+    "comparables": {
+      "title": "How we got to {value}",
+      "subtitle": "The listings that produced this estimate",
+      "medianHeader": "MEDIAN",
+      "summarySampleSize": "{count} listings",
+      "summarySources": "from {sources}",
+      "summaryFilterArea": "Filtered by ±area",
+      "summaryFilterMileage": "Filtered by ±mileage",
+      "summaryFilterNone": "No filter",
+      "summaryDate": "Scraped {date}",
+      "userReference": "Comparing against your {ref}",
+      "listingDead": "no longer listed",
+      "listingNoUrl": "—",
+      "listingPropertyShape": "{type} · {area}m² · {bedrooms}q",
+      "listingPropertyShapeNoBedrooms": "{type} · {area}m²",
+      "listingPropertyShapeAreaOnly": "{area}m²",
+      "listingPropertyTypeOnly": "{type}",
+      "listingVehicleShape": "{year} · {mileage}km · {trim}",
+      "listingVehicleShapeNoTrim": "{year} · {mileage}km",
+      "listingVehicleShapeYearOnly": "{year}",
+      "loadError": "Failed to load comparables",
+      "loadRetry": "Try again",
+      "closeButton": "Close",
+      "showAll": "Show all {n}",
+      "showLess": "Show less",
+      "empty": "No comparables to show",
+      "openListing": "Open listing"
     }
   },
   "aiAdvisor": {

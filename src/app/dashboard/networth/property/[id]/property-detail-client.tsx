@@ -36,6 +36,7 @@ import {
   type ReferenceLinePoint,
 } from "@/components/ui/value-over-time-chart";
 import { AddValuationModal } from "@/components/add-valuation-modal";
+import { ComparablesModal } from "@/components/ui/comparables-modal";
 import { ValueSourceHint } from "@/components/ui/value-source-hint";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
@@ -160,11 +161,16 @@ export default function PropertyDetailClient({
   const [showSell, setShowSell] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showAddValuation, setShowAddValuation] = useState(false);
+  const [showComparables, setShowComparables] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
   const sold = asset.status === "SOLD";
   const current = asset.currentValueEur ?? asset.purchasePriceEur;
+  const canShowComparables =
+    !sold &&
+    (asset.currentValueSource === "live_scrape" ||
+      asset.currentValueSource === "web_archive");
   const delta = ((current - asset.purchasePriceEur) / asset.purchasePriceEur) * 100;
   const realizedPnL =
     sold && asset.salePriceEur != null ? asset.salePriceEur - asset.purchasePriceEur : null;
@@ -413,6 +419,8 @@ export default function PropertyDetailClient({
                   )
                 }
                 accent={sold ? null : <DeltaInline delta={delta} />}
+                onValueClick={canShowComparables ? () => setShowComparables(true) : undefined}
+                valueAriaLabel={canShowComparables ? t("estimatedValue") : undefined}
               />
               {realizedPnL != null ? (
                 <HeroStat
@@ -535,6 +543,12 @@ export default function PropertyDetailClient({
             }}
           />
         )}
+        <ComparablesModal
+          assetId={asset.id}
+          currentValueEur={current}
+          isOpen={showComparables}
+          onClose={() => setShowComparables(false)}
+        />
         {showEdit && (
           <EditPropertyModal
             asset={{
@@ -677,13 +691,21 @@ function HeroStat({
   accent,
   hint,
   valueClass,
+  onValueClick,
+  valueAriaLabel,
 }: {
   label: string;
   value: string;
   accent?: React.ReactNode;
   hint?: React.ReactNode;
   valueClass?: string;
+  onValueClick?: () => void;
+  valueAriaLabel?: string;
 }) {
+  const valueClasses = cn(
+    "truncate text-base font-semibold tabular-nums md:text-lg",
+    valueClass,
+  );
   return (
     <div className="min-w-0">
       <div className="flex items-center gap-1">
@@ -691,7 +713,25 @@ function HeroStat({
         {hint}
       </div>
       <div className="mt-0.5 flex items-baseline gap-1.5">
-        <p className={cn("truncate text-base font-semibold tabular-nums md:text-lg", valueClass)}>{value}</p>
+        {onValueClick ? (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              onValueClick();
+            }}
+            className={cn(
+              valueClasses,
+              "cursor-pointer rounded-sm decoration-muted-foreground/40 underline-offset-4 transition-all hover:underline hover:decoration-foreground/60 focus:outline-none focus:ring-2 focus:ring-primary/40",
+            )}
+            aria-label={valueAriaLabel}
+          >
+            {value}
+          </button>
+        ) : (
+          <p className={valueClasses}>{value}</p>
+        )}
         {accent}
       </div>
     </div>

@@ -1725,6 +1725,34 @@
           "body": "Nous n'avons pas de données assez récentes pour recalculer. Conservation de la dernière valeur connue. Sera mise à jour à l'arrivée de nouvelles données de marché."
         }
       }
+    },
+    "comparables": {
+      "title": "Comment nous sommes arrivés à {value}",
+      "subtitle": "Les annonces ayant produit cette estimation",
+      "medianHeader": "MÉDIANE",
+      "summarySampleSize": "{count} annonces",
+      "summarySources": "de {sources}",
+      "summaryFilterArea": "Filtré par ±superficie",
+      "summaryFilterMileage": "Filtré par ±kilométrage",
+      "summaryFilterNone": "Sans filtre",
+      "summaryDate": "Collecté le {date}",
+      "userReference": "Comparé à votre {ref}",
+      "listingDead": "annonce retirée",
+      "listingNoUrl": "—",
+      "listingPropertyShape": "{type} · {area}m² · {bedrooms}ch",
+      "listingPropertyShapeNoBedrooms": "{type} · {area}m²",
+      "listingPropertyShapeAreaOnly": "{area}m²",
+      "listingPropertyTypeOnly": "{type}",
+      "listingVehicleShape": "{year} · {mileage}km · {trim}",
+      "listingVehicleShapeNoTrim": "{year} · {mileage}km",
+      "listingVehicleShapeYearOnly": "{year}",
+      "loadError": "Échec du chargement des comparables",
+      "loadRetry": "Réessayer",
+      "closeButton": "Fermer",
+      "showAll": "Afficher les {n}",
+      "showLess": "Afficher moins",
+      "empty": "Aucune annonce comparable",
+      "openListing": "Ouvrir l'annonce"
     }
   },
   "aiAdvisor": {

@@ -25,11 +25,11 @@ enum WorkspaceType {
 }
 
 enum ExpenseType {
-  SURVIVAL_FIXED    // Fixed recurring (Spotify, Rent, Car Lease)
+  SURVIVAL_FIXED // Fixed recurring (Spotify, Rent, Car Lease)
   SURVIVAL_VARIABLE // Variable recurring (Utilities: Luz, Água, Gás)
-  LIFESTYLE         // Daily variable spending
-  PROJECT           // Tagged to a specific project (e.g., Casa)
-  INVESTMENT        // Exchange/broker funding (Kraken, Trading212, etc.)
+  LIFESTYLE // Daily variable spending
+  PROJECT // Tagged to a specific project (e.g., Casa)
+  INVESTMENT // Exchange/broker funding (Kraken, Trading212, etc.)
 }
 
 enum ExpenseStatus {
@@ -80,13 +80,13 @@ enum TradeSide {
 }
 
 enum IncomeType {
-  SALARY          // Regular salary/wage
-  FREELANCE       // Freelance/contract work
-  INVESTMENT      // Dividends, capital gains
-  SALE            // OLX, marketplace sales
-  GIFT            // Money gifts
-  REFUND          // Refunds, cashback
-  OTHER           // Miscellaneous
+  SALARY // Regular salary/wage
+  FREELANCE // Freelance/contract work
+  INVESTMENT // Dividends, capital gains
+  SALE // OLX, marketplace sales
+  GIFT // Money gifts
+  REFUND // Refunds, cashback
+  OTHER // Miscellaneous
 }
 
 // ============================================================================
@@ -94,29 +94,29 @@ enum IncomeType {
 // ============================================================================
 
 model User {
-  id                 String             @id @default(cuid())
-  email              String             @unique
-  username           String?            @unique // Optional username for login
-  name               String?
-  password           String?            // Hashed, nullable for OAuth users
-  image              String?
-  emailVerified      DateTime?
-  subscriptionStatus SubscriptionStatus @default(BASIC)
-  aiCredits          Int                @default(0)
-  aiProcessingEnabled Boolean           @default(false) // Doubles as AI Advisor consent flag
-  aiConsentAt        DateTime?          // When user accepted/declined the AI advisor consent prompt
-  activeWorkspaceId  String?            // Currently selected workspace for multi-workspace support
-  seenAnnouncements  String[]           @default([]) // Array of announcement IDs user has dismissed
+  id                  String             @id @default(cuid())
+  email               String             @unique
+  username            String?            @unique // Optional username for login
+  name                String?
+  password            String? // Hashed, nullable for OAuth users
+  image               String?
+  emailVerified       DateTime?
+  subscriptionStatus  SubscriptionStatus @default(BASIC)
+  aiCredits           Int                @default(0)
+  aiProcessingEnabled Boolean            @default(false) // Doubles as AI Advisor consent flag
+  aiConsentAt         DateTime? // When user accepted/declined the AI advisor consent prompt
+  activeWorkspaceId   String? // Currently selected workspace for multi-workspace support
+  seenAnnouncements   String[]           @default([]) // Array of announcement IDs user has dismissed
 
   // Relations
-  accounts           Account[]
-  sessions           Session[]
-  ownedWorkspaces    Workspace[]        @relation("WorkspaceOwner")
-  workspaceMembers   WorkspaceMember[]
-  invitationsSent    WorkspaceInvitation[] @relation("InvitationsSent")
+  accounts         Account[]
+  sessions         Session[]
+  ownedWorkspaces  Workspace[]           @relation("WorkspaceOwner")
+  workspaceMembers WorkspaceMember[]
+  invitationsSent  WorkspaceInvitation[] @relation("InvitationsSent")
 
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@map("users")
 }
@@ -165,7 +165,7 @@ model VerificationToken {
 model EmailVerificationToken {
   id        String   @id @default(cuid())
   email     String
-  code      String   // 6-digit verification code
+  code      String // 6-digit verification code
   userData  String   @db.Text // JSON: {name, username, email, hashedPassword}
   attempts  Int      @default(0) // Track failed verification attempts
   expires   DateTime
@@ -181,10 +181,10 @@ model EmailVerificationToken {
 // ============================================================================
 
 model Workspace {
-  id       String        @id @default(cuid())
-  name     String        @db.VarChar(100)
-  type     WorkspaceType @default(PERSONAL)
-  ownerId  String
+  id      String        @id @default(cuid())
+  name    String        @db.VarChar(100)
+  type    WorkspaceType @default(PERSONAL)
+  ownerId String
 
   // Onboarding
   onboardingCompleted Boolean @default(false)
@@ -193,24 +193,24 @@ model Workspace {
   monthlyBudget        Decimal? @db.Decimal(12, 2) // Target monthly spending limit
   monthlySalary        Decimal? @db.Decimal(12, 2) // Monthly income for budgeting
   defaultCurrency      String   @default("EUR") @db.VarChar(3)
-  defaultBankAccountId String?  // Default bank account for new expenses
+  defaultBankAccountId String? // Default bank account for new expenses
   language             String   @default("en") @db.VarChar(10) // User's preferred language (en, pt-PT, fr-FR)
   currencyDisplayMode  String   @default("converted") @db.VarChar(20) // "converted", "original", "original_only"
 
   // Relations
-  owner        User              @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
-  members      WorkspaceMember[]
-  invitations  WorkspaceInvitation[]
-  bankAccounts BankAccount[]
-  expenses     Expense[]
-  projects     Project[]
-  categories   Category[]
-  recurringTemplates RecurringTemplate[]
-  incomes      Income[]
+  owner               User                  @relation("WorkspaceOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+  members             WorkspaceMember[]
+  invitations         WorkspaceInvitation[]
+  bankAccounts        BankAccount[]
+  expenses            Expense[]
+  projects            Project[]
+  categories          Category[]
+  recurringTemplates  RecurringTemplate[]
+  incomes             Income[]
   exchangeConnections ExchangeConnection[]
-  realAssets   RealAsset[]
-  liabilities  Liability[]
-  insights     Insight[]
+  realAssets          RealAsset[]
+  liabilities         Liability[]
+  insights            Insight[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -237,17 +237,17 @@ model WorkspaceMember {
 model WorkspaceInvitation {
   id           String    @id @default(cuid())
   workspaceId  String
-  invitedEmail String    // Email of the person being invited
-  invitedById  String    // User who sent the invitation
+  invitedEmail String // Email of the person being invited
+  invitedById  String // User who sent the invitation
   role         String    @default("MEMBER") // ADMIN or MEMBER (can't invite as OWNER)
   token        String    @unique // Unique token for invite link
-  expiresAt    DateTime  // Typically 7 days from creation
+  expiresAt    DateTime // Typically 7 days from creation
   acceptedAt   DateTime? // When the invitation was accepted
 
-  workspace    Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  invitedBy    User      @relation("InvitationsSent", fields: [invitedById], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  invitedBy User      @relation("InvitationsSent", fields: [invitedById], references: [id], onDelete: Cascade)
 
-  createdAt    DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([workspaceId, invitedEmail]) // One pending invite per email per workspace
   @@index([token])
@@ -294,9 +294,9 @@ model Category {
   isSystem    Boolean @default(false)
 
   // Relations
-  workspace          Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  parent             Category?          @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
-  children           Category[]         @relation("CategoryHierarchy")
+  workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  parent             Category?           @relation("CategoryHierarchy", fields: [parentId], references: [id], onDelete: Cascade)
+  children           Category[]          @relation("CategoryHierarchy")
   expenses           Expense[]
   recurringTemplates RecurringTemplate[]
   keywordMappings    KeywordMapping[]
@@ -314,18 +314,18 @@ model Category {
 // ============================================================================
 
 model Project {
-  id          String  @id @default(cuid())
+  id          String    @id @default(cuid())
   workspaceId String
-  name        String  @db.VarChar(100) // e.g., "Casa", "Wedding", "Vacation"
-  description String? @db.VarChar(500)
-  budget      Decimal? @db.Decimal(12, 2) // Optional budget limit
+  name        String    @db.VarChar(100) // e.g., "Casa", "Wedding", "Vacation"
+  description String?   @db.VarChar(500)
+  budget      Decimal?  @db.Decimal(12, 2) // Optional budget limit
   startDate   DateTime? // Project start date
   endDate     DateTime? // Project end date
-  isActive    Boolean @default(true)
+  isActive    Boolean   @default(true)
 
   // Relations
   workspace          Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  expenses           Expense[]           // Many-to-many relation
+  expenses           Expense[] // Many-to-many relation
   recurringTemplates RecurringTemplate[] // Many-to-many relation
 
   createdAt DateTime @default(now())
@@ -340,51 +340,51 @@ model Project {
 // ============================================================================
 
 model Expense {
-  id            String        @id @default(cuid())
+  id            String  @id @default(cuid())
   workspaceId   String
   bankAccountId String?
   categoryId    String?
 
   // Core fields
-  name          String        @db.VarChar(255) // Cleaned name (e.g., "McDonalds")
-  rawInput      String?       @db.VarChar(500) // Original sloppy input for reference
-  description   String?       @db.VarChar(1000)
-  type          ExpenseType   @default(LIFESTYLE)
-  status        ExpenseStatus @default(PAID)
+  name        String        @db.VarChar(255) // Cleaned name (e.g., "McDonalds")
+  rawInput    String?       @db.VarChar(500) // Original sloppy input for reference
+  description String?       @db.VarChar(1000)
+  type        ExpenseType   @default(LIFESTYLE)
+  status      ExpenseStatus @default(PAID)
 
   // Amount handling with currency conversion
-  amount            Decimal       @db.Decimal(12, 2) // Original value
-  amountExpression  String?       @db.VarChar(255) // Original math expression (e.g. "50+30")
-  currency          String        @default("EUR") @db.VarChar(3) // Original currency
-  amountEur         Decimal       @db.Decimal(12, 2) // Converted to EUR at entry time
-  exchangeRate      Decimal?      @db.Decimal(12, 6) // Rate used for conversion
+  amount           Decimal  @db.Decimal(12, 2) // Original value
+  amountExpression String?  @db.VarChar(255) // Original math expression (e.g. "50+30")
+  currency         String   @default("EUR") @db.VarChar(3) // Original currency
+  amountEur        Decimal  @db.Decimal(12, 2) // Converted to EUR at entry time
+  exchangeRate     Decimal? @db.Decimal(12, 6) // Rate used for conversion
 
   // Date fields
-  date          DateTime      // Transaction date
-  dueDate       DateTime?     // For PENDING expenses
-  paidAt        DateTime?     // When actually paid
+  date    DateTime // Transaction date
+  dueDate DateTime? // For PENDING expenses
+  paidAt  DateTime? // When actually paid
 
   // Metadata
-  merchant      String?       @db.VarChar(255) // Normalized merchant name
-  isRecurring   Boolean       @default(false)
+  merchant            String?   @db.VarChar(255) // Normalized merchant name
+  isRecurring         Boolean   @default(false)
   recurringTemplateId String? // Link to template if auto-generated
-  importLogId   String?       // Link to import batch for bulk delete
-  excludeFromBudget Boolean   @default(false) // Don't count towards monthly budget (offshore/one-off)
-  imageUrls         String?   @db.Text // JSON array of compressed WebP base64 data URLs
-  categorizedAt     DateTime? // When this expense was categorized via tidy-up page
+  importLogId         String? // Link to import batch for bulk delete
+  excludeFromBudget   Boolean   @default(false) // Don't count towards monthly budget (offshore/one-off)
+  imageUrls           String?   @db.Text // JSON array of compressed WebP base64 data URLs
+  categorizedAt       DateTime? // When this expense was categorized via tidy-up page
 
   // Split expense data
-  splitCount        Int?              // Number of people splitting (null = not split)
-  splitData         String?   @db.Text // JSON array of {label, amount, locked} per person
+  splitCount Int? // Number of people splitting (null = not split)
+  splitData  String? @db.Text // JSON array of {label, amount, locked} per person
 
   // Real-world asset linkage (vehicle TCO, etc.)
-  realAssetId       String?
+  realAssetId String?
 
   // Relations
   workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   bankAccount       BankAccount?       @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
   category          Category?          @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  projects          Project[]          // Many-to-many: expense can have multiple tags
+  projects          Project[] // Many-to-many: expense can have multiple tags
   recurringTemplate RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
   importLog         ImportLog?         @relation(fields: [importLogId], references: [id], onDelete: SetNull)
   realAsset         RealAsset?         @relation(fields: [realAssetId], references: [id], onDelete: SetNull)
@@ -405,34 +405,34 @@ model Expense {
 // ============================================================================
 
 model RecurringTemplate {
-  id            String             @id @default(cuid())
+  id            String  @id @default(cuid())
   workspaceId   String
   categoryId    String?
   bankAccountId String?
 
-  name              String             @db.VarChar(255) // e.g., "Spotify", "Rent"
-  type              ExpenseType        // SURVIVAL_FIXED or SURVIVAL_VARIABLE
-  amount            Decimal?           @db.Decimal(12, 2) // Fixed amount (null for variable)
-  currency          String             @default("EUR") @db.VarChar(3)
-  description       String?            @db.VarChar(500) // Notes copied to generated expenses
-  excludeFromBudget Boolean            @default(false) // Generated expenses inherit this
+  name              String      @db.VarChar(255) // e.g., "Spotify", "Rent"
+  type              ExpenseType // SURVIVAL_FIXED or SURVIVAL_VARIABLE
+  amount            Decimal?    @db.Decimal(12, 2) // Fixed amount (null for variable)
+  currency          String      @default("EUR") @db.VarChar(3)
+  description       String?     @db.VarChar(500) // Notes copied to generated expenses
+  excludeFromBudget Boolean     @default(false) // Generated expenses inherit this
 
   // Recurrence settings
-  interval      RecurrenceInterval @default(MONTHLY)
-  dayOfMonth    Int?               // 1-31, for monthly recurrence
-  dayOfWeek     Int?               // 0-6, for weekly recurrence
+  interval   RecurrenceInterval @default(MONTHLY)
+  dayOfMonth Int? // 1-31, for monthly recurrence
+  dayOfWeek  Int? // 0-6, for weekly recurrence
 
   // Auto-generation settings
-  autoGenerate  Boolean            @default(false)  // If true, auto-create at month start
-  isActive      Boolean            @default(true)
-  lastGenerated DateTime?          // Last time an expense was auto-created
-  nextDue       DateTime?          // Next scheduled generation
+  autoGenerate  Boolean   @default(false) // If true, auto-create at month start
+  isActive      Boolean   @default(true)
+  lastGenerated DateTime? // Last time an expense was auto-created
+  nextDue       DateTime? // Next scheduled generation
 
   // Relations
   workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   category    Category?    @relation(fields: [categoryId], references: [id], onDelete: SetNull)
   bankAccount BankAccount? @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
-  projects    Project[]    // Many-to-many: tag templates with projects
+  projects    Project[] // Many-to-many: tag templates with projects
   expenses    Expense[]
   liabilities Liability[]  @relation("LiabilityTemplate") // Loans linked to this monthly payment
 
@@ -448,7 +448,7 @@ model RecurringTemplate {
 
 model KeywordMapping {
   id          String  @id @default(cuid())
-  workspaceId String?  // null = global/system mapping
+  workspaceId String? // null = global/system mapping
   categoryId  String?
 
   keyword     String  @db.VarChar(100) // e.g., "mcd", "uber", "spotify"
@@ -470,17 +470,17 @@ model KeywordMapping {
 // ============================================================================
 
 model PurchaseReceipt {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   userId      String
-  platform    String   // "apple" or "google"
-  productId   String   // The purchased product identifier
-  receiptData String   @db.Text // The signed receipt
-  isValid     Boolean  @default(false)
+  platform    String // "apple" or "google"
+  productId   String // The purchased product identifier
+  receiptData String    @db.Text // The signed receipt
+  isValid     Boolean   @default(false)
   verifiedAt  DateTime?
   expiresAt   DateTime? // For subscriptions
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@map("purchase_receipts")
@@ -491,19 +491,19 @@ model PurchaseReceipt {
 // ============================================================================
 
 model ImportLog {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   workspaceId String
   fileName    String
-  fileType    String   // "csv", "xlsx", "pdf"
-  rowsTotal   Int      @default(0)
-  rowsSuccess Int      @default(0)
-  rowsFailed  Int      @default(0)
-  errors      String?  @db.Text // JSON array of error messages
+  fileType    String // "csv", "xlsx", "pdf"
+  rowsTotal   Int     @default(0)
+  rowsSuccess Int     @default(0)
+  rowsFailed  Int     @default(0)
+  errors      String? @db.Text // JSON array of error messages
 
   // Relations
-  expenses    Expense[]
+  expenses Expense[]
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([workspaceId])
   @@map("import_logs")
@@ -519,18 +519,18 @@ enum FeedbackType {
 }
 
 model Feedback {
-  id          String       @id @default(cuid())
-  userId      String
-  type        FeedbackType
-  message     String       @db.Text
-  imageUrl    String?      // Optional screenshot URL (legacy, for single image)
-  imageUrls   String?      @db.Text // JSON array of image URLs for multiple screenshots
-  userAgent   String?      // Browser/device info
-  pageUrl     String?      // Where user was when submitting
-  isRead      Boolean      @default(false)
-  isResolved  Boolean      @default(false)
+  id         String       @id @default(cuid())
+  userId     String
+  type       FeedbackType
+  message    String       @db.Text
+  imageUrl   String? // Optional screenshot URL (legacy, for single image)
+  imageUrls  String?      @db.Text // JSON array of image URLs for multiple screenshots
+  userAgent  String? // Browser/device info
+  pageUrl    String? // Where user was when submitting
+  isRead     Boolean      @default(false)
+  isResolved Boolean      @default(false)
 
-  createdAt   DateTime     @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([type])
@@ -543,28 +543,28 @@ model Feedback {
 // ============================================================================
 
 model Income {
-  id            String     @id @default(cuid())
+  id            String  @id @default(cuid())
   workspaceId   String
   bankAccountId String?
 
   // Core fields
-  name          String     @db.VarChar(255) // e.g., "Salary", "OLX Sale - iPhone"
-  description   String?    @db.VarChar(1000)
-  type          IncomeType @default(SALARY)
+  name        String     @db.VarChar(255) // e.g., "Salary", "OLX Sale - iPhone"
+  description String?    @db.VarChar(1000)
+  type        IncomeType @default(SALARY)
 
   // Amount handling
-  amount        Decimal    @db.Decimal(12, 2)
-  currency      String     @default("EUR") @db.VarChar(3)
-  amountEur     Decimal    @db.Decimal(12, 2)
-  exchangeRate  Decimal?   @db.Decimal(12, 6) // Rate used for conversion
+  amount       Decimal  @db.Decimal(12, 2)
+  currency     String   @default("EUR") @db.VarChar(3)
+  amountEur    Decimal  @db.Decimal(12, 2)
+  exchangeRate Decimal? @db.Decimal(12, 6) // Rate used for conversion
 
   // Date
-  date          DateTime   // When received
+  date DateTime // When received
 
   // Recurrence (for salary/regular income)
-  isRecurring   Boolean    @default(false)
-  interval      RecurrenceInterval?
-  dayOfMonth    Int?       // 1-31, for monthly income
+  isRecurring Boolean             @default(false)
+  interval    RecurrenceInterval?
+  dayOfMonth  Int? // 1-31, for monthly income
 
   // Relations
   workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -583,42 +583,42 @@ model Income {
 // ============================================================================
 
 model ExchangeConnection {
-  id            String           @id @default(cuid())
-  workspaceId   String
-  provider      ExchangeProvider
-  label         String           @db.VarChar(100) // "My Kraken", "T212 Pie"
+  id          String           @id @default(cuid())
+  workspaceId String
+  provider    ExchangeProvider
+  label       String           @db.VarChar(100) // "My Kraken", "T212 Pie"
 
   // Wallet address (for WALLET_ETH, WALLET_SOL — public, no encryption needed)
-  walletAddress      String?  @db.VarChar(100)
+  walletAddress String? @db.VarChar(100)
 
   // Encrypted credentials (AES-256-GCM) — optional for wallet providers
-  encryptedApiKey    String?  @db.Text
-  encryptedApiSecret String?  @db.Text
-  encryptionIV       String?  @db.VarChar(32) // hex IV
-  encryptionTag      String?  @db.VarChar(32) // GCM auth tag
+  encryptedApiKey    String? @db.Text
+  encryptedApiSecret String? @db.Text
+  encryptionIV       String? @db.VarChar(32) // hex IV
+  encryptionTag      String? @db.VarChar(32) // GCM auth tag
 
   // Sync state
-  syncStatus           SyncStatus  @default(IDLE)
+  syncStatus           SyncStatus @default(IDLE)
   lastSyncAt           DateTime?
-  lastSyncError        String?     @db.VarChar(500)
-  syncStartedAt        DateTime?   // Set when sync begins; used to detect stuck SYNCING state
-  tradeHistoryComplete Boolean     @default(false) // Flips true once we've paginated to empty
+  lastSyncError        String?    @db.VarChar(500)
+  syncStartedAt        DateTime? // Set when sync begins; used to detect stuck SYNCING state
+  tradeHistoryComplete Boolean    @default(false) // Flips true once we've paginated to empty
 
   // Cached account summary
-  freeCash      Decimal?    @db.Decimal(18, 2)
+  freeCash         Decimal? @db.Decimal(18, 2)
   freeCashCurrency String?  @db.VarChar(10)
 
-  isActive      Boolean     @default(true)
+  isActive Boolean @default(true)
 
   // Relations
-  workspace     Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
-  assets        PortfolioAsset[]
-  snapshots     PortfolioSnapshot[]
-  deposits      ExchangeDeposit[]
-  trades        Trade[]
+  workspace Workspace           @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  assets    PortfolioAsset[]
+  snapshots PortfolioSnapshot[]
+  deposits  ExchangeDeposit[]
+  trades    Trade[]
 
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([workspaceId, provider, label])
   @@index([workspaceId])
@@ -626,52 +626,52 @@ model ExchangeConnection {
 }
 
 model PortfolioAsset {
-  id                   String    @id @default(cuid())
+  id                   String @id @default(cuid())
   exchangeConnectionId String
 
   // Asset identity
-  symbol              String    @db.VarChar(20)   // "BTC", "CSPX", "XDWL"
-  name                String    @db.VarChar(200)  // "Bitcoin", "iShares Core S&P 500"
-  assetType           AssetType
+  symbol    String    @db.VarChar(20) // "BTC", "CSPX", "XDWL"
+  name      String    @db.VarChar(200) // "Bitcoin", "iShares Core S&P 500"
+  assetType AssetType
 
   // Holdings
-  quantity            Decimal   @db.Decimal(18, 8) // 8 decimal places for crypto
-  averageBuyPrice     Decimal   @db.Decimal(18, 8)
-  averageBuyPriceEur  Decimal   @db.Decimal(18, 8)
+  quantity           Decimal @db.Decimal(18, 8) // 8 decimal places for crypto
+  averageBuyPrice    Decimal @db.Decimal(18, 8)
+  averageBuyPriceEur Decimal @db.Decimal(18, 8)
 
   // Current valuation (updated on sync)
-  currentPrice        Decimal   @db.Decimal(18, 8)
-  currentPriceEur     Decimal   @db.Decimal(18, 8)
-  currentValue        Decimal   @db.Decimal(18, 2) // quantity * currentPrice
-  currentValueEur     Decimal   @db.Decimal(18, 2)
+  currentPrice    Decimal @db.Decimal(18, 8)
+  currentPriceEur Decimal @db.Decimal(18, 8)
+  currentValue    Decimal @db.Decimal(18, 2) // quantity * currentPrice
+  currentValueEur Decimal @db.Decimal(18, 2)
 
   // P&L
-  totalCost           Decimal   @db.Decimal(18, 2) // total invested
-  totalCostEur        Decimal   @db.Decimal(18, 2)
-  unrealizedPnl       Decimal   @db.Decimal(18, 2) // currentValue - totalCost
-  unrealizedPnlEur    Decimal   @db.Decimal(18, 2)
-  unrealizedPnlPct    Decimal   @db.Decimal(8, 4)  // percentage P&L
+  totalCost        Decimal @db.Decimal(18, 2) // total invested
+  totalCostEur     Decimal @db.Decimal(18, 2)
+  unrealizedPnl    Decimal @db.Decimal(18, 2) // currentValue - totalCost
+  unrealizedPnlEur Decimal @db.Decimal(18, 2)
+  unrealizedPnlPct Decimal @db.Decimal(8, 4) // percentage P&L
 
   // Currency of the asset on the exchange (USDT/USDC/etc. so 10 chars; matches freeCashCurrency + Trade.currency)
-  currency            String    @default("EUR") @db.VarChar(10)
+  currency String @default("EUR") @db.VarChar(10)
 
   // Price availability — for assets we can hold but not price (delisted, no pair)
   priceStatus            PriceStatus @default(OK)
   priceUnavailableReason String?     @db.VarChar(200)
 
   // Locked / staked portion of quantity (e.g., Kraken .S balances, Bybit Earn)
-  lockedQuantity      Decimal?  @db.Decimal(18, 8)
+  lockedQuantity Decimal? @db.Decimal(18, 8)
 
   // Realized P&L computed from Trade history (null until tradeHistoryComplete)
-  realizedPnlEur      Decimal?  @db.Decimal(18, 2)
+  realizedPnlEur Decimal? @db.Decimal(18, 2)
 
   // Marked dust (value < threshold and no trade history) — hidden from UI by default
-  isDust              Boolean   @default(false)
+  isDust Boolean @default(false)
 
-  lastUpdatedAt       DateTime  @default(now())
+  lastUpdatedAt DateTime @default(now())
 
   // Relations
-  exchangeConnection  ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
+  exchangeConnection ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
 
   @@unique([exchangeConnectionId, symbol])
   @@index([exchangeConnectionId])
@@ -679,24 +679,24 @@ model PortfolioAsset {
 }
 
 model Trade {
-  id                   String    @id @default(cuid())
+  id                   String @id @default(cuid())
   exchangeConnectionId String
 
-  externalId           String    @db.VarChar(200) // exchange's own trade/execution ID
-  symbol               String    @db.VarChar(20)  // canonical base symbol (e.g., BTC, ATOM)
-  side                 TradeSide
+  externalId String    @db.VarChar(200) // exchange's own trade/execution ID
+  symbol     String    @db.VarChar(20) // canonical base symbol (e.g., BTC, ATOM)
+  side       TradeSide
 
-  quantity             Decimal   @db.Decimal(18, 8) // base asset quantity
-  price                Decimal   @db.Decimal(18, 8) // price per unit, in `currency`
-  currency             String    @db.VarChar(10)    // quote currency (USD, USDT, EUR, ...)
-  fee                  Decimal   @db.Decimal(18, 8) @default(0)
-  feeCurrency          String    @db.VarChar(10)
+  quantity    Decimal @db.Decimal(18, 8) // base asset quantity
+  price       Decimal @db.Decimal(18, 8) // price per unit, in `currency`
+  currency    String  @db.VarChar(10) // quote currency (USD, USDT, EUR, ...)
+  fee         Decimal @default(0) @db.Decimal(18, 8)
+  feeCurrency String  @db.VarChar(10)
 
-  date                 DateTime
+  date DateTime
 
-  exchangeConnection   ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
+  exchangeConnection ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
 
-  createdAt            DateTime  @default(now())
+  createdAt DateTime @default(now())
 
   @@unique([exchangeConnectionId, externalId])
   @@index([exchangeConnectionId, symbol, date])
@@ -705,19 +705,19 @@ model Trade {
 }
 
 model PortfolioSnapshot {
-  id                   String   @id @default(cuid())
+  id                   String @id @default(cuid())
   exchangeConnectionId String
 
-  date                 DateTime @db.Date
-  totalValueEur        Decimal  @db.Decimal(18, 2)
-  totalCostEur         Decimal  @db.Decimal(18, 2)
-  unrealizedPnlEur     Decimal  @db.Decimal(18, 2)
-  freeCashEur          Decimal? @db.Decimal(18, 2)
+  date             DateTime @db.Date
+  totalValueEur    Decimal  @db.Decimal(18, 2)
+  totalCostEur     Decimal  @db.Decimal(18, 2)
+  unrealizedPnlEur Decimal  @db.Decimal(18, 2)
+  freeCashEur      Decimal? @db.Decimal(18, 2)
 
   // Per-asset breakdown at this point in time
-  assetBreakdown       String?  @db.Text // JSON
+  assetBreakdown String? @db.Text // JSON
 
-  exchangeConnection   ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
+  exchangeConnection ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
 
   @@unique([exchangeConnectionId, date])
   @@index([exchangeConnectionId, date])
@@ -725,20 +725,20 @@ model PortfolioSnapshot {
 }
 
 model ExchangeDeposit {
-  id                   String   @id @default(cuid())
+  id                   String @id @default(cuid())
   exchangeConnectionId String
 
-  externalId           String   @db.VarChar(200) // exchange's own reference ID
-  amount               Decimal  @db.Decimal(18, 2)
-  currency             String   @db.VarChar(10)
-  amountEur            Decimal  @db.Decimal(18, 2)
-  date                 DateTime
+  externalId String   @db.VarChar(200) // exchange's own reference ID
+  amount     Decimal  @db.Decimal(18, 2)
+  currency   String   @db.VarChar(10)
+  amountEur  Decimal  @db.Decimal(18, 2)
+  date       DateTime
 
   // Link to expense system
-  linkedExpenseId      String?  // null until user confirms
-  dismissed            Boolean  @default(false) // user said "ignore this"
+  linkedExpenseId String? // null until user confirms
+  dismissed       Boolean @default(false) // user said "ignore this"
 
-  exchangeConnection   ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
+  exchangeConnection ExchangeConnection @relation(fields: [exchangeConnectionId], references: [id], onDelete: Cascade)
 
   @@unique([exchangeConnectionId, externalId])
   @@index([exchangeConnectionId])
@@ -847,15 +847,15 @@ model RealAsset {
 
   // Async backfill state (Web Archive scrape on creation / spec change)
   backfillStatus     String?   @db.VarChar(20) // "queued" | "running" | "done" | "no_data"
-  backfillProgress   Int?      // 0..100 (or N out of total snapshot count)
+  backfillProgress   Int? // 0..100 (or N out of total snapshot count)
   backfillStartedAt  DateTime?
   backfillFinishedAt DateTime?
 
   // Sale (status=SOLD)
   soldAt       DateTime?
-  salePrice    Decimal? @db.Decimal(14, 2)
-  salePriceEur Decimal? @db.Decimal(14, 2)
-  saleCurrency String?  @db.VarChar(3)
+  salePrice    Decimal?  @db.Decimal(14, 2)
+  salePriceEur Decimal?  @db.Decimal(14, 2)
+  saleCurrency String?   @db.VarChar(3)
 
   // Display
   imageUrl String? @db.VarChar(500)
@@ -888,7 +888,7 @@ model Vehicle {
   year       Int
   trim       String? @db.VarChar(100)
 
-  mileage          Int?      // km
+  mileage          Int? // km
   mileageUpdatedAt DateTime?
 
   vin   String? @db.VarChar(17)
@@ -921,14 +921,14 @@ model Property {
   country    String  @default("PT") @db.VarChar(2)
 
   // Physical
-  livableAreaM2  Int?
-  totalAreaM2    Int?
-  bedrooms       Int?
-  bathrooms      Int?
-  yearBuilt      Int?
-  floor          Int? // for apartments
-  parkingSpaces  Int?
-  energyRating   EnergyRating?
+  livableAreaM2 Int?
+  totalAreaM2   Int?
+  bedrooms      Int?
+  bathrooms     Int?
+  yearBuilt     Int?
+  floor         Int? // for apartments
+  parkingSpaces Int?
+  energyRating  EnergyRating?
 
   // Recurring fees
   condominiumFeeMonthly Decimal? @db.Decimal(10, 2)
@@ -974,9 +974,17 @@ model ValuationHistory {
 
   recordedAt DateTime @default(now())
 
+  // Optional FK to the SpecMarketSnapshot that produced this row. Phase 1 of
+  // the comparables-modal feature doesn't read this — added now so a future
+  // chart-dot-click flow can resolve "which listings produced this dot"
+  // without a data backfill.
+  snapshotId String?
+  snapshot   SpecMarketSnapshot? @relation(fields: [snapshotId], references: [id], onDelete: SetNull)
+
   realAsset RealAsset @relation(fields: [realAssetId], references: [id], onDelete: Cascade)
 
   @@index([realAssetId, recordedAt])
+  @@index([snapshotId])
   @@map("valuation_history")
 }
 
@@ -1025,9 +1033,30 @@ model SpecMarketSnapshot {
   listings    Json
   sampleSize  Int       @default(0)
 
+  // Reverse side of the optional FK from ValuationHistory.
+  valuationRows ValuationHistory[]
+
   @@index([specHash, scrapedAt])
   @@index([source, scrapedAt])
   @@map("spec_market_snapshots")
+}
+
+// Per-URL liveness for scraped listings. Populated by a daily cron that
+// HEAD-checks listing URLs across all SpecMarketSnapshot rows. Deduped by
+// URL so multiple users sharing the same Idealista listing only cost one
+// HTTP check.
+model ListingHealthCheck {
+  url         String   @id @db.VarChar(500)
+  source      String?  @db.VarChar(50) // "idealista" | "imovirtual" | "standvirtual" | "olx"
+  status      String   @db.VarChar(20) // "alive" | "dead" | "unknown"
+  lastChecked DateTime @default(now())
+  // Last HTTP status code seen, for diagnostics. Null when the request never
+  // resolved (timeout / network error / proxy block).
+  httpStatus  Int?
+
+  @@index([lastChecked])
+  @@index([status, lastChecked])
+  @@map("listing_health_checks")
 }
 
 // Quarterly housing price index by Portuguese concelho (município).
@@ -1097,18 +1126,18 @@ model Liability {
 // ============================================================================
 
 enum InsightType {
-  RETROSPECTIVE       // Day-1 monthly retrospective popup
-  NUDGE_CATEGORIZE    // "X expenses need a category" prompt
-  NUDGE_KEYWORD       // "Make Continente → Groceries a rule?" prompt
-  NUDGE_RECURRING     // "Spotify recurs monthly — add template?" prompt
-  NUDGE_PROJECT       // "These 4 expenses look like a project" prompt
+  RETROSPECTIVE // Day-1 monthly retrospective popup
+  NUDGE_CATEGORIZE // "X expenses need a category" prompt
+  NUDGE_KEYWORD // "Make Continente → Groceries a rule?" prompt
+  NUDGE_RECURRING // "Spotify recurs monthly — add template?" prompt
+  NUDGE_PROJECT // "These 4 expenses look like a project" prompt
 }
 
 enum InsightStatus {
-  OPEN       // Active, surfaced to the user
-  ACCEPTED   // User acted on it (created rule, tagged, etc.) — never returns for same scope
-  DISMISSED  // User dismissed; respect snoozeUntil before regenerating
-  EXPIRED    // Time-bound (e.g. retrospective for an old month) and no longer surfaced
+  OPEN // Active, surfaced to the user
+  ACCEPTED // User acted on it (created rule, tagged, etc.) — never returns for same scope
+  DISMISSED // User dismissed; respect snoozeUntil before regenerating
+  EXPIRED // Time-bound (e.g. retrospective for an old month) and no longer surfaced
 }
 
 model Insight {
@@ -1117,14 +1146,14 @@ model Insight {
   type        InsightType
   status      InsightStatus @default(OPEN)
 
-  generatedAt DateTime      @default(now())
-  readAt      DateTime?     // For RETROSPECTIVE: when user opened the popup
+  generatedAt DateTime  @default(now())
+  readAt      DateTime? // For RETROSPECTIVE: when user opened the popup
   dismissedAt DateTime?
-  snoozeUntil DateTime?     // Suppress re-detection until this timestamp
+  snoozeUntil DateTime? // Suppress re-detection until this timestamp
 
-  content     Json          // Structured LLM output (headline + observations, or per-row guesses)
-  payload     Json          // Pre-aggregated stats sent to the LLM (audit trail + dedupe input)
-  inputHash   String        @db.VarChar(64) // sha256 of payload — idempotency key for cron generation
+  content   Json // Structured LLM output (headline + observations, or per-row guesses)
+  payload   Json // Pre-aggregated stats sent to the LLM (audit trail + dedupe input)
+  inputHash String @db.VarChar(64) // sha256 of payload — idempotency key for cron generation
 
   // Period (RETROSPECTIVE only)
   periodYear  Int?
