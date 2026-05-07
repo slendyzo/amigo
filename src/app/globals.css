@@ -256,25 +256,6 @@ body {
   body {
     @apply bg-paper text-ink-soft;
   }
-
-  /* ---------- Fraunces display defaults ----------
-     Fraunces is variable across opsz/SOFT/WONK. Without explicit axis
-     settings the browser renders the body-text optical size which looks
-     like a 1990s newsletter. Force display-grade axes globally on every
-     heading so any random modal/title automatically gets brand serif. */
-  h1, h2, h3 {
-    font-family: var(--font-display);
-    font-variation-settings: "opsz" 144, "SOFT" 50, "WONK" 1;
-    letter-spacing: -0.02em;
-    color: var(--ink);
-  }
-  h1 { font-weight: 300; }
-  h2 { font-weight: 320; }
-  h3 { font-weight: 360; }
-  h4, h5, h6 {
-    font-family: var(--font-sans);
-    color: var(--ink);
-  }
 }
 
 /* ---------- Type semantics (mirror of kit colors_and_type.css) ---------- */
