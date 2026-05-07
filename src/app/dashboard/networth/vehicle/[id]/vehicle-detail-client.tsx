@@ -185,10 +185,12 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
     };
   }, [asset.id, backfillStatus, router]);
 
+  // If the backfill marked itself "no_data" but the live-scrape cron has since
+  // produced rows, prefer showing the actual points over the empty state.
   const chartStatus: "loading" | "done" | "no_data" =
     backfillStatus === "queued" || backfillStatus === "running"
       ? "loading"
-      : backfillStatus === "no_data"
+      : backfillStatus === "no_data" && chartPoints.length === 0
       ? "no_data"
       : "done";
 
@@ -249,12 +251,12 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
           {/* Info column */}
           <div className="flex min-w-0 flex-col justify-between p-5 md:p-6">
             <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">{vehicle.year}</p>
-                <h1 className="mt-0.5 text-2xl font-bold leading-tight md:text-[26px]">
+                <h1 className="mt-0.5 truncate text-2xl font-bold leading-tight md:text-[26px]">
                   {vehicle.brand} {vehicle.model}
                 </h1>
-                {vehicle.trim && <p className="text-sm text-muted-foreground">{vehicle.trim}</p>}
+                {vehicle.trim && <p className="truncate text-sm text-muted-foreground">{vehicle.trim}</p>}
                 <div className="mt-2.5 flex flex-wrap gap-1.5">
                   {vehicle.fuelType && <Chip>{vehicle.fuelType}</Chip>}
                   {vehicle.bodyType && <Chip>{vehicle.bodyType}</Chip>}

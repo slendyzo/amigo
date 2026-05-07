@@ -226,10 +226,12 @@ export default function PropertyDetailClient({
     };
   }, [asset.id, backfillStatus, router]);
 
+  // If the backfill marked itself "no_data" but the live-scrape cron has since
+  // produced rows, prefer showing the actual points over the empty state.
   const chartStatus: "loading" | "done" | "no_data" =
     backfillStatus === "queued" || backfillStatus === "running"
       ? "loading"
-      : backfillStatus === "no_data"
+      : backfillStatus === "no_data" && chartPoints.length === 0
       ? "no_data"
       : "done";
 

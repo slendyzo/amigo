@@ -113,6 +113,24 @@ function sourceLabel(rawSource: string): string {
   return rawSource;
 }
 
+// Some scrapes wrote relative paths (e.g. "/pt/anuncio/...") instead of full
+// URLs into the listing JSON. Reattach the source's origin so links work
+// outside of amigo.slendyzo.pt.
+const SOURCE_ORIGINS: Record<string, string> = {
+  idealista: "https://www.idealista.pt",
+  imovirtual: "https://www.imovirtual.com",
+  standvirtual: "https://www.standvirtual.com",
+  olx: "https://www.olx.pt",
+};
+
+function absolutizeUrl(url: string | null | undefined, source: string): string | null {
+  if (!url || typeof url !== "string") return null;
+  if (/^https?:\/\//i.test(url)) return url;
+  const origin = SOURCE_ORIGINS[source];
+  if (!origin) return null;
+  return url.startsWith("/") ? `${origin}${url}` : `${origin}/${url}`;
+}
+
 export async function getComparablesForAsset(
   asset: AssetWithRelations,
 ): Promise<ComparablesPayload> {
@@ -214,8 +232,21 @@ export async function getComparablesForAsset(
     .sort((a, b) => Math.abs(a.price - med) - Math.abs(b.price - med));
   const trimmed = sorted.slice(0, MAX_LISTINGS);
 
-  // Look up health for the URLs in this batch
-  const urls = trimmed.map((l) => l.url).filter((u): u is string => typeof u === "string" && u.length > 0);
+  // Each listing's source label comes from the snapshot's source tag (the
+  // dominant scrape provider). For mixed snapshots we don't currently track
+  // per-listing provenance, so all listings share the snapshot source.
+  const labeledSource = sourceLabel(snapshot.source);
+  const sourcesSet = new Set<string>([labeledSource]);
+
+  // Absolutize URLs (some legacy scrapes stored relative paths) and look up
+  // health for the resulting absolute URLs.
+  const absolutized = trimmed.map((l) => ({
+    listing: l,
+    url: absolutizeUrl(l.url, labeledSource),
+  }));
+  const urls = absolutized
+    .map((x) => x.url)
+    .filter((u): u is string => typeof u === "string" && u.length > 0);
   const health = urls.length
     ? await prisma.listingHealthCheck.findMany({
         where: { url: { in: urls } },
@@ -226,15 +257,7 @@ export async function getComparablesForAsset(
     health.map((h) => [h.url, h.status as "alive" | "dead" | "unknown"]),
   );
 
-  const sourcesSet = new Set<string>();
-  // Each listing's source label comes from the snapshot's source tag (the
-  // dominant scrape provider). For mixed snapshots we don't currently track
-  // per-listing provenance, so all listings share the snapshot source.
-  const labeledSource = sourceLabel(snapshot.source);
-  sourcesSet.add(labeledSource);
-
-  const listings: ComparableListing[] = trimmed.map((l) => {
-    const url = l.url ?? null;
+  const listings: ComparableListing[] = absolutized.map(({ listing: l, url }) => {
     const status: "alive" | "dead" | "unknown" =
       url && healthMap.has(url) ? healthMap.get(url)! : "unknown";
     if (isVehicle) {
