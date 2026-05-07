@@ -293,7 +293,7 @@ export default function InboxPage() {
 
               {/* Content */}
               <div className="p-4 space-y-3">
-                <p className="text-slate-800 whitespace-pre-wrap">{item.message}</p>
+                <p className="text-ink whitespace-pre-wrap">{item.message}</p>
 
                 {/* Screenshots - supports multiple images */}
                 {getImageUrls(item).length > 0 && (

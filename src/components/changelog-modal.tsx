@@ -181,11 +181,11 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
   const getIcon = (type: "feature" | "fix" | "improvement") => {
     switch (type) {
       case "feature":
-        return <Sparkles className="w-4 h-4 text-purple-500" />;
+        return <Sparkles className="w-4 h-4 text-cat-plum" />;
       case "fix":
-        return <Bug className="w-4 h-4 text-green-500" />;
+        return <Bug className="w-4 h-4 text-moss" />;
       case "improvement":
-        return <Zap className="w-4 h-4 text-amber-500" />;
+        return <Zap className="w-4 h-4 text-amber" />;
     }
   };
 
@@ -207,12 +207,12 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-md bg-paper-deep rounded-md shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-[#0070f3] to-purple-600 px-6 py-8 text-white">
+        <div className="relative bg-gradient-to-r from-forest to-cat-plum px-6 py-8 text-paper">
           <button
             onClick={handleClose}
-            className="absolute top-4 right-4 p-1 text-white/70 hover:text-white transition-colors"
+            className="absolute top-4 right-4 p-1 text-paper/70 hover:text-paper transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -222,7 +222,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
             <h2 className="text-xl font-bold">{t("title")}</h2>
           </div>
           <div className="flex items-center justify-between">
-            <p className="text-white/80 text-sm">
+            <p className="text-paper/80 text-sm">
               {t("version", { version: currentChangelog.version })} · {new Date(currentChangelog.date).toLocaleDateString(locale === "en" ? "en-GB" : locale)}
             </p>
             {CHANGELOG_ENTRIES.length > 1 && (
@@ -230,18 +230,18 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
                 <button
                   onClick={handlePrevious}
                   disabled={!hasPrevious}
-                  className="p-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="p-1 rounded-full text-paper/70 hover:text-paper hover:bg-paper-deep/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   title={t("olderUpdates")}
                 >
                   <ChevronLeft className="w-5 h-5" />
                 </button>
-                <span className="text-xs text-white/60 min-w-[3rem] text-center">
+                <span className="text-xs text-paper/60 min-w-[3rem] text-center">
                   {currentIndex + 1} / {CHANGELOG_ENTRIES.length}
                 </span>
                 <button
                   onClick={handleNext}
                   disabled={!hasNext}
-                  className="p-1 rounded-full text-white/70 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  className="p-1 rounded-full text-paper/70 hover:text-paper hover:bg-paper-deep/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   title={t("newerUpdates")}
                 >
                   <ChevronRight className="w-5 h-5" />
@@ -261,22 +261,22 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900">
+                    <span className="text-sm font-medium text-ink">
                       {entry.title[locale] || entry.title.en}
                     </span>
                     <span
                       className={`text-xs px-1.5 py-0.5 rounded-full ${
                         entry.type === "feature"
-                          ? "bg-purple-100 text-purple-700"
+                          ? "bg-paper-soft text-cat-plum"
                           : entry.type === "fix"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-amber-100 text-amber-700"
+                          ? "bg-moss-tint text-moss-deep"
+                          : "bg-amber-tint text-amber"
                       }`}
                     >
                       {getTypeLabel(entry.type)}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 mt-0.5">
+                  <p className="text-sm text-ink-soft mt-0.5">
                     {entry.description[locale] || entry.description.en}
                   </p>
                 </div>
@@ -286,10 +286,10 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-200">
+        <div className="px-6 py-4 border-t border-rule">
           <button
             onClick={handleClose}
-            className="w-full py-2.5 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] transition-colors"
+            className="w-full py-2.5 bg-forest text-paper font-medium rounded-lg hover:bg-forest-deep transition-colors"
           >
             {t("close")}
           </button>

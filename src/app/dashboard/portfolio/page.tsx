@@ -29,7 +29,7 @@ export default async function PortfolioPage() {
   if (!workspace) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-600">
+        <p className="text-ink-soft">
           No workspace found. Please contact support.
         </p>
       </div>

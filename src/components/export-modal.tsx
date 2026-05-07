@@ -248,7 +248,7 @@ export default function ExportModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">{t("title")}</h2>
+          <h2 className="text-lg font-semibold text-ink">{t("title")}</h2>
           <button
             onClick={() => !isExporting && onClose()}
             className="rounded-lg p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-600"
@@ -306,7 +306,7 @@ export default function ExportModal({
                   <div className="min-w-0">
                     <div
                       className={`text-sm font-medium ${
-                        isSelected ? "text-blue-900" : "text-slate-900"
+                        isSelected ? "text-blue-900" : "text-ink"
                       }`}
                     >
                       {t(labelKey as "csv" | "excel" | "pdf" | "markdown")}
@@ -365,7 +365,7 @@ export default function ExportModal({
                   <div className="min-w-0 flex-1">
                     <div
                       className={`text-sm font-medium ${
-                        isSelected ? "text-blue-900" : "text-slate-900"
+                        isSelected ? "text-blue-900" : "text-ink"
                       }`}
                     >
                       {t(
@@ -396,7 +396,7 @@ export default function ExportModal({
             type="button"
             onClick={() => !isExporting && onClose()}
             disabled={isExporting}
-            className="px-4 py-2 text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900 disabled:opacity-50"
+            className="px-4 py-2 text-sm text-slate-600 transition-colors duration-150 hover:text-ink disabled:opacity-50"
           >
             {t("cancel")}
           </button>

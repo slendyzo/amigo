@@ -123,7 +123,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("workspaces.feature1.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("workspaces.feature1.title")}</h3>
                 <p className="text-sm text-slate-600">{t("workspaces.feature1.description")}</p>
               </div>
             </div>
@@ -134,7 +134,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("workspaces.feature2.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("workspaces.feature2.title")}</h3>
                 <p className="text-sm text-slate-600">{t("workspaces.feature2.description")}</p>
               </div>
             </div>
@@ -145,7 +145,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("workspaces.feature3.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("workspaces.feature3.title")}</h3>
                 <p className="text-sm text-slate-600">{t("workspaces.feature3.description")}</p>
               </div>
             </div>
@@ -156,7 +156,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("workspaces.feature4.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("workspaces.feature4.title")}</h3>
                 <p className="text-sm text-slate-600">{t("workspaces.feature4.description")}</p>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("unified_transactions.feature1.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("unified_transactions.feature1.title")}</h3>
                 <p className="text-sm text-slate-600">{t("unified_transactions.feature1.description")}</p>
               </div>
             </div>
@@ -223,7 +223,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("unified_transactions.feature2.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("unified_transactions.feature2.title")}</h3>
                 <p className="text-sm text-slate-600">{t("unified_transactions.feature2.description")}</p>
               </div>
             </div>
@@ -236,7 +236,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("unified_transactions.feature3.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("unified_transactions.feature3.title")}</h3>
                 <p className="text-sm text-slate-600">{t("unified_transactions.feature3.description")}</p>
               </div>
             </div>
@@ -249,7 +249,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("unified_transactions.feature4.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("unified_transactions.feature4.title")}</h3>
                 <p className="text-sm text-slate-600">{t("unified_transactions.feature4.description")}</p>
               </div>
             </div>
@@ -296,7 +296,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("scheduled_expenses.feature1.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("scheduled_expenses.feature1.title")}</h3>
                 <p className="text-sm text-slate-600">{t("scheduled_expenses.feature1.description")}</p>
               </div>
             </div>
@@ -309,7 +309,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("scheduled_expenses.feature2.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("scheduled_expenses.feature2.title")}</h3>
                 <p className="text-sm text-slate-600">{t("scheduled_expenses.feature2.description")}</p>
               </div>
             </div>
@@ -322,7 +322,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("scheduled_expenses.feature3.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("scheduled_expenses.feature3.title")}</h3>
                 <p className="text-sm text-slate-600">{t("scheduled_expenses.feature3.description")}</p>
               </div>
             </div>
@@ -369,7 +369,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("category_groups.feature1.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("category_groups.feature1.title")}</h3>
                 <p className="text-sm text-slate-600">{t("category_groups.feature1.description")}</p>
               </div>
             </div>
@@ -382,7 +382,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("category_groups.feature2.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("category_groups.feature2.title")}</h3>
                 <p className="text-sm text-slate-600">{t("category_groups.feature2.description")}</p>
               </div>
             </div>
@@ -395,7 +395,7 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("category_groups.feature3.title")}</h3>
+                <h3 className="font-semibold text-ink">{t("category_groups.feature3.title")}</h3>
                 <p className="text-sm text-slate-600">{t("category_groups.feature3.description")}</p>
               </div>
             </div>

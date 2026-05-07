@@ -137,7 +137,7 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
     <div className="bg-white border border-slate-200 rounded-2xl p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">
+        <h3 className="text-sm font-semibold text-ink">
           {t("performance")}
         </h3>
         {/* Range selector pills */}

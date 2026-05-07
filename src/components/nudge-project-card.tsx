@@ -117,7 +117,7 @@ export default function NudgeProjectCard({
       </button>
 
       {/* Heading */}
-      <p className="text-sm font-medium text-slate-900 pr-6">
+      <p className="text-sm font-medium text-ink pr-6">
         {t("nudges.project.cardHeading", { count: cluster.expenses.length })}
       </p>
 
@@ -141,7 +141,7 @@ export default function NudgeProjectCard({
         <select
           value={selectedProjectId}
           onChange={(e) => handleDropdownChange(e.target.value)}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+          className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
         >
           <option value="">{t("nudges.project.pickProject")}</option>
           {existingProjects.map((p) => (
@@ -158,7 +158,7 @@ export default function NudgeProjectCard({
           onChange={(e) => handleNameChange(e.target.value)}
           disabled={!!selectedProjectId}
           placeholder={t("nudges.project.newProjectPlaceholder")}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-ink placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] disabled:opacity-40 disabled:cursor-not-allowed"
         />
       </div>
 

@@ -482,8 +482,8 @@ export default function ExpensesPage() {
       {!isSelectionMode && (
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("title")}</h1>
-            <p className="text-slate-500 text-xs md:text-sm mt-0.5 md:mt-1">
+            <h1 className="text-xl md:text-2xl font-bold text-ink">{t("title")}</h1>
+            <p className="text-ink-mute text-xs md:text-sm mt-0.5 md:mt-1">
               {selectedMonthFilter !== "all" ? (
                 <>
                   {sortedExpenses.length} {t("title").toLowerCase()} {
@@ -514,7 +514,7 @@ export default function ExpensesPage() {
       <div className="bg-white rounded-xl p-2 md:p-4 shadow-sm border border-slate-200">
         {/* Year selector */}
         <div className="flex gap-2 items-center mb-2 pb-2 border-b border-slate-100">
-          <span className="text-xs text-slate-500 font-medium mr-1">{t("year")}:</span>
+          <span className="text-xs text-ink-mute font-medium mr-1">{t("year")}:</span>
           {availableYears.map((year) => (
             <button
               key={year}
@@ -533,7 +533,7 @@ export default function ExpensesPage() {
               className={`px-3 py-1 rounded-full text-sm font-medium transition-colors tap-none ${
                 selectedYear === year
                   ? "bg-slate-700 text-white"
-                  : "bg-slate-100 text-slate-600 active:bg-slate-200 md:hover:bg-slate-200"
+                  : "bg-slate-100 text-ink-soft active:bg-slate-200 md:hover:bg-slate-200"
               }`}
             >
               {year}
@@ -549,7 +549,7 @@ export default function ExpensesPage() {
             className={`flex-shrink-0 px-3 py-1.5 md:py-1.5 rounded-full text-sm font-medium transition-colors tap-none ${
               selectedMonthFilter === "all"
                 ? "bg-[#0070f3] text-white"
-                : "bg-slate-100 text-slate-600 active:bg-slate-200 md:hover:bg-slate-200"
+                : "bg-slate-100 text-ink-soft active:bg-slate-200 md:hover:bg-slate-200"
             }`}
           >
             {tCommon("all")}
@@ -571,7 +571,7 @@ export default function ExpensesPage() {
                     ? "bg-[#0070f3] text-white"
                     : isFuture
                     ? "bg-slate-50 text-slate-300 cursor-not-allowed"
-                    : "bg-slate-100 text-slate-600 active:bg-slate-200 md:hover:bg-slate-200"
+                    : "bg-slate-100 text-ink-soft active:bg-slate-200 md:hover:bg-slate-200"
                 }`}
               >
                 {SHORT_MONTHS[index]}
@@ -591,7 +591,7 @@ export default function ExpensesPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t("searchPlaceholder")}
-              className="w-full rounded-lg border border-slate-300 px-4 py-2.5 md:py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+              className="w-full rounded-lg border border-slate-300 px-4 py-2.5 md:py-2 text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
             />
           </div>
           {/* Filter row */}
@@ -600,7 +600,7 @@ export default function ExpensesPage() {
               <select
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value)}
-                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
               >
                 <option value="">{t("filterByType")}</option>
                 <option value="SURVIVAL_FIXED">{t("types.fixed")}</option>
@@ -611,7 +611,7 @@ export default function ExpensesPage() {
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
               >
                 <option value="">{t("filterByCategory")}</option>
                 {categories.map((cat) => (
@@ -621,7 +621,7 @@ export default function ExpensesPage() {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value as "date" | "amount" | "name" | "category")}
-                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                className="flex-shrink-0 rounded-lg border border-slate-300 px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
               >
                 <option value="date">{t("sortByDate")}</option>
                 <option value="amount">{t("sortByAmount")}</option>
@@ -634,11 +634,11 @@ export default function ExpensesPage() {
                 title={sortOrder === "desc" ? t("descending") : t("ascending")}
               >
                 {sortOrder === "desc" ? (
-                  <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12" />
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4h13M3 8h9m-9 4h9m5-4v12m0 0l-4-4m4 4l4-4" />
                   </svg>
                 )}
@@ -650,7 +650,7 @@ export default function ExpensesPage() {
               className="flex-shrink-0 p-2 rounded-lg border border-slate-300 active:bg-slate-50 md:hover:bg-slate-50 tap-none"
               title={t("export")}
             >
-              <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 text-ink-soft" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </button>
@@ -660,11 +660,11 @@ export default function ExpensesPage() {
 
       {/* Expenses Grouped by Month */}
       {isLoading ? (
-        <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-xl p-8 text-center text-ink-mute shadow-sm border border-slate-200">
           {tCommon("loading")}
         </div>
       ) : groupedExpenses.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
+        <div className="bg-white rounded-xl p-8 text-center text-ink-mute shadow-sm border border-slate-200">
           {t("noExpenses")}
         </div>
       ) : (
@@ -673,10 +673,10 @@ export default function ExpensesPage() {
             <div key={group.monthKey} className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
               {/* Month Header */}
               <div className="px-3 md:px-4 py-2 md:py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                <h3 className="font-semibold text-slate-900 text-sm md:text-base">{group.monthLabel}</h3>
+                <h3 className="font-semibold text-ink text-sm md:text-base">{group.monthLabel}</h3>
                 <div className="flex items-center gap-2 md:gap-4">
-                  <span className="text-xs md:text-sm text-slate-500">{group.expenses.length}</span>
-                  <span className="font-semibold text-slate-900 text-sm md:text-base">€{group.total.toFixed(2)}</span>
+                  <span className="text-xs md:text-sm text-ink-mute">{group.expenses.length}</span>
+                  <span className="font-semibold text-ink text-sm md:text-base">€{group.total.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -708,12 +708,12 @@ export default function ExpensesPage() {
                         className="w-4 h-4 rounded border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
                       />
                     </th>
-                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("date")}</th>
-                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("description")}</th>
-                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("type")}</th>
-                    <th className="text-left px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("category")}</th>
-                    <th className="text-right px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("amount")}</th>
-                    <th className="text-right px-4 py-2 text-xs font-medium text-slate-500 uppercase tracking-wider">{t("actions")}</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-ink-mute uppercase tracking-wider">{t("date")}</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-ink-mute uppercase tracking-wider">{t("description")}</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-ink-mute uppercase tracking-wider">{t("type")}</th>
+                    <th className="text-left px-4 py-2 text-xs font-medium text-ink-mute uppercase tracking-wider">{t("category")}</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-ink-mute uppercase tracking-wider">{t("amount")}</th>
+                    <th className="text-right px-4 py-2 text-xs font-medium text-ink-mute uppercase tracking-wider">{t("actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -739,7 +739,7 @@ export default function ExpensesPage() {
                           className="w-4 h-4 rounded border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
                         />
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
+                      <td className="px-4 py-3 text-sm text-ink-soft">
                         <div className="flex items-center gap-1.5">
                           {expense.isRecurring && (
                             <svg className="w-3.5 h-3.5 text-blue-500 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
@@ -753,7 +753,7 @@ export default function ExpensesPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <div className="text-sm font-medium text-slate-900 flex items-center gap-1.5">
+                        <div className="text-sm font-medium text-ink flex items-center gap-1.5">
                           {expense.name}
                           {expense.splitCount && expense.splitCount > 1 && (
                             <span className="text-[10px] px-1 py-0.5 rounded bg-indigo-100 text-indigo-600 font-medium">
@@ -785,7 +785,7 @@ export default function ExpensesPage() {
                           {typeLabels[expense.type]}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-sm text-slate-600">
+                      <td className="px-4 py-3 text-sm text-ink-soft">
                         {expense.category ? translateCategory(expense.category.name) : "-"}
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -793,7 +793,7 @@ export default function ExpensesPage() {
                           const amt = Number(expense.amount);
                           const share = getUserShare(expense.splitCount, expense.splitData);
                           const displayAmt = share !== null ? share : amt;
-                          const colorClass = amt < 0 ? 'text-green-600' : 'text-slate-900';
+                          const colorClass = amt < 0 ? 'text-green-600' : 'text-ink';
                           return (
                             <div>
                               <span className={`text-sm font-medium ${colorClass}`}>
@@ -812,7 +812,7 @@ export default function ExpensesPage() {
                         <div className="flex justify-end gap-1">
                           <button
                             onClick={() => setEditingExpense(expense)}
-                            className="text-slate-500 hover:text-slate-700 p-1"
+                            className="text-ink-mute hover:text-ink-soft p-1"
                             title={tCommon("edit")}
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -880,7 +880,7 @@ export default function ExpensesPage() {
                             <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clipRule="evenodd" />
                           </svg>
                         )}
-                        <p className="font-medium text-slate-900 text-sm truncate max-w-[160px] inline-flex items-center gap-1">
+                        <p className="font-medium text-ink text-sm truncate max-w-[160px] inline-flex items-center gap-1">
                           {expense.name}
                           {expense.splitCount && expense.splitCount > 1 && (
                             <span className="text-[10px] px-1 py-0.5 rounded bg-indigo-100 text-indigo-600 font-medium">
@@ -901,7 +901,7 @@ export default function ExpensesPage() {
                         ))}
                       </div>
                       <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <span className="text-xs text-slate-500">
+                        <span className="text-xs text-ink-mute">
                           {new Date(expense.date).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" })}
                           {" "}
                           <span className="text-slate-400">
@@ -920,7 +920,7 @@ export default function ExpensesPage() {
                         const amt = Number(expense.amount);
                         const share = getUserShare(expense.splitCount, expense.splitData);
                         const displayAmt = share !== null ? share : amt;
-                        const colorClass = amt < 0 ? 'text-green-600' : 'text-slate-900';
+                        const colorClass = amt < 0 ? 'text-green-600' : 'text-ink';
                         return (
                           <div className="text-right">
                             <p className={`font-semibold text-sm tabular-nums ${colorClass}`}>
@@ -938,7 +938,7 @@ export default function ExpensesPage() {
                         <>
                           <button
                             onClick={(e) => { e.stopPropagation(); setEditingExpense(expense); }}
-                            className="p-1.5 text-slate-400 active:text-slate-700 active:bg-slate-100 rounded tap-none"
+                            className="p-1.5 text-slate-400 active:text-ink-soft active:bg-slate-100 rounded tap-none"
                           >
                             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -965,7 +965,7 @@ export default function ExpensesPage() {
 
       {/* Show total count */}
       {sortedExpenses.length > 0 && (
-        <div className="text-center text-sm text-slate-500 py-2">
+        <div className="text-center text-sm text-ink-mute py-2">
           {t("showingAll", { count: sortedExpenses.length })}
         </div>
       )}
@@ -975,12 +975,12 @@ export default function ExpensesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("deleteExpenseQuestion")}</h3>
-            <p className="text-slate-600 text-sm mb-4">{t("deleteWarning")}</p>
+            <h3 className="text-lg font-semibold text-ink mb-2">{t("deleteExpenseQuestion")}</h3>
+            <p className="text-ink-soft text-sm mb-4">{t("deleteWarning")}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-ink-soft hover:bg-slate-50"
               >
                 {tCommon("cancel")}
               </button>
@@ -1000,10 +1000,10 @@ export default function ExpensesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => !bulkLinkBusy && setShowBulkLinkModal(false)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-1">
+            <h3 className="text-lg font-semibold text-ink mb-1">
               {tRwa("bulkLinkTitle")}
             </h3>
-            <p className="text-sm text-slate-500 mb-4">
+            <p className="text-sm text-ink-mute mb-4">
               {tRwa("bulkLinkSubtitle", { count: selectedIds.size })}
             </p>
             <AssetLinkPicker value={bulkLinkAssetId} onChange={setBulkLinkAssetId} />
@@ -1018,7 +1018,7 @@ export default function ExpensesPage() {
               <button
                 onClick={() => handleBulkLink(false)}
                 disabled={bulkLinkBusy}
-                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-50"
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 text-ink-soft hover:bg-slate-50 disabled:opacity-50"
               >
                 {tRwa("bulkUnlink")}
               </button>
@@ -1028,7 +1028,7 @@ export default function ExpensesPage() {
                   setBulkLinkAssetId(null);
                 }}
                 disabled={bulkLinkBusy}
-                className="w-full px-4 py-2 rounded-lg text-slate-500 hover:text-slate-700 disabled:opacity-50"
+                className="w-full px-4 py-2 rounded-lg text-ink-mute hover:text-ink-soft disabled:opacity-50"
               >
                 {tCommon("cancel")}
               </button>
@@ -1042,15 +1042,15 @@ export default function ExpensesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setShowBulkDeleteConfirm(false)} />
           <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">
+            <h3 className="text-lg font-semibold text-ink mb-2">
               {t("deleteSelectedQuestion", { count: selectedIds.size })}
             </h3>
-            <p className="text-slate-600 text-sm mb-4">{t("deleteWarning")}</p>
+            <p className="text-ink-soft text-sm mb-4">{t("deleteWarning")}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowBulkDeleteConfirm(false)}
                 disabled={isDeleting}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50 disabled:opacity-50"
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-ink-soft hover:bg-slate-50 disabled:opacity-50"
               >
                 {tCommon("cancel")}
               </button>

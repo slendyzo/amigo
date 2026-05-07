@@ -58,7 +58,7 @@ export default async function DashboardPage({
   if (!workspace) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-600">No workspace found. Please contact support.</p>
+        <p className="text-ink-soft">No workspace found. Please contact support.</p>
       </div>
     );
   }

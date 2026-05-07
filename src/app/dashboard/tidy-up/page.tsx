@@ -618,7 +618,7 @@ export default function CategorizePage() {
         <button
           onClick={handleSkip}
           disabled={isSaving}
-          className="w-full py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1"
+          className="w-full py-2.5 text-slate-600 hover:text-ink hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1"
         >
           {t("skip")}
           <ChevronRight className="w-4 h-4" />

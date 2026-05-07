@@ -126,7 +126,7 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
         <p className="text-xs font-medium uppercase tracking-widest text-slate-400 mb-1">
           {t("totalValue")}
         </p>
-        <p className="text-4xl font-bold tabular-nums text-slate-900 tracking-tight">
+        <p className="text-4xl font-bold tabular-nums text-ink tracking-tight">
           {formatAmount(totalValueEur)}
         </p>
       </div>

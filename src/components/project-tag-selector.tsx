@@ -97,7 +97,7 @@ export default function ProjectTagSelector({
             value={newTagName}
             onChange={(e) => onNewTagNameChange(e.target.value)}
             placeholder={t("tagPlaceholder")}
-            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();

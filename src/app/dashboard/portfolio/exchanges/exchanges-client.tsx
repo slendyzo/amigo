@@ -270,14 +270,14 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                 <div className="hidden sm:flex items-center gap-5 shrink-0 text-right">
                   <div>
                     <p className="text-xs text-slate-400">{t("assets")}</p>
-                    <p className="text-sm font-semibold text-slate-800">
+                    <p className="text-sm font-semibold text-ink">
                       {conn.assetCount}
                     </p>
                   </div>
                   {conn.freeCash !== null && (
                     <div>
                       <p className="text-xs text-slate-400">{t("freeCash")}</p>
-                      <p className="text-sm font-semibold text-slate-800">
+                      <p className="text-sm font-semibold text-ink">
                         {formatCurrency(conn.freeCash, conn.freeCashCurrency)}
                       </p>
                     </div>
@@ -289,12 +289,12 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
               <div className="sm:hidden mt-3 flex gap-5 text-sm">
                 <div>
                   <span className="text-slate-400 text-xs">{t("assets")}: </span>
-                  <span className="font-medium text-slate-800">{conn.assetCount}</span>
+                  <span className="font-medium text-ink">{conn.assetCount}</span>
                 </div>
                 {conn.freeCash !== null && (
                   <div>
                     <span className="text-slate-400 text-xs">{t("freeCash")}: </span>
-                    <span className="font-medium text-slate-800">
+                    <span className="font-medium text-ink">
                       {formatCurrency(conn.freeCash, conn.freeCashCurrency)}
                     </span>
                   </div>

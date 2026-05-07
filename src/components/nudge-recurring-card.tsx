@@ -95,7 +95,7 @@ export default function NudgeRecurringCard({
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-      <p className="text-sm font-medium text-slate-900 pr-6">
+      <p className="text-sm font-medium text-ink pr-6">
         {t("nudges.recurring.cardHeading", { name, amount: formatEur(amount), day: formatOrdinal(dayOfMonth, locale) })}
       </p>
       <p className="text-xs text-slate-500 mt-1 leading-relaxed">

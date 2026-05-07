@@ -181,7 +181,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
             <div className="w-10 h-1 rounded-full bg-slate-300" />
           </div>
           <div className="px-4 md:px-5 py-2 md:py-3 flex items-center justify-between">
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">
+            <h2 className="text-base md:text-lg font-semibold text-ink">
               {t("addIncome")}
             </h2>
             <button
@@ -214,7 +214,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
               onChange={(e) => setName(e.target.value)}
               placeholder={t("whatDidYouReceivePlaceholder")}
               required
-              className="w-full text-[17px] font-medium text-slate-900 placeholder-slate-400 bg-transparent outline-none"
+              className="w-full text-[17px] font-medium text-ink placeholder-slate-400 bg-transparent outline-none"
             />
 
             {/* Amount + Currency */}
@@ -228,7 +228,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                   required
                   hideCurrencySymbol
                   className="flex-1"
-                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[28px] font-bold !text-slate-900 !placeholder-slate-300"
+                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[28px] font-bold !text-ink !placeholder-slate-300"
                 />
               </div>
               <select
@@ -266,7 +266,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
               />
             )}
           </div>
@@ -311,7 +311,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                   <select
                     value={bankAccountId}
                     onChange={(e) => setBankAccountId(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-ink focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
                   >
                     <option value="">{t("none")}</option>
                     {bankAccounts.map((acc) => (
@@ -372,7 +372,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                 rows={2}
                 maxLength={1000}
                 autoFocus
-                className="w-full text-sm text-slate-900 placeholder-slate-400 bg-slate-50 rounded-lg p-2.5 border border-slate-200 outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent resize-none"
+                className="w-full text-sm text-ink placeholder-slate-400 bg-slate-50 rounded-lg p-2.5 border border-slate-200 outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent resize-none"
               />
             </div>
           ) : (

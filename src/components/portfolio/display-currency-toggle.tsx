@@ -26,7 +26,7 @@ export default function DisplayCurrencyToggle() {
             className={[
               "relative px-3 py-1 rounded-md transition-colors duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0070f3]/40",
               isActive
-                ? "text-slate-900"
+                ? "text-ink"
                 : "text-slate-500 hover:text-slate-700",
             ].join(" ")}
           >

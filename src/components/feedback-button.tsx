@@ -207,7 +207,7 @@ export default function FeedbackButton() {
       {/* Floating Feedback Button - on mobile: left side above nav. On desktop: next to add button (right side) */}
       <button
         onClick={handleOpen}
-        className="floating-nav-button fixed left-4 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-center w-12 h-12 rounded-full bg-slate-700 text-white shadow-lg hover:bg-slate-600 transition-all hover:scale-105 active:scale-95 md:w-14 md:h-14 md:bottom-24 md:right-[6.5rem] md:left-auto"
+        className="floating-nav-button fixed left-4 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-center w-12 h-12 rounded-full bg-paper-deep border border-rule text-ink-mute shadow-lg hover:bg-paper-soft transition-all hover:scale-105 active:scale-95 md:w-14 md:h-14 md:bottom-24 md:right-[6.5rem] md:left-auto"
         title={t("title")}
         aria-label={t("title")}
       >
@@ -226,17 +226,17 @@ export default function FeedbackButton() {
           />
 
           {/* Modal Content */}
-          <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-md mx-4 bg-paper-deep rounded-xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-semibold text-slate-900">
+            <div className="px-6 py-4 border-b border-rule bg-paper-soft flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-semibold text-ink">
                 {t("title")}
               </h2>
               <button
                 onClick={handleClose}
-                className="p-1 rounded-full hover:bg-slate-200 transition-colors"
+                className="p-1 rounded-full hover:bg-paper-soft transition-colors"
               >
-                <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-ink-mute" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -247,52 +247,52 @@ export default function FeedbackButton() {
               {submitted ? (
                 /* Success State */
                 <div className="text-center py-8">
-                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
-                    <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-moss-tint flex items-center justify-center">
+                    <svg className="w-8 h-8 text-moss" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  <h3 className="text-lg font-semibold text-ink mb-2">
                     {t("thankYou")}
                   </h3>
-                  <p className="text-slate-600">
+                  <p className="text-ink-soft">
                     {t("thankYouMessage")}
                   </p>
                 </div>
               ) : step === "select" ? (
                 /* Type Selection */
                 <div className="space-y-4">
-                  <p className="text-slate-600 text-center mb-6">
+                  <p className="text-ink-soft text-center mb-6">
                     {t("selectType")}
                   </p>
 
                   <button
                     onClick={() => handleTypeSelect("BUG")}
-                    className="w-full p-4 rounded-xl border-2 border-slate-200 hover:border-red-300 hover:bg-red-50 transition-all flex items-center gap-4 group"
+                    className="w-full p-4 rounded-md border border-rule hover:border-crimson hover:bg-crimson-tint transition-all flex items-center gap-4 group"
                   >
-                    <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
-                      <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-12 h-12 rounded-full bg-crimson-tint flex items-center justify-center group-hover:bg-crimson-tint transition-colors">
+                      <svg className="w-6 h-6 text-crimson" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-semibold text-slate-900">{t("reportBug")}</h3>
-                      <p className="text-sm text-slate-500">{t("reportBugDesc")}</p>
+                      <h3 className="font-semibold text-ink">{t("reportBug")}</h3>
+                      <p className="text-sm text-ink-mute">{t("reportBugDesc")}</p>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleTypeSelect("FEATURE")}
-                    className="w-full p-4 rounded-xl border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center gap-4 group"
+                    className="w-full p-4 rounded-md border border-rule hover:border-forest hover:bg-paper-soft transition-all flex items-center gap-4 group"
                   >
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-12 h-12 rounded-full bg-paper-soft flex items-center justify-center group-hover:bg-paper-soft transition-colors">
+                      <svg className="w-6 h-6 text-forest" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-semibold text-slate-900">{t("requestFeature")}</h3>
-                      <p className="text-sm text-slate-500">{t("requestFeatureDesc")}</p>
+                      <h3 className="font-semibold text-ink">{t("requestFeature")}</h3>
+                      <p className="text-sm text-ink-mute">{t("requestFeatureDesc")}</p>
                     </div>
                   </button>
                 </div>
@@ -302,7 +302,7 @@ export default function FeedbackButton() {
                   {/* Back button */}
                   <button
                     onClick={() => setStep("select")}
-                    className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                    className="flex items-center gap-1 text-sm text-ink-mute hover:text-ink-soft transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -315,8 +315,8 @@ export default function FeedbackButton() {
                     <span
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         feedbackType === "BUG"
-                          ? "bg-red-100 text-red-700"
-                          : "bg-blue-100 text-blue-700"
+                          ? "bg-crimson-tint text-crimson-deep"
+                          : "bg-paper-soft text-forest"
                       }`}
                     >
                       {feedbackType === "BUG" ? t("reportBug") : t("requestFeature")}
@@ -325,7 +325,7 @@ export default function FeedbackButton() {
 
                   {/* Message Input */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-soft mb-2">
                       {feedbackType === "BUG" ? t("describeBug") : t("describeFeature")}
                     </label>
                     <textarea
@@ -333,16 +333,16 @@ export default function FeedbackButton() {
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder={feedbackType === "BUG" ? t("bugPlaceholder") : t("featurePlaceholder")}
                       rows={4}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] resize-none"
+                      className="w-full rounded-md border border-rule-strong px-4 py-3 text-ink focus:outline-none focus:ring-2 focus:ring-forest resize-none"
                       autoFocus
                     />
                   </div>
 
                   {/* Image Upload - Multiple Images */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-ink-soft mb-2">
                       {t("attachScreenshots")}
-                      <span className="text-slate-400 font-normal ml-1">
+                      <span className="text-ink-faint font-normal ml-1">
                         ({imagePreviews.length}/{MAX_IMAGES})
                       </span>
                     </label>
@@ -362,7 +362,7 @@ export default function FeedbackButton() {
                       <div className="grid grid-cols-3 gap-2 mb-3">
                         {imagePreviews.map((preview, index) => (
                           <div key={index} className="relative aspect-square">
-                            <div className="relative w-full h-full rounded-lg overflow-hidden border border-slate-200">
+                            <div className="relative w-full h-full rounded-lg overflow-hidden border border-rule">
                               <Image
                                 src={preview}
                                 alt={`Screenshot ${index + 1}`}
@@ -373,7 +373,7 @@ export default function FeedbackButton() {
                             <button
                               type="button"
                               onClick={() => removeImage(index)}
-                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition-colors"
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-crimson text-paper flex items-center justify-center hover:bg-crimson-deep transition-colors"
                             >
                               <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -389,7 +389,7 @@ export default function FeedbackButton() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors flex flex-col items-center gap-2 text-slate-500 hover:text-slate-600"
+                        className="w-full p-4 rounded-md border-2 border-dashed border-rule-strong hover:border-forest transition-colors flex flex-col items-center gap-2 text-ink-mute hover:text-ink-soft"
                       >
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
@@ -403,7 +403,7 @@ export default function FeedbackButton() {
 
                   {/* Error */}
                   {error && (
-                    <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
+                    <div className="p-3 rounded-lg bg-crimson-tint text-crimson text-sm">
                       {error}
                     </div>
                   )}
@@ -412,7 +412,7 @@ export default function FeedbackButton() {
                   <button
                     onClick={handleSubmit}
                     disabled={!message.trim() || isSubmitting || isUploading}
-                    className="w-full rounded-xl bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-md bg-forest px-4 py-3 text-paper font-medium hover:bg-forest-deep transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isUploading ? t("uploading") : isSubmitting ? t("submitting") : t("submit")}
                   </button>
