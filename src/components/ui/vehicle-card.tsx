@@ -51,8 +51,8 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
         whileHover={sold ? undefined : { y: -2, scale: 1.005 }}
         transition={SPRING}
         className={cn(
-          "relative overflow-hidden rounded-md border border-rule bg-card transition-colors",
-          "hover:border-rule-strong",
+          "relative overflow-hidden rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm transition-colors",
+          "hover:border-border hover:shadow-md",
           sold && "opacity-70",
           className
         )}
@@ -102,7 +102,7 @@ export function VehicleCard({ vehicle, className, href }: VehicleCardProps) {
                 <span
                   className={cn(
                     "font-medium tabular-nums",
-                    vehicle.realizedPnLEur > 0 ? "text-moss" : "text-crimson"
+                    vehicle.realizedPnLEur > 0 ? "text-emerald-500" : "text-rose-500"
                   )}
                 >
                   {t("realizedPnL")} {vehicle.realizedPnLEur > 0 ? "+" : ""}
@@ -170,9 +170,9 @@ function DeltaBadge({
   const Icon = sign === "up" ? TrendingUp : sign === "down" ? TrendingDown : Minus;
   const color =
     sign === "up"
-      ? "text-moss"
+      ? "text-emerald-500"
       : sign === "down"
-        ? "text-crimson"
+        ? "text-rose-500"
         : "text-muted-foreground";
   return (
     <span className={cn("inline-flex items-center gap-1 text-xs font-medium tabular-nums", color)}>
@@ -187,7 +187,7 @@ export function VehicleCardSkeleton({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-md border border-rule bg-card",
+        "overflow-hidden rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm",
         className
       )}
     >

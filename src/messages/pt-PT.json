@@ -41,21 +41,16 @@
   "nav": {
     "dashboard": "Painel",
     "holdings": "Ativos",
-    "networth": "Resumo",
+    "networth": "Património",
     "exchanges": "Corretoras",
-    "property": "Imóveis",
-    "vehicles": "Veículos",
-    "sectionVision": "Visão",
-    "sectionPatrimonio": "Património",
-    "sectionPortfolio": "Património",
+    "sectionPortfolio": "Portfolio",
     "sectionFinances": "Finanças",
     "sectionTools": "Ferramentas",
-    "sectionAccount": "Conta",
     "overview": "Resumo",
     "expenses": "Despesas",
     "incomes": "Receitas",
     "recurring": "Recorrentes",
-    "portfolio": "Património",
+    "portfolio": "Portfolio",
     "projects": "Projetos",
     "categories": "Categorias",
     "tidyUp": "Arrumar",
@@ -70,12 +65,10 @@
     "menu": "Menu",
     "inbox": "Caixa de Entrada",
     "whatsNew": "Novidades",
-    "workspace": "Workspace",
     "sectionMoney": "Dinheiro",
     "sectionOrganize": "Organizar",
     "sectionData": "Dados",
-    "insights": "Retrospetiva",
-    "retrospective": "Retrospetiva"
+    "insights": "Análises"
   },
   "auth": {
     "signIn": "Iniciar Sessão",
@@ -223,63 +216,6 @@
       "invested": "Investido",
       "pnl": "L/P",
       "freeCash": "Saldo Livre"
-    }
-  },
-  "painel": {
-    "eyebrow": "Painel · {month} {year} · Pessoal",
-    "greeting": "Olá, {name}.",
-    "sub": "Visão completa: saldo do mês, fluxo de tesouraria, distribuição por categoria e património.",
-    "addExpense": "Nova despesa",
-    "hero": {
-      "balanceEyebrow": "Saldo de {month} {year}",
-      "vsPrev": "vs mês anterior",
-      "vsYearAgo": "vs ano anterior",
-      "income": "Receitas",
-      "expenses": "Despesas",
-      "pending": "Por liquidar",
-      "netWorthEyebrow": "Património Líquido",
-      "cash": "Cash & Contas",
-      "assets": "Ativos · Crypto e ETFs",
-      "property": "Imóveis",
-      "vehicles": "Veículos",
-      "liabilities": "− Passivos"
-    },
-    "cashflow": {
-      "eyebrow": "Fluxo · 30 dias",
-      "title": "Tesouraria de {month}",
-      "today": "Hoje · {day} {month}"
-    },
-    "donut": {
-      "eyebrow": "Distribuição",
-      "title": "Despesas por categoria",
-      "total": "Total gasto"
-    },
-    "bars": {
-      "eyebrow": "Fluxo · 12 meses",
-      "title": "Receitas vs Despesas",
-      "income": "Receitas",
-      "expense": "Despesas",
-      "net": "líquido"
-    },
-    "ledger": {
-      "eyebrow": "Movimentos · Recentes",
-      "title": "Lançamentos recentes",
-      "seeAll": "Ver todos",
-      "date": "Data",
-      "description": "Descrição",
-      "category": "Categoria",
-      "amount": "Valor"
-    },
-    "empty": {
-      "eyebrow": "Vazio",
-      "headline": "Sem despesas este mês.",
-      "body": "A primeira que adicionares aparece aqui — com gráfico, totais e o resto.",
-      "cta": "Adicionar a primeira"
-    },
-    "error": {
-      "eyebrow": "Erro",
-      "headline": "Não foi possível carregar.",
-      "body": "Houve um problema a ler os movimentos do mês. Pode ser temporário — tenta novamente daqui a uns segundos."
     }
   },
   "expenses": {
@@ -1262,110 +1198,6 @@
     "moreItems": "mais itens",
     "invalidFileType": "Por favor seleciona um ficheiro de imagem",
     "ocrFailed": "Falha ao ler o recibo. Por favor tenta novamente com uma imagem mais clara."
-  },
-  "addExpense": {
-    "eyebrow": "NOVO LANÇAMENTO",
-    "title": "Adicionar despesa",
-    "save": "Guardar despesa",
-    "savingShort": "A guardar…",
-    "savingHint": "A escrever no livro…",
-    "shortcutHint": "Atalho",
-    "saveFailed": "Não foi possível guardar a despesa.",
-    "offlineUnavailable": "O armazenamento offline não está disponível neste momento.",
-    "modes": {
-      "manual": {
-        "label": "Manual",
-        "sub": "Uma despesa, do zero"
-      },
-      "recibo": {
-        "label": "Recibo · IA",
-        "sub": "Foto ou PDF · a IA lê os campos"
-      },
-      "dividir": {
-        "label": "Dividir",
-        "sub": "Entre amigos ou família"
-      }
-    },
-    "manual": {
-      "description": "Descrição",
-      "descriptionPlaceholder": "ex: Continente Colombo",
-      "descriptionMissing": "Descrição em falta",
-      "amountInvalid": "Valor inválido",
-      "date": "Data",
-      "today": "HOJE",
-      "type": "Tipo",
-      "types": {
-        "fixed": "Sobrev. Fixa",
-        "variable": "Sobrev. Variável",
-        "lifestyle": "Estilo de Vida",
-        "project": "Projeto"
-      },
-      "category": "Categoria",
-      "bankAccount": "Conta Bancária",
-      "projects": "Tags · Projetos",
-      "notes": "Notas",
-      "notesPlaceholder": "Detalhes opcionais sobre esta despesa.",
-      "allCurrencies": "Todas as moedas"
-    },
-    "recibo": {
-      "dropEyebrow": "ARRASTA O TEU RECIBO AQUI",
-      "dropOrClick": "ou clica para escolher",
-      "dropSupport": "JPG, PNG, PDF · ATÉ 10 MB",
-      "swap": "Trocar imagem",
-      "imagePreviewAlt": "Pré-visualização do recibo",
-      "readEyebrow": "LIDO PELA IA",
-      "readingEyebrow": "A LER COM IA",
-      "processingHint": "A ler com Tesseract.js…",
-      "lowConfidenceBanner": "A IA não tem a certeza. Verifica cada campo antes de guardar.",
-      "invalidFile": "Por favor, escolhe uma imagem.",
-      "ocrFailed": "Não foi possível ler o recibo. Tenta com uma imagem mais nítida.",
-      "fields": {
-        "merchant": "Comerciante",
-        "total": "Total",
-        "date": "Data",
-        "currency": "Moeda"
-      },
-      "confidence": {
-        "high": "Alto",
-        "medium": "Médio",
-        "low": "Baixo"
-      }
-    },
-    "dividir": {
-      "total": "Total",
-      "descriptionPlaceholder": "ex: Jantar · Tasca do Chico",
-      "whoPaid": "Quem pagou",
-      "you": "Eu",
-      "youTag": "tu",
-      "dividedAmong": "DIVIDIDO ENTRE {count, plural, one {# PESSOA} other {# PESSOAS}}",
-      "noParticipantsEyebrow": "SEM PARTICIPANTES",
-      "modes": {
-        "equal": "Igualmente",
-        "amount": "Por valor",
-        "percent": "Por percentagem"
-      },
-      "mismatchEyebrow": "SOMA NÃO BATE",
-      "short": "FALTA",
-      "over": "SOBRA",
-      "mismatchSave": "Ajusta as quotas até bater certo antes de guardar.",
-      "noParticipants": "Adiciona pelo menos uma pessoa para dividir.",
-      "subPaid": "pagou a conta",
-      "subOwes": "deve",
-      "subSettled": "liquidou",
-      "paid": "Pago",
-      "unpaid": "Não pago",
-      "lockedTitle": "Bloqueado em modo igualmente",
-      "remove": "Remover",
-      "addPerson": "Adicionar pessoa",
-      "workspaceMembers": "MEMBROS DO WORKSPACE",
-      "addAdHoc": "Adicionar nome avulso…",
-      "adHocPlaceholder": "Nome",
-      "adHocAdd": "Adicionar",
-      "emptyPrompt": "Adiciona alguém para dividir.",
-      "settleYouOwe": "Deves a {payer} {currency}{amount}.",
-      "owesYouLine": "{name} deve-te {currency}{amount}.",
-      "settledLine": "{name} já te pagou {currency}{amount}."
-    }
   },
   "categoryNames": {
     "Groceries": "Mercearia",

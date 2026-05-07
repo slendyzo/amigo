@@ -60,10 +60,10 @@ export default function AssetLinkPicker({ value, onChange, className }: AssetLin
         {t("linkedAsset")}
       </label>
       {selected ? (
-        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2">
+        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-900/40 dark:bg-blue-950/20">
           <div className="flex items-center gap-2">
             <SelectedIcon className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-slate-800">
+            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
               {displayName(selected)}
             </span>
           </div>
@@ -80,7 +80,7 @@ export default function AssetLinkPicker({ value, onChange, className }: AssetLin
         <select
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
-          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm"
+          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
         >
           <option value="">{t("linkedAssetNone")}</option>
           {assets.map((a) => (

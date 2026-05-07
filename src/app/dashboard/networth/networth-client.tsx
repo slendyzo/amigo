@@ -277,10 +277,10 @@ function SummaryTile({
 }) {
   const tintClass =
     tint === "emerald"
-      ? "bg-emerald-500/10 text-emerald-600"
+      ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
       : tint === "sky"
-        ? "bg-sky-500/10 text-sky-600"
-        : "bg-rose-500/10 text-rose-600";
+        ? "bg-sky-500/10 text-sky-600 dark:text-sky-400"
+        : "bg-rose-500/10 text-rose-600 dark:text-rose-400";
 
   const inner = (
     <div className="flex items-start justify-between rounded-2xl border border-border/60 bg-card/80 p-4 transition-colors hover:border-border">

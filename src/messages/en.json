@@ -41,21 +41,16 @@
   "nav": {
     "dashboard": "Dashboard",
     "holdings": "Holdings",
-    "networth": "Summary",
+    "networth": "Net Worth",
     "exchanges": "Exchanges",
-    "property": "Property",
-    "vehicles": "Vehicles",
-    "sectionVision": "Overview",
-    "sectionPatrimonio": "Wealth",
-    "sectionPortfolio": "Wealth",
+    "sectionPortfolio": "Portfolio",
     "sectionFinances": "Finances",
     "sectionTools": "Tools",
-    "sectionAccount": "Account",
-    "overview": "Summary",
+    "overview": "Overview",
     "expenses": "Expenses",
     "incomes": "Incomes",
     "recurring": "Recurring",
-    "portfolio": "Wealth",
+    "portfolio": "Portfolio",
     "projects": "Projects",
     "categories": "Categories",
     "tidyUp": "Tidy Up",
@@ -70,12 +65,10 @@
     "menu": "Menu",
     "inbox": "Inbox",
     "whatsNew": "What's New",
-    "workspace": "Workspace",
     "sectionMoney": "Money",
     "sectionOrganize": "Organize",
     "sectionData": "Data",
-    "insights": "Retrospective",
-    "retrospective": "Retrospective"
+    "insights": "Insights"
   },
   "auth": {
     "signIn": "Sign In",
@@ -223,63 +216,6 @@
       "invested": "Invested",
       "pnl": "P&L",
       "freeCash": "Free Cash"
-    }
-  },
-  "painel": {
-    "eyebrow": "Dashboard · {month} {year} · Personal",
-    "greeting": "Hi, {name}.",
-    "sub": "Full view: month balance, cashflow, category breakdown and net worth.",
-    "addExpense": "New expense",
-    "hero": {
-      "balanceEyebrow": "{month} {year} balance",
-      "vsPrev": "vs previous month",
-      "vsYearAgo": "vs same month last year",
-      "income": "Income",
-      "expenses": "Expenses",
-      "pending": "Pending",
-      "netWorthEyebrow": "Net Worth",
-      "cash": "Cash & Accounts",
-      "assets": "Assets · Crypto and ETFs",
-      "property": "Property",
-      "vehicles": "Vehicles",
-      "liabilities": "− Liabilities"
-    },
-    "cashflow": {
-      "eyebrow": "Cashflow · 30 days",
-      "title": "{month} cashflow",
-      "today": "Today · {day} {month}"
-    },
-    "donut": {
-      "eyebrow": "Distribution",
-      "title": "Expenses by category",
-      "total": "Total spent"
-    },
-    "bars": {
-      "eyebrow": "Flow · 12 months",
-      "title": "Income vs Expenses",
-      "income": "Income",
-      "expense": "Expenses",
-      "net": "net"
-    },
-    "ledger": {
-      "eyebrow": "Movements · Recent",
-      "title": "Recent entries",
-      "seeAll": "See all",
-      "date": "Date",
-      "description": "Description",
-      "category": "Category",
-      "amount": "Amount"
-    },
-    "empty": {
-      "eyebrow": "Empty",
-      "headline": "No expenses this month.",
-      "body": "The first one you add will show up here — with chart, totals, and the rest.",
-      "cta": "Add the first one"
-    },
-    "error": {
-      "eyebrow": "Error",
-      "headline": "Couldn't load.",
-      "body": "Something went wrong reading this month's entries. It may be temporary — try again in a few seconds."
     }
   },
   "expenses": {
@@ -1262,110 +1198,6 @@
     "moreItems": "more items",
     "invalidFileType": "Please select an image file",
     "ocrFailed": "Failed to read the receipt. Please try again with a clearer image."
-  },
-  "addExpense": {
-    "eyebrow": "NEW ENTRY",
-    "title": "Add expense",
-    "save": "Save expense",
-    "savingShort": "Saving…",
-    "savingHint": "Writing to the ledger…",
-    "shortcutHint": "Shortcut",
-    "saveFailed": "Could not save the expense.",
-    "offlineUnavailable": "Offline storage is not available right now.",
-    "modes": {
-      "manual": {
-        "label": "Manual",
-        "sub": "One expense, from scratch"
-      },
-      "recibo": {
-        "label": "Receipt · AI",
-        "sub": "Photo or PDF · AI reads the fields"
-      },
-      "dividir": {
-        "label": "Split",
-        "sub": "Between friends or family"
-      }
-    },
-    "manual": {
-      "description": "Description",
-      "descriptionPlaceholder": "e.g. Continente Colombo",
-      "descriptionMissing": "Description is missing",
-      "amountInvalid": "Amount is invalid",
-      "date": "Date",
-      "today": "TODAY",
-      "type": "Type",
-      "types": {
-        "fixed": "Fixed survival",
-        "variable": "Variable survival",
-        "lifestyle": "Lifestyle",
-        "project": "Project"
-      },
-      "category": "Category",
-      "bankAccount": "Bank account",
-      "projects": "Tags · Projects",
-      "notes": "Notes",
-      "notesPlaceholder": "Optional details about this expense.",
-      "allCurrencies": "All currencies"
-    },
-    "recibo": {
-      "dropEyebrow": "DROP YOUR RECEIPT HERE",
-      "dropOrClick": "or click to choose",
-      "dropSupport": "JPG, PNG, PDF · UP TO 10 MB",
-      "swap": "Swap image",
-      "imagePreviewAlt": "Receipt preview",
-      "readEyebrow": "READ BY AI",
-      "readingEyebrow": "READING WITH AI",
-      "processingHint": "Reading with Tesseract.js…",
-      "lowConfidenceBanner": "The AI isn't sure. Verify each field before saving.",
-      "invalidFile": "Please select an image file.",
-      "ocrFailed": "Could not read the receipt. Try a clearer image.",
-      "fields": {
-        "merchant": "Merchant",
-        "total": "Total",
-        "date": "Date",
-        "currency": "Currency"
-      },
-      "confidence": {
-        "high": "High",
-        "medium": "Medium",
-        "low": "Low"
-      }
-    },
-    "dividir": {
-      "total": "Total",
-      "descriptionPlaceholder": "e.g. Dinner · Tasca do Chico",
-      "whoPaid": "Who paid",
-      "you": "You",
-      "youTag": "you",
-      "dividedAmong": "SPLIT AMONG {count, plural, one {# PERSON} other {# PEOPLE}}",
-      "noParticipantsEyebrow": "NO PARTICIPANTS",
-      "modes": {
-        "equal": "Equally",
-        "amount": "By amount",
-        "percent": "By percent"
-      },
-      "mismatchEyebrow": "AMOUNTS DON'T ADD UP",
-      "short": "SHORT BY",
-      "over": "OVER BY",
-      "mismatchSave": "Adjust the shares so they add up to the total before saving.",
-      "noParticipants": "Add at least one person to split with.",
-      "subPaid": "paid the bill",
-      "subOwes": "owes",
-      "subSettled": "settled up",
-      "paid": "Paid",
-      "unpaid": "Unpaid",
-      "lockedTitle": "Locked while in equal mode",
-      "remove": "Remove",
-      "addPerson": "Add person",
-      "workspaceMembers": "WORKSPACE MEMBERS",
-      "addAdHoc": "Add a one-off name…",
-      "adHocPlaceholder": "Name",
-      "adHocAdd": "Add",
-      "emptyPrompt": "Add someone to split with.",
-      "settleYouOwe": "You owe {payer} {currency}{amount}.",
-      "owesYouLine": "{name} owes you {currency}{amount}.",
-      "settledLine": "{name} already paid you {currency}{amount}."
-    }
   },
   "categoryNames": {
     "Groceries": "Groceries",

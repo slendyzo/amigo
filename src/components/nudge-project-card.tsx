@@ -104,12 +104,12 @@ export default function NudgeProjectCard({
   };
 
   return (
-    <div className="relative w-full rounded-lg border border-slate-200 bg-white px-4 py-3.5">
+    <div className="relative w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5">
       {/* Dismiss X */}
       <button
         onClick={handleDismiss}
         aria-label={t("nudges.common.dismiss")}
-        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 transition-colors"
+        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -117,19 +117,19 @@ export default function NudgeProjectCard({
       </button>
 
       {/* Heading */}
-      <p className="text-sm font-medium text-slate-900 pr-6">
+      <p className="text-sm font-medium text-slate-900 dark:text-white pr-6">
         {t("nudges.project.cardHeading", { count: cluster.expenses.length })}
       </p>
 
       {/* Theme */}
-      <p className="text-xs text-slate-700 mt-1">
+      <p className="text-xs text-slate-700 dark:text-slate-300 mt-1">
         <span className="font-medium">{t("nudges.project.themePrefix")}</span>
         {": "}
         {cluster.theme}
       </p>
 
       {/* Merchants */}
-      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 leading-relaxed">
         <span className="font-medium">{t("nudges.project.merchantsPrefix")}</span>
         {": "}
         {merchantList}
@@ -141,7 +141,7 @@ export default function NudgeProjectCard({
         <select
           value={selectedProjectId}
           onChange={(e) => handleDropdownChange(e.target.value)}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
         >
           <option value="">{t("nudges.project.pickProject")}</option>
           {existingProjects.map((p) => (
@@ -158,7 +158,7 @@ export default function NudgeProjectCard({
           onChange={(e) => handleNameChange(e.target.value)}
           disabled={!!selectedProjectId}
           placeholder={t("nudges.project.newProjectPlaceholder")}
-          className="w-full rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] disabled:opacity-40 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -173,7 +173,7 @@ export default function NudgeProjectCard({
         </button>
         <button
           onClick={handleDismiss}
-          className="flex-1 rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          className="flex-1 rounded-md border border-slate-300 dark:border-slate-600 px-3 py-1.5 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
         >
           {t("nudges.common.notNow")}
         </button>

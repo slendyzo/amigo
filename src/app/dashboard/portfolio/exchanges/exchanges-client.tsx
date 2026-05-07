@@ -40,7 +40,7 @@ const STATUS_DOT: Record<string, string> = {
   SYNCING: "bg-yellow-400 animate-pulse",
   ERROR: "bg-red-500",
   PARTIAL: "bg-amber-500",
-  IDLE: "bg-slate-300",
+  IDLE: "bg-slate-300 dark:bg-slate-600",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -52,11 +52,11 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_TEXT_COLOR: Record<string, string> = {
-  SUCCESS: "text-emerald-600",
-  SYNCING: "text-yellow-600",
-  ERROR: "text-red-600",
-  PARTIAL: "text-amber-600",
-  IDLE: "text-slate-500",
+  SUCCESS: "text-emerald-600 dark:text-emerald-400",
+  SYNCING: "text-yellow-600 dark:text-yellow-400",
+  ERROR: "text-red-600 dark:text-red-400",
+  PARTIAL: "text-amber-600 dark:text-amber-400",
+  IDLE: "text-slate-500 dark:text-slate-400",
 };
 
 function formatRelativeTime(isoString: string | null): string {
@@ -150,15 +150,15 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/portfolio"
-            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition"
+            className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
           >
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
             </svg>
             {t("title")}
           </Link>
-          <span className="text-slate-300">/</span>
-          <h1 className="text-lg font-semibold text-slate-900">
+          <span className="text-slate-300 dark:text-slate-600">/</span>
+          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
             {t("exchangeConnections")}
           </h1>
         </div>
@@ -176,14 +176,14 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
 
       {/* Empty state */}
       {connections.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-14 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100">
+        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-6 py-14 text-center">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
             <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
             </svg>
           </div>
-          <p className="text-sm font-medium text-slate-700">{t("noExchanges")}</p>
-          <p className="mt-1 text-sm text-slate-500">{t("noExchangesDescription")}</p>
+          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("noExchanges")}</p>
+          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("noExchangesDescription")}</p>
           <button
             type="button"
             onClick={openAdd}
@@ -209,7 +209,7 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
           return (
             <div
               key={conn.id}
-              className="rounded-xl border border-slate-200 bg-white p-5"
+              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5"
             >
               <div className="flex items-start justify-between gap-4">
                 {/* Left: identity + status */}
@@ -227,16 +227,16 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
 
                   <div className="min-w-0 space-y-1">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-slate-900 truncate">
+                      <span className="font-semibold text-slate-900 dark:text-slate-100 truncate">
                         {conn.label}
                       </span>
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-slate-500 dark:text-slate-400">
                         {meta.name}
                       </span>
                     </div>
 
                     {/* Status row */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
                       <span className={["w-2 h-2 rounded-full shrink-0", statusDot].join(" ")} />
                       <span className={STATUS_TEXT_COLOR[conn.syncStatus] ?? STATUS_TEXT_COLOR.IDLE}>
                         {conn.syncStatus === "SUCCESS" && conn.lastSyncAt
@@ -256,8 +256,8 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                         <p
                           className={`text-xs mt-0.5 ${
                             conn.syncStatus === "PARTIAL"
-                              ? "text-amber-600"
-                              : "text-red-500"
+                              ? "text-amber-600 dark:text-amber-500"
+                              : "text-red-500 dark:text-red-400"
                           }`}
                         >
                           {conn.lastSyncError}
@@ -269,15 +269,15 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                 {/* Right: stats */}
                 <div className="hidden sm:flex items-center gap-5 shrink-0 text-right">
                   <div>
-                    <p className="text-xs text-slate-400">{t("assets")}</p>
-                    <p className="text-sm font-semibold text-slate-800">
+                    <p className="text-xs text-slate-400 dark:text-slate-500">{t("assets")}</p>
+                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                       {conn.assetCount}
                     </p>
                   </div>
                   {conn.freeCash !== null && (
                     <div>
-                      <p className="text-xs text-slate-400">{t("freeCash")}</p>
-                      <p className="text-sm font-semibold text-slate-800">
+                      <p className="text-xs text-slate-400 dark:text-slate-500">{t("freeCash")}</p>
+                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                         {formatCurrency(conn.freeCash, conn.freeCashCurrency)}
                       </p>
                     </div>
@@ -288,13 +288,13 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
               {/* Mobile stats */}
               <div className="sm:hidden mt-3 flex gap-5 text-sm">
                 <div>
-                  <span className="text-slate-400 text-xs">{t("assets")}: </span>
-                  <span className="font-medium text-slate-800">{conn.assetCount}</span>
+                  <span className="text-slate-400 dark:text-slate-500 text-xs">{t("assets")}: </span>
+                  <span className="font-medium text-slate-800 dark:text-slate-200">{conn.assetCount}</span>
                 </div>
                 {conn.freeCash !== null && (
                   <div>
-                    <span className="text-slate-400 text-xs">{t("freeCash")}: </span>
-                    <span className="font-medium text-slate-800">
+                    <span className="text-slate-400 dark:text-slate-500 text-xs">{t("freeCash")}: </span>
+                    <span className="font-medium text-slate-800 dark:text-slate-200">
                       {formatCurrency(conn.freeCash, conn.freeCashCurrency)}
                     </span>
                   </div>
@@ -308,7 +308,7 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                   type="button"
                   onClick={() => handleSync(conn.id)}
                   disabled={isSyncingThis || conn.syncStatus === "SYNCING"}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
                 >
                   {isSyncingThis ? (
                     <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -327,7 +327,7 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                 <button
                   type="button"
                   onClick={() => openEdit(conn)}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition"
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
@@ -338,7 +338,7 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                 {/* Delete / confirm */}
                 {isConfirmingDelete ? (
                   <div className="flex items-center gap-2 ml-auto">
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-slate-500 dark:text-slate-400">
                       {t("deleteConnectionConfirm")}
                     </span>
                     <button
@@ -353,7 +353,7 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                       type="button"
                       onClick={() => setConfirmDeleteId(null)}
                       disabled={isDeleting}
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50 transition"
+                      className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
                     >
                       {tCommon("cancel")}
                     </button>
@@ -362,7 +362,7 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteId(conn.id)}
-                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition"
+                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
                   >
                     <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                       <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />

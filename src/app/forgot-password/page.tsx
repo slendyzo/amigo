@@ -41,24 +41,24 @@ export default function ForgotPasswordPage() {
 
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-white px-4 relative">
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 px-4 relative">
         {/* Language Switcher */}
         <div className="absolute top-4 right-4">
           <LanguageSwitcher />
         </div>
 
         <div className="w-full max-w-md">
-          <div className="bg-white rounded-2xl shadow-xl p-8 text-center border border-slate-200">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-slate-900/50 p-8 text-center border border-slate-200 dark:border-slate-800">
+            <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
               </svg>
             </div>
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">{t("checkYourEmail")}</h1>
-            <p className="text-slate-600 mb-6">
-              {t("ifAccountExists")} <strong className="text-slate-900">{email}</strong>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t("checkYourEmail")}</h1>
+            <p className="text-slate-600 dark:text-slate-400 mb-6">
+              {t("ifAccountExists")} <strong className="text-slate-900 dark:text-white">{email}</strong>
             </p>
-            <p className="text-sm text-slate-500 mb-6">
+            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6">
               {t("linkExpiresIn")}
             </p>
             <Link
@@ -74,30 +74,30 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 relative">
+    <div className="min-h-screen flex items-center justify-center bg-white dark:bg-slate-950 px-4 relative">
       {/* Language Switcher */}
       <div className="absolute top-4 right-4">
         <LanguageSwitcher />
       </div>
 
       <div className="w-full max-w-md">
-        <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl dark:shadow-slate-900/50 p-8 border border-slate-200 dark:border-slate-800">
           <div className="text-center mb-8">
-            <h1 className="text-2xl font-bold text-slate-900 mb-2">{t("forgotYourPassword")}</h1>
-            <p className="text-slate-600">
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">{t("forgotYourPassword")}</h1>
+            <p className="text-slate-600 dark:text-slate-400">
               {t("enterEmailForReset")}
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-red-600 text-sm">
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-600 dark:text-red-400 text-sm">
                 {error}
               </div>
             )}
 
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
                 {t("emailAddress")}
               </label>
               <input
@@ -105,7 +105,7 @@ export default function ForgotPasswordPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-300 rounded-lg bg-white text-slate-900 focus:ring-2 focus:ring-[#0070f3] focus:border-[#0070f3] outline-none transition-colors"
+                className="w-full px-4 py-3 border border-slate-300 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:ring-2 focus:ring-[#0070f3] focus:border-[#0070f3] outline-none transition-colors"
                 placeholder={t("emailPlaceholder")}
                 required
               />
@@ -114,7 +114,7 @@ export default function ForgotPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 px-4 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] focus:ring-4 focus:ring-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="w-full py-3 px-4 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] focus:ring-4 focus:ring-blue-200 dark:focus:ring-blue-900 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? (
                 <span className="flex items-center justify-center gap-2">

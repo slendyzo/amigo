@@ -1,217 +1,337 @@
-# Amigo — Design System (Forest & Bracket)
+# Design System & Workflow
 
-> **Source of truth:** `claude design/colors_and_type.css` and `claude design/README.md`. This file is the implementation companion — how Forest & Bracket maps onto the Next.js + Tailwind 4 + Shadcn codebase.
+## Blueprint-First Design Process
 
-Forest & Bracket replaces the previous Electric Blue identity in full. There is no dark mode. The brand is one opinionated paper-light surface — bone paper `#f1ebdd`, forest green `#1e3a2c`, gilt accent `#a8853a`, Fraunces serif numerals.
+When making significant UI/UX changes, use the **blueprint workflow** to explore options before implementation.
+
+### Workflow Steps
+
+1. **Create Blueprint HTML**
+   - Generate a standalone HTML file in `blueprints/` folder
+   - Include multiple design variants (3-4 options)
+   - Add light/dark mode toggle for testing both themes
+   - Include comparison table summarizing trade-offs
+
+2. **Review & Select**
+   - Open blueprint in browser
+   - Test interactions and responsiveness
+   - Choose preferred option with stakeholder
+
+3. **Plan Implementation**
+   - Enter plan mode to design architecture
+   - Document in `.claude/plans/` for complex features
+   - Consider mobile UX separately
+
+4. **Implement & Iterate**
+   - Build chosen design
+   - Keep blueprint for reference
+   - Update if design evolves
+
+### Blueprint Template Structure
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>[Feature] Design Options</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* CSS variables matching project theme */
+    :root {
+      --color-background: #ffffff;
+      --color-surface: #f8fafc;
+      --color-text-primary: #1e293b;
+      /* ... */
+    }
+    .dark {
+      --color-background: #0f172a;
+      --color-surface: #1e293b;
+      --color-text-primary: #f1f5f9;
+      /* ... */
+    }
+  </style>
+</head>
+<body>
+  <!-- Dark mode toggle -->
+  <button onclick="document.documentElement.classList.toggle('dark')">
+    Toggle Dark Mode
+  </button>
+
+  <!-- Option A -->
+  <section id="option-a">
+    <h2>Option A: [Name]</h2>
+    <!-- Design implementation -->
+  </section>
+
+  <!-- Option B, C, D... -->
+
+  <!-- Comparison Table -->
+  <table>
+    <tr><th>Criteria</th><th>Option A</th><th>Option B</th></tr>
+    <!-- ... -->
+  </table>
+</body>
+</html>
+```
+
+### Naming Convention
+
+```
+blueprints/
+├── [feature]-blueprint.html      # Main exploration file
+├── [feature]-v2-blueprint.html   # Iteration if needed
+└── archived/                     # Old blueprints for reference
+```
+
+### Example: Gym Zone Redesign
+
+The Gym zone was redesigned using this workflow:
+
+1. Created `blueprints/gym-redesign-blueprint.html` with 4 options:
+   - Vercel-style minimal grid
+   - App Store card carousel
+   - Webflow two-panel sidebar (selected)
+   - Bumble swipe cards
+
+2. User reviewed and selected Webflow style + "All" category
+
+3. Implementation plan created with mobile UX (horizontal pills)
+
+4. Built and iterated based on feedback
 
 ---
 
-## Tokens — Tailwind / CSS variables
+## Design System
 
-All tokens live in `src/app/globals.css` under `@theme inline`, sourced from the kit's `colors_and_type.css`. Tailwind utilities map to semantic classes (e.g. `bg-paper`, `bg-paper-deep`, `text-ink`, `border-rule`, `text-forest`, `text-gilt`).
+### Color Palette
 
-**Surface tokens**
+Use semantic CSS variables for consistent theming:
 
-| Token | Hex | Usage |
-|---|---|---|
-| `--paper` | `#f1ebdd` | Page background. Never pure white. |
-| `--paper-deep` | `#e8e0cc` | Card / inset surface. |
-| `--paper-soft` | `#ece5d4` | Hover row. |
-| `--rule` | `#d8cdb1` | Default 1px divider. |
-| `--rule-strong` | `#b8ad91` | Heavier divider. |
+```css
+/* Text */
+--color-text-primary    /* Main text */
+--color-text-secondary  /* Subdued text */
+--color-text-muted      /* Hint text, placeholders */
 
-**Ink ramp**
+/* Surfaces */
+--color-background      /* Page background */
+--color-surface         /* Card backgrounds */
+--color-surface-elevated /* Raised elements */
 
-| Token | Hex | Usage |
-|---|---|---|
-| `--ink` | `#14140f` | Display, hero text. |
-| `--ink-soft` | `#3d3a30` | Body. |
-| `--ink-mute` | `#6b6655` | Secondary, labels. |
-| `--ink-faint` | `#8c8770` | Tertiary, eyebrows. |
+/* Borders */
+--color-border          /* Default borders */
+```
 
-**Brand**
+### Accent Colors
 
-| Token | Hex | Usage |
-|---|---|---|
-| `--forest` | `#1e3a2c` | Primary action, sidebar fill, focus border. |
-| `--forest-deep` | `#122a1f` | Pressed, sidebar interior. |
-| `--forest-soft` | `#2a4d3a` | Hover. |
-| `--forest-tint` | `#e6ebe4` | Tinted bg for chips/highlights. |
-| `--gilt` | `#a8853a` | Accent — never used as a fill. 1pt rules, today markers, dot accents, decorative. |
-| `--gilt-soft` | `#c9a85a` | Gilt on dark forest fill. |
-| `--gilt-deep` | `#876a2a` | Gilt on paper, denser. |
+| Color   | Use Case |
+|---------|----------|
+| Indigo  | Primary actions, active states, links |
+| Emerald | Success, positive, Tempo tools |
+| Blue    | Info, Fretboard tools |
+| Rose    | Ear training tools |
+| Amber   | Theory tools, warnings |
+| Violet  | Chord/harmony tools |
+| Cyan    | Technique tools |
 
-**Status (always muted; chip bg = `-tint`, text = base)**
+### Glassmorphism
 
-| Token | Usage |
-|---|---|
-| `--moss` / `--moss-tint` | Gain · positive · refund. |
-| `--amber` / `--amber-tint` | 80%+ budget · warning. |
-| `--crimson` / `--crimson-tint` | Loss · destructive · over budget. |
+```css
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
 
-**Category palette** (donut slices, chips): `--cat-forest`, `--cat-clay`, `--cat-ochre`, `--cat-sage`, `--cat-rust`, `--cat-stone`, `--cat-plum`, `--cat-bronze`, `--cat-moss-d`, `--cat-fog`. See kit README for the canonical mapping.
+.dark .glass {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+```
 
----
+### Animation Guidelines
 
-## Typography
+- Use `AnimatePresence mode="wait"` for filtering (not `popLayout`)
+- Simple opacity fades (0.15s) for list transitions
+- Avoid staggered delays on filter changes
+- Use `transition-transform` and `transition-shadow` for hover states
 
-**Font families** (all self-hosted via `next/font`):
+### Loading Skeletons
 
-| Token | Family | Where |
-|---|---|---|
-| `--font-sans` | General Sans (400/500/600/700) | Body, UI labels, button copy. |
-| `--font-display` | Fraunces (variable, opsz 9–144, wght 300–900, SOFT 0–100, WONK 0/1) | Display, headings. |
-| `--font-num` | Fraunces (opsz 144, SOFT 30, tabular + lining nums) | **All numerals.** |
-| `--font-italic` | Instrument Serif (italic) | **The bracket-with-dot logo mark only.** Not a voice/tone font. |
-| `--font-mono` | JetBrains Mono (400/500) | Eyebrows, code, ledger metadata. |
+All async-loading pages use **structural skeletons** instead of spinners or "Loading..." text. Skeletons must match the actual content layout to prevent layout shifts.
 
-**Type semantics** (utility classes from kit's `colors_and_type.css`, mirrored as Tailwind classes):
+**Skeleton colors (theme-aware):**
 
-- `t-eyebrow` — 11px JetBrains Mono uppercase, `0.18em` letter-spacing, `--ink-mute`.
-- `t-h1` — 46px Fraunces light, opsz 144, SOFT 50, WONK 1, `-0.02em` tracking.
-- `t-h2` — 36px Fraunces light, same axis settings.
-- `t-h3` — 22px General Sans semibold.
-- `t-h4` — 16px General Sans semibold.
-- `t-hero-amount` — 64px Fraunces regular, opsz 144 SOFT 30, tabular + lining nums.
-- `t-amount` — 28px Fraunces regular, tabular + lining nums.
-- `t-pull` — **Reserved.** Originally Instrument Serif 22px italic. Do **not** use in product UI; the resolved brand uses italic serif only for the logo mark. Keep the class definition for future marketing/cover surfaces only.
-- `t-body` — 15–16px General Sans regular, `--ink-soft`.
-- `t-small` — 13px General Sans, `--ink-mute`.
-- `t-meta` — 11px JetBrains Mono, `0.04em` tracking.
+- `bg-[var(--color-surface-elevated)]` — lighter blocks (badges, cards)
+- `bg-[var(--color-border)]` — darker blocks (text lines, icons)
 
-All numerals **must** use Fraunces with `font-variant-numeric: tabular-nums lining-nums`. The `tabular` class enforces this.
+**Rules:**
 
-### Italic serif — the law
-
-Instrument Serif italic exists in the system **for the logo mark only** — the bracket-with-dot `( · )`. It is **not** a voice / tone / aside / casual-emphasis font. The earlier brand iteration treated it that way; the resolved brand does not.
-
-✅ Allowed: the logo mark, marketing/cover surfaces if/when they exist.
-
-❌ Not allowed in product UI:
-- Person names (Eu / Ana / Francisco) → General Sans
-- Subtitles, page subs, descriptive copy → General Sans
-- Empty-state messages, error messages, helper text, hints → General Sans
-- Settle-up summaries, observations, advisor asides → General Sans (or Fraunces display where it's a real heading)
-- "Pull-quote" decorative emphasis → drop unless explicitly approved per surface
-- Modal subheadings, field labels → General Sans / JetBrains Mono eyebrow
-
-When in doubt, default to General Sans.
-
----
-
-## Component conventions (codebase-side)
-
-### Cards
+1. Use `animate-pulse` on the outermost wrapper only (not per-element)
+2. Match the exact grid/flex/spacing of real content
+3. Wrap loaded content in a fade-in transition:
 
 ```tsx
-<div className="bg-paper-deep border border-rule rounded-md p-6">
-  ...
+<motion.div
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  transition={{ duration: 0.2 }}
+>
+  {/* Content that just loaded */}
+</motion.div>
+```
+
+4. For elements that appear async within an already-loaded page (e.g. HeroBanner continue button), render an invisible placeholder with the same dimensions to reserve space
+
+**Pages with skeletons:** LevelDetail, ProfilePage, EducationalHub, LearningMap, Header/Sidebar/BottomNav
+
+### Responsive Breakpoints
+
+| Breakpoint | Width | Use |
+|------------|-------|-----|
+| Mobile | < 768px | Single column, bottom nav |
+| Tablet | 768-1023px | 2 columns, bottom nav |
+| Desktop | 1024px+ (lg:) | Sidebar navigation |
+| Wide | 1280px+ (xl:) | EducationalHub panel |
+
+### Mobile Patterns
+
+**Horizontal Category Pills:**
+```tsx
+<div className="sticky top-0 z-10 bg-[var(--color-background)]">
+  <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory">
+    {categories.map(cat => (
+      <button className={`
+        snap-start flex-shrink-0 px-4 py-2 rounded-full
+        ${isActive ? 'bg-indigo-500 text-white' : 'glass border'}
+      `}>
+        {label}
+      </button>
+    ))}
+  </div>
 </div>
 ```
 
-No shadow on cards. Hover does **not** elevate — the rule stays. Statement-style emphasis (e.g. expense detail panel, hero balance frame) uses `border-ink rounded-sm` on a `paper` background.
+**Category Filtering:**
+```tsx
+const [selectedCategory, setSelectedCategory] = useState<'all' | Category>('all')
 
-### Buttons
-
-- Primary: `bg-forest text-paper hover:bg-forest-deep rounded-md px-4 py-2`. Focus ring `0 0 0 3px var(--forest-ring)`.
-- Ghost: `text-ink-soft hover:bg-paper-soft rounded-md px-3 py-2`.
-- Destructive: `bg-crimson-tint text-crimson hover:bg-crimson hover:text-paper`.
-- Icon-only: 36–40px square, ghost by default.
-
-### Inputs
-
-`bg-paper border border-rule rounded-sm px-3 py-2 focus:border-forest focus:ring-3 focus:ring-forest/30`. Inputs sit on paper, never on paper-deep cards (visual depth comes from the rule and the paper-on-paper-deep contrast).
-
-### Chips / Pills
-
-- Filter chips: `bg-paper border border-rule rounded-sm px-2.5 py-1` for inactive, `bg-forest text-paper border-forest` for active.
-- Status chips: `bg-{moss|amber|crimson}-tint text-{moss|amber|crimson} rounded-sm px-2 py-0.5 text-xs`.
-
-### Eyebrows + section headers
-
-Every section gets a JetBrains Mono uppercase eyebrow (`text-xs tracking-eyebrow text-ink-mute`) **above** the heading. Optional **gilt rule** under the heading: `border-b border-gilt`.
-
-### Animation
-
-- Default `transition-colors duration-200 ease-out` (the `--ease-out` curve is `cubic-bezier(0.16, 1, 0.3, 1)`).
-- List/filter re-renders use opacity fades 120–150ms. **No staggered motion, no spring overshoot.**
-- Bottom sheet drag-up: physics spring 320ms.
-
-### Loading skeletons
-
-All async-loading pages use **structural skeletons**, not spinners. Skeleton blocks are `bg-paper-soft` with `animate-pulse`. Skeleton must match content layout — never a generic full-card grey block when the content is a multi-row list.
-
-### Iconography
-
-`lucide-react` only. Stroke 1.5 for nav, 1.6–2 for inline indicators. Sizes 14–20px standard. Colour inherits `currentColor` — typically `text-ink-mute`, `text-paper` on forest fill, `text-gilt` on accents, status colour when semantic.
+const filteredItems = useMemo(() => {
+  return items.filter(item =>
+    selectedCategory === 'all' || item.category === selectedCategory
+  )
+}, [selectedCategory, items])
+```
 
 ---
 
-## Sidebar & shell
+## Component Patterns
 
-Desktop layout: 240px sidebar (forest fill, `--forest-deep` interior detail, gilt-soft group labels) + main content on `--paper`. Sidebar groups (PT-PT canonical):
+### Tool/Card Grid
 
-- **Visão** — Painel, Retrospetiva
-- **Património** — Resumo, Ativos, Imóveis, Veículos, Corretoras
-- **Finanças** — Despesas, Receitas, Recorrentes
-- **Ferramentas** — Importar, Categorias, Arrumar, Contas Bancárias, Mapeamentos, Projetos
-- **Conta** — Definições, Caixa de Entrada, Workspace
+```tsx
+<div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <AnimatePresence mode="wait">
+    {items.map(item => (
+      <motion.div
+        key={item.id}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.15 }}
+        className="h-full"
+      >
+        <Card />
+      </motion.div>
+    ))}
+  </AnimatePresence>
+</div>
+```
 
-Mobile: sidebar collapses to a 5-tab bottom bar (Painel, Património, Despesas, Ferramentas, Conta) with a centered forest **FAB** (56×56, 6px radius — restrained, ledger-paper, not iOS-circular). The FAB opens the Add Expense **bottom sheet**.
+### Two-Panel Layout (Webflow Style)
 
----
+```tsx
+<div className="flex min-h-screen">
+  {/* Desktop Sidebar */}
+  <aside className="hidden lg:flex w-56 border-r">
+    {/* Navigation */}
+  </aside>
 
-## Add Expense modal — three modes
+  {/* Main Content */}
+  <main className="flex-1 p-4">
+    {/* Mobile: Category pills */}
+    <div className="lg:hidden">
+      {/* Horizontal pills */}
+    </div>
 
-The desktop modal and mobile bottom sheet share the same three-mode tab strip:
+    {/* Content grid */}
+  </main>
+</div>
+```
 
-1. **Manual** — name + amount + category + tags + accounts.
-2. **Recibo (IA)** — Tesseract OCR receipt scanner, image preview + extracted fields.
-3. **Dividir** — Split mode. Picks workspace members or ad-hoc names; equal / by-value / by-percentage; per-participant paid status.
+### Friends & Social UI Patterns
 
-Footer fixed across modes: ghost "Cancelar" + primary "Guardar despesa" with `⌘+ENTER` shortcut hint.
+**Tab Bar Navigation (FriendsManager):**
+```tsx
+<div className="flex gap-2 overflow-x-auto pb-1 scrollbar-hide">
+  {tabs.map((tab) => (
+    <button
+      key={tab.id}
+      onClick={() => setActiveTab(tab.id)}
+      className={`
+        inline-flex items-center gap-1.5 px-4 py-2.5 min-h-[44px] rounded-xl
+        text-sm font-medium whitespace-nowrap touch-manipulation flex-shrink-0
+        ${isActive
+          ? 'bg-blue-500 text-white shadow-sm'
+          : 'bg-[var(--color-surface)] text-[var(--color-text-secondary)] border border-[var(--color-border)]'
+        }
+      `}
+    >
+      {tab.icon}
+      <span>{label}</span>
+      {badge > 0 && <span className="badge">{badge}</span>}
+    </button>
+  ))}
+</div>
+```
 
----
+Tabs: Friends, Requests, Search, Feed, Invite. Each tab uses `AnimatePresence mode="wait"` for content transitions.
 
-## Letterhead — auth & onboarding
+**Notification Bell (Header):**
+- Bell icon with unread count badge (red dot with number)
+- Polls every 30 seconds when authenticated
+- Dropdown shows latest notifications, links to full inbox
+- Badge uses `bg-red-500 text-white` absolute-positioned circle
 
-Auth surfaces (signin, signup, OTP, forgot, reset, setup-username) and the onboarding wizard sit outside the dashboard shell. They use the **letterhead** treatment:
+**Activity Feed Items:**
+- Avatar + display name + event description + emoji icon
+- Relative timestamps (`timeAgo()` utility)
+- Emoji reaction bar below each item (6 emojis: guitar, fire, clap, flex, party, heart)
+- Compact mode (3 items) for EducationalHub sidebar
 
-- Centred form, `max-w-md`, paper-deep card, ink-bordered statement frame.
-- Fraunces wordmark / mark at the top.
-- Gilt 1pt rule under the heading.
-- Brand voice paragraph on desktop two-column layout uses **Fraunces display** (light, opsz 144), not Instrument Serif italic. Italic serif is reserved for the logo mark.
-- Mobile collapses to single column. Pull-quote becomes a small italic line above the form.
+**Friend Card:**
+- Avatar (gradient fallback with initials) + name + online status
+- Nudge button (opens NudgePicker popover at z-[100])
+- Remove button with confirmation step
+- View profile link
 
-OTP boxes: 6 inputs, each Fraunces serif numeral on inset paper with a 4px radius. Input inactive border `--rule`, active `--forest`, error `--crimson`.
+**Public Profile Page (`/u/:username`):**
+- Large avatar with gradient ring
+- Display name, username, role badge
+- Friend action button (contextual: Add, Pending, Accept, Friends/Remove)
+- 2x2 stats grid (XP, Lessons, Challenges, Best Streak)
+- Earned badges grid
+- Member since date
 
----
+**Invite Section:**
+- Invite URL display with copy button
+- Share button (uses Web Share API with clipboard fallback)
+- QR code toggle (uses `qrcode.react`)
 
-## Dark mode — retired
-
-The codebase has historically used Tailwind `dark:` variants (~145 occurrences). All are stripped under Forest & Bracket. The brand is paper-only. `prefers-color-scheme: dark` is ignored; the app renders the paper theme regardless.
-
----
-
-## Mock workflow
-
-When designing new surfaces or significantly reworking existing ones:
-
-1. **Static HTML mock first** in `docs/mocks/<surface>.html`. PT-PT copy. Tokens via `<link rel="stylesheet" href="../../claude design/colors_and_type.css">`.
-2. **One file per surface.** Keep cross-links in the mock footer for navigation.
-3. **Approve before coding.** No production component edits before the static mock is signed off.
-4. **Ship in waves of 4–6 surfaces** so feedback rounds short and code never drifts far ahead of approved design.
-
----
-
-## Anti-patterns
-
-- ❌ Pure white backgrounds. White only exists on the OTP input squares.
-- ❌ Drop shadows on cards. Cards use rules.
-- ❌ Saturated fills for status. Status is always `-tint` background + base text.
-- ❌ Gilt as a fill. Gilt is rules, dots, and accent strokes.
-- ❌ Inter, system-ui, or any sans-serif other than General Sans for body. No fallback to Helvetica.
-- ❌ `dark:` Tailwind variants — paper-only.
-- ❌ Emoji in product UI.
-- ❌ Big drop-shadowed iOS-radius (12–24px) cards. Cards are 6px.
-- ❌ Stacked-letter logo treatments. The brand mark is `( · )` and the wordmark is `amigo` lowercase Fraunces.
+**Weekly Leaderboard:**
+- Podium display for top 3 (gold/silver/bronze styling)
+- Scrollable list for remaining friends
+- Current user's rank highlighted
+- Compact mode for EducationalHub sidebar

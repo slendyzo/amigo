@@ -23,7 +23,7 @@ interface NudgeRow {
 type RowState = "pending" | "accepted" | "rejected";
 
 const CONFIDENCE_DOT: Record<"high" | "medium" | "low", string> = {
-  high: "bg-slate-700",
+  high: "bg-slate-700 dark:bg-slate-300",
   medium: "bg-slate-500",
   low: "bg-slate-400",
 };
@@ -105,20 +105,20 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full md:max-w-2xl bg-white rounded-t-xl md:rounded-xl shadow-xl overflow-hidden"
+            className="w-full md:max-w-2xl bg-white dark:bg-slate-900 rounded-t-xl md:rounded-xl shadow-xl overflow-hidden"
           >
             {/* Header */}
-            <div className="px-5 py-4 border-b border-slate-200">
-              <p className="text-sm font-semibold text-slate-900">
+            <div className="px-5 py-4 border-b border-slate-200 dark:border-slate-700">
+              <p className="text-sm font-semibold text-slate-900 dark:text-white">
                 {t("nudges.categorize.modalTitle")}
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
                 {t("nudges.categorize.modalSubtitle")}
               </p>
             </div>
 
             {/* Body */}
-            <div className="overflow-y-auto max-h-[60vh] divide-y divide-slate-100">
+            <div className="overflow-y-auto max-h-[60vh] divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <div className="px-5 py-8 text-center text-sm text-slate-400">
                   Loading...
@@ -140,7 +140,7 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
                       {/* Expense info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="text-sm font-medium text-slate-900 truncate max-w-[160px]">
+                          <span className="text-sm font-medium text-slate-900 dark:text-white truncate max-w-[160px]">
                             {row.expenseName}
                           </span>
                           <span className="text-xs text-slate-400">{formatDate(row.expenseDate)}</span>
@@ -148,13 +148,13 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
                             className={`inline-block w-1.5 h-1.5 rounded-full ${CONFIDENCE_DOT[row.confidence]}`}
                             title={t(`nudges.categorize.confidence${row.confidence.charAt(0).toUpperCase() + row.confidence.slice(1)}` as "nudges.categorize.confidenceHigh")}
                           />
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
                             {row.origin === "keyword"
                               ? t("nudges.categorize.originKeyword")
                               : t("nudges.categorize.originAi")}
                           </span>
                         </div>
-                        <span className="text-xs text-slate-500 tabular-nums">
+                        <span className="text-xs text-slate-500 dark:text-slate-400 tabular-nums">
                           €{Math.abs(row.expenseAmount).toFixed(2)}
                         </span>
                       </div>
@@ -164,7 +164,7 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
                         value={overrides[row.expenseId] ?? ""}
                         onChange={(e) => setOverride(row.expenseId, e.target.value || null)}
                         disabled={state === "rejected"}
-                        className="text-xs rounded-md border border-slate-200 bg-white text-slate-900 px-2 py-1.5 max-w-[130px] focus:outline-none focus:ring-1 focus:ring-slate-400"
+                        className="text-xs rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-2 py-1.5 max-w-[130px] focus:outline-none focus:ring-1 focus:ring-slate-400"
                       >
                         <option value="">—</option>
                         {categories.map((c) => (
@@ -179,8 +179,8 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
                           aria-label="Accept"
                           className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
                             state === "accepted"
-                              ? "bg-slate-800 text-white"
-                              : "border border-slate-200 text-slate-400 hover:text-slate-700"
+                              ? "bg-slate-800 dark:bg-white text-white dark:text-slate-900"
+                              : "border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                           }`}
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -192,8 +192,8 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
                           aria-label="Reject"
                           className={`w-7 h-7 rounded flex items-center justify-center transition-colors ${
                             state === "rejected"
-                              ? "bg-red-100 text-red-500"
-                              : "border border-slate-200 text-slate-400 hover:text-red-400"
+                              ? "bg-red-100 dark:bg-red-900/40 text-red-500"
+                              : "border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-red-400"
                           }`}
                         >
                           <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,17 +208,17 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
             </div>
 
             {/* Footer */}
-            <div className="px-5 py-4 border-t border-slate-200 flex gap-3">
+            <div className="px-5 py-4 border-t border-slate-200 dark:border-slate-700 flex gap-3">
               <button
                 onClick={onClose}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-200 text-sm text-slate-600 hover:bg-slate-50 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 text-sm text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 {t("nudges.categorize.noChanges")}
               </button>
               <button
                 onClick={handleApply}
                 disabled={acceptedRows.length === 0 || submitting}
-                className="flex-1 px-4 py-2 rounded-lg bg-slate-900 text-white text-sm font-medium hover:bg-slate-700 disabled:opacity-40 transition-colors"
+                className="flex-1 px-4 py-2 rounded-lg bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-sm font-medium hover:bg-slate-700 dark:hover:bg-slate-100 disabled:opacity-40 transition-colors"
               >
                 {t("nudges.categorize.applyButton", { count: acceptedRows.length })}
               </button>

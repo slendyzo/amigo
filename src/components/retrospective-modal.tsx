@@ -55,11 +55,11 @@ function formatEur(value: number) {
 function MomTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-md border border-slate-200 bg-white px-3 py-2 text-xs shadow-sm">
-      <div className="text-slate-500 mb-1">{payload[0]?.payload?.category}</div>
+    <div className="rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs shadow-sm">
+      <div className="text-slate-500 dark:text-slate-400 mb-1">{payload[0]?.payload?.category}</div>
       <div className="flex gap-3">
         <span className="text-slate-400">Prev: {formatEur(payload[0]?.payload?.prevTotal ?? 0)}</span>
-        <span className="text-slate-900 font-medium">
+        <span className="text-slate-900 dark:text-white font-medium">
           Now: {formatEur(payload[0]?.payload?.currentTotal ?? 0)}
         </span>
       </div>
@@ -120,16 +120,16 @@ export default function RetrospectiveModal({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.98 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full max-w-lg bg-white rounded-xl shadow-xl overflow-hidden"
+            className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-xl shadow-xl overflow-hidden"
           >
             {/* Header strip */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.35, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-              className="px-6 py-3 border-b border-slate-200"
+              className="px-6 py-3 border-b border-slate-200 dark:border-slate-700"
             >
-              <span className="text-xs font-medium uppercase tracking-wider text-slate-400">
+              <span className="text-xs font-medium uppercase tracking-wider text-slate-400 dark:text-slate-500">
                 {periodLabel}
               </span>
             </motion.div>
@@ -140,7 +140,7 @@ export default function RetrospectiveModal({
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-                className="text-xl font-semibold text-slate-900 leading-snug"
+                className="text-xl font-semibold text-slate-900 dark:text-white leading-snug"
               >
                 {insight.content.headline}
               </motion.h2>
@@ -150,7 +150,7 @@ export default function RetrospectiveModal({
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
-                className="rounded-lg border border-slate-200 divide-y divide-slate-100"
+                className="rounded-lg border border-slate-200 dark:border-slate-700 divide-y divide-slate-100 dark:divide-slate-800"
               >
                 {insight.content.observations.map((obs, i) => (
                   <div
@@ -158,10 +158,10 @@ export default function RetrospectiveModal({
                     className="px-4 py-3"
                     aria-label={`${t("retrospective.observationLabel")} ${i + 1}`}
                   >
-                    <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 mb-1">
+                    <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400 dark:text-slate-500 mb-1">
                       {indices[i]}
                     </div>
-                    <p className="text-sm text-slate-700 leading-relaxed">
+                    <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
                       {obs}
                     </p>
                   </div>
@@ -188,19 +188,19 @@ export default function RetrospectiveModal({
                       dataKey="category"
                       width={88}
                       tick={{ fontSize: 11, fill: "currentColor" }}
-                      className="text-slate-500"
+                      className="text-slate-500 dark:text-slate-400"
                       axisLine={false}
                       tickLine={false}
                     />
                     <Tooltip content={<MomTooltip />} cursor={false} />
                     <Bar dataKey="prevTotal" radius={[2, 2, 2, 2]}>
                       {chartData.map((_, idx) => (
-                        <Cell key={idx} className="fill-slate-200" fill="var(--tw-placeholder-color, #e2e8f0)" />
+                        <Cell key={idx} className="fill-slate-200 dark:fill-slate-700" fill="var(--tw-placeholder-color, #e2e8f0)" />
                       ))}
                     </Bar>
                     <Bar dataKey="currentTotal" radius={[2, 2, 2, 2]}>
                       {chartData.map((_, idx) => (
-                        <Cell key={idx} className="fill-slate-900" fill="#0f172a" />
+                        <Cell key={idx} className="fill-slate-900 dark:fill-white" fill="#0f172a" />
                       ))}
                     </Bar>
                   </BarChart>
@@ -212,19 +212,19 @@ export default function RetrospectiveModal({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 border-t border-slate-100"
+                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 border-t border-slate-100 dark:border-slate-800"
               >
                 <Link
                   href="/dashboard/insights"
                   onClick={handleClose}
-                  className="text-xs text-slate-500 hover:text-slate-800 transition-colors underline underline-offset-2"
+                  className="text-xs text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 transition-colors underline underline-offset-2"
                 >
                   {t("retrospective.viewArchive")}
                 </Link>
                 <button
                   onClick={handleClose}
                   disabled={isClosing}
-                  className="sm:ml-auto rounded-lg border border-slate-300 px-5 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="sm:ml-auto rounded-lg border border-slate-300 dark:border-slate-600 px-5 py-2 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {tCommon("close")}
                 </button>

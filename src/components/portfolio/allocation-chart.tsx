@@ -150,14 +150,14 @@ export function AllocationChart({ assets }: AllocationChartProps) {
   }, []);
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           {t("allocation")}
         </h3>
         {/* View toggle tabs */}
-        <div className="flex items-center gap-1 bg-slate-100 rounded-lg p-0.5">
+        <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 rounded-lg p-0.5">
           {tabs.map(({ key, label }) => (
             <button
               key={key}
@@ -165,7 +165,7 @@ export function AllocationChart({ assets }: AllocationChartProps) {
               className={`px-3 py-1 text-xs rounded-md font-medium transition-all duration-200 ${
                 view === key
                   ? "bg-[#0070f3] text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-700"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300"
               }`}
             >
               {label}
@@ -176,7 +176,7 @@ export function AllocationChart({ assets }: AllocationChartProps) {
 
       {/* Chart */}
       {slicesWithPct.length === 0 ? (
-        <div className="h-[280px] flex items-center justify-center text-slate-400 text-sm">
+        <div className="h-[280px] flex items-center justify-center text-slate-400 dark:text-slate-500 text-sm">
           {t("noAssets")}
         </div>
       ) : (
@@ -224,13 +224,13 @@ export function AllocationChart({ assets }: AllocationChartProps) {
                     className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: entry.color }}
                   />
-                  <span className="text-slate-600 truncate">{entry.name}</span>
+                  <span className="text-slate-600 dark:text-slate-400 truncate">{entry.name}</span>
                 </div>
                 <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                  <span className="font-medium text-slate-800">
+                  <span className="font-medium text-slate-800 dark:text-slate-200">
                     {formatAmount(entry.value)}
                   </span>
-                  <span className="text-slate-400 w-10 text-right">
+                  <span className="text-slate-400 dark:text-slate-500 w-10 text-right">
                     {entry.percentage.toFixed(1)}%
                   </span>
                 </div>

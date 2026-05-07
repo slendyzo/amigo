@@ -134,10 +134,10 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl p-5">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5">
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-slate-900">
+        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
           {t("performance")}
         </h3>
         {/* Range selector pills */}
@@ -149,7 +149,7 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
               className={`px-3 py-1 text-xs rounded-full font-medium transition-all duration-200 ${
                 range === r
                   ? "bg-[#0070f3] text-white shadow-sm"
-                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-100"
+                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
               }`}
             >
               {t(RANGE_LABEL_KEYS[r])}
@@ -162,10 +162,10 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
       {loading ? (
         <div className="h-[280px] w-full">
           {/* Skeleton */}
-          <div className="h-full w-full rounded-xl bg-slate-100 animate-pulse" />
+          <div className="h-full w-full rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
         </div>
       ) : snapshots.length < 2 ? (
-        <div className="h-[280px] flex flex-col items-center justify-center text-slate-400 gap-2">
+        <div className="h-[280px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2">
           <svg className="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
@@ -193,6 +193,7 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
                 <CartesianGrid
                   strokeDasharray="3 3"
                   stroke="#e2e8f0"
+                  className="dark:[stroke:#334155]"
                   vertical={false}
                 />
 
@@ -248,11 +249,11 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
 
           {/* Chart legend */}
           <div className="flex items-center justify-center gap-5 mt-3">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
               <span className="block w-4 h-[2px] bg-[#0070f3] rounded" />
               {t("totalValue")}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500">
+            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
               <span
                 className="block w-4 h-[2px] bg-slate-400 rounded"
                 style={{
