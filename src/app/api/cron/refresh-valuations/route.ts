@@ -17,10 +17,72 @@ import { getIndexAtOrBefore, getLatestIndex } from "@/lib/property-valuation-ind
 //   3. For every ACTIVE liability, recompute current balance using the loan
 //      amortization helper.
 //
+// Currentvalue precedence: even though we always append today's heuristic row
+// to history, we don't blindly use it as `currentValue`. A manual entry (any
+// age) or a recent market scrape (`live_scrape` / `web_archive` within the
+// asset-class freshness window) wins over the heuristic. This stops the cron
+// from overwriting €300k scraped comparables with a €115k INE index that
+// hasn't moved since 2004.
+//
 // Auth via x-cron-secret header matching CRON_SECRET env var. Failures per
 // asset/liability are logged and skipped; one bad row never blocks the rest.
 
 export const dynamic = "force-dynamic";
+
+// Real estate moves slowly; cars don't. Tune the windows independently.
+const VEHICLE_MARKET_FRESHNESS_DAYS = 30;
+const PROPERTY_MARKET_FRESHNESS_DAYS = 180;
+
+type CurrentValueWinner = {
+  valueEur: number;
+  source: string;
+  updatedAt: Date;
+};
+
+/**
+ * Pick which valuation should drive `currentValue`. Manual entries always
+ * win. Recent market evidence beats today's heuristic. Otherwise the
+ * heuristic wins.
+ */
+async function pickCurrentValue(args: {
+  realAssetId: string;
+  heuristicValueEur: number;
+  heuristicSource: string;
+  marketFreshnessDays: number;
+}): Promise<CurrentValueWinner> {
+  const { realAssetId, heuristicValueEur, heuristicSource, marketFreshnessDays } = args;
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - marketFreshnessDays * 86_400_000);
+
+  const [manual, recentMarket] = await Promise.all([
+    prisma.valuationHistory.findFirst({
+      where: { realAssetId, source: "manual" },
+      orderBy: { recordedAt: "desc" },
+    }),
+    prisma.valuationHistory.findFirst({
+      where: {
+        realAssetId,
+        source: { in: ["live_scrape", "web_archive"] },
+        recordedAt: { gte: cutoff },
+      },
+      orderBy: { recordedAt: "desc" },
+    }),
+  ]);
+
+  const candidates = [manual, recentMarket].filter(
+    (r): r is NonNullable<typeof manual> => r != null,
+  );
+  if (candidates.length === 0) {
+    return { valueEur: heuristicValueEur, source: heuristicSource, updatedAt: now };
+  }
+  candidates.sort((a, b) => b.recordedAt.getTime() - a.recordedAt.getTime());
+  const winner = candidates[0];
+  return {
+    valueEur: Number(winner.valueEur),
+    source: winner.source,
+    updatedAt: winner.recordedAt,
+  };
+}
 
 function authorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -63,26 +125,34 @@ export async function POST(request: Request) {
         mileage: asset.vehicle.mileage,
       });
 
-      await prisma.$transaction([
-        prisma.valuationHistory.create({
-          data: {
-            realAssetId: asset.id,
-            value: new Prisma.Decimal(result.valueEur),
-            valueEur: new Prisma.Decimal(result.valueEur),
-            currency: "EUR",
-            source: "heuristic",
-          },
-        }),
-        prisma.realAsset.update({
-          where: { id: asset.id },
-          data: {
-            currentValue: new Prisma.Decimal(result.valueEur),
-            currentValueEur: new Prisma.Decimal(result.valueEur),
-            currentValueUpdatedAt: new Date(),
-            currentValueSource: "heuristic",
-          },
-        }),
-      ]);
+      // Always append today's heuristic to history for chart continuity, but
+      // pick currentValue based on the most authoritative recent signal.
+      await prisma.valuationHistory.create({
+        data: {
+          realAssetId: asset.id,
+          value: new Prisma.Decimal(result.valueEur),
+          valueEur: new Prisma.Decimal(result.valueEur),
+          currency: "EUR",
+          source: "heuristic",
+        },
+      });
+
+      const winner = await pickCurrentValue({
+        realAssetId: asset.id,
+        heuristicValueEur: result.valueEur,
+        heuristicSource: "heuristic",
+        marketFreshnessDays: VEHICLE_MARKET_FRESHNESS_DAYS,
+      });
+
+      await prisma.realAsset.update({
+        where: { id: asset.id },
+        data: {
+          currentValue: new Prisma.Decimal(winner.valueEur),
+          currentValueEur: new Prisma.Decimal(winner.valueEur),
+          currentValueUpdatedAt: winner.updatedAt,
+          currentValueSource: winner.source,
+        },
+      });
       vehiclesProcessed++;
     } catch (err) {
       vehiclesFailed++;
@@ -121,34 +191,36 @@ export async function POST(request: Request) {
 
       // Don't append a ValuationHistory row for stale rebuilds — those carry no
       // new information and would clutter the chart with daily duplicates.
-      const writeOps: Prisma.PrismaPromise<unknown>[] = [];
       if (result.source === "heuristic") {
-        writeOps.push(
-          prisma.valuationHistory.create({
-            data: {
-              realAssetId: asset.id,
-              value: new Prisma.Decimal(result.valueEur),
-              valueEur: new Prisma.Decimal(result.valueEur),
-              currency: "EUR",
-              source: "heuristic",
-            },
-          }),
-        );
+        await prisma.valuationHistory.create({
+          data: {
+            realAssetId: asset.id,
+            value: new Prisma.Decimal(result.valueEur),
+            valueEur: new Prisma.Decimal(result.valueEur),
+            currency: "EUR",
+            source: "heuristic",
+          },
+        });
       } else {
         propertiesStale++;
       }
-      writeOps.push(
-        prisma.realAsset.update({
-          where: { id: asset.id },
-          data: {
-            currentValue: new Prisma.Decimal(result.valueEur),
-            currentValueEur: new Prisma.Decimal(result.valueEur),
-            currentValueUpdatedAt: new Date(),
-            currentValueSource: result.source,
-          },
-        }),
-      );
-      await prisma.$transaction(writeOps);
+
+      const winner = await pickCurrentValue({
+        realAssetId: asset.id,
+        heuristicValueEur: result.valueEur,
+        heuristicSource: result.source,
+        marketFreshnessDays: PROPERTY_MARKET_FRESHNESS_DAYS,
+      });
+
+      await prisma.realAsset.update({
+        where: { id: asset.id },
+        data: {
+          currentValue: new Prisma.Decimal(winner.valueEur),
+          currentValueEur: new Prisma.Decimal(winner.valueEur),
+          currentValueUpdatedAt: winner.updatedAt,
+          currentValueSource: winner.source,
+        },
+      });
       propertiesProcessed++;
     } catch (err) {
       propertiesFailed++;

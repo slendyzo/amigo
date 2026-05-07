@@ -4,10 +4,11 @@
 //
 // Visual grammar (canonical, applies to vehicles + properties):
 //   • Solid filled dot   = real scraped data (purchase / web_archive / live_scrape)
-//   • Hollow ring dot    = AI-estimated gap fill (ai_estimate)
+//   • Hollow ring dot    = model estimate (ai_estimate / heuristic / stale)
 //   • Diamond dot        = user-entered manual valuation (manual)
 //   • Faded reference line = INE index (property) or AI baseline (vehicle)
 //   • Tooltip            = source-aware ("Market data • 28 listings",
+//                          "Index estimate", "Depreciation curve",
 //                          "AI estimate", "Your entry: <note>")
 //
 // Loading state: skeleton card with shimmer + progress copy.
@@ -36,6 +37,8 @@ export type ValuePointSource =
   | "web_archive"
   | "live_scrape"
   | "ai_estimate"
+  | "heuristic"
+  | "stale"
   | "manual";
 
 export type ValuePoint = {
@@ -77,13 +80,15 @@ export type ValueOverTimeChartProps = {
     sourceWebArchive: string;
     sourceLiveScrape: string;
     sourceAiEstimate: string;
+    sourceHeuristic: string; // "Index estimate" (property) or "Depreciation curve" (vehicle)
+    sourceStale: string;
     sourceManual: string;
     listingsLabel: string; // "{n} listings"
     yourEntryLabel: string; // "Your entry"
-    aiEstimateLabel: string;
+    estimateLabel: string; // legend chip — covers ai_estimate + heuristic + stale
     methodologyToggle: string; // "How this chart is built"
     methodologyToggleHide: string;
-    methodologySummary: string; // "{real} market scrapes · {ai} AI fills · {manual} manual"
+    methodologySummary: string; // "{real} market scrapes · {estimates} estimates · {manual} manual"
   }>;
 };
 
@@ -99,13 +104,15 @@ const DEFAULT_COPY = {
   sourceWebArchive: "Market data",
   sourceLiveScrape: "Market data",
   sourceAiEstimate: "AI estimate",
+  sourceHeuristic: "Estimate",
+  sourceStale: "Stale",
   sourceManual: "Your entry",
   listingsLabel: "{n} listings",
   yourEntryLabel: "Your entry",
-  aiEstimateLabel: "AI estimate",
+  estimateLabel: "Estimate",
   methodologyToggle: "How this chart is built",
   methodologyToggleHide: "Hide details",
-  methodologySummary: "{real} market scrapes · {ai} AI fills · {manual} manual",
+  methodologySummary: "{real} market scrapes · {estimates} estimates · {manual} manual",
 } as const;
 
 const COLOR = "var(--primary)";
@@ -273,7 +280,13 @@ export function ValueOverTimeChart({
         </ResponsiveContainer>
       </div>
 
-      <Legend copy={copy} hasManual={sortedPoints.some((p) => p.source === "manual")} hasEstimate={sortedPoints.some((p) => p.source === "ai_estimate")} />
+      <Legend
+        copy={copy}
+        hasManual={sortedPoints.some((p) => p.source === "manual")}
+        hasEstimate={sortedPoints.some(
+          (p) => p.source === "ai_estimate" || p.source === "heuristic" || p.source === "stale",
+        )}
+      />
 
       <MethodologySection
         points={sortedPoints}
@@ -356,7 +369,7 @@ function SourceDot({ cx, cy, payload, active }: DotProps) {
     );
   }
 
-  if (src === "ai_estimate") {
+  if (src === "ai_estimate" || src === "heuristic" || src === "stale") {
     return <circle cx={cx} cy={cy} r={r} fill="var(--card)" stroke={stroke} strokeWidth={1.75} />;
   }
 
@@ -394,6 +407,10 @@ function CustomTooltip({ active, payload, copy }: TooltipShape) {
       ? copy.sourceWebArchive
       : entry.src === "ai_estimate"
       ? copy.sourceAiEstimate
+      : entry.src === "heuristic"
+      ? copy.sourceHeuristic
+      : entry.src === "stale"
+      ? copy.sourceStale
       : copy.sourceManual
     : null;
 
@@ -441,7 +458,7 @@ function Legend({
       </span>
       {hasEstimate && (
         <span className="inline-flex items-center gap-1.5">
-          <span className="inline-block h-2 w-2 rounded-full border border-primary bg-card" /> {copy.aiEstimateLabel}
+          <span className="inline-block h-2 w-2 rounded-full border border-primary bg-card" /> {copy.estimateLabel}
         </span>
       )}
       {hasManual && (
@@ -470,7 +487,7 @@ function MethodologySection({
 
   const counts = useMemo(() => {
     let real = 0;
-    let ai = 0;
+    let estimates = 0;
     let manual = 0;
     let purchase = 0;
     const realDates: string[] = [];
@@ -478,20 +495,20 @@ function MethodologySection({
       if (p.source === "web_archive" || p.source === "live_scrape") {
         real++;
         realDates.push(p.date);
-      } else if (p.source === "ai_estimate") {
-        ai++;
+      } else if (p.source === "ai_estimate" || p.source === "heuristic" || p.source === "stale") {
+        estimates++;
       } else if (p.source === "manual") {
         manual++;
       } else if (p.source === "purchase") {
         purchase++;
       }
     }
-    return { real, ai, manual, purchase, realDates };
+    return { real, estimates, manual, purchase, realDates };
   }, [points]);
 
   const summary = fmt(copy.methodologySummary, {
     real: counts.real,
-    ai: counts.ai,
+    estimates: counts.estimates,
     manual: counts.manual,
   });
 

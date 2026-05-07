@@ -88,11 +88,13 @@ const KNOWN_SOURCES: ValuePointSource[] = [
   "web_archive",
   "live_scrape",
   "ai_estimate",
+  "heuristic",
+  "stale",
   "manual",
 ];
 
 function normalizeSource(s: string): ValuePointSource {
-  return (KNOWN_SOURCES as string[]).includes(s) ? (s as ValuePointSource) : "ai_estimate";
+  return (KNOWN_SOURCES as string[]).includes(s) ? (s as ValuePointSource) : "heuristic";
 }
 
 type ExpenseRow = {
@@ -362,7 +364,11 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
             : undefined
         }
         onAddValuation={() => setShowAddValuation(true)}
-        copy={{ title: t("valueOverTime") }}
+        copy={{
+          title: t("valueOverTime"),
+          sourceHeuristic: t("valueSourceHint.sources.heuristic.vehicle.label"),
+          sourceStale: t("valueSourceHint.sources.stale.label"),
+        }}
       />
 
       {/* Loans */}
