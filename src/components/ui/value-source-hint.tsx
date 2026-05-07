@@ -4,20 +4,24 @@
 // reveals a popover explaining where the number comes from + when it was
 // last refreshed.
 //
-// Edge-collision: on first open we measure the trigger's viewport position
-// and flip the popover's horizontal anchor (left / center / right) so it
-// stays inside the card instead of clipping past the right edge.
+// Rendered through a Portal with position:fixed so it can escape any
+// `overflow-hidden` ancestor (e.g. the rounded card it lives in). We
+// recompute coordinates on open + on scroll/resize so it tracks the trigger.
 //
 // The component sits inside <Link> wrappers, so we stopPropagation on the
-// trigger to prevent accidental navigation when the user clicks the icon
-// to keep the tooltip pinned.
+// trigger to prevent accidental navigation when the user taps the icon.
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { HelpCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
+const POPOVER_WIDTH_PX = 256;
+const VIEWPORT_MARGIN_PX = 12;
+const HOVER_GRACE_MS = 120;
 
 export type ValueSourceHintProps = {
   /** RealAsset.currentValueSource — one of the documented source labels. */
@@ -31,72 +35,32 @@ export type ValueSourceHintProps = {
   className?: string;
 };
 
-const SOURCE_DESCRIPTIONS: Record<
-  string,
-  (assetType: "vehicle" | "property") => { label: string; body: string }
-> = {
-  live_scrape: (t) => ({
-    label: "Market data",
-    body:
-      t === "vehicle"
-        ? "Median of comparable Standvirtual + OLX listings, refreshed every 5 days. Filtered by your mileage (±15%)."
-        : "Median of comparable Idealista + Imovirtual listings for your concelho, refreshed every 5 days.",
-  }),
-  web_archive: () => ({
-    label: "Market data (archived)",
-    body:
-      "Median of comparable listings from a Web Archive snapshot near this date. Useful for backfilled history before the live cron started running.",
-  }),
-  heuristic: (t) =>
-    t === "vehicle"
-      ? {
-          label: "Depreciation curve",
-          body:
-            "Computed from the standard EU depreciation curve (15% year 1, 12% year 2, 10% years 3–5, 7% thereafter), adjusted for your mileage. Updated daily.",
-        }
-      : {
-          label: "Index estimate",
-          body:
-            "Computed from the INE concelho housing index, rebased to your purchase price at the purchase quarter. Updated when the index publishes.",
-        },
-  ai_estimate: () => ({
-    label: "AI estimate",
-    body:
-      "Z.AI GLM-4.6 estimated this value by interpolating between the surrounding real-data anchors. It's interpolation, not market data.",
-  }),
-  manual: () => ({
-    label: "Manual entry",
-    body: "You logged this value yourself (independent appraisal, insurance value, or offer received).",
-  }),
-  purchase: () => ({
-    label: "Purchase price",
-    body: "The original purchase price you entered when adding this asset.",
-  }),
-  stale: () => ({
-    label: "Stale",
-    body:
-      "We don't have fresh enough data to recompute. Keeping the last known value. Will refresh when new market data lands.",
-  }),
+const SOURCE_KEYS: Record<string, string> = {
+  live_scrape: "liveScrape",
+  web_archive: "webArchive",
+  heuristic: "heuristic",
+  ai_estimate: "aiEstimate",
+  manual: "manual",
+  purchase: "purchase",
+  stale: "stale",
 };
 
-function formatRelative(iso: string): string {
+type RelativeKey = "justNow" | "minutes" | "hours" | "days" | "months" | "years";
+
+function formatRelative(iso: string): { key: RelativeKey; count: number } {
   const ms = Date.now() - new Date(iso).getTime();
-  if (!Number.isFinite(ms) || ms < 0) return "just now";
+  if (!Number.isFinite(ms) || ms < 0) return { key: "justNow", count: 0 };
   const min = ms / 60_000;
-  if (min < 1) return "just now";
-  if (min < 60) return `${Math.round(min)} min ago`;
+  if (min < 1) return { key: "justNow", count: 0 };
+  if (min < 60) return { key: "minutes", count: Math.round(min) };
   const hr = min / 60;
-  if (hr < 24) return `${Math.round(hr)}h ago`;
+  if (hr < 24) return { key: "hours", count: Math.round(hr) };
   const day = hr / 24;
-  if (day < 30) return `${Math.round(day)}d ago`;
+  if (day < 30) return { key: "days", count: Math.round(day) };
   const mo = day / 30.44;
-  if (mo < 12) return `${Math.round(mo)}mo ago`;
-  return `${Math.round(mo / 12)}y ago`;
+  if (mo < 12) return { key: "months", count: Math.round(mo) };
+  return { key: "years", count: Math.round(mo / 12) };
 }
-
-type Align = "left" | "center" | "right";
-
-const POPOVER_WIDTH_PX = 256; // matches w-64
 
 export function ValueSourceHint({
   source,
@@ -105,92 +69,164 @@ export function ValueSourceHint({
   assetType = "vehicle",
   className,
 }: ValueSourceHintProps) {
+  const t = useTranslations("rwa.valueSourceHint");
   const [open, setOpen] = useState(false);
-  const [align, setAlign] = useState<Align>("center");
+  const [coords, setCoords] = useState<{ top: number; left: number } | null>(null);
+  const [mounted, setMounted] = useState(false);
   const triggerRef = useRef<HTMLButtonElement | null>(null);
-  const desc = source ? SOURCE_DESCRIPTIONS[source] : null;
+  const popoverRef = useRef<HTMLDivElement | null>(null);
+  const closeTimerRef = useRef<number | null>(null);
 
-  // Decide horizontal anchor on every open so it stays inside the viewport
-  // even after layout shifts.
   useEffect(() => {
-    if (!open || !triggerRef.current) return;
+    setMounted(true);
+  }, []);
+
+  const sourceKey = source ? SOURCE_KEYS[source] : null;
+
+  const computePosition = useCallback(() => {
+    if (!triggerRef.current) return;
     const rect = triggerRef.current.getBoundingClientRect();
     const vw = window.innerWidth;
     const half = POPOVER_WIDTH_PX / 2;
-    const margin = 12; // breathing room from viewport edge
-    if (rect.left + rect.width / 2 + half + margin > vw) {
-      setAlign("right");
-    } else if (rect.left + rect.width / 2 - half - margin < 0) {
-      setAlign("left");
+    const triggerCenter = rect.left + rect.width / 2;
+    let left: number;
+    if (triggerCenter + half + VIEWPORT_MARGIN_PX > vw) {
+      left = Math.max(VIEWPORT_MARGIN_PX, vw - POPOVER_WIDTH_PX - VIEWPORT_MARGIN_PX);
+    } else if (triggerCenter - half - VIEWPORT_MARGIN_PX < 0) {
+      left = VIEWPORT_MARGIN_PX;
     } else {
-      setAlign("center");
+      left = triggerCenter - half;
     }
+    setCoords({ top: rect.bottom + 6, left });
+  }, []);
+
+  useEffect(() => {
+    if (!open) return;
+    computePosition();
+    const onUpdate = () => computePosition();
+    window.addEventListener("scroll", onUpdate, true);
+    window.addEventListener("resize", onUpdate);
+    return () => {
+      window.removeEventListener("scroll", onUpdate, true);
+      window.removeEventListener("resize", onUpdate);
+    };
+  }, [open, computePosition]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onDocDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        triggerRef.current?.contains(target) ||
+        popoverRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setOpen(false);
+    };
+    document.addEventListener("mousedown", onDocDown);
+    return () => document.removeEventListener("mousedown", onDocDown);
   }, [open]);
 
-  if (!desc) return null;
-  const { label, body } = desc(assetType);
+  if (!sourceKey) return null;
 
-  // Stop propagation so tapping the icon doesn't navigate the parent Link.
+  const cancelClose = () => {
+    if (closeTimerRef.current != null) {
+      window.clearTimeout(closeTimerRef.current);
+      closeTimerRef.current = null;
+    }
+  };
+
+  const scheduleClose = () => {
+    cancelClose();
+    closeTimerRef.current = window.setTimeout(() => setOpen(false), HOVER_GRACE_MS);
+  };
+
   const handleClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setOpen((v) => !v);
   };
 
-  const anchorClass =
-    align === "right"
-      ? "right-0"
-      : align === "left"
-      ? "left-0"
-      : "left-1/2 -translate-x-1/2";
+  let label: string;
+  let body: string;
+  if (sourceKey === "liveScrape") {
+    label = t("sources.liveScrape.label");
+    body = t(`sources.liveScrape.${assetType}Body`);
+  } else if (sourceKey === "heuristic") {
+    label = t(`sources.heuristic.${assetType}.label`);
+    body = t(`sources.heuristic.${assetType}.body`);
+  } else {
+    label = t(`sources.${sourceKey}.label`);
+    body = t(`sources.${sourceKey}.body`);
+  }
+
+  let updatedText: string | null = null;
+  if (updatedAt) {
+    const { key, count } = formatRelative(updatedAt);
+    const time = key === "justNow" ? t("relative.justNow") : t(`relative.${key}`, { count });
+    updatedText = t("updated", { time });
+  }
 
   return (
     <span
       className={cn("relative inline-flex", className)}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => {
+        cancelClose();
+        setOpen(true);
+      }}
+      onMouseLeave={scheduleClose}
     >
       <button
         ref={triggerRef}
         type="button"
         onClick={handleClick}
         className="inline-flex items-center justify-center rounded-full p-0.5 text-muted-foreground/60 transition-colors hover:bg-muted hover:text-foreground/80"
-        aria-label={`About this value: ${label}`}
+        aria-label={label}
       >
         <HelpCircle className="h-3 w-3" strokeWidth={2.25} />
       </button>
 
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0, y: -4, scale: 0.97 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -4, scale: 0.97 }}
-            transition={{ duration: 0.16, ease: EASE }}
-            role="tooltip"
-            className={cn(
-              "absolute top-full z-50 mt-1 w-64",
-              anchorClass,
-              "rounded-lg border border-border/80 bg-popover/98 p-3 text-left shadow-2xl backdrop-blur-md",
+      {mounted &&
+        createPortal(
+          <AnimatePresence>
+            {open && coords && (
+              <motion.div
+                ref={popoverRef}
+                initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                transition={{ duration: 0.16, ease: EASE }}
+                role="tooltip"
+                style={{
+                  position: "fixed",
+                  top: coords.top,
+                  left: coords.left,
+                  width: POPOVER_WIDTH_PX,
+                }}
+                className="z-[100] rounded-lg border border-border/80 bg-popover/98 p-3 text-left shadow-2xl backdrop-blur-md"
+                onMouseEnter={cancelClose}
+                onMouseLeave={scheduleClose}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              >
+                <p className="text-[11px] font-semibold uppercase tracking-[0.6px] text-foreground/90">
+                  {label}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{body}</p>
+                <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground/80">
+                  {updatedText ? <span>{updatedText}</span> : <span />}
+                  {sampleSize != null && sampleSize > 0 && (
+                    <span className="tabular-nums">{t("listings", { count: sampleSize })}</span>
+                  )}
+                </div>
+              </motion.div>
             )}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-            }}
-          >
-            <p className="text-[11px] font-semibold uppercase tracking-[0.6px] text-foreground/90">
-              {label}
-            </p>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{body}</p>
-            <div className="mt-2 flex items-center justify-between text-[10px] text-muted-foreground/80">
-              {updatedAt ? <span>Updated {formatRelative(updatedAt)}</span> : <span />}
-              {sampleSize != null && sampleSize > 0 && (
-                <span className="tabular-nums">{sampleSize} listings</span>
-              )}
-            </div>
-          </motion.div>
+          </AnimatePresence>,
+          document.body,
         )}
-      </AnimatePresence>
     </span>
   );
 }

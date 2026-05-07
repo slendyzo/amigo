@@ -1674,7 +1674,56 @@
       "OTHER": "Outro"
     },
     "originalMsrp": "Preço de novo",
-    "aiSuggestedHint": "Sugerido por IA · podes alterar tudo abaixo."
+    "aiSuggestedHint": "Sugerido por IA · podes alterar tudo abaixo.",
+    "valueSourceHint": {
+      "updated": "Atualizado {time}",
+      "listings": "{count} anúncios",
+      "relative": {
+        "justNow": "agora mesmo",
+        "minutes": "há {count} min",
+        "hours": "há {count}h",
+        "days": "há {count}d",
+        "months": "há {count} meses",
+        "years": "há {count} anos"
+      },
+      "sources": {
+        "liveScrape": {
+          "label": "Dados de mercado",
+          "vehicleBody": "Mediana de anúncios comparáveis no Standvirtual + OLX, atualizada a cada 5 dias. Filtrada pela tua quilometragem (±15%).",
+          "propertyBody": "Mediana de anúncios comparáveis no Idealista + Imovirtual para o teu concelho, atualizada a cada 5 dias."
+        },
+        "webArchive": {
+          "label": "Dados de mercado (arquivado)",
+          "body": "Mediana de anúncios comparáveis a partir de um snapshot do Web Archive próximo desta data. Útil para o histórico anterior ao arranque do cron."
+        },
+        "heuristic": {
+          "vehicle": {
+            "label": "Curva de depreciação",
+            "body": "Calculado a partir da curva de depreciação padrão da UE (15% ano 1, 12% ano 2, 10% anos 3–5, 7% depois), ajustada pela tua quilometragem. Atualizado diariamente."
+          },
+          "property": {
+            "label": "Estimativa indexada",
+            "body": "Calculada a partir do índice de habitação do INE para o teu concelho, rebaseada ao preço de compra no trimestre da compra. Atualizada quando o índice é publicado."
+          }
+        },
+        "aiEstimate": {
+          "label": "Estimativa por IA",
+          "body": "O Z.AI GLM-4.6 estimou este valor interpolando entre os pontos de dados reais à volta. É interpolação, não dados de mercado."
+        },
+        "manual": {
+          "label": "Entrada manual",
+          "body": "Registaste este valor tu próprio (avaliação independente, valor do seguro ou proposta recebida)."
+        },
+        "purchase": {
+          "label": "Preço de compra",
+          "body": "O preço de compra original que introduziste ao adicionar este ativo."
+        },
+        "stale": {
+          "label": "Desatualizado",
+          "body": "Não temos dados suficientemente recentes para recalcular. A manter o último valor conhecido. Vai atualizar quando chegarem novos dados de mercado."
+        }
+      }
+    }
   },
   "aiAdvisor": {
     "title": "Consultor IA",

@@ -1676,7 +1676,56 @@
       "OTHER": "Autre"
     },
     "originalMsrp": "Prix neuf",
-    "aiSuggestedHint": "Suggéré par IA · vous pouvez tout modifier ci-dessous."
+    "aiSuggestedHint": "Suggéré par IA · vous pouvez tout modifier ci-dessous.",
+    "valueSourceHint": {
+      "updated": "Mis à jour {time}",
+      "listings": "{count} annonces",
+      "relative": {
+        "justNow": "à l'instant",
+        "minutes": "il y a {count} min",
+        "hours": "il y a {count} h",
+        "days": "il y a {count} j",
+        "months": "il y a {count} mois",
+        "years": "il y a {count} ans"
+      },
+      "sources": {
+        "liveScrape": {
+          "label": "Données de marché",
+          "vehicleBody": "Médiane des annonces comparables sur Standvirtual + OLX, actualisée tous les 5 jours. Filtrée par votre kilométrage (±15%).",
+          "propertyBody": "Médiane des annonces comparables sur Idealista + Imovirtual pour votre concelho, actualisée tous les 5 jours."
+        },
+        "webArchive": {
+          "label": "Données de marché (archivées)",
+          "body": "Médiane d'annonces comparables issues d'un instantané Web Archive proche de cette date. Utile pour l'historique antérieur au lancement du cron."
+        },
+        "heuristic": {
+          "vehicle": {
+            "label": "Courbe de dépréciation",
+            "body": "Calculé à partir de la courbe de dépréciation standard UE (15% an 1, 12% an 2, 10% années 3–5, 7% ensuite), ajusté à votre kilométrage. Mis à jour quotidiennement."
+          },
+          "property": {
+            "label": "Estimation indicielle",
+            "body": "Calculée à partir de l'indice de logement INE pour votre concelho, rebasée sur votre prix d'achat au trimestre d'achat. Mise à jour à chaque publication de l'indice."
+          }
+        },
+        "aiEstimate": {
+          "label": "Estimation IA",
+          "body": "Z.AI GLM-4.6 a estimé cette valeur en interpolant entre les ancrages de données réelles environnants. C'est de l'interpolation, pas des données de marché."
+        },
+        "manual": {
+          "label": "Saisie manuelle",
+          "body": "Vous avez enregistré cette valeur vous-même (expertise indépendante, valeur d'assurance ou offre reçue)."
+        },
+        "purchase": {
+          "label": "Prix d'achat",
+          "body": "Le prix d'achat initial que vous avez saisi lors de l'ajout de cet actif."
+        },
+        "stale": {
+          "label": "Obsolète",
+          "body": "Nous n'avons pas de données assez récentes pour recalculer. Conservation de la dernière valeur connue. Sera mise à jour à l'arrivée de nouvelles données de marché."
+        }
+      }
+    }
   },
   "aiAdvisor": {
     "title": "Conseiller IA",

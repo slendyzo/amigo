@@ -1705,7 +1705,56 @@
       "OTHER": "Other"
     },
     "originalMsrp": "Original MSRP",
-    "aiSuggestedHint": "Suggested by AI · you can override anything below."
+    "aiSuggestedHint": "Suggested by AI · you can override anything below.",
+    "valueSourceHint": {
+      "updated": "Updated {time}",
+      "listings": "{count} listings",
+      "relative": {
+        "justNow": "just now",
+        "minutes": "{count} min ago",
+        "hours": "{count}h ago",
+        "days": "{count}d ago",
+        "months": "{count}mo ago",
+        "years": "{count}y ago"
+      },
+      "sources": {
+        "liveScrape": {
+          "label": "Market data",
+          "vehicleBody": "Median of comparable Standvirtual + OLX listings, refreshed every 5 days. Filtered by your mileage (±15%).",
+          "propertyBody": "Median of comparable Idealista + Imovirtual listings for your concelho, refreshed every 5 days."
+        },
+        "webArchive": {
+          "label": "Market data (archived)",
+          "body": "Median of comparable listings from a Web Archive snapshot near this date. Useful for backfilled history before the live cron started running."
+        },
+        "heuristic": {
+          "vehicle": {
+            "label": "Depreciation curve",
+            "body": "Computed from the standard EU depreciation curve (15% year 1, 12% year 2, 10% years 3–5, 7% thereafter), adjusted for your mileage. Updated daily."
+          },
+          "property": {
+            "label": "Index estimate",
+            "body": "Computed from the INE concelho housing index, rebased to your purchase price at the purchase quarter. Updated when the index publishes."
+          }
+        },
+        "aiEstimate": {
+          "label": "AI estimate",
+          "body": "Z.AI GLM-4.6 estimated this value by interpolating between the surrounding real-data anchors. It's interpolation, not market data."
+        },
+        "manual": {
+          "label": "Manual entry",
+          "body": "You logged this value yourself (independent appraisal, insurance value, or offer received)."
+        },
+        "purchase": {
+          "label": "Purchase price",
+          "body": "The original purchase price you entered when adding this asset."
+        },
+        "stale": {
+          "label": "Stale",
+          "body": "We don't have fresh enough data to recompute. Keeping the last known value. Will refresh when new market data lands."
+        }
+      }
+    }
   },
   "aiAdvisor": {
     "title": "AI Advisor",
