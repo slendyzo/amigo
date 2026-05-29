@@ -23,6 +23,8 @@ export type AssetTypeForParse = "VEHICLE" | "PROPERTY";
 export type ParsedVehicleListing = {
   price: number;
   currency: string;
+  make: string | null;
+  model: string | null;
   year: number | null;
   mileage: number | null;
   trim: string | null;
@@ -46,6 +48,59 @@ export type ParseListingsInput = {
   assetType: AssetTypeForParse;
 };
 
+// ─── Make/model matching ──────────────────────────────────────────────────────
+//
+// The scrapers occasionally return cross-category junk (a CFMoto 450NK search
+// surfacing MINI Coopers from the cars index). Before any median is computed we
+// drop listings that don't actually match the asset's make + model. Without this
+// guard the median is whatever soup the search returned — that's how Nuno's
+// €4.5k bike read €23k.
+
+// Lowercase and strip everything that isn't a letter or digit, so "MX-5",
+// "mx 5" and "MX5" all collapse to "mx5", and "Mercedes-Benz" → "mercedesbenz".
+function normalizeToken(s: string | null | undefined): string {
+  if (!s) return "";
+  return s.toLowerCase().replace(/[^a-z0-9]/g, "");
+}
+
+// Lenient bidirectional containment: "mercedes" matches "mercedesbenz",
+// "450nk" matches "450nkabs". Either being empty is not a match.
+function tokensRelated(a: string, b: string): boolean {
+  if (!a || !b) return false;
+  return a.includes(b) || b.includes(a);
+}
+
+/**
+ * True if a scraped vehicle listing plausibly refers to the same make + model
+ * as the asset being valued. Uses the listing's extracted make/model when
+ * present, and falls back to the listing URL slug (which always carries the
+ * make/model on Standvirtual/OLX). A listing we can't verify at all is rejected
+ * — for valuation we'd rather drop an ambiguous comp than poison the median.
+ */
+export function vehicleListingMatches(
+  listing: ParsedVehicleListing,
+  spec: { make: string; model: string },
+): boolean {
+  const specMake = normalizeToken(spec.make);
+  const specModel = normalizeToken(spec.model);
+  if (!specMake || !specModel) return true; // nothing to match against — don't filter
+
+  const listingMake = normalizeToken(listing.make);
+  const listingModel = normalizeToken(listing.model);
+
+  if (listingMake && listingModel) {
+    return tokensRelated(listingMake, specMake) && tokensRelated(listingModel, specModel);
+  }
+
+  // Fallback: the detail URL slug carries make + model on every site we scrape.
+  const urlNorm = normalizeToken(listing.url);
+  if (urlNorm) {
+    return urlNorm.includes(specMake) && urlNorm.includes(specModel);
+  }
+
+  return false;
+}
+
 // Soft cap on cleaned HTML sent to the model. GLM-4.6 supports a large context
 // but listings are dense — keeping each chunk modest keeps cost predictable
 // and avoids tail truncation of the tool-call output.
@@ -56,6 +111,8 @@ const SYSTEM_PROMPT_VEHICLE = `You are a vehicle listing extractor for Portugues
 For each listing, extract:
 - price: the asking price as a number, in the listing's currency. Strip thousand separators ("18 500 €" → 18500). If only "Preço sob consulta" / "Price on request" is shown, omit the listing entirely.
 - currency: the ISO code ("EUR" almost always; "USD" only if clearly marked).
+- make: the manufacturer/brand exactly as shown ("Mazda", "CFMoto", "Mercedes-Benz"), or null if not shown.
+- model: the model name only, without the brand ("MX-5", "450NK", "Classe A"), or null if not shown.
 - year: the model year (4-digit), or null if not shown.
 - mileage: kilometres as an integer, or null if not shown. Convert "180.000 km" or "180,000 km" to 180000.
 - trim: the trim/version string as the seller wrote it (e.g. "RF GT", "Skyactiv-G 2.0 Sport"), or null.
@@ -98,12 +155,14 @@ const TOOL_VEHICLE = {
             properties: {
               price: { type: "number" },
               currency: { type: "string" },
+              make: { type: ["string", "null"] },
+              model: { type: ["string", "null"] },
               year: { type: ["integer", "null"] },
               mileage: { type: ["integer", "null"] },
               trim: { type: ["string", "null"] },
               url: { type: ["string", "null"] },
             },
-            required: ["price", "currency", "year", "mileage", "trim", "url"],
+            required: ["price", "currency", "make", "model", "year", "mileage", "trim", "url"],
           },
         },
       },
@@ -176,6 +235,8 @@ export async function parseVehicleListings(
     out.push({
       price,
       currency: typeof item.currency === "string" && item.currency.length <= 5 ? item.currency : "EUR",
+      make: nullableString(item.make),
+      model: nullableString(item.model),
       year: nullableInt(item.year),
       mileage: nullableInt(item.mileage),
       trim: nullableString(item.trim),

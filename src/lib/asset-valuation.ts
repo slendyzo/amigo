@@ -78,6 +78,24 @@ function round2(n: number): number {
   return Math.round(n * 100) / 100;
 }
 
+// ─── Scrape sanity clamp ──────────────────────────────────────────────────────
+//
+// A scraped market median above this multiple of the purchase price is almost
+// certainly cross-category pollution (a €4.5k bike "valued" off €30k cars),
+// not a real comp. We reject it and fall back to the heuristic. 1.5× leaves
+// headroom for a bargain buy or mild appreciation while still catching the
+// €4.5k → €23k failures. Universal backstop for any vehicle, any source.
+export const SCRAPE_VALUE_CEILING_MULTIPLE = 1.5;
+
+export function scrapeMedianIsPlausible(
+  medianEur: number,
+  purchasePriceEur: number,
+): boolean {
+  if (!(purchasePriceEur > 0) || !Number.isFinite(purchasePriceEur)) return true;
+  if (!(medianEur > 0) || !Number.isFinite(medianEur)) return false;
+  return medianEur <= purchasePriceEur * SCRAPE_VALUE_CEILING_MULTIPLE;
+}
+
 // ─── Property ───────────────────────────────────────────────────────────────
 
 export type PropertyValueInput = {

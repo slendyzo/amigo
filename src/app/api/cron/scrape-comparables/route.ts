@@ -6,9 +6,11 @@ import { scrapeStandvirtual } from "@/lib/scrapers/standvirtual";
 import { scrapeOlx } from "@/lib/scrapers/olx";
 import { scrapeIdealista } from "@/lib/scrapers/idealista";
 import { scrapeImovirtual } from "@/lib/scrapers/imovirtual";
-import type {
-  ParsedPropertyListing,
-  ParsedVehicleListing,
+import { computeVehicleHeuristicValue, scrapeMedianIsPlausible } from "@/lib/asset-valuation";
+import {
+  vehicleListingMatches,
+  type ParsedPropertyListing,
+  type ParsedVehicleListing,
 } from "@/lib/listing-html-parser";
 
 // Forward-rolling 5-day cron. Scrapes live listings for every active spec,
@@ -111,7 +113,12 @@ export async function POST(request: Request) {
         }).catch(() => [] as ParsedVehicleListing[]),
       ]);
 
-      const allListings = [...sv, ...olx];
+      // Reject cross-category junk before it can poison the median: a CFMoto
+      // 450NK search must not be valued off MINI Coopers scraped from the cars
+      // index. Match on the listing's make/model (URL-slug fallback inside).
+      const allListings = [...sv, ...olx].filter((l) =>
+        vehicleListingMatches(l, { make: spec.make, model: spec.model }),
+      );
       if (allListings.length === 0) {
         vehicleSpecsFailed++;
         continue;
@@ -148,6 +155,33 @@ export async function POST(request: Request) {
         if (pool.length < MIN_MEDIAN_SAMPLES) continue;
 
         const med = median(pool.map((l) => l.price));
+        const purchaseEur = Number(asset.purchasePriceEur);
+
+        // Sanity clamp: a median wildly above purchase price is pollution, not
+        // a comp. Reject it and heal currentValue back to the heuristic so a
+        // prior bad live_scrape value (e.g. the €23k bike) doesn't linger.
+        if (!scrapeMedianIsPlausible(med, purchaseEur)) {
+          const h = computeVehicleHeuristicValue({
+            purchasePriceEur: purchaseEur,
+            year: asset.vehicle!.year,
+            mileage,
+          });
+          await prisma.realAsset.update({
+            where: { id: asset.id },
+            data: {
+              currentValue: new Prisma.Decimal(h.valueEur),
+              currentValueEur: new Prisma.Decimal(h.valueEur),
+              currentValueUpdatedAt: new Date(),
+              currentValueSource: "heuristic",
+            },
+          });
+          vehicleSpecsFailed++;
+          console.warn(
+            `[cron/scrape-comparables] clamped implausible median €${med} for ${spec.make} ${spec.model} (purchase €${purchaseEur}) → heuristic €${h.valueEur}`,
+          );
+          continue;
+        }
+
         await prisma.$transaction([
           prisma.valuationHistory.create({
             data: {

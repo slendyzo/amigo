@@ -9,9 +9,10 @@
 import { createHash } from "node:crypto";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import type {
-  ParsedPropertyListing,
-  ParsedVehicleListing,
+import {
+  vehicleListingMatches,
+  type ParsedPropertyListing,
+  type ParsedVehicleListing,
 } from "@/lib/listing-html-parser";
 
 const MILEAGE_BAND = 0.15;
@@ -154,12 +155,16 @@ export async function getComparablesForAsset(
   let filter: "area" | "mileage" | "none" = "none";
   let ownAreaM2: number | null = null;
   let ownMileage: number | null = null;
+  let ownMake: string | null = null;
+  let ownModel: string | null = null;
 
   if (isVehicle) {
     if (!asset.vehicle) return { available: false, reason: "no_snapshot" };
     const v = asset.vehicle;
     specHash = vehicleSpecHash(v.year, v.brand, v.model, v.trim ?? null);
     ownMileage = v.mileage ?? null;
+    ownMake = v.brand;
+    ownModel = v.model;
     filter = "mileage";
     userAsset = {
       assetType: "vehicle",
@@ -202,6 +207,17 @@ export async function getComparablesForAsset(
   let pool: Array<ParsedVehicleListing | ParsedPropertyListing> = rawListings.filter(
     (l) => typeof l.price === "number" && l.price > 0,
   );
+
+  // Drop cross-category junk so the modal never shows comps from the wrong
+  // make/model (e.g. MINI Coopers behind a CFMoto estimate). Old snapshots
+  // predate the make/model fields — vehicleListingMatches falls back to the
+  // URL slug, which those snapshots do carry.
+  if (isVehicle && ownMake && ownModel) {
+    pool = pool.filter((l) =>
+      vehicleListingMatches(l as ParsedVehicleListing, { make: ownMake!, model: ownModel! }),
+    );
+    if (pool.length === 0) return { available: false, reason: "no_listings" };
+  }
 
   if (isVehicle && ownMileage != null && ownMileage > 0) {
     const filtered = pool.filter((l) => {

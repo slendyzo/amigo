@@ -22,8 +22,10 @@
 import { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { convertToEur } from "./currency";
+import { scrapeMedianIsPlausible } from "./asset-valuation";
 import {
   parseVehicleListings,
+  vehicleListingMatches,
   type ParsedPropertyListing,
   type ParsedVehicleListing,
 } from "./listing-html-parser";
@@ -183,7 +185,11 @@ async function runVehicleBackfill(
       });
       let added = false;
       for (const snap of snaps) {
-        const dot = await medianFromVehicleSnapshot(snap.listings, projectMileage(snap.archiveDate));
+        const dot = await medianFromVehicleSnapshot(snap.listings, projectMileage(snap.archiveDate), {
+          make: vehicle.brand,
+          model: vehicle.model,
+          purchasePriceEur,
+        });
         if (dot) {
           realDots.push({
             recordedAt: snap.archiveDate,
@@ -212,7 +218,11 @@ async function runVehicleBackfill(
       });
       let added = false;
       for (const snap of snaps) {
-        const dot = await medianFromVehicleSnapshot(snap.listings, projectMileage(snap.archiveDate));
+        const dot = await medianFromVehicleSnapshot(snap.listings, projectMileage(snap.archiveDate), {
+          make: vehicle.brand,
+          model: vehicle.model,
+          purchasePriceEur,
+        });
         if (dot) {
           realDots.push({
             recordedAt: snap.archiveDate,
@@ -284,8 +294,11 @@ async function runVehicleBackfill(
 async function medianFromVehicleSnapshot(
   listings: ParsedVehicleListing[],
   inferredMileage: number | null,
+  spec: { make: string; model: string; purchasePriceEur: number },
 ): Promise<{ valueEur: number; sampleSize: number } | null> {
-  let pool = listings.filter((l) => l.price > 0);
+  // Drop cross-category junk (wrong make/model) before anything else, same
+  // guard the live cron applies — see vehicleListingMatches.
+  let pool = listings.filter((l) => l.price > 0 && vehicleListingMatches(l, spec));
   if (inferredMileage != null && inferredMileage > 0) {
     const filtered = pool.filter((l) => {
       if (l.mileage == null) return true; // keep unknown-mileage listings
@@ -298,6 +311,10 @@ async function medianFromVehicleSnapshot(
 
   const prices = pool.map((l) => l.price).sort((a, b) => a - b);
   const median = prices[Math.floor(prices.length / 2)];
+
+  // Sanity clamp: reject a historical median wildly above purchase price —
+  // same backstop the live cron uses.
+  if (!scrapeMedianIsPlausible(median, spec.purchasePriceEur)) return null;
 
   // We assume EUR — every site we scrape lists in EUR. If a listing slipped
   // through with a non-EUR currency, the parser will have flagged it but we
