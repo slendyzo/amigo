@@ -427,6 +427,7 @@ model RecurringTemplate {
   isActive      Boolean   @default(true)
   lastGenerated DateTime? // Last time an expense was auto-created
   nextDue       DateTime? // Next scheduled generation
+  endDate       DateTime? // Stop generating after this date (fixed-term plans, e.g. 6× installments). Null = open-ended.
 
   // Relations
   workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
@@ -770,6 +771,7 @@ enum VehicleFuelType {
 enum VehicleClass {
   CAR
   MOTORCYCLE
+  BICYCLE
 }
 
 enum VehicleBodyType {
@@ -789,6 +791,12 @@ enum VehicleBodyType {
   ADVENTURE
   SCOOTER
   OFF_ROAD
+  // Bicycles (discipline — reuses bodyType for BICYCLE class)
+  ROAD
+  GRAVEL
+  MTB
+  HYBRID
+  E_BIKE
   OTHER
 }
 
@@ -817,6 +825,7 @@ enum LiabilityType {
   CREDIT_CARD
   PERSONAL_LOAN
   STUDENT_LOAN
+  INSTALLMENT
   OTHER
 }
 
