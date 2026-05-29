@@ -43,6 +43,8 @@ type BodyType =
   | (typeof BIKE_BODY_OPTIONS)[number];
 
 type SpecResult = {
+  brand: string | null;
+  model: string | null;
   originalMsrpEur: number | null;
   fuelType: FuelType | null;
   bodyType: BodyType | null;
@@ -236,6 +238,12 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
       const s: SpecResult | null = data.spec ?? null;
       setSpec(s);
       if (s) {
+        // Canonicalize what the user typed (fix typos/casing) so the OLX market
+        // match works — only for the free-text path (cars use the taxonomy picker).
+        if (useFreeText) {
+          if (s.brand) setFreeText((f) => ({ ...f, brand: s.brand! }));
+          if (s.model) setFreeText((f) => ({ ...f, model: s.model! }));
+        }
         if (s.fuelType && !fuelType) setFuelType(s.fuelType);
         if (s.bodyType && !bodyType) setBodyType(s.bodyType);
         if (s.generation && !generation) setGeneration(s.generation);
@@ -254,7 +262,13 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
       const res = await fetch("/api/vehicle/image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ brand, model, generation: generation || null }),
+        body: JSON.stringify({
+          brand,
+          model,
+          generation: generation || null,
+          imageHint: spec?.imageHint ?? null,
+          vehicleClass: vehicleClass ?? "CAR",
+        }),
       });
       const data = await res.json();
       setImageData(data.image ?? null);

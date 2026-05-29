@@ -9,12 +9,17 @@ export async function POST(request: Request) {
     const brand = typeof body.brand === "string" ? body.brand.trim() : "";
     const model = typeof body.model === "string" ? body.model.trim() : "";
     const generation = typeof body.generation === "string" ? body.generation.trim() : null;
+    const imageHint = typeof body.imageHint === "string" ? body.imageHint.trim() : null;
+    const vehicleClass =
+      body.vehicleClass === "CAR" || body.vehicleClass === "MOTORCYCLE" || body.vehicleClass === "BICYCLE"
+        ? body.vehicleClass
+        : undefined;
 
     if (!brand || !model) {
       return NextResponse.json({ error: "brand and model required" }, { status: 400 });
     }
 
-    const image = await lookupVehicleImage({ brand, model, generation });
+    const image = await lookupVehicleImage({ brand, model, generation, imageHint, vehicleClass });
     return NextResponse.json({ image });
   } catch (error) {
     if (error instanceof WorkspaceAccessError) {

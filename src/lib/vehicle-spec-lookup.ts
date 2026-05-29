@@ -67,6 +67,11 @@ export type VehicleSpecLookup = {
 };
 
 export type VehicleSpecResult = {
+  // Canonical brand/model — corrected spelling + casing of the user's free text
+  // ("canyn endurace" → "Canyon" / "Endurace"). Used to fix typos before the
+  // OLX market match, which needs a near-correct make/model.
+  brand: string | null;
+  model: string | null;
   originalMsrpEur: number | null;
   fuelType: VehicleFuelType | null;
   bodyType: VehicleBodyType | null;
@@ -75,6 +80,8 @@ export type VehicleSpecResult = {
 };
 
 const CAR_SYSTEM_PROMPT = `You are a vehicle spec lookup assistant. Given a brand, model, year, and optional trim, invoke the record_vehicle_spec tool with your best estimate of the original MSRP in EUR (when new), fuel type, body type, manufacturer generation code (e.g. "ND" for 4th-gen Mazda MX-5), and an image search query that would surface a clean press photo of the model.
+
+Also return the canonical brand and model with correct spelling and casing, fixing any typos in the user's input.
 
 Be honest about uncertainty: if you don't know the MSRP for a specific market or trim, set it to null. Use European pricing (EUR, when-new) where possible. Prefer the manufacturer's standardized generation code when one exists.
 
@@ -86,6 +93,8 @@ Body type guidance: NAKED = streetfighters/standards (MT-07, Z900); SPORT = supe
 
 Fuel: most bikes are PETROL; use EV for electric (LiveWire, Zero); HYBRID is rare but valid (Honda PCX-Hybrid).
 
+Also return the canonical brand and model with correct spelling and casing, fixing any typos in the user's input.
+
 Be honest about uncertainty: if you don't know the MSRP for a specific market or trim, set it to null. Use European pricing (EUR, when-new) where possible.
 
 Always invoke the tool — never reply with prose.`;
@@ -95,6 +104,8 @@ const BIKE_SYSTEM_PROMPT = `You are a bicycle spec lookup assistant. Given a bra
 Discipline (bodyType) guidance: ROAD = drop-bar road/endurance/aero (Canyon Endurace, Specialized Tarmac); GRAVEL = drop-bar off-road (Grizl, Diverge, Checkpoint); MTB = flat-bar mountain (Stumpjumper, Spectral, Fuel EX); HYBRID = flat-bar commuter/fitness/trekking; E_BIKE = any pedal-assist e-bike regardless of shape. Use OTHER only when nothing fits.
 
 Fuel type is not meaningful for bicycles: return "EV" for e-bikes, otherwise "OTHER". Generation codes do not apply — return null for generation.
+
+Also return the canonical brand and model with correct spelling and casing, fixing any typos in the user's input (e.g. "canyn endurace" → brand "Canyon", model "Endurace").
 
 Be honest about uncertainty: if you don't know the retail price for a specific build, set originalMsrpEur to null. Use European pricing (EUR, when-new).
 
@@ -109,6 +120,16 @@ function buildTool(bodyTypes: readonly string[]) {
       parameters: {
         type: "object" as const,
         properties: {
+          brand: {
+            type: ["string", "null"],
+            description:
+              "Canonical manufacturer/brand name with correct spelling + casing, fixing user typos (e.g. 'canyn' → 'Canyon', 'speclized' → 'Specialized'). Null if you can't identify it.",
+          },
+          model: {
+            type: ["string", "null"],
+            description:
+              "Canonical model name only (no brand, no build/trim), correct spelling + casing (e.g. 'endurace' → 'Endurace', 'mx5' → 'MX-5'). Null if unsure.",
+          },
           originalMsrpEur: {
             type: ["number", "null"],
             description: "Original MSRP in EUR when the vehicle was new. Null if unknown.",
@@ -133,7 +154,7 @@ function buildTool(bodyTypes: readonly string[]) {
             description: "Search query that would return a clean front-3/4 press photo of this model.",
           },
         },
-        required: ["originalMsrpEur", "fuelType", "bodyType", "generation", "imageHint"],
+        required: ["brand", "model", "originalMsrpEur", "fuelType", "bodyType", "generation", "imageHint"],
       },
     },
   };
@@ -213,6 +234,8 @@ export async function lookupVehicleSpec(
         : null;
 
     return {
+      brand: typeof out.brand === "string" && out.brand.trim() ? out.brand.trim() : null,
+      model: typeof out.model === "string" && out.model.trim() ? out.model.trim() : null,
       originalMsrpEur: typeof out.originalMsrpEur === "number" ? out.originalMsrpEur : null,
       fuelType,
       bodyType,
