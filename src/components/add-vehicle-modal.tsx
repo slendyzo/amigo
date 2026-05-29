@@ -702,12 +702,14 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                       </Field>
                       <Field label={t("year")}>
                         <input
-                          type="number"
+                          type="text"
                           inputMode="numeric"
-                          min={1900}
-                          max={currentYear + 1}
+                          pattern="[0-9]*"
+                          maxLength={4}
                           value={freeText.year}
-                          onChange={(e) => setFreeText((f) => ({ ...f, year: e.target.value }))}
+                          onChange={(e) =>
+                            setFreeText((f) => ({ ...f, year: e.target.value.replace(/[^0-9]/g, "").slice(0, 4) }))
+                          }
                           placeholder={String(currentYear)}
                           className={inputClass}
                         />
