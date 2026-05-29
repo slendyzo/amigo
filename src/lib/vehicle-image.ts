@@ -30,7 +30,7 @@ export type VehicleImageInput = {
 
 export type VehicleImageResult = {
   url: string;
-  source: "wikipedia" | "ddg" | "serpapi" | "google";
+  source: "wikipedia" | "ddg" | "serpapi" | "google" | "bing";
   pageTitle: string;
 } | null;
 
@@ -44,16 +44,18 @@ export async function lookupVehicleImage(input: VehicleImageInput): Promise<Vehi
       .trim();
 
   const tryWiki = () => wikipediaImage([input.brand, input.model, input.generation].filter(Boolean).join(" ").trim());
+  const tryBing = () => bingImage(ddgQuery);
   const tryGoogle = () => googleCseImage(ddgQuery);
   const trySerp = () => serpApiImage(ddgQuery);
   const tryDdg = () => ddgImage(ddgQuery);
 
   // Bikes: a real image search first (Wikipedia has no model article), then
   // Wikipedia as a last resort. Cars/motos: Wikipedia first (proven), search
-  // as fallback. Image search preference: Google Custom Search (official,
-  // 100/day free) → SerpAPI (100/mo) → keyless DDG (often blocked from server
-  // IPs). All keyed providers no-op without their env vars.
-  const search = [tryGoogle, trySerp, tryDdg];
+  // as fallback. Image search preference: keyless Bing scrape (works from
+  // server IPs, returns clean press/review shots) → optional keyed Google CSE
+  // / SerpAPI if their env vars are set → keyless DDG. Keyed providers no-op
+  // without their env vars, so out of the box it's 100% Bing, no setup.
+  const search = [tryBing, tryGoogle, trySerp, tryDdg];
   const order = isBike ? [...search, tryWiki] : [tryWiki, ...search];
   for (const attempt of order) {
     try {
@@ -96,6 +98,28 @@ async function wikipediaImage(query: string): Promise<VehicleImageResult> {
     };
     const url = summary.originalimage?.source ?? summary.thumbnail?.source;
     if (url) return { url, source: "wikipedia", pageTitle: summary.title ?? title };
+  }
+  return null;
+}
+
+// Keyless Bing Images scrape — the primary source. Bing tolerates server-side
+// requests (unlike Google/DDG) and surfaces clean press/review photos. Parses
+// the HTML-entity-encoded `murl` (media URL) out of each result tile.
+async function bingImage(query: string): Promise<VehicleImageResult> {
+  if (!query) return null;
+  const res = await fetch(
+    `https://www.bing.com/images/search?q=${encodeURIComponent(query)}&form=HDRSC2&first=1`,
+    { headers: { "User-Agent": BROWSER_UA, "Accept-Language": "en;q=0.9" } },
+  );
+  if (!res.ok) return null;
+  const html = await res.text();
+  // Tiles embed JSON as &quot;murl&quot;:&quot;https://….jpg&quot;
+  const matches = html.matchAll(/murl&quot;:&quot;(https?:\/\/[^&]+?)&quot;/g);
+  for (const m of matches) {
+    const url = m[1];
+    if (/\.(jpe?g|png|webp)(\?|$)/i.test(url)) {
+      return { url, source: "bing", pageTitle: query };
+    }
   }
   return null;
 }
