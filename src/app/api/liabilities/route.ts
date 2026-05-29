@@ -8,6 +8,7 @@ import {
   findCandidateTemplates,
   type AutoLinkResult,
 } from "@/lib/loan-template-sync";
+import { generateDueForTemplate } from "@/lib/recurring-generate";
 import {
   requireActiveWorkspace,
   requirePermission,
@@ -196,7 +197,20 @@ export async function POST(request: Request) {
       },
     });
 
-    return NextResponse.json({ liability, autoLink }, { status: 201 });
+    // Generate the due payment(s) immediately so the first installment (and any
+    // past months, if the loan started earlier) appears now — not only when the
+    // dashboard's on-open generator next runs. Scoped to this loan's template.
+    let generatedCount = 0;
+    if (resolvedTemplateId) {
+      generatedCount = await generateDueForTemplate(resolvedTemplateId, { startDate: start }).catch(
+        (e) => {
+          console.error("[liabilities] generateDueForTemplate failed:", e);
+          return 0;
+        },
+      );
+    }
+
+    return NextResponse.json({ liability, autoLink, generatedExpenses: generatedCount }, { status: 201 });
   } catch (error) {
     return errorResponse(error);
   }
