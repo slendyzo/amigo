@@ -54,6 +54,7 @@ const DEFAULT_COPY = {
   yearPlaceholder: "2019",
   trimPlaceholder: "e.g. Sport, RF, GT Line",
   trimHint: "Type the trim from your registration doc, or leave empty.",
+  placeholder: "Select…",
 };
 
 const MIN_YEAR = 1990;

@@ -121,15 +121,18 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   });
   const isMoto = vehicleClass === "MOTORCYCLE";
   const isBike = vehicleClass === "BICYCLE";
-  const brand = isMoto ? freeText.brand.trim() : (pick.make ?? "");
-  const model = isMoto ? freeText.model.trim() : (pick.model ?? "");
-  const year = isMoto
+  // Motorcycles AND bicycles use free-text entry (type it + auto-fill); only
+  // cars use the cascading taxonomy picker.
+  const useFreeText = isMoto || isBike;
+  const brand = useFreeText ? freeText.brand.trim() : (pick.make ?? "");
+  const model = useFreeText ? freeText.model.trim() : (pick.model ?? "");
+  const year = useFreeText
     ? freeText.year
     : pick.year != null
       ? String(pick.year)
       : "";
-  const trim = isMoto ? freeText.trim.trim() : (pick.trim ?? "");
-  const yearAsNumber = isMoto ? parseInt(freeText.year, 10) : pick.year ?? NaN;
+  const trim = useFreeText ? freeText.trim.trim() : (pick.trim ?? "");
+  const yearAsNumber = useFreeText ? parseInt(freeText.year, 10) : pick.year ?? NaN;
   const BODY_OPTIONS: readonly BodyType[] = isBike
     ? BIKE_BODY_OPTIONS
     : isMoto
@@ -677,14 +680,14 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
 
               {step === 1 && (
                 <>
-                  {isMoto ? (
+                  {useFreeText ? (
                     <div className="grid grid-cols-2 gap-3">
                       <Field label={t("brand")}>
                         <input
                           type="text"
                           value={freeText.brand}
                           onChange={(e) => setFreeText((f) => ({ ...f, brand: e.target.value }))}
-                          placeholder="Yamaha"
+                          placeholder={isBike ? "Canyon" : "Yamaha"}
                           className={inputClass}
                         />
                       </Field>
@@ -693,7 +696,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           type="text"
                           value={freeText.model}
                           onChange={(e) => setFreeText((f) => ({ ...f, model: e.target.value }))}
-                          placeholder="MT-07"
+                          placeholder={isBike ? "Endurace" : "MT-07"}
                           className={inputClass}
                         />
                       </Field>
@@ -709,12 +712,12 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           className={inputClass}
                         />
                       </Field>
-                      <Field label={t("trim")}>
+                      <Field label={isBike ? t("build") : t("trim")}>
                         <input
                           type="text"
                           value={freeText.trim}
                           onChange={(e) => setFreeText((f) => ({ ...f, trim: e.target.value }))}
-                          placeholder="ABS, World GP…"
+                          placeholder={isBike ? "CF 6, CF SL 8…" : "ABS, World GP…"}
                           className={inputClass}
                         />
                       </Field>
@@ -728,7 +731,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                         year: t("year"),
                         make: t("brand"),
                         model: t("model"),
-                        trim: isBike ? t("build") : t("trim"),
+                        trim: t("trim"),
                       }}
                     />
                   )}
