@@ -65,7 +65,8 @@ export async function POST(request: Request) {
   // ─── Vehicle pass ─────────────────────────────────────────────────────────
 
   const activeVehicles = await prisma.realAsset.findMany({
-    where: { status: "ACTIVE", type: "VEHICLE" },
+    // Bicycles are heuristic-only (no reliable market feed) — exclude them.
+    where: { status: "ACTIVE", type: "VEHICLE", vehicle: { vehicleClass: { not: "BICYCLE" } } },
     include: { vehicle: true },
   });
 

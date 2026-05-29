@@ -20,6 +20,7 @@ const VALID_TYPES = [
   "CREDIT_CARD",
   "PERSONAL_LOAN",
   "STUDENT_LOAN",
+  "INSTALLMENT",
   "OTHER",
 ] as const;
 type LiabilityType = (typeof VALID_TYPES)[number];
@@ -149,12 +150,20 @@ export async function POST(request: Request) {
       });
 
       if (candidates.length === 0) {
+        // Fixed-term plans (installments) stop billing after the final payment:
+        // endDate = startDate + termMonths. Open-ended loans leave it null.
+        const term = typeof termMonths === "number" && termMonths > 0 ? termMonths : null;
+        const endDate = term
+          ? new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + term, start.getUTCDate()))
+          : null;
+        const isInstallment = type === "INSTALLMENT";
         const tmpl = await createMonthlyTemplateForLoan(prisma, {
           workspaceId: workspace.id,
-          name: `${linkedAsset.name} loan`,
+          name: isInstallment ? `${linkedAsset.name} installments` : `${linkedAsset.name} loan`,
           monthlyPayment,
           currency: String(currency),
           startDate: start,
+          endDate,
         });
         resolvedTemplateId = tmpl.id;
         autoLink = { mode: "linked", templateId: tmpl.id };

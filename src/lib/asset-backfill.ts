@@ -116,6 +116,12 @@ async function runBackfill(realAssetId: string): Promise<void> {
       return;
     }
 
+    if (asset.type === "VEHICLE" && asset.vehicle?.vehicleClass === "BICYCLE") {
+      // Bicycles are heuristic-only — nothing to scrape. Close out as no_data.
+      await markFinished(realAssetId, "no_data");
+      return;
+    }
+
     if (asset.type === "VEHICLE" && asset.vehicle) {
       await runVehicleBackfill(asset.id, asset.purchaseDate, Number(asset.purchasePriceEur), asset.vehicle);
     } else if (asset.type === "PROPERTY" && asset.property) {

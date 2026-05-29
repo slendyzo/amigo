@@ -77,6 +77,8 @@ export async function createMonthlyTemplateForLoan(
     currency: string;
     startDate: Date;
     bankAccountId?: string | null;
+    // Fixed-term plans (e.g. 6× installments) stop generating after this date.
+    endDate?: Date | null;
   }
 ): Promise<RecurringTemplate> {
   const dayOfMonth = args.startDate.getUTCDate();
@@ -94,6 +96,7 @@ export async function createMonthlyTemplateForLoan(
     autoGenerate: true,
     isActive: true,
     nextDue,
+    endDate: args.endDate ?? null,
   };
 
   return tx.recurringTemplate.create({ data });

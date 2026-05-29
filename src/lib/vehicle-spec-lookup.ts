@@ -46,12 +46,17 @@ const MOTO_BODY_TYPES = [
   "OTHER",
 ] as const;
 
-const ALL_BODY_TYPES = [...new Set([...CAR_BODY_TYPES, ...MOTO_BODY_TYPES])] as const;
+// Bicycle "body type" reuses the bodyType column to store discipline.
+const BIKE_BODY_TYPES = ["ROAD", "GRAVEL", "MTB", "HYBRID", "E_BIKE", "OTHER"] as const;
+
+const ALL_BODY_TYPES = [
+  ...new Set([...CAR_BODY_TYPES, ...MOTO_BODY_TYPES, ...BIKE_BODY_TYPES]),
+] as const;
 
 export type VehicleFuelType = (typeof FUEL_TYPES)[number];
 export type VehicleBodyType = (typeof ALL_BODY_TYPES)[number];
 
-export type VehicleClass = "CAR" | "MOTORCYCLE";
+export type VehicleClass = "CAR" | "MOTORCYCLE" | "BICYCLE";
 
 export type VehicleSpecLookup = {
   brand: string;
@@ -82,6 +87,16 @@ Body type guidance: NAKED = streetfighters/standards (MT-07, Z900); SPORT = supe
 Fuel: most bikes are PETROL; use EV for electric (LiveWire, Zero); HYBRID is rare but valid (Honda PCX-Hybrid).
 
 Be honest about uncertainty: if you don't know the MSRP for a specific market or trim, set it to null. Use European pricing (EUR, when-new) where possible.
+
+Always invoke the tool — never reply with prose.`;
+
+const BIKE_SYSTEM_PROMPT = `You are a bicycle spec lookup assistant. Given a brand, model, year, and optional build/spec, invoke the record_vehicle_spec tool with your best estimate of the original retail price in EUR (when new), the discipline (as bodyType), and an image search query that would surface a clean side-profile press photo of the model.
+
+Discipline (bodyType) guidance: ROAD = drop-bar road/endurance/aero (Canyon Endurace, Specialized Tarmac); GRAVEL = drop-bar off-road (Grizl, Diverge, Checkpoint); MTB = flat-bar mountain (Stumpjumper, Spectral, Fuel EX); HYBRID = flat-bar commuter/fitness/trekking; E_BIKE = any pedal-assist e-bike regardless of shape. Use OTHER only when nothing fits.
+
+Fuel type is not meaningful for bicycles: return "EV" for e-bikes, otherwise "OTHER". Generation codes do not apply — return null for generation.
+
+Be honest about uncertainty: if you don't know the retail price for a specific build, set originalMsrpEur to null. Use European pricing (EUR, when-new).
 
 Always invoke the tool — never reply with prose.`;
 
@@ -126,6 +141,7 @@ function buildTool(bodyTypes: readonly string[]) {
 
 const CAR_TOOL = buildTool(CAR_BODY_TYPES);
 const MOTO_TOOL = buildTool(MOTO_BODY_TYPES);
+const BIKE_TOOL = buildTool(BIKE_BODY_TYPES);
 
 type ChatCompletionResponse = {
   choices?: Array<{
@@ -147,9 +163,10 @@ export async function lookupVehicleSpec(
   if (!apiKey) return null;
 
   const isMoto = input.vehicleClass === "MOTORCYCLE";
-  const systemPrompt = isMoto ? MOTO_SYSTEM_PROMPT : CAR_SYSTEM_PROMPT;
-  const tool = isMoto ? MOTO_TOOL : CAR_TOOL;
-  const allowedBodyTypes = isMoto ? MOTO_BODY_TYPES : CAR_BODY_TYPES;
+  const isBike = input.vehicleClass === "BICYCLE";
+  const systemPrompt = isBike ? BIKE_SYSTEM_PROMPT : isMoto ? MOTO_SYSTEM_PROMPT : CAR_SYSTEM_PROMPT;
+  const tool = isBike ? BIKE_TOOL : isMoto ? MOTO_TOOL : CAR_TOOL;
+  const allowedBodyTypes = isBike ? BIKE_BODY_TYPES : isMoto ? MOTO_BODY_TYPES : CAR_BODY_TYPES;
 
   const userText =
     `Brand: ${input.brand}\nModel: ${input.model}\nYear: ${input.year}` +

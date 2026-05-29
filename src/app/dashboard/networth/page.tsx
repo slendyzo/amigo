@@ -52,7 +52,13 @@ export default async function NetworthPage() {
         salePriceEur: a.salePriceEur != null ? Number(a.salePriceEur) : null,
         soldAt: a.soldAt?.toISOString() ?? null,
         vehicle: a.vehicle
-          ? { brand: a.vehicle.brand, model: a.vehicle.model, year: a.vehicle.year }
+          ? {
+              brand: a.vehicle.brand,
+              model: a.vehicle.model,
+              year: a.vehicle.year,
+              vehicleClass: a.vehicle.vehicleClass,
+              bodyType: a.vehicle.bodyType,
+            }
           : null,
         property: a.property
           ? {

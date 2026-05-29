@@ -77,6 +77,13 @@ export async function GET() {
         continue;
       }
 
+      // Fixed-term plans (e.g. 6× installments) stop generating once the target
+      // month reaches the template's endDate month. endDate = startDate +
+      // termMonths, so payments span exactly termMonths months.
+      if (template.endDate && monthIndexReached(targetYear, targetMonth, template.endDate)) {
+        continue;
+      }
+
       // Use day 1 for auto-generated expenses (they get created at month start)
       const dayOfMonth = template.dayOfMonth || 1;
       const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
@@ -145,6 +152,16 @@ export async function GET() {
     console.error("Auto-generate expenses error:", error);
     return NextResponse.json({ error: "Failed to auto-generate expenses" }, { status: 500 });
   }
+}
+
+// True once the target month is at or past the template's endDate month —
+// i.e. the fixed-term plan has finished. Compared as year*12+month so it's
+// independent of day-of-month and timezone drift.
+function monthIndexReached(targetYear: number, targetMonth: number, endDate: Date): boolean {
+  const end = new Date(endDate);
+  const endIdx = end.getFullYear() * 12 + end.getMonth();
+  const targetIdx = targetYear * 12 + targetMonth;
+  return targetIdx >= endIdx;
 }
 
 // POST - Generate expenses from templates for a given month
@@ -245,6 +262,12 @@ export async function POST(request: Request) {
 
     for (const template of templates) {
       if (existingTemplateIds.has(template.id)) {
+        skipped++;
+        continue;
+      }
+
+      // Fixed-term plans stop once the target month reaches the endDate month.
+      if (template.endDate && monthIndexReached(targetYear, targetMonth, template.endDate)) {
         skipped++;
         continue;
       }

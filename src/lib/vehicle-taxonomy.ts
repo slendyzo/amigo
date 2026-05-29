@@ -84,6 +84,45 @@ const MAKES_PT: readonly string[] = [
   "XPeng",
 ];
 
+// Static list of bicycle brands commonly bought in Europe. Bikes use the same
+// cascading wizard as cars but a different brand universe and AI prompts; bike
+// lookups are namespaced with a "bike|" parentKey prefix so the cache never
+// collides with car/moto taxonomy.
+const BIKE_MAKES: readonly string[] = [
+  "BMC",
+  "Bianchi",
+  "Cannondale",
+  "Canyon",
+  "Cervélo",
+  "Colnago",
+  "Cube",
+  "Decathlon",
+  "Focus",
+  "Giant",
+  "Cresta",
+  "Ghost",
+  "Lapierre",
+  "Liv",
+  "Merida",
+  "Orbea",
+  "Pinarello",
+  "Ridley",
+  "Rose",
+  "Santa Cruz",
+  "Scott",
+  "Specialized",
+  "Trek",
+  "Vitus",
+  "Wilier",
+  "YT",
+];
+
+// Bike lookups carry this prefix in their parentKey.
+const BIKE_PREFIX = "bike|";
+function isBikeKey(parentKey: string): boolean {
+  return parentKey.startsWith(BIKE_PREFIX);
+}
+
 // In-memory dedupe of concurrent cache misses. Keyed by `{level}|{parentKey}`.
 // The window is short — only the time between cache miss and DB write — but
 // long enough that two near-simultaneous wizard openings don't both pay for
@@ -110,6 +149,24 @@ const PROMPT_BY_LEVEL: Record<Exclude<TaxonomyLevel, "makes">, (parts: string[])
     `List MODELS that ${make} sold new in Portugal in model year ${year}. Use the canonical European model name (e.g. for BMW: "1 Series", "3 Series", "X1", "M2", "i4"; for Mazda: "2", "3", "6", "MX-5", "CX-3", "CX-5", "CX-30"). Do NOT include trim levels yet — that's a separate step.`,
   trims: ([year, make, model]) =>
     `List TRIMS / variants of the ${year} ${make} ${model} as it was sold in Portugal. CRITICAL: include body-style and roof variants as DISTINCT entries (e.g. for Mazda MX-5: "RF" and "Soft Top" must be separate items, NOT collapsed; for Porsche 911: "Coupe" and "Cabriolet"; for BMW 4 Series: "Coupé", "Convertible", "Gran Coupé"). Also include named special editions where they are commercially distinct (e.g. "GT Sport Tech", "Sport Black", "M Sport"). Use the trim labels Portuguese buyers would recognize on a Standvirtual listing. If the model has no meaningful trim segmentation, return a single entry "Base".`,
+};
+
+const SYSTEM_PROMPT_BIKE = `You are a bicycle catalog assistant. You return clean, deduplicated lists of bicycle model families or build/spec levels — one list at a time — by invoking the record_taxonomy tool.
+
+Hard rules:
+- Cover bikes generally available in Europe around the requested year.
+- Sort entries alphabetically (case-insensitive).
+- Use the manufacturer's canonical naming (e.g. "Endurace" not "endurace", "Émonda" not "Emonda").
+- No duplicates, no empty strings, no surrounding whitespace.
+- Be reasonably comprehensive but cap each list at 60 entries.
+
+Always invoke the record_taxonomy tool. Never reply with prose.`;
+
+const BIKE_PROMPT_BY_LEVEL: Record<Exclude<TaxonomyLevel, "makes">, (parts: string[]) => string> = {
+  models: ([year, make]) =>
+    `List BICYCLE MODEL FAMILIES that ${make} offered around model year ${year}. Use canonical family names (e.g. Canyon: "Endurace", "Ultimate", "Aeroad", "Grail", "Grizl", "Spectral", "Neuron"; Trek: "Domane", "Émonda", "Madone", "Checkpoint", "Marlin", "Fuel EX"; Specialized: "Tarmac", "Roubaix", "Allez", "Diverge", "Stumpjumper"). Do NOT include build/spec levels yet — that's a separate step.`,
+  trims: ([year, make, model]) =>
+    `List BUILD / SPEC variants of the ${year} ${make} ${model} (e.g. Canyon Endurace: "CF 6", "CF 7", "CF SL 8 Di2", "AL 7"; the frame code + number denotes frame tier and groupset). Use the manufacturer's build names exactly as marketed. If the model has no distinct sub-builds, return a single entry "Base".`,
 };
 
 const TOOL = {
@@ -152,7 +209,7 @@ export async function fetchTaxonomyLevel(
   parentKey: string,
 ): Promise<string[]> {
   // Makes never go through the AI / cache path — they're a stable static list.
-  if (level === "makes") return [...MAKES_PT];
+  if (level === "makes") return isBikeKey(parentKey) ? [...BIKE_MAKES] : [...MAKES_PT];
 
   // 1. Cache hit?
   const cached = await prisma.vehicleTaxonomy.findUnique({
@@ -191,7 +248,8 @@ export async function fetchTaxonomyLevel(
 }
 
 async function callZAI(level: TaxonomyLevel, parentKey: string): Promise<string[]> {
-  if (level === "makes") return [...MAKES_PT]; // defensive — fetchTaxonomyLevel short-circuits first
+  const bike = isBikeKey(parentKey);
+  if (level === "makes") return bike ? [...BIKE_MAKES] : [...MAKES_PT]; // defensive — fetchTaxonomyLevel short-circuits first
 
   const apiKey = process.env.ZAI_API_KEY;
   if (!apiKey) {
@@ -199,8 +257,10 @@ async function callZAI(level: TaxonomyLevel, parentKey: string): Promise<string[
     return [];
   }
 
-  const parts = parentKey.split("|");
-  const userText = PROMPT_BY_LEVEL[level](parts);
+  // Strip the "bike|" namespace prefix before parsing year/make/model.
+  const parts = (bike ? parentKey.slice(BIKE_PREFIX.length) : parentKey).split("|");
+  const systemPrompt = bike ? SYSTEM_PROMPT_BIKE : SYSTEM_PROMPT_BASE;
+  const userText = (bike ? BIKE_PROMPT_BY_LEVEL : PROMPT_BY_LEVEL)[level](parts);
 
   try {
     const res = await fetch(ENDPOINT, {
@@ -214,7 +274,7 @@ async function callZAI(level: TaxonomyLevel, parentKey: string): Promise<string[
         thinking: { type: "disabled" },
         max_tokens: 2048,
         messages: [
-          { role: "system", content: SYSTEM_PROMPT_BASE },
+          { role: "system", content: systemPrompt },
           { role: "user", content: userText },
         ],
         tools: [TOOL],
@@ -269,6 +329,8 @@ export function parseTaxonomyRequest(searchParams: URLSearchParams): {
   const yearRaw = searchParams.get("year");
   const make = searchParams.get("make")?.trim() || null;
   const model = searchParams.get("model")?.trim() || null;
+  const isBike = searchParams.get("class")?.trim().toLowerCase() === "bicycle";
+  const prefix = isBike ? "bike|" : "";
 
   if (!yearRaw) return { error: "year is required" };
   const year = Number.parseInt(yearRaw, 10);
@@ -277,10 +339,10 @@ export function parseTaxonomyRequest(searchParams: URLSearchParams): {
   }
 
   if (!make) {
-    return { level: "makes", parentKey: String(year) };
+    return { level: "makes", parentKey: `${prefix}${year}` };
   }
   if (!model) {
-    return { level: "models", parentKey: `${year}|${make}` };
+    return { level: "models", parentKey: `${prefix}${year}|${make}` };
   }
-  return { level: "trims", parentKey: `${year}|${make}|${model}` };
+  return { level: "trims", parentKey: `${prefix}${year}|${make}|${model}` };
 }

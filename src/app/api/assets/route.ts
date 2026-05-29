@@ -17,7 +17,7 @@ type RealAssetType = (typeof VALID_TYPES)[number];
 const VALID_STATUSES = ["ACTIVE", "SOLD"] as const;
 type RealAssetStatus = (typeof VALID_STATUSES)[number];
 
-const VALID_VEHICLE_CLASS = ["CAR", "MOTORCYCLE"] as const;
+const VALID_VEHICLE_CLASS = ["CAR", "MOTORCYCLE", "BICYCLE"] as const;
 const VALID_FUEL = ["PETROL", "DIESEL", "HYBRID", "EV", "OTHER"] as const;
 const VALID_BODY = [
   // Cars
@@ -36,6 +36,12 @@ const VALID_BODY = [
   "ADVENTURE",
   "SCOOTER",
   "OFF_ROAD",
+  // Bicycles (discipline)
+  "ROAD",
+  "GRAVEL",
+  "MTB",
+  "HYBRID",
+  "E_BIKE",
   "OTHER",
 ] as const;
 
@@ -349,7 +355,11 @@ export async function POST(request: Request) {
     // Fire-and-forget: backfill runs async, the chart polls for completion
     // via /api/assets/[id]. Failures inside the job are self-contained and
     // never affect this response.
-    if (asset?.id) {
+    //
+    // Bicycles are heuristic-only — there is no reliable bike market feed to
+    // scrape (and scraping is what produced the €23k-bike bug), so we skip
+    // backfill entirely. The heuristic value computed above stands.
+    if (asset?.id && asset.vehicle?.vehicleClass !== "BICYCLE") {
       void enqueueBackfill(asset.id).catch((err) =>
         console.error("[POST /api/assets] enqueueBackfill failed:", err),
       );

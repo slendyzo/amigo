@@ -32,12 +32,15 @@ const MOTO_BODY_OPTIONS = [
   "OFF_ROAD",
   "OTHER",
 ] as const;
+// Bicycle "body type" stores the discipline.
+const BIKE_BODY_OPTIONS = ["ROAD", "GRAVEL", "MTB", "HYBRID", "E_BIKE", "OTHER"] as const;
 
-type VehicleClass = "CAR" | "MOTORCYCLE";
+type VehicleClass = "CAR" | "MOTORCYCLE" | "BICYCLE";
 type FuelType = (typeof FUEL_OPTIONS)[number];
 type BodyType =
   | (typeof CAR_BODY_OPTIONS)[number]
-  | (typeof MOTO_BODY_OPTIONS)[number];
+  | (typeof MOTO_BODY_OPTIONS)[number]
+  | (typeof BIKE_BODY_OPTIONS)[number];
 
 type SpecResult = {
   originalMsrpEur: number | null;
@@ -117,6 +120,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
     trim: "",
   });
   const isMoto = vehicleClass === "MOTORCYCLE";
+  const isBike = vehicleClass === "BICYCLE";
   const brand = isMoto ? freeText.brand.trim() : (pick.make ?? "");
   const model = isMoto ? freeText.model.trim() : (pick.model ?? "");
   const year = isMoto
@@ -126,7 +130,11 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
       : "";
   const trim = isMoto ? freeText.trim.trim() : (pick.trim ?? "");
   const yearAsNumber = isMoto ? parseInt(freeText.year, 10) : pick.year ?? NaN;
-  const BODY_OPTIONS: readonly BodyType[] = isMoto ? MOTO_BODY_OPTIONS : CAR_BODY_OPTIONS;
+  const BODY_OPTIONS: readonly BodyType[] = isBike
+    ? BIKE_BODY_OPTIONS
+    : isMoto
+      ? MOTO_BODY_OPTIONS
+      : CAR_BODY_OPTIONS;
   const [fuelType, setFuelType] = useState<FuelType | "">("");
   const [bodyType, setBodyType] = useState<BodyType | "">("");
   const [generation, setGeneration] = useState("");
@@ -302,12 +310,12 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            type: "VEHICLE_LOAN",
-            name: `${brand} ${model} loan`.trim(),
+            type: isBike ? "INSTALLMENT" : "VEHICLE_LOAN",
+            name: isBike ? `${brand} ${model} installments`.trim() : `${brand} ${model} loan`.trim(),
             currency: purchaseCurrency,
             principal: parseFloat(purchasePrice),
             monthlyPayment: parseFloat(monthlyPayment),
-            interestRate: interestRate ? parseFloat(interestRate) : null,
+            interestRate: interestRate ? parseFloat(interestRate) : isBike ? 0 : null,
             termMonths: termMonths ? parseInt(termMonths, 10) : null,
             startDate: loanStart,
             realAssetId: asset.id,
@@ -455,6 +463,8 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
               {isMoto ? (
                 <span className="text-lg leading-none" aria-hidden>🏍️</span>
+              ) : isBike ? (
+                <span className="text-lg leading-none" aria-hidden>🚲</span>
               ) : (
                 <Car className="h-5 w-5 text-primary" />
               )}
@@ -467,7 +477,9 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                     ? t("matchHeader")
                     : isMoto
                       ? t("addMotorcycle")
-                      : t("addVehicle")}
+                      : isBike
+                        ? t("addBicycle")
+                        : t("addVehicle")}
               </h2>
               <p className="text-xs text-muted-foreground">
                 {phase === "templates" || phase === "matching"
@@ -616,7 +628,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
               {step === 0 && (
                 <div className="space-y-3">
                   <p className="text-sm text-muted-foreground">{t("vehicleClassChoiceTitle")}</p>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                     <button
                       type="button"
                       onClick={() => {
@@ -644,6 +656,20 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                       </span>
                       <span className="font-semibold leading-tight">{t("vehicleClassMotorcycle")}</span>
                       <span className="text-xs text-muted-foreground">{t("vehicleClassMotorcycleDescription")}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setVehicleClass("BICYCLE");
+                        setStep(1);
+                      }}
+                      className="flex flex-col items-start gap-2 rounded-2xl border border-border/60 bg-card p-4 text-left transition-colors hover:border-primary/40 hover:bg-primary/5"
+                    >
+                      <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-2xl leading-none" aria-hidden>
+                        🚲
+                      </span>
+                      <span className="font-semibold leading-tight">{t("vehicleClassBicycle")}</span>
+                      <span className="text-xs text-muted-foreground">{t("vehicleClassBicycleDescription")}</span>
                     </button>
                   </div>
                 </div>
@@ -697,11 +723,12 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                     <CascadingVehiclePicker
                       value={pick}
                       onChange={setPick}
+                      vehicleClass={vehicleClass ?? "CAR"}
                       copy={{
                         year: t("year"),
                         make: t("brand"),
                         model: t("model"),
-                        trim: t("trim"),
+                        trim: isBike ? t("build") : t("trim"),
                       }}
                     />
                   )}
@@ -718,17 +745,17 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
 
                   {spec && (
                     <div className="space-y-3 rounded-xl border border-border/50 bg-muted/30 p-3">
-                      {spec.fuelType && (
+                      {!isBike && spec.fuelType && (
                         <ChipRow label={t("fuelType")}>{t(`fuelTypeOption.${spec.fuelType}`)}</ChipRow>
                       )}
                       {spec.bodyType && (
-                        <ChipRow label={t("bodyType")}>{t(`bodyTypeOption.${spec.bodyType}`)}</ChipRow>
+                        <ChipRow label={isBike ? t("discipline") : t("bodyType")}>{t(`bodyTypeOption.${spec.bodyType}`)}</ChipRow>
                       )}
-                      {spec.generation && (
+                      {!isBike && spec.generation && (
                         <ChipRow label={t("generation")}>{spec.generation}</ChipRow>
                       )}
                       {spec.originalMsrpEur && (
-                        <ChipRow label={t("originalMsrp")}>
+                        <ChipRow label={isBike ? t("originalRetail") : t("originalMsrp")}>
                           €{spec.originalMsrpEur.toLocaleString()}
                         </ChipRow>
                       )}
@@ -741,21 +768,23 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                   <details className="rounded-xl border border-border/40 px-3 py-2">
                     <summary className="cursor-pointer text-xs text-muted-foreground">{t("moreDetails")}</summary>
                     <div className="mt-3 grid grid-cols-2 gap-3">
-                      <Field label={t("fuelType")}>
-                        <select
-                          value={fuelType}
-                          onChange={(e) => setFuelType(e.target.value as FuelType)}
-                          className={inputClass}
-                        >
-                          <option value="">—</option>
-                          {FUEL_OPTIONS.map((f) => (
-                            <option key={f} value={f}>
-                              {t(`fuelTypeOption.${f}`)}
-                            </option>
-                          ))}
-                        </select>
-                      </Field>
-                      <Field label={t("bodyType")}>
+                      {!isBike && (
+                        <Field label={t("fuelType")}>
+                          <select
+                            value={fuelType}
+                            onChange={(e) => setFuelType(e.target.value as FuelType)}
+                            className={inputClass}
+                          >
+                            <option value="">—</option>
+                            {FUEL_OPTIONS.map((f) => (
+                              <option key={f} value={f}>
+                                {t(`fuelTypeOption.${f}`)}
+                              </option>
+                            ))}
+                          </select>
+                        </Field>
+                      )}
+                      <Field label={isBike ? t("discipline") : t("bodyType")}>
                         <select
                           value={bodyType}
                           onChange={(e) => setBodyType(e.target.value as BodyType)}
@@ -769,15 +798,17 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                           ))}
                         </select>
                       </Field>
-                      <Field label={t("generation")}>
-                        <input
-                          type="text"
-                          value={generation}
-                          onChange={(e) => setGeneration(e.target.value)}
-                          placeholder="ND, F30…"
-                          className={inputClass}
-                        />
-                      </Field>
+                      {!isBike && (
+                        <Field label={t("generation")}>
+                          <input
+                            type="text"
+                            value={generation}
+                            onChange={(e) => setGeneration(e.target.value)}
+                            placeholder="ND, F30…"
+                            className={inputClass}
+                          />
+                        </Field>
+                      )}
                       <Field label={t("color")}>
                         <input
                           type="text"
@@ -804,27 +835,29 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                     </div>
                   )}
 
-                  <div className="grid grid-cols-2 gap-3">
-                    <Field label={t("mileageKm")}>
-                      <input
-                        type="number"
-                        min={0}
-                        value={mileage}
-                        onChange={(e) => setMileage(e.target.value)}
-                        placeholder="60000"
-                        className={inputClass}
-                      />
-                    </Field>
-                    <Field label={t("licensePlate")}>
-                      <input
-                        type="text"
-                        value={plate}
-                        onChange={(e) => setPlate(e.target.value.toUpperCase())}
-                        placeholder="00-AA-00"
-                        className={inputClass}
-                      />
-                    </Field>
-                  </div>
+                  {!isBike && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <Field label={t("mileageKm")}>
+                        <input
+                          type="number"
+                          min={0}
+                          value={mileage}
+                          onChange={(e) => setMileage(e.target.value)}
+                          placeholder="60000"
+                          className={inputClass}
+                        />
+                      </Field>
+                      <Field label={t("licensePlate")}>
+                        <input
+                          type="text"
+                          value={plate}
+                          onChange={(e) => setPlate(e.target.value.toUpperCase())}
+                          placeholder="00-AA-00"
+                          className={inputClass}
+                        />
+                      </Field>
+                    </div>
+                  )}
 
                   <Field label={t("purchaseDate")}>
                     <input
@@ -1046,7 +1079,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                 className="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity disabled:opacity-50"
               >
                 {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
-                {submitting ? t("saving") : isMoto ? t("addMotorcycle") : t("addVehicle")}
+                {submitting ? t("saving") : isMoto ? t("addMotorcycle") : isBike ? t("addBicycle") : t("addVehicle")}
               </button>
             )}
           </footer>

@@ -49,7 +49,7 @@ type Asset = {
 };
 
 type Vehicle = {
-  vehicleClass?: "CAR" | "MOTORCYCLE";
+  vehicleClass?: "CAR" | "MOTORCYCLE" | "BICYCLE";
   brand: string;
   model: string;
   year: number;
@@ -128,6 +128,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
   const [busy, setBusy] = useState(false);
 
   const sold = asset.status === "SOLD";
+  const isBike = vehicle.vehicleClass === "BICYCLE";
   const current = asset.currentValueEur ?? asset.purchasePriceEur;
   const canShowComparables =
     !sold &&
@@ -229,6 +230,10 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
             <div className="flex h-full w-full items-center justify-center">
               <span className="text-7xl opacity-50" aria-hidden>🏍️</span>
             </div>
+          ) : isBike ? (
+            <div className="flex h-full w-full items-center justify-center">
+              <span className="text-7xl opacity-50" aria-hidden>🚲</span>
+            </div>
           ) : (
             <div className="flex h-full w-full items-center justify-center">
               <Car className="h-16 w-16 text-muted-foreground/40" strokeWidth={1.5} />
@@ -248,9 +253,11 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
         subtitle={vehicle.trim ?? null}
         chips={
           <>
-            {vehicle.fuelType && <Chip>{vehicle.fuelType}</Chip>}
-            {vehicle.bodyType && <Chip>{vehicle.bodyType}</Chip>}
-            {vehicle.generation && <Chip>{vehicle.generation}</Chip>}
+            {!isBike && vehicle.fuelType && <Chip>{vehicle.fuelType}</Chip>}
+            {vehicle.bodyType && (
+              <Chip>{isBike ? t(`bodyTypeOption.${vehicle.bodyType}`) : vehicle.bodyType}</Chip>
+            )}
+            {!isBike && vehicle.generation && <Chip>{vehicle.generation}</Chip>}
             {vehicle.color && <Chip>{vehicle.color}</Chip>}
           </>
         }
@@ -333,10 +340,15 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
                 value: `${realizedPnL > 0 ? "+" : ""}${formatCurrency(realizedPnL, "EUR")}`,
                 valueClass: realizedPnL > 0 ? "text-emerald-500" : "text-rose-500",
               }
-            : {
-                label: t("mileage"),
-                value: vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : "—",
-              },
+            : isBike
+              ? {
+                  label: t("discipline"),
+                  value: vehicle.bodyType ? t(`bodyTypeOption.${vehicle.bodyType}`) : "—",
+                }
+              : {
+                  label: t("mileage"),
+                  value: vehicle.mileage != null ? `${vehicle.mileage.toLocaleString()} km` : "—",
+                },
           {
             label: t("monthsOwned"),
             value: String(monthsOwned),

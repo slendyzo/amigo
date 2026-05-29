@@ -28,7 +28,8 @@ type RealAsset = {
     brand: string;
     model: string;
     year: number;
-    vehicleClass?: "CAR" | "MOTORCYCLE";
+    vehicleClass?: "CAR" | "MOTORCYCLE" | "BICYCLE";
+    bodyType?: string | null;
   } | null;
   property: {
     propertyType: string;

@@ -25,6 +25,8 @@ export type VehiclePick = {
 export type CascadingVehiclePickerProps = {
   value: Partial<VehiclePick>;
   onChange: (next: Partial<VehiclePick>) => void;
+  // "bicycle" routes the taxonomy lookups to the bike brand list + AI prompts.
+  vehicleClass?: "CAR" | "MOTORCYCLE" | "BICYCLE";
   copy?: Partial<{
     year: string;
     make: string;
@@ -59,9 +61,11 @@ const MIN_YEAR = 1990;
 export function CascadingVehiclePicker({
   value,
   onChange,
+  vehicleClass,
   copy: copyOverrides,
 }: CascadingVehiclePickerProps) {
   const copy = { ...DEFAULT_COPY, ...copyOverrides };
+  const isBike = vehicleClass === "BICYCLE";
   const currentYear = new Date().getUTCFullYear();
   const maxYear = currentYear + 1;
 
@@ -79,7 +83,7 @@ export function CascadingVehiclePicker({
     if (value.year == null) return;
     let cancelled = false;
     setMakesLoading(true);
-    fetchTaxonomy({ year: value.year })
+    fetchTaxonomy({ year: value.year, isBike })
       .then((vals) => {
         if (cancelled) return;
         setMakes(vals);
@@ -88,7 +92,7 @@ export function CascadingVehiclePicker({
     return () => {
       cancelled = true;
     };
-  }, [value.year]);
+  }, [value.year, isBike]);
 
   // Reset downstream when make changes
   useEffect(() => {
@@ -96,7 +100,7 @@ export function CascadingVehiclePicker({
     if (value.year == null || !value.make) return;
     let cancelled = false;
     setModelsLoading(true);
-    fetchTaxonomy({ year: value.year, make: value.make })
+    fetchTaxonomy({ year: value.year, make: value.make, isBike })
       .then((vals) => {
         if (cancelled) return;
         setModels(vals);
@@ -105,7 +109,7 @@ export function CascadingVehiclePicker({
     return () => {
       cancelled = true;
     };
-  }, [value.year, value.make]);
+  }, [value.year, value.make, isBike]);
 
   return (
     <div className="space-y-3">
@@ -310,11 +314,12 @@ function DropdownField({
 
 // ─── Helper ─────────────────────────────────────────────────────────────────
 
-async function fetchTaxonomy(query: { year: number; make?: string; model?: string }): Promise<string[]> {
+async function fetchTaxonomy(query: { year: number; make?: string; model?: string; isBike?: boolean }): Promise<string[]> {
   const params = new URLSearchParams();
   params.set("year", String(query.year));
   if (query.make) params.set("make", query.make);
   if (query.model) params.set("model", query.model);
+  if (query.isBike) params.set("class", "bicycle");
   try {
     const res = await fetch(`/api/taxonomy/vehicle?${params.toString()}`, {
       cache: "force-cache",

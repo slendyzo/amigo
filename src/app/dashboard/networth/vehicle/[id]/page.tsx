@@ -57,6 +57,7 @@ export default async function VehicleDetailPage({ params }: PageProps) {
         backfillProgress: asset.backfillProgress,
       }}
       vehicle={{
+        vehicleClass: asset.vehicle.vehicleClass,
         brand: asset.vehicle.brand,
         model: asset.vehicle.model,
         year: asset.vehicle.year,
