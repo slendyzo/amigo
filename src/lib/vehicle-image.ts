@@ -30,7 +30,7 @@ export type VehicleImageInput = {
 
 export type VehicleImageResult = {
   url: string;
-  source: "wikipedia" | "ddg" | "serpapi";
+  source: "wikipedia" | "ddg" | "serpapi" | "google";
   pageTitle: string;
 } | null;
 
@@ -44,14 +44,17 @@ export async function lookupVehicleImage(input: VehicleImageInput): Promise<Vehi
       .trim();
 
   const tryWiki = () => wikipediaImage([input.brand, input.model, input.generation].filter(Boolean).join(" ").trim());
+  const tryGoogle = () => googleCseImage(ddgQuery);
   const trySerp = () => serpApiImage(ddgQuery);
   const tryDdg = () => ddgImage(ddgQuery);
 
   // Bikes: a real image search first (Wikipedia has no model article), then
   // Wikipedia as a last resort. Cars/motos: Wikipedia first (proven), search
-  // as fallback. The image search prefers SerpAPI (keyed, reliable) and only
-  // falls back to keyless DDG, which DuckDuckGo often blocks from server IPs.
-  const order = isBike ? [trySerp, tryDdg, tryWiki] : [tryWiki, trySerp, tryDdg];
+  // as fallback. Image search preference: Google Custom Search (official,
+  // 100/day free) → SerpAPI (100/mo) → keyless DDG (often blocked from server
+  // IPs). All keyed providers no-op without their env vars.
+  const search = [tryGoogle, trySerp, tryDdg];
+  const order = isBike ? [...search, tryWiki] : [tryWiki, ...search];
   for (const attempt of order) {
     try {
       const hit = await attempt();
@@ -95,6 +98,26 @@ async function wikipediaImage(query: string): Promise<VehicleImageResult> {
     if (url) return { url, source: "wikipedia", pageTitle: summary.title ?? title };
   }
   return null;
+}
+
+// Google Custom Search JSON API — the official route to Google Images. Needs
+// GOOGLE_CSE_KEY (API key) + GOOGLE_CSE_CX (Programmable Search Engine id, with
+// "Image search" + "Search the entire web" enabled). 100 queries/day free.
+async function googleCseImage(query: string): Promise<VehicleImageResult> {
+  const key = process.env.GOOGLE_CSE_KEY;
+  const cx = process.env.GOOGLE_CSE_CX;
+  if (!key || !cx || !query) return null;
+  const url =
+    `https://www.googleapis.com/customsearch/v1?searchType=image&num=1&safe=active` +
+    `&key=${encodeURIComponent(key)}&cx=${encodeURIComponent(cx)}&q=${encodeURIComponent(query)}`;
+  const res = await fetch(url, { headers: { Accept: "application/json" } });
+  if (!res.ok) return null;
+  const data = (await res.json()) as { items?: Array<{ link?: string; title?: string }> };
+  const first = (data.items ?? []).find(
+    (r) => typeof r.link === "string" && /^https?:\/\//.test(r.link),
+  );
+  if (!first?.link) return null;
+  return { url: first.link, source: "google", pageTitle: first.title ?? query };
 }
 
 // SerpAPI Google Images — reliable clean press shots, but needs a key
