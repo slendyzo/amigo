@@ -5,6 +5,7 @@ import { convertToEur } from "@/lib/currency";
 import { computeVehicleHeuristicValue } from "@/lib/asset-valuation";
 import { geocodeAddress } from "@/lib/geocode";
 import { enqueueBackfill } from "@/lib/asset-backfill";
+import { refreshBikeValuation } from "@/lib/bike-valuation";
 import {
   requireActiveWorkspace,
   requirePermission,
@@ -356,13 +357,20 @@ export async function POST(request: Request) {
     // via /api/assets/[id]. Failures inside the job are self-contained and
     // never affect this response.
     //
-    // Bicycles are heuristic-only — there is no reliable bike market feed to
-    // scrape (and scraping is what produced the €23k-bike bug), so we skip
-    // backfill entirely. The heuristic value computed above stands.
-    if (asset?.id && asset.vehicle?.vehicleClass !== "BICYCLE") {
-      void enqueueBackfill(asset.id).catch((err) =>
-        console.error("[POST /api/assets] enqueueBackfill failed:", err),
-      );
+    // Cars/motos: Web-Archive backfill + live scrape. Bicycles have no archive
+    // history (OLX bike snapshots aren't in CDX), so skip backfill and instead
+    // fire an immediate OLX.pt market refresh so the value isn't stale until
+    // the next cron. The heuristic value stands until real comps land. (AMIGO-258)
+    if (asset?.id) {
+      if (asset.vehicle?.vehicleClass === "BICYCLE") {
+        void refreshBikeValuation(asset.id).catch((err) =>
+          console.error("[POST /api/assets] refreshBikeValuation failed:", err),
+        );
+      } else {
+        void enqueueBackfill(asset.id).catch((err) =>
+          console.error("[POST /api/assets] enqueueBackfill failed:", err),
+        );
+      }
     }
 
     return NextResponse.json({ asset }, { status: 201 });

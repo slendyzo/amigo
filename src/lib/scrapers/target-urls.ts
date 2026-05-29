@@ -78,6 +78,17 @@ export function olxArchiveUrls(q: VehicleScrapeQuery): string[] {
   );
 }
 
+/**
+ * OLX.pt bicycles search. Brand+model granularity (not build) so the median
+ * pool stays large enough; the make/model matcher filters out wrong models.
+ * Verified live: olx.pt/desporto-e-lazer/bicicletas/q-canyon-endurace/ → 200.
+ */
+export function olxBikesSearchUrl(q: VehicleScrapeQuery): string {
+  const make = slug(q.make);
+  const model = slug(q.model);
+  return `https://www.olx.pt/desporto-e-lazer/bicicletas/q-${make}-${model}/`;
+}
+
 // ─── Properties ─────────────────────────────────────────────────────────────
 
 const IDEALISTA_PROPERTY_TYPE: Record<string, string> = {

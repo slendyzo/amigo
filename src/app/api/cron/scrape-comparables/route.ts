@@ -7,6 +7,7 @@ import { scrapeOlx } from "@/lib/scrapers/olx";
 import { scrapeIdealista } from "@/lib/scrapers/idealista";
 import { scrapeImovirtual } from "@/lib/scrapers/imovirtual";
 import { computeVehicleHeuristicValue, scrapeMedianIsPlausible } from "@/lib/asset-valuation";
+import { refreshBikeValuation } from "@/lib/bike-valuation";
 import {
   vehicleListingMatches,
   type ParsedPropertyListing,
@@ -356,6 +357,21 @@ export async function POST(request: Request) {
     }
   }
 
+  // ─── Bicycle pass ─────────────────────────────────────────────────────────
+  // Bikes use a separate OLX.pt feed (no Standvirtual). The matcher + clamp
+  // live inside refreshBikeValuation.
+  let bikeAssetsUpdated = 0;
+  let bikeAssetsNoData = 0;
+  const activeBikes = await prisma.realAsset.findMany({
+    where: { status: "ACTIVE", type: "VEHICLE", vehicle: { vehicleClass: "BICYCLE" } },
+    select: { id: true },
+  });
+  for (const bike of activeBikes) {
+    const res = await refreshBikeValuation(bike.id);
+    if (res.status === "updated") bikeAssetsUpdated++;
+    else bikeAssetsNoData++;
+  }
+
   return NextResponse.json({
     ok: true,
     tookMs: Date.now() - startedAt,
@@ -368,6 +384,10 @@ export async function POST(request: Request) {
       specsScraped: propertySpecsScraped,
       specsFailed: propertySpecsFailed,
       assetsUpdated: propertyAssetsUpdated,
+    },
+    bikes: {
+      assetsUpdated: bikeAssetsUpdated,
+      assetsNoData: bikeAssetsNoData,
     },
   });
 }
