@@ -26,7 +26,7 @@ type ApiAsset = {
     brand: string;
     model: string;
     year: number;
-    vehicleClass?: "CAR" | "MOTORCYCLE";
+    vehicleClass?: "CAR" | "MOTORCYCLE" | "BICYCLE";
   } | null;
   property: {
     propertyType: string;
@@ -52,14 +52,32 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export default function DashboardRwaSection({ className }: DashboardRwaSectionProps) {
   const t = useTranslations("rwa");
   const [assets, setAssets] = useState<RwaCard[] | null>(null);
+  const [linkedDebt, setLinkedDebt] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [showAdd, setShowAdd] = useState(false);
 
   const fetchAssets = async () => {
     try {
-      const res = await fetch("/api/assets?status=ACTIVE", { cache: "no-store" });
+      const [res, liabRes] = await Promise.all([
+        fetch("/api/assets?status=ACTIVE", { cache: "no-store" }),
+        fetch("/api/liabilities?status=ACTIVE", { cache: "no-store" }),
+      ]);
       if (!res.ok) throw new Error(`status ${res.status}`);
       const data = (await res.json()) as { assets: ApiAsset[] };
+
+      // Only loans linked to an asset net against asset value — standalone debt
+      // (credit cards) belongs on the net-worth page, not in this asset tile.
+      // Best-effort: a liabilities failure must not sink the whole section.
+      if (liabRes.ok) {
+        const lj = (await liabRes.json()) as {
+          liabilities: Array<{ currentBalanceEur: string | number; realAssetId: string | null }>;
+        };
+        setLinkedDebt(
+          lj.liabilities
+            .filter((l) => l.realAssetId)
+            .reduce((s, l) => s + Number(l.currentBalanceEur), 0),
+        );
+      }
       setAssets(
         data.assets.map((a): RwaCard => {
           const common = {
@@ -119,13 +137,15 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
     fetchAssets();
   }, []);
 
-  const totalValue = useMemo(() => {
+  const grossValue = useMemo(() => {
     if (!assets) return null;
     return assets.reduce(
       (sum, a) => sum + (a.data.currentValueEur ?? a.data.purchasePriceEur),
       0,
     );
   }, [assets]);
+
+  const netEquity = grossValue != null ? grossValue - linkedDebt : null;
 
   const handleSuccess = () => fetchAssets();
 
@@ -134,13 +154,18 @@ export default function DashboardRwaSection({ className }: DashboardRwaSectionPr
       <div className="flex items-end justify-between gap-2">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.8px] text-primary/80">
-            {t("section")}
+            {linkedDebt > 0 ? t("netEquity") : t("section")}
           </p>
           <div className="mt-0.5 flex items-baseline gap-2">
             <h2 className="text-xl font-bold tabular-nums">
-              {totalValue != null ? formatCurrency(totalValue, "EUR") : "—"}
+              {netEquity != null ? formatCurrency(netEquity, "EUR") : "—"}
             </h2>
           </div>
+          {linkedDebt > 0 && netEquity != null && (
+            <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+              {t("afterLoans", { amount: formatCurrency(linkedDebt, "EUR") })}
+            </p>
+          )}
         </div>
         {assets && assets.length > 0 && (
           <Link
