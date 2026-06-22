@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-accent="iris">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Amigo — Nav Redesign Prototype</title>
+<style>
+  /* ============ TOKENS ============ */
+  :root {
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+    --radius: 10px;
+    --sidebar-w: 240px;
+    --rail-w: 68px;
+  }
+  /* Accent families */
+  [data-accent="iris"]   { --accent:#818cf8; --accent-strong:#6366f1; --accent-tint:rgba(129,140,248,.14); }
+  [data-accent="teal"]   { --accent:#2dd4bf; --accent-strong:#0d9488; --accent-tint:rgba(45,212,191,.14); }
+  [data-accent="amber"]  { --accent:#fbbf24; --accent-strong:#d97706; --accent-tint:rgba(251,191,36,.16); }
+
+  [data-theme="dark"] {
+    --bg:#0a0a0b; --surface:#131316; --surface-2:#1a1b1f; --surface-3:#212227;
+    --border:rgba(255,255,255,.08); --border-strong:rgba(255,255,255,.14);
+    --text:#ededef; --text-muted:#a1a1aa; --text-subtle:#71717a;
+    --positive:#4ade80; --negative:#f87171; --warning:#fbbf24;
+    --shadow:0 12px 40px rgba(0,0,0,.5);
+  }
+  [data-theme="light"] {
+    --bg:#f7f8fa; --surface:#ffffff; --surface-2:#f1f2f4; --surface-3:#e9eaed;
+    --border:rgba(9,9,11,.08); --border-strong:rgba(9,9,11,.13);
+    --text:#18181b; --text-muted:#52525b; --text-subtle:#8a8a93;
+    --positive:#16a34a; --negative:#dc2626; --warning:#d97706;
+    --shadow:0 12px 40px rgba(9,9,11,.12);
+  }
+  [data-accent="iris"][data-theme="light"]  { --accent:#6366f1; --accent-strong:#4f46e5; --accent-tint:rgba(99,102,241,.09); }
+  [data-accent="teal"][data-theme="light"]  { --accent:#0d9488; --accent-strong:#0f766e; --accent-tint:rgba(13,148,136,.09); }
+  [data-accent="amber"][data-theme="light"] { --accent:#d97706; --accent-strong:#b45309; --accent-tint:rgba(217,119,6,.10); }
+
+  * { box-sizing:border-box; margin:0; padding:0; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+    background:var(--bg); color:var(--text);
+    transition:background .4s var(--ease), color .4s var(--ease);
+    padding:24px; min-height:100vh;
+  }
+  .icon { width:20px; height:20px; flex-shrink:0; }
+
+  /* ============ CONTROL PANEL ============ */
+  .controls {
+    display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    max-width:1180px; margin:0 auto 22px; padding:14px 16px;
+    background:var(--surface); border:1px solid var(--border); border-radius:14px;
+  }
+  .controls .group { display:flex; gap:6px; align-items:center; }
+  .controls .label { font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--text-subtle); margin-right:4px; font-weight:600; }
+  .seg { display:flex; background:var(--surface-2); border-radius:9px; padding:3px; }
+  .seg button {
+    border:0; background:transparent; color:var(--text-muted); cursor:pointer;
+    font-size:13px; font-weight:500; padding:6px 12px; border-radius:7px;
+    transition:all .2s var(--ease); display:flex; align-items:center; gap:6px;
+  }
+  .seg button.on { background:var(--surface); color:var(--text); box-shadow:0 1px 3px rgba(0,0,0,.18); }
+  .dot { width:13px; height:13px; border-radius:50%; }
+  .controls .spacer { flex:1; }
+  .controls .title { font-size:13px; color:var(--text-subtle); }
+
+  /* ============ STAGE ============ */
+  .stage { max-width:1180px; margin:0 auto; display:flex; gap:24px; align-items:flex-start; flex-wrap:wrap; }
+
+  /* ============ DESKTOP SHELL ============ */
+  .app {
+    flex:1; min-width:640px; height:680px; display:flex; overflow:hidden;
+    background:var(--bg); border:1px solid var(--border); border-radius:16px;
+    box-shadow:var(--shadow);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    width:var(--sidebar-w); flex-shrink:0; background:var(--surface);
+    border-right:1px solid var(--border); display:flex; flex-direction:column;
+    transition:width .3s var(--ease-soft); position:relative;
+  }
+  .app.rail .sidebar { width:var(--rail-w); }
+
+  .side-head { height:60px; display:flex; align-items:center; gap:11px; padding:0 18px; }
+  .app.rail .side-head { justify-content:center; padding:0; }
+  .mark {
+    width:30px; height:30px; border-radius:8px; flex-shrink:0;
+    background:linear-gradient(135deg, var(--accent-strong), var(--accent));
+    display:flex; align-items:center; justify-content:center;
+    color:#fff; font-weight:700; font-size:15px;
+    box-shadow:0 4px 14px var(--accent-tint);
+  }
+  .wordmark { font-size:18px; font-weight:700; letter-spacing:-.01em; white-space:nowrap; }
+  .app.rail .wordmark { display:none; }
+
+  .nav { flex:1; padding:8px 12px; overflow-y:auto; }
+  .app.rail .nav { padding:8px 10px; }
+  .nav-item {
+    position:relative; display:flex; align-items:center; gap:12px;
+    padding:9px 12px; border-radius:var(--radius); cursor:pointer;
+    color:var(--text-muted); font-size:14px; font-weight:500;
+    transition:background .2s var(--ease), color .2s var(--ease); margin-bottom:2px;
+    white-space:nowrap;
+  }
+  .app.rail .nav-item { justify-content:center; padding:11px; }
+  .nav-item:hover { background:var(--surface-2); color:var(--text); }
+  .nav-item.active { background:var(--accent-tint); color:var(--accent); }
+  .nav-item.active::before {
+    content:""; position:absolute; left:0; top:7px; bottom:7px; width:2.5px;
+    border-radius:0 3px 3px 0; background:var(--accent);
+    animation:barIn .2s var(--ease);
+  }
+  @keyframes barIn { from { transform:scaleY(0); } to { transform:scaleY(1); } }
+  .nav-item .lbl { transition:opacity .15s var(--ease); }
+  .app.rail .nav-item .lbl { display:none; }
+  .nav-item .badge {
+    margin-left:auto; font-size:11px; font-weight:600; padding:1px 7px; border-radius:99px;
+    background:var(--warning); color:#1a1300;
+  }
+  .app.rail .badge { display:none; }
+  .nav-divider { height:1px; background:var(--border); margin:10px 8px; }
+  .nav-section-hint { font-size:10px; text-transform:uppercase; letter-spacing:.07em; color:var(--text-subtle); padding:0 12px; margin:4px 0; }
+  .app.rail .nav-section-hint { display:none; }
+
+  /* Profile */
+  .profile-wrap { padding:10px; border-top:1px solid var(--border); position:relative; }
+  .profile {
+    display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:var(--radius);
+    cursor:pointer; transition:background .2s var(--ease);
+  }
+  .profile:hover { background:var(--surface-2); }
+  .avatar {
+    width:30px; height:30px; border-radius:50%; flex-shrink:0;
+    background:linear-gradient(135deg,#f59e0b,#ef4444); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-weight:600; font-size:13px;
+  }
+  .profile .who { flex:1; min-width:0; }
+  .profile .who .nm { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .profile .who .ws { font-size:11px; color:var(--text-subtle); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .app.rail .profile .who, .app.rail .profile .chev { display:none; }
+  .app.rail .profile { justify-content:center; padding:8px; }
+  .chev { color:var(--text-subtle); }
+
+  .popover {
+    position:absolute; bottom:calc(100% + 6px); left:10px; right:10px;
+    background:var(--surface-2); border:1px solid var(--border-strong); border-radius:14px;
+    box-shadow:var(--shadow); padding:6px; opacity:0; visibility:hidden;
+    transform:scale(.96) translateY(6px); transform-origin:bottom left;
+    transition:all .18s var(--ease); z-index:30; backdrop-filter:blur(20px);
+  }
+  .popover.open { opacity:1; visibility:visible; transform:scale(1) translateY(0); }
+  .pop-ws { padding:9px 11px; border-radius:9px; background:var(--surface-3); margin-bottom:5px; }
+  .pop-ws .t { font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:var(--text-subtle); }
+  .pop-ws .v { font-size:13px; font-weight:600; display:flex; align-items:center; justify-content:space-between; margin-top:2px; }
+  .pop-item { display:flex; align-items:center; gap:10px; padding:8px 11px; border-radius:8px; font-size:13px; color:var(--text); cursor:pointer; transition:background .15s var(--ease); }
+  .pop-item:hover { background:var(--surface-3); }
+  .pop-item.danger { color:var(--negative); }
+  .pop-sep { height:1px; background:var(--border); margin:5px 4px; }
+
+  /* Content */
+  .content { flex:1; display:flex; flex-direction:column; min-width:0; overflow:hidden; }
+  .page-head { padding:22px 28px 0; }
+  .page-title { font-size:24px; font-weight:700; letter-spacing:-.02em; }
+  .page-sub { color:var(--text-subtle); font-size:13px; margin-top:3px; }
+  .tabs { display:flex; gap:4px; margin-top:18px; border-bottom:1px solid var(--border); }
+  .tab {
+    position:relative; padding:9px 14px 12px; font-size:14px; font-weight:500;
+    color:var(--text-muted); cursor:pointer; transition:color .2s var(--ease);
+  }
+  .tab:hover { color:var(--text); }
+  .tab.active { color:var(--text); }
+  .tab.active::after {
+    content:""; position:absolute; left:10px; right:10px; bottom:-1px; height:2px;
+    background:var(--accent); border-radius:2px;
+  }
+  .page-actions { margin-left:auto; display:flex; gap:8px; align-items:center; }
+  .btn {
+    display:inline-flex; align-items:center; gap:7px; padding:8px 14px; border-radius:9px;
+    font-size:13px; font-weight:600; cursor:pointer; border:1px solid transparent;
+    transition:all .2s var(--ease);
+  }
+  .btn-primary { background:var(--accent-strong); color:#fff; }
+  .btn-primary:hover { filter:brightness(1.08); transform:translateY(-1px); }
+  .btn-ghost { background:transparent; border-color:var(--border-strong); color:var(--text-muted); }
+  .btn-ghost:hover { background:var(--surface-2); color:var(--text); }
+
+  .body { flex:1; padding:18px 28px 28px; overflow-y:auto; }
+
+  /* Tidy-up nudge */
+  .nudge {
+    display:flex; align-items:center; gap:12px; padding:12px 16px; border-radius:12px;
+    background:color-mix(in srgb, var(--warning) 12%, var(--surface));
+    border:1px solid color-mix(in srgb, var(--warning) 30%, transparent);
+    margin-bottom:18px; animation:nudgeIn .3s var(--ease);
+  }
+  @keyframes nudgeIn { from { opacity:0; transform:translateY(-8px); } to { opacity:1; transform:translateY(0); } }
+  .nudge .ic { color:var(--warning); }
+  .nudge .tx { flex:1; font-size:13px; }
+  .nudge .tx b { color:var(--text); }
+  .nudge .go { font-size:13px; font-weight:600; color:var(--accent); cursor:pointer; white-space:nowrap; }
+  .nudge .x { color:var(--text-subtle); cursor:pointer; padding:4px; }
+
+  /* Fake expense rows */
+  .row {
+    display:flex; align-items:center; gap:14px; padding:13px 16px; border-radius:11px;
+    background:var(--surface); border:1px solid var(--border); margin-bottom:8px;
+    transition:transform .2s var(--ease), border-color .2s var(--ease);
+  }
+  .row:hover { transform:translateX(3px); border-color:var(--border-strong); }
+  .row .ri { width:36px; height:36px; border-radius:9px; background:var(--surface-2); display:flex; align-items:center; justify-content:center; color:var(--text-muted); flex-shrink:0; }
+  .row .rn { flex:1; min-width:0; }
+  .row .rn .rt { font-size:14px; font-weight:600; }
+  .row .rn .rd { font-size:12px; color:var(--text-subtle); margin-top:1px; }
+  .row .ra { font-size:15px; font-weight:600; font-variant-numeric:tabular-nums; }
+  .row .ra.neg { color:var(--text); }
+  .row .ra.pos { color:var(--positive); }
+  .chip { font-size:11px; font-weight:500; padding:3px 9px; border-radius:99px; background:var(--surface-2); color:var(--text-muted); }
+
+  .rail-toggle {
+    position:absolute; top:64px; right:-12px; width:24px; height:24px; border-radius:50%;
+    background:var(--surface-2); border:1px solid var(--border-strong); color:var(--text-muted);
+    display:flex; align-items:center; justify-content:center; cursor:pointer; z-index:20;
+    transition:all .2s var(--ease);
+  }
+  .rail-toggle:hover { color:var(--text); background:var(--surface-3); }
+  .app.rail .rail-toggle svg { transform:rotate(180deg); }
+
+  /* ============ MOBILE ============ */
+  .phone {
+    width:300px; flex-shrink:0; height:620px; border-radius:38px; padding:11px;
+    background:var(--surface); border:1px solid var(--border-strong); box-shadow:var(--shadow);
+  }
+  .phone-screen {
+    width:100%; height:100%; border-radius:28px; overflow:hidden; background:var(--bg);
+    display:flex; flex-direction:column; position:relative;
+  }
+  .ph-head { height:50px; display:flex; align-items:center; justify-content:center; gap:8px; border-bottom:1px solid var(--border); flex-shrink:0; }
+  .ph-head .mark { width:22px; height:22px; font-size:12px; border-radius:6px; }
+  .ph-head .wordmark { font-size:15px; }
+  .ph-body { flex:1; padding:14px; overflow-y:auto; }
+  .ph-card { background:var(--surface); border:1px solid var(--border); border-radius:13px; padding:15px; margin-bottom:11px; }
+  .ph-card .k { font-size:11px; color:var(--text-subtle); text-transform:uppercase; letter-spacing:.05em; }
+  .ph-card .big { font-size:26px; font-weight:700; margin-top:5px; letter-spacing:-.02em; }
+  .ph-card .delta { font-size:12px; color:var(--positive); margin-top:3px; }
+  .ph-mini { display:flex; gap:9px; }
+  .ph-mini .ph-card { flex:1; margin-bottom:0; }
+  .ph-mini .big { font-size:18px; }
+
+  .ph-nav {
+    height:64px; flex-shrink:0; border-top:1px solid var(--border); background:var(--surface);
+    display:flex; align-items:center; justify-content:space-around; padding:0 6px; position:relative;
+  }
+  .ph-tab { display:flex; flex-direction:column; align-items:center; gap:3px; color:var(--text-subtle); font-size:10px; font-weight:500; cursor:pointer; flex:1; transition:color .2s var(--ease); }
+  .ph-tab.active { color:var(--accent); }
+  .ph-tab svg { width:22px; height:22px; }
+  .ph-add {
+    width:50px; height:50px; border-radius:50%; flex-shrink:0; margin-top:-22px;
+    background:var(--accent-strong); color:#fff; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 8px 22px var(--accent-tint), 0 4px 10px rgba(0,0,0,.3); cursor:pointer;
+    transition:transform .2s var(--ease);
+  }
+  .ph-add:active { transform:scale(.92); }
+  .ph-add svg { width:26px; height:26px; }
+  .ph-label { text-align:center; font-size:11px; color:var(--text-subtle); margin-top:10px; }
+
+  .caption { max-width:1180px; margin:18px auto 0; font-size:12px; color:var(--text-subtle); text-align:center; line-height:1.6; }
+  @media (max-width:760px){ .app{min-width:0;} .stage{flex-direction:column;} }
+</style>
+</head>
+<body>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <span class="title"><b>Amigo</b> · Nav Redesign Prototype</span>
+  <div class="spacer"></div>
+  <div class="group">
+    <span class="label">Theme</span>
+    <div class="seg" id="themeSeg">
+      <button data-theme="dark" class="on">Dark</button>
+      <button data-theme="light">Light</button>
+    </div>
+  </div>
+  <div class="group">
+    <span class="label">Accent</span>
+    <div class="seg" id="accentSeg">
+      <button data-accent="iris" class="on"><span class="dot" style="background:#818cf8"></span>Iris</button>
+      <button data-accent="teal"><span class="dot" style="background:#2dd4bf"></span>Teal</button>
+      <button data-accent="amber"><span class="dot" style="background:#fbbf24"></span>Amber</button>
+    </div>
+  </div>
+</div>
+
+<div class="stage">
+
+  <!-- ============ DESKTOP ============ -->
+  <div class="app" id="app">
+    <aside class="sidebar">
+      <div class="side-head">
+        <div class="mark">a</div>
+        <div class="wordmark">Amigo</div>
+      </div>
+
+      <div class="rail-toggle" id="railToggle" title="Collapse sidebar">
+        <svg class="icon" style="width:14px;height:14px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+      </div>
+
+      <nav class="nav" id="nav">
+        <div class="nav-item" data-page="Dashboard" data-sub="Your money at a glance">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zm10-3a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>
+          <span class="lbl">Dashboard</span>
+        </div>
+        <div class="nav-item active" data-page="Money" data-sub="Expenses, incomes & recurring" data-tabs="Expenses,Incomes,Recurring">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          <span class="lbl">Money</span>
+        </div>
+        <div class="nav-item" data-page="Portfolio" data-sub="Holdings, net worth & exchanges" data-tabs="Holdings,Net Worth,Exchanges">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          <span class="lbl">Portfolio</span>
+        </div>
+        <div class="nav-item" data-page="Projects" data-sub="Tagged spending by project">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"/></svg>
+          <span class="lbl">Projects</span>
+        </div>
+        <div class="nav-item" data-page="Settings" data-sub="Categories, mappings, accounts & import" data-tabs="General,Categories,Mappings,Accounts,Import,Workspace">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span class="lbl">Settings</span>
+        </div>
+
+        <div class="nav-divider"></div>
+        <div class="nav-section-hint">Conditional</div>
+        <div class="nav-item" data-page="Insights" data-sub="AI-powered spending insights">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+          <span class="lbl">Insights</span>
+        </div>
+        <div class="nav-item" data-page="Inbox" data-sub="Feedback & bug reports (admin)">
+          <svg class="icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"/></svg>
+          <span class="lbl">Inbox</span>
+          <span class="badge">3</span>
+        </div>
+      </nav>
+
+      <div class="profile-wrap">
+        <div class="popover" id="popover">
+          <div class="pop-ws">
+            <div class="t">Workspace</div>
+            <div class="v">Personal
+              <svg class="icon" style="width:15px;height:15px;color:var(--text-subtle)" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg>
+            </div>
+          </div>
+          <div class="pop-item"><svg class="icon" style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4v16m8-8H4"/></svg> Create workspace</div>
+          <div class="pop-sep"></div>
+          <div class="pop-item"><svg class="icon" style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg> What's new</div>
+          <div class="pop-item" id="themeTogglePop"><svg class="icon" style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/></svg> Toggle theme</div>
+          <div class="pop-sep"></div>
+          <div class="pop-item danger"><svg class="icon" style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg> Sign out</div>
+        </div>
+        <div class="profile" id="profileBtn">
+          <div class="avatar">F</div>
+          <div class="who"><div class="nm">Francisco</div><div class="ws">Personal workspace</div></div>
+          <svg class="icon chev" style="width:15px;height:15px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="content">
+      <div class="page-head">
+        <div style="display:flex;align-items:flex-start">
+          <div>
+            <div class="page-title" id="pageTitle">Money</div>
+            <div class="page-sub" id="pageSub">Expenses, incomes & recurring</div>
+          </div>
+          <div class="page-actions">
+            <button class="btn btn-ghost"><svg class="icon" style="width:15px;height:15px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>Import</button>
+            <button class="btn btn-primary"><svg class="icon" style="width:15px;height:15px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>Add expense</button>
+          </div>
+        </div>
+        <div class="tabs" id="tabs">
+          <div class="tab active">Expenses</div>
+          <div class="tab">Incomes</div>
+          <div class="tab">Recurring</div>
+        </div>
+      </div>
+
+      <div class="body" id="body">
+        <div class="nudge">
+          <svg class="icon ic" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+          <div class="tx"><b>7 expenses</b> need a category. Tidy up to keep your reports accurate.</div>
+          <div class="go">Tidy up →</div>
+          <div class="x">✕</div>
+        </div>
+
+        <div class="row"><div class="ri">🍔</div><div class="rn"><div class="rt">McDonald's</div><div class="rd">Today · Lifestyle</div></div><span class="chip">Food</span><div class="ra neg">€12.40</div></div>
+        <div class="row"><div class="ri">🎵</div><div class="rn"><div class="rt">Spotify</div><div class="rd">Yesterday · Survival · Fixed</div></div><span class="chip">Subscriptions</span><div class="ra neg">€10.99</div></div>
+        <div class="row"><div class="ri">↩️</div><div class="rn"><div class="rt">Amazon refund</div><div class="rd">2 days ago · Refund</div></div><span class="chip">Shopping</span><div class="ra pos">(€34.50)</div></div>
+        <div class="row"><div class="ri">⚡</div><div class="rn"><div class="rt">EDP — Luz</div><div class="rd">3 days ago · Survival · Variable</div></div><span class="chip">Utilities</span><div class="ra neg">€58.20</div></div>
+        <div class="row"><div class="ri">🚗</div><div class="rn"><div class="rt">Car lease</div><div class="rd">5 days ago · Survival · Fixed</div></div><span class="chip">Transport</span><div class="ra neg">€289.00</div></div>
+        <div class="row"><div class="ri">🛒</div><div class="rn"><div class="rt">Continente</div><div class="rd">6 days ago · Lifestyle</div></div><span class="chip">Groceries</span><div class="ra neg">€76.83</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ MOBILE ============ -->
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="ph-head"><div class="mark">a</div><div class="wordmark">Amigo</div></div>
+      <div class="ph-body">
+        <div class="ph-card">
+          <div class="k">Spent this month</div>
+          <div class="big">€1,284</div>
+          <div class="delta" style="color:var(--negative)">↑ 12% vs last month</div>
+        </div>
+        <div class="ph-mini">
+          <div class="ph-card"><div class="k">Net worth</div><div class="big">€42.1k</div></div>
+          <div class="ph-card"><div class="k">Budget left</div><div class="big" style="color:var(--positive)">€716</div></div>
+        </div>
+        <div class="ph-card" style="margin-top:11px">
+          <div class="k" style="margin-bottom:9px">Recent</div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0"><span>McDonald's</span><span>€12.40</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0"><span>Spotify</span><span>€10.99</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:5px 0;color:var(--positive)"><span>Amazon refund</span><span>(€34.50)</span></div>
+        </div>
+      </div>
+      <div class="ph-nav">
+        <div class="ph-tab active">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zm10-3a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z"/></svg>
+          Home
+        </div>
+        <div class="ph-tab">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+          Money
+        </div>
+        <div class="ph-add">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+        </div>
+        <div class="ph-tab">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
+          Portfolio
+        </div>
+        <div class="ph-tab">
+          <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 6h16M4 12h16M4 18h16"/></svg>
+          More
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="caption">
+  Interactive prototype — switch <b>theme</b> & <b>accent</b> up top · click sidebar items to navigate · click the <b>‹ toggle</b> to collapse to icon rail · click your <b>profile</b> (bottom-left) for the popover.<br>
+  This shows the shell only. Inner page content (cards, tables, charts) is illustrative.
+</div>
+
+<script>
+  const root = document.documentElement;
+  // Theme
+  document.getElementById('themeSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    root.setAttribute('data-theme', b.dataset.theme);
+    document.querySelectorAll('#themeSeg button').forEach(x=>x.classList.toggle('on', x===b));
+  });
+  document.getElementById('themeTogglePop').addEventListener('click', ()=>{
+    const next = root.getAttribute('data-theme')==='dark'?'light':'dark';
+    root.setAttribute('data-theme', next);
+    document.querySelectorAll('#themeSeg button').forEach(x=>x.classList.toggle('on', x.dataset.theme===next));
+  });
+  // Accent
+  document.getElementById('accentSeg').addEventListener('click', e => {
+    const b = e.target.closest('button'); if(!b) return;
+    root.setAttribute('data-accent', b.dataset.accent);
+    document.querySelectorAll('#accentSeg button').forEach(x=>x.classList.toggle('on', x===b));
+  });
+  // Rail toggle
+  document.getElementById('railToggle').addEventListener('click', ()=> document.getElementById('app').classList.toggle('rail'));
+  // Profile popover
+  const pop = document.getElementById('popover');
+  document.getElementById('profileBtn').addEventListener('click', e=>{ e.stopPropagation(); pop.classList.toggle('open'); });
+  document.addEventListener('click', ()=> pop.classList.remove('open'));
+  pop.addEventListener('click', e=>e.stopPropagation());
+  // Nav switching
+  const tabsEl = document.getElementById('tabs');
+  document.getElementById('nav').addEventListener('click', e=>{
+    const item = e.target.closest('.nav-item'); if(!item) return;
+    document.querySelectorAll('.nav-item').forEach(x=>x.classList.remove('active'));
+    item.classList.add('active');
+    document.getElementById('pageTitle').textContent = item.dataset.page;
+    document.getElementById('pageSub').textContent = item.dataset.sub;
+    // tabs
+    tabsEl.innerHTML='';
+    if(item.dataset.tabs){
+      item.dataset.tabs.split(',').forEach((t,i)=>{
+        const d=document.createElement('div'); d.className='tab'+(i===0?' active':''); d.textContent=t;
+        d.onclick=()=>{ tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); d.classList.add('active'); };
+        tabsEl.appendChild(d);
+      });
+      tabsEl.style.display='flex';
+    } else { tabsEl.style.display='none'; }
+  });
+  // Hub tab clicks (initial)
+  tabsEl.addEventListener('click', e=>{ const t=e.target.closest('.tab'); if(!t)return; tabsEl.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); t.classList.add('active'); });
+</script>
+</body>
+</html>

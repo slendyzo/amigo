@@ -68,7 +68,11 @@
     "sectionMoney": "Argent",
     "sectionOrganize": "Organiser",
     "sectionData": "Données",
-    "insights": "Analyses"
+    "insights": "Analyses",
+    "money": "Argent",
+    "themeLight": "Clair",
+    "themeDark": "Sombre",
+    "themeSystem": "Auto"
   },
   "auth": {
     "signIn": "Connexion",
@@ -1431,6 +1435,8 @@
     "lastSync": "Dernière sync",
     "neverSynced": "Jamais synchronisé",
     "syncError": "Erreur de synchronisation",
+    "syncFailed": "La synchronisation a échoué. Veuillez réessayer.",
+    "deleteFailed": "Impossible de supprimer cette connexion. Veuillez réessayer.",
     "syncSuccess": "Synchronisé avec succès",
     "assetType": "Type d'Actif",
     "exchange": "Plateforme",
@@ -1440,6 +1446,7 @@
     "currentValue": "Valeur Actuelle",
     "pnl": "Plus/Moins-value",
     "dcaAverage": "Moyenne DCA",
+    "costBasisPending": "Coût d'acquisition en attente",
     "crypto": "Crypto",
     "etf": "ETF",
     "stock": "Actions",
@@ -1488,6 +1495,8 @@
     "addFirstVehicleDescription": "Suivez sa valeur, son kilométrage, son crédit et son coût total de possession",
     "addAnother": "Ajouter un autre véhicule",
     "viewAll": "Voir tout",
+    "netEquity": "Valeur nette",
+    "afterLoans": "après {amount} de prêts",
     "estimatedValue": "Valeur estimée",
     "soldFor": "Vendu pour",
     "costBasis": "Prix d'achat",

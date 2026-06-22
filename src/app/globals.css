@@ -37,6 +37,28 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* ===== Amigo shell tokens — LIGHT (accent: Amber) ===== */
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --app-bg: #f7f8fa;
+  --surface: #ffffff;
+  --surface-2: #f1f2f4;
+  --surface-3: #e9eaed;
+  --line: rgba(9, 9, 11, 0.08);
+  --line-strong: rgba(9, 9, 11, 0.13);
+  --ink: #18181b;
+  --ink-muted: #52525b;
+  --ink-subtle: #8a8a93;
+  --accent: #d97706;
+  --accent-strong: #b45309;
+  --accent-fg: #ffffff;
+  --accent-tint: rgba(217, 119, 6, 0.10);
+  --positive: #16a34a;
+  --negative: #dc2626;
+  /* warning moved OFF amber → orange, so it never collides with the accent */
+  --warning: #f97316;
+  --shadow-pop: 0 12px 40px rgba(9, 9, 11, 0.12);
 }
 
 body {
@@ -127,6 +149,25 @@ html {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+
+  /* ===== Amigo shell tokens — DARK (accent: Amber, brighter for dark) ===== */
+  --app-bg: #0a0a0b;
+  --surface: #131316;
+  --surface-2: #1a1b1f;
+  --surface-3: #212227;
+  --line: rgba(255, 255, 255, 0.08);
+  --line-strong: rgba(255, 255, 255, 0.14);
+  --ink: #ededef;
+  --ink-muted: #a1a1aa;
+  --ink-subtle: #71717a;
+  --accent: #fbbf24;
+  --accent-strong: #d97706;
+  --accent-fg: #1a1300;
+  --accent-tint: rgba(251, 191, 36, 0.16);
+  --positive: #4ade80;
+  --negative: #f87171;
+  --warning: #fb923c;
+  --shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {

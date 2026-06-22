@@ -68,7 +68,11 @@
     "sectionMoney": "Money",
     "sectionOrganize": "Organize",
     "sectionData": "Data",
-    "insights": "Insights"
+    "insights": "Insights",
+    "money": "Money",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "themeSystem": "Auto"
   },
   "auth": {
     "signIn": "Sign In",
@@ -1460,6 +1464,8 @@
     "lastSync": "Last sync",
     "neverSynced": "Never synced",
     "syncError": "Sync error",
+    "syncFailed": "Sync failed. Please try again.",
+    "deleteFailed": "Couldn't remove that connection. Please try again.",
     "syncSuccess": "Synced successfully",
     "assetType": "Asset Type",
     "exchange": "Exchange",
@@ -1469,6 +1475,7 @@
     "currentValue": "Current Value",
     "pnl": "P&L",
     "dcaAverage": "DCA Avg",
+    "costBasisPending": "Cost basis pending",
     "crypto": "Crypto",
     "etf": "ETF",
     "stock": "Stock",
@@ -1517,6 +1524,8 @@
     "addFirstVehicleDescription": "Track its value, mileage, loan, and total cost of ownership",
     "addAnother": "Add another vehicle",
     "viewAll": "View all",
+    "netEquity": "Net equity",
+    "afterLoans": "after {amount} in loans",
     "estimatedValue": "Estimated value",
     "soldFor": "Sold for",
     "costBasis": "Cost basis",

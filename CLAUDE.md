@@ -2,6 +2,10 @@
 
 This file provides all context needed to start a new Claude Code session and continue development.
 
+## CRITICAL: HTML for Human-Facing Deliverables
+
+**Anything meant for Kiko to read or review — blueprints, design proposals, plans, reports, mockups — is a self-contained HTML file in `/docs`, not markdown.** For UI/design work, the doc must *render the actual UI* (real layout, colors, theme/accent toggles, interactive states), not describe it in prose. Single `.html`, inline CSS/JS, no build step, double-click to open. Exceptions that stay markdown: this file, `PRD.md`, `README`, and agent-context files. See global CLAUDE.md for the full rule.
+
 ## CRITICAL: Use Plane for ALL Tasks
 
 **NEVER skip Plane.** Every task, bug fix, and feature must be tracked in Plane. Before starting any work:
