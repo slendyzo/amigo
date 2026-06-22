@@ -54,6 +54,11 @@ export interface AggregatedAsset {
   unrealizedPnlPct: number;
   realizedPnlEur: number | null;
 
+  // True when at least one constituent has a real value but no cost basis yet
+  // (e.g. Bybit trade-history backfill still running). P&L excludes those
+  // positions, so callers should render "—" rather than a misleading number.
+  costBasisPending: boolean;
+
   isDust: boolean;
   priceStatus: AggPriceStatus;
   priceUnavailableReason: string | null;
@@ -130,9 +135,20 @@ export function aggregateAssetsBySymbol(assets: AssetInput[]): AggregatedAsset[]
     );
     const currentValueEur = list.reduce((s, a) => s + a.currentValueEur, 0);
     const totalCostEur = list.reduce((s, a) => s + a.totalCostEur, 0);
-    const unrealizedPnlEur = currentValueEur - totalCostEur;
+
+    // A position with real value but zero cost basis hasn't had its trades
+    // backfilled yet (Bybit reports 0 cost until sync.ts persists trade history).
+    // Counting its whole value as profit inflates P&L — exclude it from the P&L
+    // math while still counting its value in currentValueEur. P&L fills in once
+    // backfill completes.
+    const isPending = (a: AssetInput) => a.totalCostEur === 0 && a.currentValueEur > 0;
+    const costBasisPending = list.some(isPending);
+    const knownForPnl = list.filter((a) => !isPending(a));
+    const knownValueEur = knownForPnl.reduce((s, a) => s + a.currentValueEur, 0);
+    const knownCostEur = knownForPnl.reduce((s, a) => s + a.totalCostEur, 0);
+    const unrealizedPnlEur = knownValueEur - knownCostEur;
     const unrealizedPnlPct =
-      totalCostEur > 0 ? (unrealizedPnlEur / totalCostEur) * 100 : 0;
+      knownCostEur > 0 ? (unrealizedPnlEur / knownCostEur) * 100 : 0;
 
     const realizedPnls = list
       .map((a) => a.realizedPnlEur)
@@ -171,6 +187,7 @@ export function aggregateAssetsBySymbol(assets: AssetInput[]): AggregatedAsset[]
       unrealizedPnlEur,
       unrealizedPnlPct,
       realizedPnlEur,
+      costBasisPending,
       isDust,
       priceStatus,
       priceUnavailableReason,

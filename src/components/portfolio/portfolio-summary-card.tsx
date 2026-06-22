@@ -81,10 +81,15 @@ const CURRENCY_FALLBACK: Record<string, string> = {
 
 export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }: Props) {
   const { formatAmount } = usePortfolioCurrency();
+  // A position with real value but zero cost basis hasn't had its trades
+  // backfilled yet (Bybit reports 0 cost until sync persists trade history).
+  // Its raw unrealizedPnl equals the whole current value, so counting it as
+  // profit inflates the total — exclude it from P&L while still counting value.
+  const isPending = (a: Asset) => a.totalCostEur === 0 && a.currentValueEur > 0;
   // Aggregate totals across all assets
   const totalValueEur = assets.reduce((sum, a) => sum + a.currentValueEur, 0);
   const totalCostEur = assets.reduce((sum, a) => sum + a.totalCostEur, 0);
-  const totalPnlEur = assets.reduce((sum, a) => sum + a.unrealizedPnlEur, 0);
+  const totalPnlEur = assets.reduce((sum, a) => sum + (isPending(a) ? 0 : a.unrealizedPnlEur), 0);
   const totalPnlPct = totalCostEur > 0 ? (totalPnlEur / totalCostEur) * 100 : 0;
 
   // Total free cash across all connections — converted to EUR per connection
@@ -113,7 +118,7 @@ export default function PortfolioSummaryCard({ connections, assets, fxMeta, t }:
   const exchangeBreakdown = connections.map((conn) => {
     const connAssets = assets.filter((a) => a.exchange.id === conn.id);
     const connValue = connAssets.reduce((sum, a) => sum + a.currentValueEur, 0);
-    const connPnl = connAssets.reduce((sum, a) => sum + a.unrealizedPnlEur, 0);
+    const connPnl = connAssets.reduce((sum, a) => sum + (isPending(a) ? 0 : a.unrealizedPnlEur), 0);
     const connCost = connAssets.reduce((sum, a) => sum + a.totalCostEur, 0);
     const connPct = connCost > 0 ? (connPnl / connCost) * 100 : 0;
     return { conn, connValue, connPnl, connPct };

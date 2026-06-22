@@ -67,6 +67,7 @@ export async function GET(request: Request) {
       where: whereClause,
       orderBy: { date: "asc" },
       select: {
+        exchangeConnectionId: true,
         date: true,
         totalValueEur: true,
         totalCostEur: true,
@@ -75,46 +76,77 @@ export async function GET(request: Request) {
       },
     });
 
-    // Aggregate across connections per date
-    const dateMap = new Map<
-      string,
-      {
-        totalValueEur: number;
-        totalCostEur: number;
-        unrealizedPnlEur: number;
-        freeCashEur: number;
-      }
-    >();
+    type Vals = {
+      totalValueEur: number;
+      totalCostEur: number;
+      unrealizedPnlEur: number;
+      freeCashEur: number;
+    };
+    const toVals = (snap: {
+      totalValueEur: unknown;
+      totalCostEur: unknown;
+      unrealizedPnlEur: unknown;
+      freeCashEur: unknown;
+    }): Vals => ({
+      totalValueEur: Number(snap.totalValueEur),
+      totalCostEur: Number(snap.totalCostEur),
+      unrealizedPnlEur: Number(snap.unrealizedPnlEur),
+      freeCashEur: snap.freeCashEur ? Number(snap.freeCashEur) : 0,
+    });
 
-    for (const snap of snapshots) {
-      const dateKey = snap.date.toISOString().slice(0, 10); // YYYY-MM-DD
-      const existing = dateMap.get(dateKey);
-      const freeCash = snap.freeCashEur ? Number(snap.freeCashEur) : 0;
+    // Forward-fill each connection's last-known value across the date ladder.
+    // Naively summing per-date rows means a day where only connection A synced
+    // omits B entirely → a phantom dip/spike that's a sync-timing artifact, not
+    // a real value change. Carry each connection's prior value forward instead.
+    const lastByConn = new Map<string, Vals>();
 
-      if (existing) {
-        existing.totalValueEur += Number(snap.totalValueEur);
-        existing.totalCostEur += Number(snap.totalCostEur);
-        existing.unrealizedPnlEur += Number(snap.unrealizedPnlEur);
-        existing.freeCashEur += freeCash;
-      } else {
-        dateMap.set(dateKey, {
-          totalValueEur: Number(snap.totalValueEur),
-          totalCostEur: Number(snap.totalCostEur),
-          unrealizedPnlEur: Number(snap.unrealizedPnlEur),
-          freeCashEur: freeCash,
-        });
-      }
+    // Seed from the most recent snapshot per connection *before* the window, so
+    // carry-forward into the window starts from the right baseline (not zero).
+    if (startDate) {
+      const seeds = await prisma.portfolioSnapshot.findMany({
+        where: { exchangeConnectionId: { in: connectionIds }, date: { lt: startDate } },
+        orderBy: [{ exchangeConnectionId: "asc" }, { date: "desc" }],
+        distinct: ["exchangeConnectionId"],
+        select: {
+          exchangeConnectionId: true,
+          totalValueEur: true,
+          totalCostEur: true,
+          unrealizedPnlEur: true,
+          freeCashEur: true,
+        },
+      });
+      for (const s of seeds) lastByConn.set(s.exchangeConnectionId, toVals(s));
     }
 
-    const aggregated = Array.from(dateMap.entries())
-      .sort(([a], [b]) => a.localeCompare(b))
-      .map(([date, values]) => ({
-        date,
-        totalValueEur: values.totalValueEur,
-        totalCostEur: values.totalCostEur,
-        unrealizedPnlEur: values.unrealizedPnlEur,
-        freeCashEur: values.freeCashEur,
-      }));
+    // Group in-window snapshots by date (one row per connection per date).
+    const byDate = new Map<string, Array<{ connId: string; vals: Vals }>>();
+    for (const snap of snapshots) {
+      const dateKey = snap.date.toISOString().slice(0, 10); // YYYY-MM-DD
+      const arr = byDate.get(dateKey) ?? [];
+      arr.push({ connId: snap.exchangeConnectionId, vals: toVals(snap) });
+      byDate.set(dateKey, arr);
+    }
+
+    const dateKeys = Array.from(byDate.keys()).sort((a, b) => a.localeCompare(b));
+
+    const aggregated = dateKeys.map((dateKey) => {
+      // Apply this date's updates to the running per-connection state…
+      for (const { connId, vals } of byDate.get(dateKey)!) {
+        lastByConn.set(connId, vals);
+      }
+      // …then sum across every connection seen so far (forward-filled).
+      let totalValueEur = 0;
+      let totalCostEur = 0;
+      let unrealizedPnlEur = 0;
+      let freeCashEur = 0;
+      for (const v of lastByConn.values()) {
+        totalValueEur += v.totalValueEur;
+        totalCostEur += v.totalCostEur;
+        unrealizedPnlEur += v.unrealizedPnlEur;
+        freeCashEur += v.freeCashEur;
+      }
+      return { date: dateKey, totalValueEur, totalCostEur, unrealizedPnlEur, freeCashEur };
+    });
 
     return NextResponse.json({ snapshots: aggregated });
   } catch (error) {

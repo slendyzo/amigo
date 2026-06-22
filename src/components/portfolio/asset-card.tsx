@@ -47,7 +47,9 @@ const ASSET_TYPE_CONFIG: Record<
 export default function AssetCard({ asset, t }: Props) {
   const { formatAmount, formatPrice } = usePortfolioCurrency();
   const isPnlPositive = asset.unrealizedPnlEur >= 0;
-  const pnlBarWidthPct = Math.min(Math.abs(asset.unrealizedPnlPct), 100);
+  const pnlBarWidthPct = asset.costBasisPending
+    ? 0
+    : Math.min(Math.abs(asset.unrealizedPnlPct), 100);
 
   const assetConfig = ASSET_TYPE_CONFIG[asset.assetType] ?? {
     label: asset.assetType,
@@ -111,26 +113,39 @@ export default function AssetCard({ asset, t }: Props) {
 
         {/* Right: P&L */}
         <div className="text-right flex-shrink-0">
-          <p
-            className={`text-sm font-bold tabular-nums ${
-              isPnlPositive
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-red-500 dark:text-red-400"
-            }`}
-          >
-            {isPnlPositive ? "+" : ""}
-            {formatAmount(asset.unrealizedPnlEur)}
-          </p>
-          <p
-            className={`text-xs font-medium tabular-nums ${
-              isPnlPositive
-                ? "text-emerald-500 dark:text-emerald-500"
-                : "text-red-400 dark:text-red-500"
-            }`}
-          >
-            {isPnlPositive ? "+" : ""}
-            {asset.unrealizedPnlPct.toFixed(2)}%
-          </p>
+          {asset.costBasisPending ? (
+            <>
+              <p className="text-sm font-bold tabular-nums text-slate-400 dark:text-slate-500">
+                —
+              </p>
+              <p className="text-[10px] font-medium text-slate-400 dark:text-slate-500">
+                {t("costBasisPending")}
+              </p>
+            </>
+          ) : (
+            <>
+              <p
+                className={`text-sm font-bold tabular-nums ${
+                  isPnlPositive
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-red-500 dark:text-red-400"
+                }`}
+              >
+                {isPnlPositive ? "+" : ""}
+                {formatAmount(asset.unrealizedPnlEur)}
+              </p>
+              <p
+                className={`text-xs font-medium tabular-nums ${
+                  isPnlPositive
+                    ? "text-emerald-500 dark:text-emerald-500"
+                    : "text-red-400 dark:text-red-500"
+                }`}
+              >
+                {isPnlPositive ? "+" : ""}
+                {asset.unrealizedPnlPct.toFixed(2)}%
+              </p>
+            </>
+          )}
         </div>
       </div>
 
@@ -176,10 +191,12 @@ export default function AssetCard({ asset, t }: Props) {
             style={{ width: `${pnlBarWidthPct}%` }}
           />
         </div>
-        {/* DCA Average */}
-        <p className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
-          {t("dcaAverage")}: {formatPrice(asset.averageBuyPriceEur)}
-        </p>
+        {/* DCA Average — hidden while cost basis is still backfilling */}
+        {!asset.costBasisPending && (
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 tabular-nums">
+            {t("dcaAverage")}: {formatPrice(asset.averageBuyPriceEur)}
+          </p>
+        )}
       </div>
     </Link>
   );

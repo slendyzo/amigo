@@ -98,6 +98,10 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
   // Syncing state: stores the id being synced
   const [syncingId, setSyncingId] = useState<string | null>(null);
 
+  // Surfaced error for a failed sync/delete (silent failures read as "nothing
+  // happened" otherwise).
+  const [actionError, setActionError] = useState<string | null>(null);
+
   // ─── Handlers ───────────────────────────────────────────────────────────────
 
   const openAdd = () => {
@@ -112,30 +116,65 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
 
   const handleDelete = async (id: string) => {
     setIsDeleting(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/portfolio/exchanges/${id}`, { method: "DELETE" });
       if (res.ok) {
         router.refresh();
+      } else {
+        setActionError(t("deleteFailed"));
       }
     } catch {
-      // swallow
+      setActionError(t("deleteFailed"));
     } finally {
       setIsDeleting(false);
       setConfirmDeleteId(null);
     }
   };
 
+  // Sync is kicked off detached on the server (returns ~immediately). Poll
+  // /api/portfolio until this connection leaves SYNCING before clearing the
+  // spinner — otherwise we'd report "done" while the sync is still running and
+  // the refreshed data wouldn't reflect it.
+  const pollConnectionSynced = async (id: string) => {
+    const POLL_INTERVAL_MS = 2000;
+    const POLL_TIMEOUT_MS = 10 * 60 * 1000;
+    const startedAt = Date.now();
+    while (Date.now() - startedAt < POLL_TIMEOUT_MS) {
+      await new Promise((r) => setTimeout(r, POLL_INTERVAL_MS));
+      try {
+        const res = await fetch("/api/portfolio");
+        if (!res.ok) continue;
+        const data = (await res.json()) as {
+          exchanges?: Array<{ id: string; syncStatus: string }>;
+        };
+        const conn = data.exchanges?.find((e) => e.id === id);
+        if (!conn || conn.syncStatus !== "SYNCING") return;
+      } catch {
+        // transient — keep polling
+      }
+    }
+  };
+
   const handleSync = async (id: string) => {
+    if (syncingId) return;
     setSyncingId(id);
+    setActionError(null);
     try {
-      await fetch("/api/portfolio/sync", {
+      const res = await fetch("/api/portfolio/sync", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ connectionId: id }),
       });
+      // 409 = a sync was already in flight — fine, just poll for it.
+      if (!res.ok && res.status !== 409) {
+        setActionError(t("syncFailed"));
+        return;
+      }
+      await pollConnectionSynced(id);
       router.refresh();
     } catch {
-      // swallow
+      setActionError(t("syncFailed"));
     } finally {
       setSyncingId(null);
     }
@@ -173,6 +212,16 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
           {t("addExchange")}
         </button>
       </div>
+
+      {/* Action error banner */}
+      {actionError && (
+        <div className="flex items-center gap-3 rounded-xl border border-red-200/60 dark:border-red-700/30 bg-red-50/80 dark:bg-red-900/10 px-4 py-3">
+          <svg className="w-4 h-4 shrink-0 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+          </svg>
+          <p className="text-sm text-red-700 dark:text-red-400">{actionError}</p>
+        </div>
+      )}
 
       {/* Empty state */}
       {connections.length === 0 && (
