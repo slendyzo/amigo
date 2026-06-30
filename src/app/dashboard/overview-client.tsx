@@ -134,7 +134,9 @@ type Props = {
   // Overview/home redesign (AMIGO-279) — current values; consumed by the new
   // Bento client. Optional during the migration so this component still builds.
   netWorthEur?: number;
+  netWorthDeltaEur?: number | null;
   portfolioTotalEur?: number;
+  portfolioDeltaEur?: number | null;
   rwaEquityEur?: number;
   rwaTopAssets?: { id: string; name: string; valueEur: number }[];
   rwaLinkedDebtEur?: number;
@@ -180,7 +182,9 @@ export default function DashboardOverview({
   exchangeConnections,
   portfolioAssets,
   netWorthEur,
+  netWorthDeltaEur,
   portfolioTotalEur,
+  portfolioDeltaEur,
   rwaEquityEur,
   rwaTopAssets,
   rwaLinkedDebtEur,
@@ -1305,9 +1309,11 @@ export default function DashboardOverview({
         <OverviewHero
           userName={userName}
           netWorthEur={netWorthEur ?? portfolioTotalValue}
+          netWorthDeltaEur={netWorthDeltaEur}
           spentEur={stats.budgetTotal}
           budgetEur={livingBudget}
           portfolioEur={portfolioTotalEur ?? portfolioTotalValue}
+          portfolioDeltaEur={portfolioDeltaEur}
         />
 
         {/* Bento body — spending box (left) + rail (right) */}
@@ -1440,6 +1446,7 @@ export default function DashboardOverview({
           <div className="space-y-4">
             <RailPortfolio
               totalEur={portfolioTotalEur ?? portfolioTotalValue}
+              deltaEur={portfolioDeltaEur}
               holdings={portfolioAssets.slice(0, 2).map((a) => ({ symbol: a.symbol, label: `${a.symbol} · ${a.exchange.label}`, valueEur: a.currentValueEur }))}
               exchangeCount={exchangeConnections.length}
               moreCount={Math.max(0, exchangeConnections.reduce((s, c) => s + c.assetCount, 0) - 2)}

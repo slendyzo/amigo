@@ -395,6 +395,40 @@ export default async function DashboardPage({
     .sort((x, y) => y.valueEur - x.valueEur)
     .slice(0, 2);
 
+  // ── "This month" deltas ───────────────────────────────────────────────────
+  // Compare today's values against the last known value at/before the start of
+  // the month: portfolio from snapshots, RWA from valuation history (per-asset
+  // latest before the month). Liabilities amortize slowly — omitted from the
+  // delta. Null when there's no history yet (so the hero hides the delta line).
+  const connectionIds = exchangeConnections.map((c) => c.id);
+  const realAssetIds = realAssets.map((a) => a.id);
+  const [portfolioStartSnaps, rwaStartVals] = await Promise.all([
+    connectionIds.length
+      ? prisma.portfolioSnapshot.findMany({
+          where: { exchangeConnectionId: { in: connectionIds }, date: { lte: startOfMonth } },
+          orderBy: [{ exchangeConnectionId: "asc" }, { date: "desc" }],
+          distinct: ["exchangeConnectionId"],
+          select: { totalValueEur: true },
+        })
+      : Promise.resolve([] as { totalValueEur: unknown }[]),
+    realAssetIds.length
+      ? prisma.valuationHistory.findMany({
+          where: { realAssetId: { in: realAssetIds }, recordedAt: { lte: startOfMonth } },
+          orderBy: [{ realAssetId: "asc" }, { recordedAt: "desc" }],
+          distinct: ["realAssetId"],
+          select: { valueEur: true },
+        })
+      : Promise.resolve([] as { valueEur: unknown }[]),
+  ]);
+  const portfolioStartValue = portfolioStartSnaps.reduce((s, r) => s + Number(r.totalValueEur), 0);
+  const rwaStartValue = rwaStartVals.reduce((s, r) => s + Number(r.valueEur), 0);
+  const portfolioDeltaEur = portfolioStartSnaps.length > 0 ? portfolioTotalEur - portfolioStartValue : null;
+  const rwaDeltaEur = rwaStartVals.length > 0 ? rwaAssetsEur - rwaStartValue : 0;
+  const netWorthDeltaEur =
+    portfolioStartSnaps.length > 0 || rwaStartVals.length > 0
+      ? (portfolioDeltaEur ?? 0) + rwaDeltaEur
+      : null;
+
   // Use username (nickname) if set, otherwise fall back to name or "User"
   const displayName = user?.username || user?.name || session.user.name || "User";
 
@@ -421,7 +455,9 @@ export default async function DashboardPage({
       exchangeConnections={connectionsForDashboard}
       portfolioAssets={assetsForDashboard}
       netWorthEur={netWorthEur}
+      netWorthDeltaEur={netWorthDeltaEur}
       portfolioTotalEur={portfolioTotalEur}
+      portfolioDeltaEur={portfolioDeltaEur}
       rwaEquityEur={rwaEquityEur}
       rwaTopAssets={rwaTopAssets}
       rwaLinkedDebtEur={linkedLiabilitiesEur}
