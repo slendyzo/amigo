@@ -229,8 +229,10 @@ export class BinanceClient implements ExchangeClient {
     const averages: Record<string, { avgPrice: number; currency: string }> = {};
 
     for (const asset of assets) {
-      // Try USDT pair first, then BUSD, then EUR
-      const quotesToTry = ["USDT", "BUSD", "EUR"];
+      // Quote pairs to try, in priority order. USDC/FDUSD are now Binance's
+      // dominant zero-fee quotes for newer tokens; BUSD is defunct (kept last
+      // only for legacy pre-2024 trades).
+      const quotesToTry = ["USDT", "USDC", "FDUSD", "EUR", "BUSD"];
       let symbol: string | null = null;
       let quoteCurrency: string | null = null;
 
@@ -316,7 +318,7 @@ export class BinanceClient implements ExchangeClient {
         const buyInfo = avgBuyPrices[holding.asset] ?? { avgPrice: 0, currency: "USDT" };
 
         // Resolve current price using the same quote currency as buy trades
-        const quotesToTry = [buyInfo.currency, "USDT", "BUSD", "EUR"];
+        const quotesToTry = [buyInfo.currency, "USDT", "USDC", "FDUSD", "EUR", "BUSD"];
         let currentPrice = 0;
         let positionCurrency = buyInfo.currency;
 
@@ -495,8 +497,9 @@ export class BinanceClient implements ExchangeClient {
     if (since) params.startTime = since.getTime();
 
     for (const asset of tradedAssets) {
-      // Try USDT, BUSD, EUR pairs
-      const quotesToTry = ["USDT", "BUSD", "EUR"];
+      // Pull trade history across all common quote pairs. Missing USDC/FDUSD
+      // here is what hid recent buys (e.g. SYN on SYN/FDUSD) entirely.
+      const quotesToTry = ["USDT", "USDC", "FDUSD", "EUR", "BUSD"];
 
       for (const quote of quotesToTry) {
         const symbol = `${asset}${quote}`;

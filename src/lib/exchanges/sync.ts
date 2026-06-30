@@ -281,20 +281,6 @@ export async function syncExchange(
       console.log(`${tag} Marked tradeHistoryComplete=true after full backfill`);
     }
 
-    // Symbols with any trade history (used for the dust-exemption check below).
-    // After the optional persist above, the DB reflects current truth.
-    const tradedSymbolsRows = await prisma.trade.findMany({
-      where: { exchangeConnectionId: connectionId },
-      select: { symbol: true },
-      distinct: ["symbol"],
-    });
-    // In dry-run we haven't persisted, but include the just-fetched trades too
-    // so dust assignment isn't biased by the missing writes.
-    const tradedSymbols = new Set([
-      ...tradedSymbolsRows.map((r) => r.symbol),
-      ...rawTrades.map((t) => t.symbol),
-    ]);
-
     // Cost basis from full trade history. Only meaningful once we've completed
     // the backfill — otherwise we'd be averaging an incomplete set of buys.
     // The flag was just (potentially) flipped above, so re-read connection state.
@@ -316,13 +302,19 @@ export async function syncExchange(
       // averageBuyPrice=0 (e.g., Bybit) and we'll fill it in here. If no trade
       // history covers this symbol, fall back to whatever the connector said.
       const cb = costBasisMap.get(pos.symbol);
-      const useTradeBasis = cb && cb.avgBuyPrice > 0 && cb.currency === pos.currency;
+      const useTradeBasis = !!cb && cb.avgBuyPrice > 0;
 
+      // When using trade-derived cost basis, the avg buy price is denominated in
+      // the dominant quote currency of the trades (e.g. FDUSD), which can differ
+      // from the live position's quote (e.g. USDT — Binance prices SYN there even
+      // when it was bought on SYN/FDUSD). Track the cost currency separately and
+      // convert each leg with its own currency; both normalise to USD→EUR anyway.
+      // Requiring an exact currency match here is what discarded cross-quote cost
+      // bases and left DCA at €0.
       const averageBuyPrice = useTradeBasis ? cb!.avgBuyPrice : pos.averageBuyPrice;
+      const costCurrency = useTradeBasis ? cb!.currency : pos.currency;
       const totalCost = averageBuyPrice * pos.quantity;
       const currentValue = pos.currentValue; // already qty * currentPrice
-      const unrealizedPnl = currentValue - totalCost;
-      const unrealizedPnlPct = totalCost > 0 ? (unrealizedPnl / totalCost) * 100 : 0;
 
       const { amountEur: currentPriceEur } = await convertToEur(
         pos.currentPrice,
@@ -330,7 +322,7 @@ export async function syncExchange(
       );
       const { amountEur: averageBuyPriceEur } = await convertToEur(
         averageBuyPrice,
-        pos.currency
+        costCurrency
       );
       const { amountEur: currentValueEur } = await convertToEur(
         currentValue,
@@ -338,12 +330,15 @@ export async function syncExchange(
       );
       const { amountEur: totalCostEur } = await convertToEur(
         totalCost,
-        pos.currency
+        costCurrency
       );
-      const { amountEur: unrealizedPnlEur } = await convertToEur(
-        unrealizedPnl,
-        pos.currency
-      );
+
+      // Compute P&L in EUR space so cost (costCurrency) and value (pos.currency)
+      // can be denominated differently without corrupting the subtraction.
+      const unrealizedPnlEur = currentValueEur - totalCostEur;
+      const unrealizedPnl = currentValue - totalCost; // raw; display uses EUR
+      const unrealizedPnlPct =
+        totalCostEur > 0 ? (unrealizedPnlEur / totalCostEur) * 100 : 0;
 
       // Realized P&L (from sells) — convert at today's FX. Only when complete.
       const realizedPnlEur = cb && cb.realizedPnl !== 0
@@ -351,10 +346,13 @@ export async function syncExchange(
         : null;
 
       const priceStatus: DbPriceStatus = (pos.priceStatus ?? "OK") as DbPriceStatus;
+      // Strict floor: anything worth under the threshold is dust, regardless of
+      // trade history. (We previously exempted any traded symbol, which kept
+      // worthless leftovers like PUMP €0.00 / SOL €0.05 on the list forever.)
+      // priceStatus !== OK still escapes the filter so unknown-price holdings
+      // aren't hidden.
       const isDust =
-        priceStatus === "OK" &&
-        currentValueEur < DUST_THRESHOLD_EUR &&
-        !tradedSymbols.has(pos.symbol);
+        priceStatus === "OK" && currentValueEur < DUST_THRESHOLD_EUR;
 
       const computed: ComputedAssetRow = {
         symbol: pos.symbol,
