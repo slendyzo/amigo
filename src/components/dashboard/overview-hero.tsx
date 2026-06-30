@@ -78,15 +78,37 @@ export default function OverviewHero({
 
   const pct = budgetEur > 0 ? Math.round((spentEur / budgetEur) * 100) : 0;
 
+  const cardStyle = { background: "var(--surface)", border: "1px solid var(--line)" };
+
   return (
     <section>
-      <h1 className="mb-3.5 text-[19px] font-semibold tracking-tight">
+      <h1 className="mb-3.5 text-[17px] font-semibold tracking-tight md:text-[19px]">
         {t(greetingKey, { name: userName })} 👋
       </h1>
-      <div
-        className="grid grid-cols-3 rounded-2xl"
-        style={{ background: "var(--surface)", border: "1px solid var(--line)" }}
-      >
+
+      {/* Mobile (variant A): net worth big + Spent / Portfolio in a 2-up row */}
+      <div className="space-y-2.5 md:hidden">
+        <Link href="/dashboard/networth" className="block rounded-2xl px-4 py-3.5" style={cardStyle}>
+          <p className="text-[11px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("statNetWorth")}</p>
+          <p className="mt-1 text-[27px] font-bold tracking-tight tabular-nums">{formatCurrency(netWorthEur, "EUR")}</p>
+          <p className="mt-0.5 text-[12px] font-semibold tabular-nums"><DeltaText amount={netWorthDeltaEur} /></p>
+        </Link>
+        <div className="grid grid-cols-2 gap-2.5">
+          <Link href="/dashboard/expenses" className="block rounded-2xl px-4 py-3" style={cardStyle}>
+            <p className="text-[11px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("statSpent")}</p>
+            <p className="mt-1 text-[18px] font-bold tracking-tight tabular-nums">{formatCurrency(spentEur, "EUR")}</p>
+            <p className="mt-0.5 text-[11px]" style={{ color: "var(--ink-muted)" }}>{t("pctOfBudget", { pct })}</p>
+          </Link>
+          <Link href="/dashboard/portfolio" className="block rounded-2xl px-4 py-3" style={cardStyle}>
+            <p className="text-[11px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("statPortfolio")}</p>
+            <p className="mt-1 text-[18px] font-bold tracking-tight tabular-nums">{formatCurrency(portfolioEur, "EUR")}</p>
+            <p className="mt-0.5 text-[11px] font-semibold tabular-nums"><DeltaText amount={portfolioDeltaEur} /></p>
+          </Link>
+        </div>
+      </div>
+
+      {/* Desktop: 3-across strip */}
+      <div className="hidden grid-cols-3 rounded-2xl md:grid" style={cardStyle}>
         <StatTile
           isFirst
           label={t("statNetWorth")}

@@ -21,7 +21,6 @@ const ExpenseDetailModal = lazy(() => import("@/components/expense-detail-modal"
 const OnboardingModal = lazy(() => import("@/components/onboarding-modal"));
 const AnnouncementModal = lazy(() => import("@/components/announcement-modal"));
 const BurnChart = lazy(() => import("@/components/ui/burn-chart").then(mod => ({ default: mod.BurnChart })));
-const DashboardRwaSection = lazy(() => import("@/components/dashboard-rwa-section"));
 const RetrospectiveModal = lazy(() => import("@/components/retrospective-modal"));
 
 // Loading skeleton for the chart
@@ -422,8 +421,7 @@ export default function DashboardOverview({
 
   // Swipe handlers for month navigation (only in month view) + pull-to-refresh
   const { handlers: swipeHandlers } = useSwipe({
-    onSwipeLeft: viewMode === "month" ? goToNextMonth : undefined,
-    onSwipeRight: viewMode === "month" ? goToPreviousMonth : undefined,
+    // Month nav removed — the overview is always "this month". Pull-to-refresh stays.
     onSwipeDown: handlePullRefresh,
     threshold: 75,
   });
@@ -1075,8 +1073,8 @@ export default function DashboardOverview({
       {/* Tidy-up nudge — only renders when there are uncategorized expenses */}
       <TidyUpNudge count={uncategorizedCount} />
 
-      {/* ==================== MOBILE-ONLY HEADER ==================== */}
-      <div className="md:hidden space-y-3">
+      {/* ==================== MOBILE-ONLY HEADER (legacy — hidden, superseded by the responsive overview; TODO remove) ==================== */}
+      <div className="hidden space-y-3">
         {/* Month Navigation */}
         {viewMode === "month" && (
           <div className="flex items-center justify-between bg-white rounded-xl border border-slate-200 p-3">
@@ -1302,8 +1300,8 @@ export default function DashboardOverview({
         )}
       </div>
 
-      {/* ==================== DESKTOP HUB LAYOUT (Option C) ==================== */}
-      <div className="hidden md:block space-y-4">
+      {/* ==================== OVERVIEW (Bento — responsive) ==================== */}
+      <div className="space-y-4">
         {/* Overview hero — greeting + net worth / spent / portfolio */}
         <OverviewHero
           userName={userName}
@@ -1315,8 +1313,8 @@ export default function DashboardOverview({
           portfolioDeltaEur={portfolioDeltaEur}
         />
 
-        {/* Bento body — spending box (left) + rail (right) */}
-        <div className="grid grid-cols-[2fr_1fr] gap-4 items-start">
+        {/* Bento body — spending box (left) + rail (right); stacks on mobile */}
+        <div className="grid grid-cols-1 gap-4 items-start md:grid-cols-[2fr_1fr]">
           {/* LEFT: Spending box — gauge + burn + recent */}
           <div className="rounded-2xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--line)" }}>
             <div className="mb-4 flex items-center justify-between">
@@ -1380,8 +1378,8 @@ export default function DashboardOverview({
 
             <div className="my-4 h-px" style={{ background: "var(--line)" }} />
 
-            {/* Inline quick-add — "mcd 12" parsed server-side */}
-            <form onSubmit={handleInlineQuickAdd} className="mb-3 flex gap-2">
+            {/* Inline quick-add — "mcd 12" parsed server-side (desktop only; mobile uses the bottom + Add) */}
+            <form onSubmit={handleInlineQuickAdd} className="mb-3 hidden gap-2 md:flex">
               <input
                 value={quickAddText}
                 onChange={(ev) => setQuickAddText(ev.target.value)}
@@ -1462,8 +1460,8 @@ export default function DashboardOverview({
         </div>
       </div>
 
-      {/* ==================== MOBILE-ONLY LAYOUT ==================== */}
-      <div className="mt-3 md:hidden">
+      {/* ==================== MOBILE-ONLY LAYOUT (legacy — hidden; full list now lives on the Expenses page; TODO remove) ==================== */}
+      <div className="mt-3 hidden">
         <div className="space-y-3">
           {/* Mobile Filters */}
           <div className="md:hidden bg-white rounded-xl border border-slate-200 overflow-hidden">
@@ -1703,13 +1701,6 @@ export default function DashboardOverview({
             )}
           </div>
         </div>
-      </div>
-
-      {/* ==================== REAL-WORLD ASSETS (mobile — desktop shows it in the rail) ==================== */}
-      <div className="mt-6 md:hidden">
-        <Suspense fallback={null}>
-          <DashboardRwaSection />
-        </Suspense>
       </div>
 
       {/* ==================== MODALS ==================== */}
