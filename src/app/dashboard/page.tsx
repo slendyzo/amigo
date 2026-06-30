@@ -389,6 +389,12 @@ export default async function DashboardPage({
     .sort((a, b) => b.amountEur - a.amountEur)
     .slice(0, 4);
 
+  // Top RWA assets by value (for the dashboard RWA rail card)
+  const rwaTopAssets = realAssets
+    .map((a) => ({ id: a.id, name: a.name, valueEur: Number(a.currentValueEur ?? a.purchasePriceEur) }))
+    .sort((x, y) => y.valueEur - x.valueEur)
+    .slice(0, 2);
+
   // Use username (nickname) if set, otherwise fall back to name or "User"
   const displayName = user?.username || user?.name || session.user.name || "User";
 
@@ -417,6 +423,8 @@ export default async function DashboardPage({
       netWorthEur={netWorthEur}
       portfolioTotalEur={portfolioTotalEur}
       rwaEquityEur={rwaEquityEur}
+      rwaTopAssets={rwaTopAssets}
+      rwaLinkedDebtEur={linkedLiabilitiesEur}
       topCategories={topCategories}
     />
   );

@@ -10,6 +10,9 @@ import type { Expense as FullExpense } from "@/types/models";
 import { getUserShare } from "@/lib/split-utils";
 import OverviewHero from "@/components/dashboard/overview-hero";
 import TidyUpNudge from "@/components/dashboard/tidy-up-nudge";
+import RailPortfolio from "@/components/dashboard/rail-portfolio";
+import RailRwa from "@/components/dashboard/rail-rwa";
+import RailCategories from "@/components/dashboard/rail-categories";
 
 // Lazy load heavy modals and charts to reduce initial bundle size
 const AddTypeSelector = lazy(() => import("@/components/add-type-selector"));
@@ -133,6 +136,8 @@ type Props = {
   netWorthEur?: number;
   portfolioTotalEur?: number;
   rwaEquityEur?: number;
+  rwaTopAssets?: { id: string; name: string; valueEur: number }[];
+  rwaLinkedDebtEur?: number;
   topCategories?: { name: string; amountEur: number }[];
 };
 
@@ -176,6 +181,10 @@ export default function DashboardOverview({
   portfolioAssets,
   netWorthEur,
   portfolioTotalEur,
+  rwaEquityEur,
+  rwaTopAssets,
+  rwaLinkedDebtEur,
+  topCategories,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("dashboard");
@@ -784,13 +793,6 @@ export default function DashboardOverview({
   const portfolioPnlPct = portfolioTotalCost > 0 ? (portfolioTotalPnl / portfolioTotalCost) * 100 : 0;
   const portfolioFreeCash = exchangeConnections.reduce((sum, c) => sum + c.freeCash, 0);
 
-  // Asset type colors for holdings
-  const ASSET_COLORS: Record<string, string> = {
-    BTC: "#f59e0b", SOL: "#7c3aed", ETH: "#6366f1",
-    CSPX: "#06b6d4", XDWL: "#10b981", DEFAULT: "#94a3b8",
-  };
-  const getAssetColor = (symbol: string) => ASSET_COLORS[symbol] || ASSET_COLORS.DEFAULT;
-
   // Category data for inline bar (same logic as CategoryBreakdown component)
   const CATEGORY_COLORS = ["#0070f3", "#8b5cf6", "#10b981", "#f59e0b", "#ef4444", "#06b6d4", "#ec4899", "#6366f1"];
   const categoryData = useMemo(() => {
@@ -1279,183 +1281,131 @@ export default function DashboardOverview({
           portfolioEur={portfolioTotalEur ?? portfolioTotalValue}
         />
 
-        {/* Hub Grid */}
-        <div className={`grid gap-4 items-start ${hasPortfolio ? "grid-cols-2" : "grid-cols-1"}`}>
-          {/* LEFT: Portfolio Column (conditional) */}
-          {hasPortfolio && (
-            <div className="space-y-4">
-              {/* Top Holdings */}
-              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("portfolio.topHoldings")}</p>
-                {portfolioAssets.length > 0 ? (
-                  <>
-                    <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                      {portfolioAssets.slice(0, 5).map((asset) => (
-                        <div key={asset.id} className="flex items-center py-2.5">
-                          <div
-                            className="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold text-white mr-2.5 flex-shrink-0"
-                            style={{ backgroundColor: getAssetColor(asset.symbol) }}
-                          >
-                            {asset.symbol.charAt(0)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-sm font-semibold text-slate-900 dark:text-white">{asset.symbol}</span>
-                              <span className={`text-[9px] px-1 py-0.5 rounded font-semibold ${
-                                asset.assetType === "CRYPTO"
-                                  ? "bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400"
-                                  : "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
-                              }`}>
-                                {asset.assetType}
-                              </span>
-                            </div>
-                            <p className="text-[10px] text-slate-400 truncate">{asset.name}</p>
-                          </div>
-                          <div className="text-right ml-2">
-                            <p className="text-sm font-semibold text-slate-900 dark:text-white tabular-nums">€{asset.currentValueEur.toFixed(2)}</p>
-                            <p className={`text-[10px] font-medium tabular-nums ${asset.unrealizedPnlPct >= 0 ? "text-green-600" : "text-red-600"}`}>
-                              {asset.unrealizedPnlPct >= 0 ? "▲" : "▼"} {Math.abs(asset.unrealizedPnlPct).toFixed(1)}%
-                            </p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                    <a href="/dashboard/portfolio" className="block text-center pt-2.5 text-sm font-medium text-[#0070f3] hover:underline">{t("viewAll")} →</a>
-                  </>
-                ) : (
-                  <div className="py-6 text-center">
-                    <p className="text-sm text-slate-400">{t("portfolio.noHoldings")}</p>
+        {/* Bento body — spending box (left) + rail (right) */}
+        <div className="grid grid-cols-[2fr_1fr] gap-4 items-start">
+          {/* LEFT: Spending box — gauge + burn + recent */}
+          <div className="rounded-2xl p-5" style={{ background: "var(--surface)", border: "1px solid var(--line)" }}>
+            <div className="mb-4 flex items-center justify-between">
+              <span className="text-[10px] font-bold uppercase tracking-[0.07em]" style={{ color: "var(--accent)" }}>
+                {t("thisMonth")}
+              </span>
+              <button
+                onClick={() => setIsSelectorOpen(true)}
+                className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[13px] font-semibold transition-opacity hover:opacity-90"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+              >
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
+                </svg>
+                {t("addExpense")}
+              </button>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <div className="relative flex-shrink-0" style={{ width: ringSize, height: ringSize }}>
+                <svg className="-rotate-90" width={ringSize} height={ringSize}>
+                  <circle cx={ringSize / 2} cy={ringSize / 2} r={ringRadius} fill="none" stroke="var(--surface-3)" strokeWidth={ringStroke} />
+                  <circle
+                    cx={ringSize / 2} cy={ringSize / 2} r={ringRadius}
+                    fill="none" stroke={isOverBudget ? "var(--negative)" : "var(--accent)"} strokeWidth={ringStroke}
+                    strokeLinecap="round" strokeDasharray={ringCircumference} strokeDashoffset={ringDashoffset}
+                    className="transition-all duration-700 ease-out"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-lg font-bold tabular-nums">{budgetPercentage.toFixed(0)}%</span>
+                </div>
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-2xl font-bold tabular-nums">€{stats.budgetTotal.toFixed(2)}</span>
+                  {showBudgetInfo && (
+                    <span className="text-sm" style={{ color: "var(--ink-subtle)" }}>/ €{livingBudget.toFixed(0)}</span>
+                  )}
+                </div>
+                <p className="mt-0.5 text-[12px]" style={{ color: isOverBudget ? "var(--negative)" : "var(--ink-muted)" }}>
+                  {isOverBudget
+                    ? `€${Math.abs(budgetRemaining).toFixed(0)} · ${budgetPercentage.toFixed(0)}%`
+                    : `€${Math.max(budgetRemaining, 0).toFixed(0)} · ${budgetPercentage.toFixed(0)}% ${t("budget.used")}`}
+                </p>
+                {showBudgetInfo && (
+                  <div className="mt-3">
+                    <Suspense fallback={<div className="h-20 animate-pulse rounded-lg" style={{ background: "var(--surface-2)" }} />}>
+                      <BurnChart
+                        currentMonthExpenses={burnChartCurrentExpenses}
+                        previousMonthExpenses={burnChartPreviousExpenses}
+                        currentMonthLabel={currentMonthLabel}
+                        previousMonthLabel={previousMonthLabel}
+                        compact
+                      />
+                    </Suspense>
                   </div>
                 )}
               </div>
-
-              {/* Recent Trades Placeholder */}
-              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("portfolio.recentTrades")}</p>
-                <div className="py-6 text-center">
-                  <p className="text-sm text-slate-400">{t("portfolio.noTrades")}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* RIGHT (or FULL): Expenses Column */}
-          <div className="space-y-4">
-            {/* Spending Split */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("typeBreakdown")}</p>
-              <div className="space-y-3">
-                {/* Living */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-600 dark:text-slate-300 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />{t("stats.living")}</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">€{stats.living.toFixed(2)} <span className="text-slate-400 font-normal text-xs">{stats.grandTotal > 0 ? ((stats.living / stats.grandTotal) * 100).toFixed(0) : 0}%</span></span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-700"><div className="h-full rounded-full bg-blue-500 transition-all duration-500" style={{ width: `${stats.grandTotal > 0 ? (stats.living / stats.grandTotal) * 100 : 0}%` }} /></div>
-                  <p className="text-[10.5px] text-slate-400 mt-1">{t("stats.fixed")} €{stats.livingFixed.toFixed(2)} · {t("stats.variable")} €{stats.livingVariable.toFixed(2)}</p>
-                </div>
-                {/* Lifestyle */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-600 dark:text-slate-300 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-500 inline-block" />{t("stats.lifestyle")}</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">€{stats.lifestyle.toFixed(2)} <span className="text-slate-400 font-normal text-xs">{stats.grandTotal > 0 ? ((stats.lifestyle / stats.grandTotal) * 100).toFixed(0) : 0}%</span></span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-700"><div className="h-full rounded-full bg-purple-500 transition-all duration-500" style={{ width: `${stats.grandTotal > 0 ? (stats.lifestyle / stats.grandTotal) * 100 : 0}%` }} /></div>
-                </div>
-                {/* Projects */}
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-slate-600 dark:text-slate-300 flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange-500 inline-block" />{t("stats.projects")}</span>
-                    <span className="font-semibold text-slate-900 dark:text-white">€{stats.projects.toFixed(2)} <span className="text-slate-400 font-normal text-xs">{stats.grandTotal > 0 ? ((stats.projects / stats.grandTotal) * 100).toFixed(0) : 0}%</span></span>
-                  </div>
-                  <div className="h-1.5 rounded-full bg-slate-100 dark:bg-slate-700"><div className="h-full rounded-full bg-orange-500 transition-all duration-500" style={{ width: `${stats.grandTotal > 0 ? (stats.projects / stats.grandTotal) * 100 : 0}%` }} /></div>
-                </div>
-                {/* Total */}
-                <div className="border-t border-slate-100 dark:border-slate-700/50 pt-2.5 flex justify-between text-sm font-bold text-slate-900 dark:text-white">
-                  <span>{t("stats.grandTotal")}</span>
-                  <span>€{stats.grandTotal.toFixed(2)}</span>
-                </div>
-              </div>
             </div>
 
-            {/* Where Money Goes */}
-            {categoryData.length > 0 && (
-              <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-                <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("whereMoneyGoes")}</p>
-                <div className="h-3 rounded-full overflow-hidden bg-slate-100 dark:bg-slate-700 flex mb-3">
-                  {categoryData.map((cat, i) => (
-                    <div key={cat.name} className="h-full" style={{ width: `${cat.percentage}%`, backgroundColor: cat.color, marginLeft: i > 0 ? "1px" : 0 }} />
-                  ))}
-                </div>
-                <div className="space-y-1.5">
-                  {categoryData.slice(0, 5).map((cat) => (
-                    <div key={cat.name} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2 min-w-0"><div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: cat.color }} /><span className="text-slate-600 dark:text-slate-300 truncate">{cat.name}</span></div>
-                      <div className="flex gap-2 flex-shrink-0 ml-2"><span className="font-medium text-slate-900 dark:text-white">€{cat.amount.toFixed(2)}</span><span className="text-slate-400 text-xs w-10 text-right">{cat.percentage.toFixed(1)}%</span></div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+            <div className="my-4 h-px" style={{ background: "var(--line)" }} />
 
-            {/* AI Advisor cold-start card — suppressed when an unread retrospective exists */}
-            {advisorState?.aiProcessingEnabled && advisorState?.isColdstart && !unreadRetro && (
-              <Suspense fallback={null}>
-                <AdvisorColdstartCard
-                  expenseCount={advisorState.expenseCount}
-                  monthsTracked={advisorState.monthsTracked}
-                />
-              </Suspense>
-            )}
-
-            {/* Recent Expenses */}
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-              <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">{t("recentExpenses")}</p>
-              {expenses.length > 0 ? (
-                <div className="divide-y divide-slate-100 dark:divide-slate-700/50">
-                  {expenses.slice(0, 5).map((e) => {
-                    const shownEur = effectiveEur(e);
-                    return (
-                    <div key={e.id} className="flex justify-between items-center gap-3 py-2.5 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800 -mx-2 px-2 rounded-lg transition-colors" onClick={() => handleViewExpense(e.id)}>
+            {expenses.length > 0 ? (
+              <div>
+                {expenses.slice(0, 5).map((e) => {
+                  const shownEur = effectiveEur(e);
+                  return (
+                    <div
+                      key={e.id}
+                      onClick={() => handleViewExpense(e.id)}
+                      className="-mx-2 flex cursor-pointer items-center justify-between gap-3 rounded-lg px-2 py-2 transition-colors hover:bg-[var(--surface-2)]"
+                    >
                       <div className="min-w-0 flex-1">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-medium text-slate-900 dark:text-white truncate">{e.name}</p>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="truncate text-sm font-medium">{e.name}</p>
                           {e.projects && e.projects.length > 0 && e.projects.map((project) => (
-                            <span key={project.id} className="px-2 py-0.5 text-[10px] rounded-full bg-orange-100 text-orange-700 flex-shrink-0">
+                            <span
+                              key={project.id}
+                              className="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px]"
+                              style={{ background: "color-mix(in srgb, var(--warning) 15%, transparent)", color: "var(--warning)" }}
+                            >
                               {project.name}
                             </span>
                           ))}
                         </div>
-                        <p className="text-xs text-slate-400">{new Date(e.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short", timeZone: "UTC" })}</p>
+                        <p className="text-xs" style={{ color: "var(--ink-subtle)" }}>
+                          {new Date(e.date).toLocaleDateString("pt-PT", { day: "numeric", month: "short", timeZone: "UTC" })}
+                        </p>
                       </div>
-                      <p className={`text-sm font-semibold tabular-nums flex-shrink-0 ${shownEur < 0 ? "text-green-600" : "text-slate-900 dark:text-white"}`}>
+                      <p className="flex-shrink-0 text-sm font-semibold tabular-nums" style={{ color: shownEur < 0 ? "var(--positive)" : "var(--ink)" }}>
                         {shownEur < 0 ? `(€${Math.abs(shownEur).toFixed(2)})` : `-€${shownEur.toFixed(2)}`}
                       </p>
                     </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <p className="text-sm text-slate-400 text-center py-4">{t("transactions.noTransactions")}</p>
-              )}
-              <a href="/dashboard/expenses" className="block text-center pt-2.5 text-sm font-medium text-[#0070f3] hover:underline">{t("viewAll")} →</a>
-            </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="py-4 text-center text-sm" style={{ color: "var(--ink-subtle)" }}>{t("logFirstExpense")}</p>
+            )}
+            <a href="/dashboard/expenses" className="block pt-2.5 text-center text-[13px] font-semibold" style={{ color: "var(--accent)" }}>
+              {t("viewAllMoney")} →
+            </a>
+          </div>
+
+          {/* RIGHT: rail */}
+          <div className="space-y-4">
+            <RailPortfolio
+              totalEur={portfolioTotalEur ?? portfolioTotalValue}
+              holdings={portfolioAssets.slice(0, 2).map((a) => ({ symbol: a.symbol, label: `${a.symbol} · ${a.exchange.label}`, valueEur: a.currentValueEur }))}
+              exchangeCount={exchangeConnections.length}
+              moreCount={Math.max(0, exchangeConnections.reduce((s, c) => s + c.assetCount, 0) - 2)}
+              hasData={hasPortfolio}
+            />
+            <RailRwa
+              equityEur={rwaEquityEur ?? 0}
+              assets={rwaTopAssets ?? []}
+              linkedDebtEur={rwaLinkedDebtEur ?? 0}
+              hasData={(rwaTopAssets?.length ?? 0) > 0}
+            />
+            <RailCategories categories={topCategories ?? []} />
           </div>
         </div>
-
-        {/* Burn Chart (full width) */}
-        {showBudgetInfo && (
-          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 p-5">
-            <Suspense fallback={<ChartSkeleton />}>
-              <BurnChart
-                currentMonthExpenses={burnChartCurrentExpenses}
-                previousMonthExpenses={burnChartPreviousExpenses}
-                currentMonthLabel={currentMonthLabel}
-                previousMonthLabel={previousMonthLabel}
-              />
-            </Suspense>
-          </div>
-        )}
       </div>
 
       {/* ==================== MOBILE-ONLY LAYOUT ==================== */}
@@ -1711,8 +1661,8 @@ export default function DashboardOverview({
         </div>
       </div>
 
-      {/* ==================== REAL-WORLD ASSETS ==================== */}
-      <div className="mt-6">
+      {/* ==================== REAL-WORLD ASSETS (mobile — desktop shows it in the rail) ==================== */}
+      <div className="mt-6 md:hidden">
         <Suspense fallback={null}>
           <DashboardRwaSection />
         </Suspense>
