@@ -88,6 +88,9 @@ export default async function DashboardPage({
     recurringIncomes,
     exchangeConnections,
     portfolioAssets,
+    portfolioValueAgg,
+    realAssets,
+    liabilities,
   ] = await Promise.all([
     // Projects for filter dropdown
     prisma.project.findMany({
@@ -230,6 +233,22 @@ export default async function DashboardPage({
         },
       },
     }),
+    // Full portfolio value across ALL active assets (for net worth — the top-5
+    // list above isn't the total)
+    prisma.portfolioAsset.aggregate({
+      where: { exchangeConnection: { workspaceId: workspace.id, isActive: true } },
+      _sum: { currentValueEur: true },
+    }),
+    // Active real-world assets (for net worth + RWA equity)
+    prisma.realAsset.findMany({
+      where: { workspaceId: workspace.id, status: "ACTIVE" },
+      select: { id: true, name: true, type: true, currentValueEur: true, purchasePriceEur: true },
+    }),
+    // Active liabilities (for net worth + linked-loan netting)
+    prisma.liability.findMany({
+      where: { workspaceId: workspace.id, status: "ACTIVE" },
+      select: { currentBalanceEur: true, realAssetId: true },
+    }),
   ]);
 
   const tQueries = performance.now();
@@ -341,6 +360,35 @@ export default async function DashboardPage({
     },
   }));
 
+  // ── Net worth + RWA equity (mirrors the net-worth page math) ──────────────
+  // Net worth = investments + real-world assets − all active liabilities.
+  // RWA equity = real-world assets − loans linked to them (the AMIGO-263 rule).
+  const portfolioTotalEur = Number(portfolioValueAgg._sum.currentValueEur ?? 0);
+  const rwaAssetsEur = realAssets.reduce(
+    (s, a) => s + Number(a.currentValueEur ?? a.purchasePriceEur),
+    0,
+  );
+  const activeLiabilitiesEur = liabilities.reduce((s, l) => s + Number(l.currentBalanceEur), 0);
+  const linkedLiabilitiesEur = liabilities
+    .filter((l) => l.realAssetId)
+    .reduce((s, l) => s + Number(l.currentBalanceEur), 0);
+  const netWorthEur = portfolioTotalEur + rwaAssetsEur - activeLiabilitiesEur;
+  const rwaEquityEur = rwaAssetsEur - linkedLiabilitiesEur;
+
+  // Top spend categories this month — exclude project-tagged spend (own ledger)
+  // and income; refunds (negative) net the category down.
+  const categoryTotals = new Map<string, number>();
+  for (const e of expenses) {
+    if (e.type === "PROJECT") continue;
+    const name = e.category?.name ?? "Uncategorized";
+    categoryTotals.set(name, (categoryTotals.get(name) ?? 0) + Number(e.amountEur));
+  }
+  const topCategories = Array.from(categoryTotals.entries())
+    .map(([name, amountEur]) => ({ name, amountEur }))
+    .filter((c) => c.amountEur > 0)
+    .sort((a, b) => b.amountEur - a.amountEur)
+    .slice(0, 4);
+
   // Use username (nickname) if set, otherwise fall back to name or "User"
   const displayName = user?.username || user?.name || session.user.name || "User";
 
@@ -366,6 +414,10 @@ export default async function DashboardPage({
       defaultCurrency={workspace.defaultCurrency ?? "EUR"}
       exchangeConnections={connectionsForDashboard}
       portfolioAssets={assetsForDashboard}
+      netWorthEur={netWorthEur}
+      portfolioTotalEur={portfolioTotalEur}
+      rwaEquityEur={rwaEquityEur}
+      topCategories={topCategories}
     />
   );
 }

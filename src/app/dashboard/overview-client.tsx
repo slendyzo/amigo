@@ -126,6 +126,12 @@ type Props = {
   defaultCurrency: string;
   exchangeConnections: DashboardExchangeConnection[];
   portfolioAssets: DashboardPortfolioAsset[];
+  // Overview/home redesign (AMIGO-279) — current values; consumed by the new
+  // Bento client. Optional during the migration so this component still builds.
+  netWorthEur?: number;
+  portfolioTotalEur?: number;
+  rwaEquityEur?: number;
+  topCategories?: { name: string; amountEur: number }[];
 };
 
 // Current announcement IDs - add new ones here when releasing new features
