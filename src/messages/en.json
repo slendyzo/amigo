@@ -119,6 +119,8 @@
     "noSpendYet": "No spending yet this month",
     "tidyUpCount": "You have {count} uncategorized expenses",
     "tidyUpAction": "Tidy up",
+    "quickAddPlaceholder": "e.g. mcd 12",
+    "quickAddButton": "Add",
     "title": "Dashboard",
     "welcome": "Welcome, {name}!",
     "financialOverview": "Here's your financial overview",

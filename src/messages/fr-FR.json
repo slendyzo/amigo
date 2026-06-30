@@ -119,6 +119,8 @@
     "noSpendYet": "Aucune dépense ce mois-ci",
     "tidyUpCount": "Vous avez {count} dépenses non catégorisées",
     "tidyUpAction": "Ranger",
+    "quickAddPlaceholder": "ex. mcd 12",
+    "quickAddButton": "Ajouter",
     "title": "Tableau de bord",
     "welcome": "Bienvenue, {name} !",
     "financialOverview": "Voici votre aperçu financier",

@@ -119,6 +119,8 @@
     "noSpendYet": "Ainda sem gastos este mês",
     "tidyUpCount": "Tens {count} despesas por categorizar",
     "tidyUpAction": "Organizar",
+    "quickAddPlaceholder": "ex. mcd 12",
+    "quickAddButton": "Adicionar",
     "title": "Painel",
     "welcome": "Bem-vindo, {name}!",
     "financialOverview": "Aqui está o teu resumo financeiro",

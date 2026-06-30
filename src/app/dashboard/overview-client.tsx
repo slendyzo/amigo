@@ -246,6 +246,10 @@ export default function DashboardOverview({
     monthsTracked: number;
   } | null>(null);
 
+  // Inline quick-add ("mcd 12") in the spending box.
+  const [quickAddText, setQuickAddText] = useState("");
+  const [quickAddBusy, setQuickAddBusy] = useState(false);
+
   // Uncategorized count drives the dashboard tidy-up nudge.
   const [uncategorizedCount, setUncategorizedCount] = useState(0);
   useEffect(() => {
@@ -903,6 +907,31 @@ export default function DashboardOverview({
     ]);
   }, []);
 
+  // Inline quick-add: POST the raw string; the API parses it server-side
+  // (parseQuickAdd + keyword mappings) and creates the expense. Refresh to
+  // reflect it everywhere (gauge, burn, recent, stats) in one shot.
+  const handleInlineQuickAdd = async (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const text = quickAddText.trim();
+    if (!text || quickAddBusy) return;
+    setQuickAddBusy(true);
+    try {
+      const res = await fetch("/api/expenses", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ quickAdd: text }),
+      });
+      if (res.ok) {
+        setQuickAddText("");
+        router.refresh();
+      }
+    } catch (error) {
+      console.error("Inline quick-add failed:", error);
+    } finally {
+      setQuickAddBusy(false);
+    }
+  };
+
   // Fetch full expense data for editing
   const handleEditExpense = async (expenseId: string) => {
     setIsLoadingExpense(true);
@@ -1345,6 +1374,25 @@ export default function DashboardOverview({
             </div>
 
             <div className="my-4 h-px" style={{ background: "var(--line)" }} />
+
+            {/* Inline quick-add — "mcd 12" parsed server-side */}
+            <form onSubmit={handleInlineQuickAdd} className="mb-3 flex gap-2">
+              <input
+                value={quickAddText}
+                onChange={(ev) => setQuickAddText(ev.target.value)}
+                placeholder={t("quickAddPlaceholder")}
+                className="flex-1 rounded-lg px-3 py-2 font-mono text-[13px] outline-none focus:ring-2"
+                style={{ background: "var(--surface-2)", border: "1px solid var(--line)", color: "var(--ink)" }}
+              />
+              <button
+                type="submit"
+                disabled={quickAddBusy || !quickAddText.trim()}
+                className="rounded-lg px-4 text-[13px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+              >
+                {quickAddBusy ? "…" : t("quickAddButton")}
+              </button>
+            </form>
 
             {expenses.length > 0 ? (
               <div>
