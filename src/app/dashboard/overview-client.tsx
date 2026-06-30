@@ -22,7 +22,6 @@ const OnboardingModal = lazy(() => import("@/components/onboarding-modal"));
 const AnnouncementModal = lazy(() => import("@/components/announcement-modal"));
 const BurnChart = lazy(() => import("@/components/ui/burn-chart").then(mod => ({ default: mod.BurnChart })));
 const DashboardRwaSection = lazy(() => import("@/components/dashboard-rwa-section"));
-const AdvisorColdstartCard = lazy(() => import("@/components/advisor-coldstart-card"));
 const RetrospectiveModal = lazy(() => import("@/components/retrospective-modal"));
 
 // Loading skeleton for the chart
@@ -1508,16 +1507,6 @@ export default function DashboardOverview({
               </select>
             </div>
           </div>
-
-          {/* AI Advisor cold-start card (mobile) — suppressed when an unread retrospective exists */}
-          {advisorState?.aiProcessingEnabled && advisorState?.isColdstart && !unreadRetro && (
-            <Suspense fallback={null}>
-              <AdvisorColdstartCard
-                expenseCount={advisorState.expenseCount}
-                monthsTracked={advisorState.monthsTracked}
-              />
-            </Suspense>
-          )}
 
           {/* Transaction List */}
           <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
