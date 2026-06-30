@@ -8,6 +8,8 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import type { Expense as FullExpense } from "@/types/models";
 import { getUserShare } from "@/lib/split-utils";
+import OverviewHero from "@/components/dashboard/overview-hero";
+import TidyUpNudge from "@/components/dashboard/tidy-up-nudge";
 
 // Lazy load heavy modals and charts to reduce initial bundle size
 const AddTypeSelector = lazy(() => import("@/components/add-type-selector"));
@@ -172,6 +174,8 @@ export default function DashboardOverview({
   defaultCurrency,
   exchangeConnections,
   portfolioAssets,
+  netWorthEur,
+  portfolioTotalEur,
 }: Props) {
   const router = useRouter();
   const t = useTranslations("dashboard");
@@ -232,6 +236,15 @@ export default function DashboardOverview({
     expenseCount: number;
     monthsTracked: number;
   } | null>(null);
+
+  // Uncategorized count drives the dashboard tidy-up nudge.
+  const [uncategorizedCount, setUncategorizedCount] = useState(0);
+  useEffect(() => {
+    fetch("/api/expenses/uncategorized-count")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => { if (d && typeof d.count === "number") setUncategorizedCount(d.count); })
+      .catch(() => { /* non-critical */ });
+  }, []);
 
   // Retrospective state
   type UnreadInsight = {
@@ -1025,6 +1038,9 @@ export default function DashboardOverview({
         </div>
       )}
 
+      {/* Tidy-up nudge — only renders when there are uncategorized expenses */}
+      <TidyUpNudge count={uncategorizedCount} />
+
       {/* ==================== MOBILE-ONLY HEADER ==================== */}
       <div className="md:hidden space-y-3">
         {/* Month Navigation */}
@@ -1254,92 +1270,14 @@ export default function DashboardOverview({
 
       {/* ==================== DESKTOP HUB LAYOUT (Option C) ==================== */}
       <div className="hidden md:block space-y-4">
-        {/* Column Headers */}
-        <div className={`grid gap-4 ${hasPortfolio ? "grid-cols-2" : "grid-cols-1"}`}>
-          {/* Portfolio Header — only if exchanges connected */}
-          {hasPortfolio && (
-            <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 px-5 py-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.8px] text-indigo-500 mb-1.5">{t("portfolio.title")}</p>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-extrabold text-slate-900 dark:text-white tabular-nums tracking-tight">
-                  €{portfolioTotalValue.toFixed(2)}
-                </span>
-                <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-full ${
-                  portfolioTotalPnl >= 0
-                    ? "bg-green-50 text-green-600 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-red-50 text-red-600 dark:bg-red-900/30 dark:text-red-400"
-                }`}>
-                  {portfolioTotalPnl >= 0 ? "▲" : "▼"} {Math.abs(portfolioPnlPct).toFixed(1)}%
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {t("portfolio.acrossExchanges", { count: exchangeConnections.length })}
-              </p>
-              <div className="flex gap-5 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-700/50">
-                <div>
-                  <p className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">{t("portfolio.invested")}</p>
-                  <p className="text-[13px] font-bold text-slate-900 dark:text-white mt-0.5">€{portfolioTotalCost.toFixed(0)}</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">{t("portfolio.pnl")}</p>
-                  <p className={`text-[13px] font-bold mt-0.5 ${portfolioTotalPnl >= 0 ? "text-green-600" : "text-red-600"}`}>
-                    {portfolioTotalPnl >= 0 ? "+" : ""}€{portfolioTotalPnl.toFixed(0)}
-                  </p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">{t("portfolio.freeCash")}</p>
-                  <p className="text-[13px] font-bold text-slate-900 dark:text-white mt-0.5">€{portfolioFreeCash.toFixed(0)}</p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Expenses Header */}
-          <div className="relative bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-700 px-5 py-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.8px] text-amber-500 mb-1.5">{t("thisMonth")}</p>
-            <div className="flex items-baseline gap-2">
-              <span className="text-2xl font-extrabold text-slate-900 dark:text-white tabular-nums tracking-tight">
-                €{stats.budgetTotal.toFixed(2)}
-              </span>
-              {showBudgetInfo && (
-                <span className="text-sm font-medium text-slate-400">/ €{livingBudget.toFixed(0)}</span>
-              )}
-            </div>
-            {showBudgetInfo && (
-              <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                {budgetPercentage.toFixed(0)}% {t("budget.used")}
-              </p>
-            )}
-            <div className="flex gap-5 mt-2.5 pt-2.5 border-t border-slate-100 dark:border-slate-700/50">
-              <div>
-                <p className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">{t("income.received")}</p>
-                <p className="text-[13px] font-bold text-green-600 mt-0.5">€{currentMonthIncome.toFixed(0)}</p>
-              </div>
-              <div>
-                <p className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">{t("income.balance")}</p>
-                <p className={`text-[13px] font-bold mt-0.5 ${balance >= 0 ? "text-blue-600" : "text-red-600"}`}>
-                  €{balance.toFixed(0)}
-                </p>
-              </div>
-              <div>
-                <p className="text-[9px] font-semibold uppercase text-slate-400 tracking-wide">{t("budgetRemaining")}</p>
-                <p className={`text-[13px] font-bold mt-0.5 ${isOverBudget ? "text-red-500" : budgetPercentage > 80 ? "text-amber-500" : "text-slate-900 dark:text-white"}`}>
-                  €{Math.abs(budgetRemaining).toFixed(0)}
-                </p>
-              </div>
-            </div>
-            {/* Add button — top right of expenses header */}
-            <button
-              onClick={() => setIsSelectorOpen(true)}
-              className="absolute top-4 right-4 flex items-center gap-1.5 rounded-lg bg-[#0070f3] px-3 py-2 text-sm text-white font-medium hover:bg-[#0060df] transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-              </svg>
-              {t("addExpense")}
-            </button>
-          </div>
-        </div>
+        {/* Overview hero — greeting + net worth / spent / portfolio */}
+        <OverviewHero
+          userName={userName}
+          netWorthEur={netWorthEur ?? portfolioTotalValue}
+          spentEur={stats.budgetTotal}
+          budgetEur={livingBudget}
+          portfolioEur={portfolioTotalEur ?? portfolioTotalValue}
+        />
 
         {/* Hub Grid */}
         <div className={`grid gap-4 items-start ${hasPortfolio ? "grid-cols-2" : "grid-cols-1"}`}>
