@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amigo — Dashboard (locked design)</title>
+<style>
+  :root {
+    --app-bg:#f7f8fa; --surface:#fff; --surface-2:#f1f2f4; --surface-3:#e9eaed;
+    --line:rgba(9,9,11,.08); --line-strong:rgba(9,9,11,.13);
+    --ink:#18181b; --ink-muted:#52525b; --ink-subtle:#8a8a93;
+    --accent:#d97706; --accent-strong:#b45309; --accent-fg:#fff; --accent-tint:rgba(217,119,6,.10);
+    --positive:#16a34a; --negative:#dc2626; --warning:#f97316; --warning-tint:rgba(249,115,22,.10);
+    --shadow-pop:0 12px 40px rgba(9,9,11,.12);
+  }
+  .dark {
+    --app-bg:#0a0a0b; --surface:#131316; --surface-2:#1a1b1f; --surface-3:#212227;
+    --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14);
+    --ink:#ededef; --ink-muted:#a1a1aa; --ink-subtle:#71717a;
+    --accent:#fbbf24; --accent-strong:#d97706; --accent-fg:#1a1300; --accent-tint:rgba(251,191,36,.16);
+    --positive:#4ade80; --negative:#f87171; --warning:#fb923c; --warning-tint:rgba(251,146,60,.12);
+    --shadow-pop:0 12px 40px rgba(0,0,0,.5);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--app-bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; transition:background .4s,color .4s; }
+  .num{font-variant-numeric:tabular-nums;} .pos{color:var(--positive);} .neg{color:var(--negative);}
+  .wrap { max-width:1400px; margin:0 auto; padding:24px 22px 70px; }
+  .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .top h1 { font-size:18px; font-weight:700; letter-spacing:-.02em; margin:0; color:var(--ink-muted); }
+  .toggle { cursor:pointer; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); padding:8px 14px; border-radius:10px; font-size:13px; font-weight:500; }
+
+  .app { display:flex; border:1px solid var(--line-strong); border-radius:18px; overflow:hidden; box-shadow:var(--shadow-pop); background:var(--app-bg); }
+  .side { width:212px; flex:none; background:var(--surface); border-right:1px solid var(--line); padding:14px 12px; display:flex; flex-direction:column; gap:3px; }
+  .brand { display:flex; align-items:center; gap:9px; padding:6px 8px 14px; font-weight:700; letter-spacing:-.01em; }
+  .mark { width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-fg); display:grid; place-items:center; font-size:13px; font-weight:800; }
+  .nav { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:9px; font-size:13.5px; font-weight:500; color:var(--ink-muted); position:relative; }
+  .nav .ic { width:16px; height:16px; border-radius:5px; border:1.6px solid currentColor; opacity:.85; }
+  .nav.active { color:var(--accent); background:var(--accent-tint); font-weight:600; }
+  .nav.active::before { content:""; position:absolute; left:0; top:7px; bottom:7px; width:2px; border-radius:2px; background:var(--accent); }
+  .side .spacer { flex:1; } .prof { display:flex; align-items:center; gap:9px; padding:8px; border-radius:10px; background:var(--surface-2); font-size:13px; font-weight:500; }
+  .av { width:24px; height:24px; border-radius:50%; background:linear-gradient(135deg,var(--accent),var(--accent-strong)); }
+  .content { flex:1; padding:22px; min-width:0; }
+
+  /* tidy-up nudge */
+  .nudge { display:flex; align-items:center; gap:12px; background:var(--warning-tint); border:1px solid color-mix(in srgb,var(--warning) 30%,transparent); border-radius:12px; padding:11px 14px; font-size:13px; margin-bottom:16px; }
+  .nudge .dot { width:7px; height:7px; border-radius:50%; background:var(--warning); }
+  .nudge a { color:var(--warning); font-weight:650; text-decoration:none; margin-left:auto; }
+  .nudge .x { color:var(--ink-subtle); cursor:pointer; padding-left:8px; }
+
+  .greet { font-size:19px; font-weight:600; letter-spacing:-.01em; margin:2px 0 14px; }
+  .strip { display:grid; grid-template-columns:repeat(3,1fr); background:var(--surface); border:1px solid var(--line); border-radius:16px; }
+  .stat { padding:16px 20px; border-left:1px solid var(--line); cursor:pointer; transition:background .2s; border-radius:16px; }
+  .stat:hover { background:var(--surface-2); } .stat:first-child{border-left:0;}
+  .stat .k { font-size:11px; color:var(--ink-muted); font-weight:500; } .stat .v { font-size:25px; font-weight:750; letter-spacing:-.02em; margin-top:4px; } .stat .dd { font-size:12px; font-weight:600; margin-top:2px; }
+
+  .bento { display:grid; grid-template-columns:2fr 1fr; gap:14px; margin-top:14px; }
+  .rail { display:flex; flex-direction:column; gap:14px; }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; }
+  .ctitle { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--accent); opacity:.9; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; }
+  .ctitle .mut { color:var(--ink-subtle); font-weight:600; letter-spacing:0; text-transform:none; font-size:11px; }
+  .cap{color:var(--ink-muted);font-size:12px;} .subtle{color:var(--ink-subtle);font-size:11px;} .link{color:var(--accent);font-size:12.5px;font-weight:600;cursor:pointer;}
+  .big2 { font-size:23px; font-weight:750; letter-spacing:-.02em; }
+  .row { display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid var(--line); font-size:13px; } .row:first-of-type{border-top:0;}
+
+  .spendgrid { display:flex; align-items:center; gap:24px; }
+  .gmeta .l { font-size:12px; color:var(--ink-muted); margin-bottom:5px; }
+  .burn { display:flex; align-items:flex-end; gap:8px; height:92px; }
+  .bcol { flex:1; display:flex; flex-direction:column; justify-content:flex-end; gap:5px; align-items:center; }
+  .bbar { width:60%; border-radius:5px 5px 0 0; background:var(--surface-3); } .bbar.now{background:var(--accent);}
+  .bcol .bl{font-size:9.5px;color:var(--ink-subtle);}
+  .divider { height:1px; background:var(--line); margin:16px 0; }
+  .qadd { display:flex; gap:8px; margin-bottom:12px; }
+  .qadd input { flex:1; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:13px; color:var(--ink); font-family:ui-monospace,Menlo,monospace; }
+  .qadd input::placeholder{color:var(--ink-subtle);}
+  .qadd button { background:var(--accent); color:var(--accent-fg); border:0; border-radius:10px; padding:0 16px; font-size:13px; font-weight:650; cursor:pointer; }
+  .tx { display:flex; justify-content:space-between; align-items:center; padding:8px 0; font-size:13px; border-top:1px solid var(--line); } .tx:first-of-type{border-top:0;}
+  .tx .when{color:var(--ink-subtle);font-size:11px;margin-left:8px;font-weight:400;}
+  .catrow { display:grid; grid-template-columns:64px 1fr auto; align-items:center; gap:10px; padding:6px 0; font-size:12.5px; }
+  .catbar { height:7px; border-radius:999px; background:var(--accent); opacity:.85; }
+  .note { margin-top:26px; padding:16px 18px; background:var(--surface); border:1px solid var(--line); border-radius:14px; font-size:13px; color:var(--ink-muted); line-height:1.65; }
+  .note b{color:var(--ink);}
+</style>
+</head>
+<body class="dark">
+<div class="wrap">
+  <div class="top"><h1>Dashboard — locked design</h1><button class="toggle" onclick="document.body.classList.toggle('dark')">◐ Light / dark</button></div>
+
+  <div class="app">
+    <nav class="side">
+      <div class="brand"><span class="mark">A</span> Amigo</div>
+      <div class="nav active"><span class="ic"></span>Dashboard</div>
+      <div class="nav"><span class="ic"></span>Money</div>
+      <div class="nav"><span class="ic"></span>Portfolio</div>
+      <div class="nav"><span class="ic"></span>Projects</div>
+      <div class="nav"><span class="ic"></span>Settings</div>
+      <div class="spacer"></div>
+      <div class="prof"><span class="av"></span>Francisco</div>
+    </nav>
+
+    <div class="content">
+      <!-- conditional tidy-up nudge -->
+      <div class="nudge"><span class="dot"></span> You have <b>&nbsp;3 uncategorized expenses</b><a href="#">Tidy up →</a><span class="x">✕</span></div>
+
+      <div class="greet">Good evening, Francisco 👋</div>
+
+      <div class="strip">
+        <div class="stat"><div class="k">Net worth</div><div class="v num">€182,400</div><div class="dd pos num">▲ €2,100 · 1.2% this month</div></div>
+        <div class="stat"><div class="k">Spent · June</div><div class="v num">€2,140</div><div class="dd cap num">64% of €3,300 budget</div></div>
+        <div class="stat"><div class="k">Portfolio</div><div class="v num">€19,300</div><div class="dd pos num">▲ €280 this month</div></div>
+      </div>
+
+      <div class="bento">
+        <!-- LEFT: spending box = gauge + burn + quick-add + recent -->
+        <div class="card">
+          <div class="ctitle">Spending · June <span class="mut">vs last 5 months</span></div>
+          <div class="spendgrid">
+            <svg width="124" height="124" viewBox="0 0 124 124" style="flex:none">
+              <circle cx="62" cy="62" r="51" fill="none" stroke="var(--surface-3)" stroke-width="12"/>
+              <circle cx="62" cy="62" r="51" fill="none" stroke="var(--accent)" stroke-width="12" stroke-linecap="round" stroke-dasharray="320.4" stroke-dashoffset="115.3" transform="rotate(-90 62 62)"/>
+              <text x="62" y="58" text-anchor="middle" font-size="26" font-weight="750" fill="var(--ink)" font-variant-numeric="tabular-nums">64%</text>
+              <text x="62" y="77" text-anchor="middle" font-size="11" fill="var(--ink-muted)">€1,160 left</text>
+            </svg>
+            <div class="gmeta" style="flex:1">
+              <div class="l">€2,140 spent of €3,300 survival budget</div>
+              <div class="burn">
+                <div class="bcol"><div class="bbar" style="height:50%"></div><div class="bl">Feb</div></div>
+                <div class="bcol"><div class="bbar" style="height:68%"></div><div class="bl">Mar</div></div>
+                <div class="bcol"><div class="bbar" style="height:44%"></div><div class="bl">Apr</div></div>
+                <div class="bcol"><div class="bbar" style="height:80%"></div><div class="bl">May</div></div>
+                <div class="bcol"><div class="bbar now" style="height:62%"></div><div class="bl">Jun</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+
+          <div class="qadd">
+            <input value="mcd 12" />
+            <button>Add</button>
+          </div>
+          <div class="tx"><span>McDonald's <span class="when">today</span></span><span class="num">€12.00</span></div>
+          <div class="tx"><span>Refund — Zara <span class="when">today</span></span><span class="num pos">(€8.00)</span></div>
+          <div class="tx"><span>Rent <span class="when">2 Jun</span></span><span class="num">€900.00</span></div>
+          <div class="tx"><span>Pingo Doce <span class="when">1 Jun</span></span><span class="num">€43.20</span></div>
+          <div class="tx"><span>Galp fuel <span class="when">31 May</span></span><span class="num">€60.00</span></div>
+          <div class="tx" style="border-top:1px solid var(--line)"><span class="link">View all in Money →</span><span class="subtle">+38 this month</span></div>
+        </div>
+
+        <!-- RIGHT RAIL -->
+        <div class="rail">
+          <div class="card">
+            <div class="ctitle">Portfolio <span class="mut">2 exchanges</span></div>
+            <div class="big2 num">€19,300 <span class="pos" style="font-size:13px">▲ €280</span></div>
+            <div class="row"><span class="cap">BTC · Bybit</span><span class="num">€11,420</span></div>
+            <div class="row"><span class="cap">ETH · Kraken</span><span class="num">€4,860</span></div>
+            <div class="row"><span class="link">Open Portfolio →</span><span class="subtle">+5 more</span></div>
+          </div>
+          <div class="card">
+            <div class="ctitle">Net worth · RWA equity</div>
+            <div class="big2 num">€38,100</div>
+            <div class="row"><span class="cap">BMW M340i</span><span class="num">€34,200</span></div>
+            <div class="row"><span class="cap">Apartment Lisbon</span><span class="num">€32,000</span></div>
+            <div class="row"><span class="subtle">after €28,100 in loans</span><span class="link">Net Worth →</span></div>
+          </div>
+          <div class="card">
+            <div class="ctitle">Top categories <span class="mut">June</span></div>
+            <div class="catrow"><span class="cap">Dining</span><div class="catbar" style="width:100%"></div><span class="num">€620</span></div>
+            <div class="catrow"><span class="cap">Groceries</span><div class="catbar" style="width:77%"></div><span class="num">€480</span></div>
+            <div class="catrow"><span class="cap">Transport</span><div class="catbar" style="width:34%"></div><span class="num">€210</span></div>
+            <div class="catrow"><span class="cap">Shopping</span><div class="catbar" style="width:31%"></div><span class="num">€190</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="note">
+        <b>Locked design — every grill decision integrated.</b> Overview/home that summarizes and links into the hubs · greeting + 3-stat hero (Net worth · Spent · Portfolio) · Bento 2/3 + 1/3 · Spending box holds gauge + burn + inline <span style="font-family:monospace">mcd 12</span> quick-add + recent transactions · right rail Portfolio / RWA equity / Top categories · tidy-up nudge on top when count &gt; 0 · all deltas read "this month" · stat tiles and card footers deep-link into Money / Portfolio · empty state = same layout, per-card CTAs. Amber accent, dark-first, both themes above.
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

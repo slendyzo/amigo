@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amigo — Dashboard hero options</title>
+<style>
+  /* ─── Real Amigo tokens (from globals.css) ─────────────────────────── */
+  :root {
+    --app-bg:#f7f8fa; --surface:#fff; --surface-2:#f1f2f4; --surface-3:#e9eaed;
+    --line:rgba(9,9,11,.08); --line-strong:rgba(9,9,11,.13);
+    --ink:#18181b; --ink-muted:#52525b; --ink-subtle:#8a8a93;
+    --accent:#d97706; --accent-strong:#b45309; --accent-fg:#fff; --accent-tint:rgba(217,119,6,.10);
+    --positive:#16a34a; --negative:#dc2626; --warning:#f97316;
+    --shadow-pop:0 12px 40px rgba(9,9,11,.12);
+  }
+  .dark {
+    --app-bg:#0a0a0b; --surface:#131316; --surface-2:#1a1b1f; --surface-3:#212227;
+    --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14);
+    --ink:#ededef; --ink-muted:#a1a1aa; --ink-subtle:#71717a;
+    --accent:#fbbf24; --accent-strong:#d97706; --accent-fg:#1a1300; --accent-tint:rgba(251,191,36,.16);
+    --positive:#4ade80; --negative:#f87171; --warning:#fb923c;
+    --shadow-pop:0 12px 40px rgba(0,0,0,.5);
+  }
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--app-bg); color:var(--ink);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; transition:background .4s cubic-bezier(.16,1,.3,1),color .4s;
+  }
+  .num { font-variant-numeric:tabular-nums; }
+  .pos { color:var(--positive); } .neg { color:var(--negative); }
+
+  .page { max-width:1180px; margin:0 auto; padding:32px 24px 80px; }
+  .topbar { display:flex; align-items:center; justify-content:space-between; margin-bottom:8px; }
+  .topbar h1 { font-size:20px; font-weight:700; letter-spacing:-.02em; margin:0; }
+  .sub { color:var(--ink-muted); font-size:13px; margin:2px 0 28px; }
+  .toggle {
+    display:inline-flex; align-items:center; gap:8px; cursor:pointer; user-select:none;
+    background:var(--surface-2); border:1px solid var(--line); color:var(--ink);
+    padding:8px 14px; border-radius:10px; font-size:13px; font-weight:500;
+    transition:background .2s,border-color .2s;
+  }
+  .toggle:hover { border-color:var(--line-strong); }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:24px; }
+  .opt { display:flex; flex-direction:column; }
+  .opt-head { display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .chip {
+    font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    color:var(--accent); background:var(--accent-tint); padding:3px 9px; border-radius:999px;
+  }
+  .opt-title { font-size:15px; font-weight:650; }
+  .tradeoff { color:var(--ink-muted); font-size:12.5px; line-height:1.5; margin:0 0 14px; min-height:38px; }
+
+  /* App content frame — mimics the dashboard content column */
+  .frame {
+    background:var(--app-bg); border:1px solid var(--line-strong); border-radius:20px;
+    padding:18px; box-shadow:var(--shadow-pop); flex:1;
+  }
+  .card {
+    background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px;
+  }
+  .card + .card { margin-top:12px; }
+
+  .eyebrow { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); opacity:.9; }
+  .big { font-size:36px; font-weight:750; letter-spacing:-.03em; line-height:1.05; margin:6px 0 4px; }
+  .delta { font-size:13px; font-weight:600; }
+  .muted { color:var(--ink-muted); font-size:12.5px; }
+  .subtle { color:var(--ink-subtle); font-size:11px; }
+
+  /* stat strip */
+  .strip { display:grid; grid-template-columns:repeat(3,1fr); gap:0; }
+  .stat { padding:0 14px; border-left:1px solid var(--line); }
+  .stat:first-child { padding-left:0; border-left:0; }
+  .stat .k { font-size:11px; color:var(--ink-muted); font-weight:500; }
+  .stat .v { font-size:19px; font-weight:700; letter-spacing:-.02em; margin-top:3px; }
+  .stat .d { font-size:11.5px; font-weight:600; margin-top:1px; }
+  .greet { font-size:17px; font-weight:600; letter-spacing:-.01em; margin-bottom:14px; }
+
+  /* gauge row */
+  .gaugerow { display:flex; align-items:center; gap:18px; }
+  .gaugemeta .lab { font-size:12px; color:var(--ink-muted); }
+  .gaugemeta .amt { font-size:26px; font-weight:750; letter-spacing:-.02em; margin:2px 0; }
+
+  .secondary { display:flex; align-items:center; justify-content:space-between; }
+  .secondary .l { font-size:13px; font-weight:600; }
+  .secondary .r { font-size:13px; font-weight:700; }
+  .row { display:flex; align-items:center; justify-content:space-between; padding:9px 0; border-top:1px solid var(--line); font-size:13px; }
+  .row:first-of-type { border-top:0; }
+  .dotlink { color:var(--accent); font-size:12.5px; font-weight:600; }
+  .barwrap { height:6px; border-radius:999px; background:var(--surface-3); overflow:hidden; margin-top:10px; }
+  .bar { height:100%; border-radius:999px; background:var(--accent); }
+  .note { margin-top:28px; padding:16px 18px; background:var(--surface); border:1px solid var(--line); border-radius:14px; font-size:13px; color:var(--ink-muted); line-height:1.6; }
+  .kbd { font-family:ui-monospace,SFMono-Regular,Menlo,monospace; font-size:12px; background:var(--surface-2); border:1px solid var(--line); border-radius:6px; padding:1px 6px; }
+</style>
+</head>
+<body class="dark">
+<div class="page">
+  <div class="topbar">
+    <h1>Dashboard hero — 3 options</h1>
+    <button class="toggle" onclick="document.body.classList.toggle('dark')">◐ Toggle light / dark</button>
+  </div>
+  <p class="sub">Rendered with Amigo's live tokens (Amber accent, dark-first). Same data in all three: net worth €182,400 · portfolio €19,300 · spent €2,140 of €3,300.</p>
+
+  <div class="grid">
+
+    <!-- ── Option A ─────────────────────────────────────────── -->
+    <div class="opt">
+      <div class="opt-head"><span class="chip">A · Recommended</span><span class="opt-title">Net worth + trend</span></div>
+      <p class="tradeoff">One dominant number anchors the whole screen. Strongest "how am I doing overall" signal. Spending lives just below as a second beat.</p>
+      <div class="frame">
+        <div class="card">
+          <div class="eyebrow">Net worth</div>
+          <div class="big num">€182,400</div>
+          <div class="delta pos num">▲ €2,100 · 1.2% this month</div>
+          <svg viewBox="0 0 320 64" width="100%" height="58" style="margin-top:12px;display:block" preserveAspectRatio="none">
+            <defs><linearGradient id="gA" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="var(--accent)" stop-opacity="0.28"/>
+              <stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></linearGradient></defs>
+            <path d="M0,50 L36,46 L72,48 L108,38 L144,40 L180,30 L216,32 L252,20 L288,16 L320,10 L320,64 L0,64 Z" fill="url(#gA)"/>
+            <path d="M0,50 L36,46 L72,48 L108,38 L144,40 L180,30 L216,32 L252,20 L288,16 L320,10" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="card secondary">
+          <div><div class="l">This month</div><div class="muted num">€2,140 of €3,300 · 64% used</div></div>
+          <div class="r num pos">€1,160 left</div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="l">Portfolio</span><span class="num">€19,300 <span class="pos">▲ €280</span></span></div>
+          <div class="row"><span class="l">RWA equity</span><span class="num">€38,100</span></div>
+          <div class="row"><span class="dotlink">Recent activity →</span><span class="subtle">5 transactions</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Option B ─────────────────────────────────────────── -->
+    <div class="opt">
+      <div class="opt-head"><span class="chip" style="color:var(--ink-muted);background:var(--surface-2)">B</span><span class="opt-title">Greeting + 3-stat strip</span></div>
+      <p class="tradeoff">Warmer, more human. Three equal stats — no single hero number. Good if you want a calm balanced glance over a wealth statement.</p>
+      <div class="frame">
+        <div class="card">
+          <div class="greet">Good evening, Francisco 👋</div>
+          <div class="strip">
+            <div class="stat"><div class="k">Net worth</div><div class="v num">€182,400</div><div class="d pos num">▲ 1.2%</div></div>
+            <div class="stat"><div class="k">Spent</div><div class="v num">€2,140</div><div class="d num" style="color:var(--ink-muted)">64% budget</div></div>
+            <div class="stat"><div class="k">Portfolio</div><div class="v num">€19,300</div><div class="d pos num">▲ €280</div></div>
+          </div>
+        </div>
+        <div class="card secondary">
+          <div><div class="l">Survival budget</div><div class="muted num">€1,160 left of €3,300</div></div>
+          <div class="r num">64%</div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="l">RWA equity</span><span class="num">€38,100</span></div>
+          <div class="row"><span class="dotlink">Recent activity →</span><span class="subtle">5 transactions</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Option C ─────────────────────────────────────────── -->
+    <div class="opt">
+      <div class="opt-head"><span class="chip" style="color:var(--ink-muted);background:var(--surface-2)">C</span><span class="opt-title">This-month spending pulse</span></div>
+      <p class="tradeoff">Survival gauge stays the hero — spending is the daily reason to open the app. Net worth is a strong second block. Most continuous with today.</p>
+      <div class="frame">
+        <div class="card">
+          <div class="gaugerow">
+            <svg width="104" height="104" viewBox="0 0 104 104">
+              <circle cx="52" cy="52" r="44" fill="none" stroke="var(--surface-3)" stroke-width="11"/>
+              <circle cx="52" cy="52" r="44" fill="none" stroke="var(--accent)" stroke-width="11" stroke-linecap="round"
+                stroke-dasharray="276.5" stroke-dashoffset="99.5" transform="rotate(-90 52 52)"/>
+              <text x="52" y="49" text-anchor="middle" font-size="22" font-weight="750" fill="var(--ink)" font-variant-numeric="tabular-nums">64%</text>
+              <text x="52" y="65" text-anchor="middle" font-size="10" fill="var(--ink-muted)">used</text>
+            </svg>
+            <div class="gaugemeta">
+              <div class="lab">Survival spending · June</div>
+              <div class="amt num">€2,140 <span class="muted" style="font-weight:500">/ €3,300</span></div>
+              <div class="delta pos num">€1,160 left</div>
+            </div>
+          </div>
+        </div>
+        <div class="card secondary">
+          <div><div class="l">Net worth</div><div class="muted num">▲ €2,100 this month</div></div>
+          <div class="r num">€182,400</div>
+        </div>
+        <div class="card">
+          <div class="row"><span class="l">Portfolio</span><span class="num">€19,300 <span class="pos">▲</span></span></div>
+          <div class="row"><span class="dotlink">Recent activity →</span><span class="subtle">5 transactions</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="note">
+    <b>How to read these:</b> the frame mimics the dashboard content column; everything below the hero is identical scaffolding so you're only judging the <i>top moment</i>. Toggle light/dark — the Amber accent and semantic green/red carry through both.<br>
+    Pick a letter (or mix — e.g. "A's hero but keep B's greeting line") and we'll lock the hero, then move down the tree: section order, the temporal mismatch (net worth = now vs spending = this month), and the dashboard's one primary action.
+  </div>
+</div>
+</body>
+</html>
