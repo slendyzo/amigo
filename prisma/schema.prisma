@@ -114,6 +114,7 @@ model User {
   ownedWorkspaces  Workspace[]           @relation("WorkspaceOwner")
   workspaceMembers WorkspaceMember[]
   invitationsSent  WorkspaceInvitation[] @relation("InvitationsSent")
+  apiTokens        ApiToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -176,6 +177,27 @@ model EmailVerificationToken {
   @@map("email_verification_tokens")
 }
 
+// Personal access tokens for the iOS Shortcuts integration (Bearer auth).
+// Only the sha256 hash is stored - the raw token is shown once at creation.
+model ApiToken {
+  id          String @id @default(cuid())
+  userId      String
+  workspaceId String
+  name        String @db.VarChar(100) // e.g. "iPhone Wallet automation"
+  tokenHash   String @unique // sha256 hex of the raw token
+  tokenPrefix String @db.VarChar(12) // first chars for display, e.g. "amigo_a3f9"
+
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([workspaceId])
+  @@map("api_tokens")
+}
+
 // ============================================================================
 // WORKSPACE (Multi-tenancy)
 // ============================================================================
@@ -211,6 +233,7 @@ model Workspace {
   realAssets          RealAsset[]
   liabilities         Liability[]
   insights            Insight[]
+  apiTokens           ApiToken[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
