@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
+import ShortcutsTokensCard from "@/components/shortcuts-tokens-card";
 
 type Stats = {
   totalExpenses: number;
@@ -733,6 +734,9 @@ export default function SettingsPage() {
           {tAi("toggleLabel")}
         </p>
       </div>
+
+      {/* iPhone Shortcuts (API tokens) */}
+      <ShortcutsTokensCard />
 
       {/* Danger Zone */}
       <div className="bg-white rounded-xl p-6 shadow-sm border border-red-200">
