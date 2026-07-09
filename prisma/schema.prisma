@@ -192,6 +192,7 @@ model ApiToken {
 
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   workspace Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  expenses  Expense[]
 
   @@index([userId])
   @@index([workspaceId])
@@ -403,6 +404,10 @@ model Expense {
   // Real-world asset linkage (vehicle TCO, etc.)
   realAssetId String?
 
+  // Set when the expense was created through an iOS Shortcut, so the Shortcuts
+  // endpoint can de-duplicate its own writes without touching anyone else's.
+  apiTokenId String?
+
   // Relations
   workspace         Workspace          @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
   bankAccount       BankAccount?       @relation(fields: [bankAccountId], references: [id], onDelete: SetNull)
@@ -411,6 +416,7 @@ model Expense {
   recurringTemplate RecurringTemplate? @relation(fields: [recurringTemplateId], references: [id], onDelete: SetNull)
   importLog         ImportLog?         @relation(fields: [importLogId], references: [id], onDelete: SetNull)
   realAsset         RealAsset?         @relation(fields: [realAssetId], references: [id], onDelete: SetNull)
+  apiToken          ApiToken?          @relation(fields: [apiTokenId], references: [id], onDelete: SetNull)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -420,6 +426,7 @@ model Expense {
   @@index([workspaceId, categoryId])
   @@index([importLogId])
   @@index([realAssetId])
+  @@index([apiTokenId, createdAt])
   @@map("expenses")
 }
 

@@ -6,24 +6,44 @@ import { parseQuickAdd } from "@/lib/parser";
 import { formatCurrency } from "@/lib/currency";
 import { stripHtmlTags } from "@/lib/utils";
 
-// Simple in-memory rate limit per token (resets on redeploy, good enough here)
-const RATE_LIMIT_MAX = 30; // requests per token per minute
+// Simple in-memory rate limits (reset on redeploy, good enough for a single container)
+const WINDOW_MS = 60_000;
+const RATE_LIMIT_MAX = 30; // authenticated requests per token per minute
+const ANON_RATE_LIMIT_MAX = 60; // requests per IP per minute, applied before auth
 const rateBuckets = new Map<string, { count: number; windowStart: number }>();
 
-function isRateLimited(tokenId: string): boolean {
+// How long a Wallet double-fire can lag its twin. Kept short: beyond this, an
+// identical merchant + amount is far more likely to be a real second purchase.
+const DUPLICATE_WINDOW_MS = 60_000;
+
+function isRateLimited(key: string, max: number): boolean {
   const now = Date.now();
-  const bucket = rateBuckets.get(tokenId);
-  if (!bucket || now - bucket.windowStart > 60_000) {
-    rateBuckets.set(tokenId, { count: 1, windowStart: now });
+
+  // Sweep expired buckets so an unauthenticated caller can't grow the map forever.
+  if (rateBuckets.size > 5_000) {
+    for (const [k, b] of rateBuckets) {
+      if (now - b.windowStart > WINDOW_MS) rateBuckets.delete(k);
+    }
+  }
+
+  const bucket = rateBuckets.get(key);
+  if (!bucket || now - bucket.windowStart > WINDOW_MS) {
+    rateBuckets.set(key, { count: 1, windowStart: now });
     return false;
   }
   bucket.count++;
-  return bucket.count > RATE_LIMIT_MAX;
+  return bucket.count > max;
+}
+
+function clientIp(request: Request): string {
+  const forwarded = request.headers.get("x-forwarded-for");
+  return forwarded?.split(",")[0].trim() || request.headers.get("x-real-ip") || "unknown";
 }
 
 /**
  * Parse a localized amount string coming from the iOS Wallet Transaction trigger.
- * Handles "23,40", "€ 23,40", "1.234,56", "12.50", negatives (refunds).
+ * Handles "23,40", "€ 23,40", "1.234,56", "12.50", and negatives (refunds), whose
+ * sign sits on either end depending on locale: "-12,34" or "12,34-".
  */
 function parseWalletAmount(input: unknown): number | null {
   if (typeof input === "number") {
@@ -31,8 +51,13 @@ function parseWalletAmount(input: unknown): number | null {
   }
   if (typeof input !== "string") return null;
 
-  // Keep digits, separators and minus sign only
-  let s = input.replace(/[^\d.,-]/g, "");
+  const trimmed = input.trim();
+  const negative = trimmed.startsWith("-") || trimmed.endsWith("-");
+
+  // A minus anywhere else means we misread the string — refuse rather than guess.
+  if (trimmed.replace(/^-|-$/g, "").includes("-")) return null;
+
+  let s = trimmed.replace(/[^\d.,]/g, "");
   if (!s) return null;
 
   const lastDot = s.lastIndexOf(".");
@@ -52,7 +77,8 @@ function parseWalletAmount(input: unknown): number | null {
   }
 
   const value = parseFloat(s);
-  return Number.isFinite(value) ? value : null;
+  if (!Number.isFinite(value)) return null;
+  return negative ? -value : value;
 }
 
 // POST - Create an expense from an iOS Shortcut (Bearer token auth)
@@ -60,6 +86,14 @@ function parseWalletAmount(input: unknown): number | null {
 // Mode B: { merchant, amount, currency?, date? } - Wallet Transaction trigger
 export async function POST(request: Request) {
   try {
+    // Throttle before the token lookup too, so unknown tokens can't hammer the DB.
+    if (isRateLimited(`ip:${clientIp(request)}`, ANON_RATE_LIMIT_MAX)) {
+      return NextResponse.json(
+        { success: false, message: "Too many requests, slow down" },
+        { status: 429 }
+      );
+    }
+
     const context = await resolveApiToken(request);
     if (!context) {
       return NextResponse.json(
@@ -68,7 +102,7 @@ export async function POST(request: Request) {
       );
     }
 
-    if (isRateLimited(context.tokenId)) {
+    if (isRateLimited(`token:${context.tokenId}`, RATE_LIMIT_MAX)) {
       return NextResponse.json(
         { success: false, message: "Too many requests, slow down" },
         { status: 429 }
@@ -130,7 +164,9 @@ export async function POST(request: Request) {
     }
 
     // Duplicate guard: Wallet triggers occasionally fire twice for one payment.
-    // Compare against the same parsed name/amount the quick-add path would produce.
+    // Scoped to this token's own writes and to a short window — two genuine taps
+    // at the same merchant, or the same purchase logged by a workspace mate or in
+    // the web UI, must still produce two expenses.
     const parsed = parseQuickAdd(input);
     const parsedName = stripHtmlTags(parsed.name, 255);
     const expectedAmount = amount ?? parsed.amount;
@@ -138,9 +174,10 @@ export async function POST(request: Request) {
     const recentDuplicate = await prisma.expense.findFirst({
       where: {
         workspaceId: workspace.id,
+        apiTokenId: context.tokenId,
         name: parsedName,
         amount: expectedAmount,
-        createdAt: { gte: new Date(Date.now() - 3 * 60_000) },
+        createdAt: { gte: new Date(Date.now() - DUPLICATE_WINDOW_MS) },
       },
       orderBy: { createdAt: "desc" },
     });
@@ -152,6 +189,7 @@ export async function POST(request: Request) {
           date,
           currency,
           amount: amount ?? undefined,
+          apiTokenId: context.tokenId,
         });
 
     const amountNumber = Number(expense.amount);

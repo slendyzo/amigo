@@ -13,6 +13,21 @@ export interface QuickAddOptions {
   date?: Date; // Transaction date (defaults to now)
   currency?: string; // Original currency (defaults to workspace default)
   amount?: number; // Override the parsed amount (Shortcuts Mode B, supports negatives/refunds)
+  apiTokenId?: string; // Set when created through an iOS Shortcut
+
+  // Passed straight through to the create. Before this logic was extracted, a
+  // quick-add body fell through to the manual path and these were honoured, so
+  // they stay honoured here.
+  status?: "PAID" | "PENDING";
+  dueDate?: Date | null;
+  projectIds?: string[];
+  excludeFromBudget?: boolean;
+  description?: string | null;
+  amountExpression?: string | null;
+  imageUrls?: string | null;
+  splitCount?: number | null;
+  splitData?: string | null;
+  realAssetId?: string | null;
 }
 
 type ExpenseTypeValue = "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
@@ -106,20 +121,32 @@ export async function createQuickAddExpense(
   const expenseCurrency = opts.currency || workspace.defaultCurrency || "EUR";
   const { amountEur, exchangeRate } = await convertToEur(amount, expenseCurrency);
 
+  const projectIds = opts.projectIds ?? [];
+
   const expense = await prisma.expense.create({
     data: {
       workspaceId: workspace.id,
       name: stripHtmlTags(parsed.name, 255),
       rawInput: stripHtmlTags(input, 500),
       type: mappedType,
-      status: "PAID",
+      status: opts.status === "PENDING" ? "PENDING" : "PAID",
       amount,
+      amountExpression: opts.amountExpression ?? null,
       currency: expenseCurrency,
       amountEur,
       exchangeRate,
       date: opts.date || new Date(),
+      dueDate: opts.dueDate ?? null,
       categoryId,
       bankAccountId: bankAccount?.id || null,
+      apiTokenId: opts.apiTokenId ?? null,
+      excludeFromBudget: opts.excludeFromBudget ?? false,
+      description: opts.description ?? null,
+      imageUrls: opts.imageUrls ?? null,
+      splitCount: opts.splitCount ?? null,
+      splitData: opts.splitData ?? null,
+      realAssetId: opts.realAssetId ?? null,
+      projects: projectIds.length > 0 ? { connect: projectIds.map((id) => ({ id })) } : undefined,
     },
     include: {
       category: { include: { parent: true } },
