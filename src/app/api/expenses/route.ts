@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { parseQuickAdd, CATEGORY_VARIANTS } from "@/lib/parser";
+import { createQuickAddExpense } from "@/lib/quick-add";
 import { convertToEur } from "@/lib/currency";
 import { stripHtmlTags } from "@/lib/utils";
 import { getActiveWorkspace } from "@/lib/workspace";
@@ -119,70 +119,13 @@ export async function POST(request: Request) {
       bankAccountId: string | null;
     };
 
-    // Quick-add mode: parse the input string
+    // Quick-add mode: parse the input string (shared with the iOS Shortcuts endpoint)
     if (quickAdd) {
-      const parsed = parseQuickAdd(quickAdd);
-
-      // Find bank account by hint
-      let bankAccount = null;
-      if (parsed.accountHint) {
-        bankAccount = await prisma.bankAccount.findFirst({
-          where: {
-            workspaceId: workspace.id,
-            name: { contains: parsed.accountHint, mode: "insensitive" },
-          },
-        });
-      }
-
-      // Look up keyword mappings for auto-categorization (check original input first)
-      let category = null;
-      let mappedType: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT" = "LIFESTYLE";
-
-      // Search using original input (before parser transforms it)
-      const inputLower = quickAdd.toLowerCase();
-      const mappings = await prisma.keywordMapping.findMany({
-        where: { workspaceId: workspace.id },
-        include: { category: true },
+      const expense = await createQuickAddExpense(workspace, quickAdd, {
+        date: date ? new Date(date) : undefined,
+        currency,
       });
-
-      // Find the best matching keyword (longest match wins)
-      let bestMatch: typeof mappings[0] | null = null;
-      for (const mapping of mappings) {
-        if (inputLower.includes(mapping.keyword)) {
-          if (!bestMatch || mapping.keyword.length > bestMatch.keyword.length) {
-            bestMatch = mapping;
-          }
-        }
-      }
-
-      if (bestMatch) {
-        if (bestMatch.categoryId) {
-          category = bestMatch.category;
-        }
-        if (bestMatch.expenseType) {
-          mappedType = bestMatch.expenseType as typeof mappedType;
-        }
-      }
-
-      // If no database mapping found, try to find category by parser's suggestion
-      // Try all language variants of the category name
-      if (!category && parsed.category) {
-        const variants = CATEGORY_VARIANTS[parsed.category] || [parsed.category];
-        category = await prisma.category.findFirst({
-          where: {
-            workspaceId: workspace.id,
-            name: { in: variants }
-          },
-        });
-      }
-
-      expenseData = {
-        name: stripHtmlTags(parsed.name, 255),
-        amount: parsed.amount,
-        type: mappedType,
-        categoryId: category?.id || null,
-        bankAccountId: bankAccount?.id || null,
-      };
+      return NextResponse.json({ expense }, { status: 201 });
     } else {
       // Manual mode
       if (!name || amount === undefined) {
