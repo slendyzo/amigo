@@ -124,6 +124,16 @@ export async function POST(request: Request) {
       const expense = await createQuickAddExpense(workspace, quickAdd, {
         date: date ? new Date(date) : undefined,
         currency,
+        status: status === "PENDING" ? "PENDING" : "PAID",
+        dueDate: dueDate ? new Date(dueDate) : null,
+        projectIds: projectIdsToConnect,
+        excludeFromBudget: excludeFromBudget || false,
+        description: description || null,
+        amountExpression: amountExpression || null,
+        imageUrls: imageUrls || null,
+        splitCount: splitCount || null,
+        splitData: splitData || null,
+        realAssetId: typeof realAssetId === "string" && realAssetId ? realAssetId : null,
       });
       return NextResponse.json({ expense }, { status: 201 });
     } else {
