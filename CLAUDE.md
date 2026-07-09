@@ -41,6 +41,31 @@ ssh -i ~/.ssh/id_ed25519 root@100.110.224.38 'bash /root/amigo/deploy.sh'
 
 If the script fails, **do not** fall back to `docker compose up -d --build` — diagnose the build failure first. Common causes: disk pressure (check `df -h /`, run `docker image prune -af` if needed), TypeScript errors that didn't surface in local `npm run build`, env var mismatch.
 
+### Schema changes must be applied BEFORE deploying
+
+`deploy.sh` does not migrate. If the change touches `prisma/schema.prisma`, the database needs the new shape first, or the new code boots against a database missing its tables and every affected route 500s.
+
+**`docker exec amigo npx prisma db push` does not work.** The runtime image is a slim `output: "standalone"` build with no Prisma CLI in it, and the running container still holds the *previous* build's schema — so even if the CLI were present it would push the old shape and silently create nothing.
+
+Instead, generate the SQL locally by diffing the deployed schema against the new one, read it, then apply it in a single transaction:
+
+```bash
+# 1. Dump the schema as it exists on the currently deployed commit
+git show <deployed-sha>:prisma/schema.prisma > /tmp/old.prisma
+
+# 2. Generate the migration (DATABASE_URL just needs to be a valid-looking URL)
+DATABASE_URL="postgresql://amigo:placeholder@localhost:5432/amigo" \
+  npx prisma migrate diff --from-schema /tmp/old.prisma \
+    --to-schema prisma/schema.prisma --script > /tmp/migration.sql
+
+# 3. READ IT. Reject anything with DROP / TRUNCATE / DELETE unless intended.
+# 4. Apply atomically — ON_ERROR_STOP + -1 means all-or-nothing
+ssh -i ~/.ssh/id_ed25519 root@100.110.224.38 \
+  'docker exec -i amigo-db psql -U amigo -d amigo -v ON_ERROR_STOP=1 -1 -f -' < /tmp/migration.sql
+```
+
+Then run `deploy.sh`. Verify with `\d <table>` before trusting it.
+
 Background context (do not need to repeat to user):
 
 - CT 104 rootfs is 32GB. Pool is `local-lvm` on `pc2-sv` (Tailscale `100.127.19.92`). To grow further: `pct resize 104 rootfs +XG` from the Proxmox host.
