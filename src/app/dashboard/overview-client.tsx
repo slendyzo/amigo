@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo, lazy, Suspense, useCallback } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useSwipe } from "@/hooks/use-swipe";
@@ -251,6 +251,23 @@ export default function DashboardOverview({
   // Inline quick-add ("mcd 12") in the spending box.
   const [quickAddText, setQuickAddText] = useState("");
   const [quickAddBusy, setQuickAddBusy] = useState(false);
+  const quickAddInputRef = useRef<HTMLInputElement>(null);
+
+  // Deep link prefill: /dashboard?add=mcd%2012 (iOS Shortcuts "review before save" mode).
+  // Prefills the inline quick-add and shows it on mobile too. Never auto-submits.
+  const [quickAddPrefilled, setQuickAddPrefilled] = useState(false);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const add = params.get("add");
+    if (add?.trim()) {
+      setQuickAddText(add.trim());
+      setQuickAddPrefilled(true);
+      // Clean the URL so refresh/back doesn't re-trigger the prefill
+      window.history.replaceState(null, "", "/dashboard");
+      // Focus after the input renders
+      setTimeout(() => quickAddInputRef.current?.focus(), 100);
+    }
+  }, []);
 
   // Uncategorized count drives the dashboard tidy-up nudge.
   const [uncategorizedCount, setUncategorizedCount] = useState(0);
@@ -1379,8 +1396,9 @@ export default function DashboardOverview({
             <div className="my-4 h-px" style={{ background: "var(--line)" }} />
 
             {/* Inline quick-add — "mcd 12" parsed server-side (desktop only; mobile uses the bottom + Add) */}
-            <form onSubmit={handleInlineQuickAdd} className="mb-3 hidden gap-2 md:flex">
+            <form onSubmit={handleInlineQuickAdd} className={`mb-3 gap-2 md:flex ${quickAddPrefilled ? "flex" : "hidden"}`}>
               <input
+                ref={quickAddInputRef}
                 value={quickAddText}
                 onChange={(ev) => setQuickAddText(ev.target.value)}
                 placeholder={t("quickAddPlaceholder")}
