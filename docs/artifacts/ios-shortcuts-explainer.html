@@ -1,0 +1,719 @@
+<title>Amigo × iOS Shortcuts — how it works</title>
+
+<style>
+  :root {
+    --bg: #EFF1F3;
+    --surface: #FFFFFF;
+    --surface-2: #F7F8F9;
+    --ink: #14161A;
+    --muted: #5B606A;
+    --faint: #878D97;
+    --line: rgba(20, 22, 26, 0.11);
+    --line-strong: rgba(20, 22, 26, 0.22);
+    --accent: #9A5B00;
+    --accent-bright: #F5A623;
+    --accent-wash: rgba(245, 166, 35, 0.12);
+    --ok: #1F7A52;
+    --ok-wash: rgba(31, 122, 82, 0.10);
+    --bad: #B03A34;
+    --bad-wash: rgba(176, 58, 52, 0.10);
+    --hold: #3D5F8F;
+    --hold-wash: rgba(61, 95, 143, 0.10);
+
+    --display: "Iowan Old Style", "Charter", "Palatino Linotype", Palatino, Georgia, serif;
+    --body: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0C0D10;
+      --surface: #15171B;
+      --surface-2: #1B1E23;
+      --ink: #ECEEF1;
+      --muted: #949BA6;
+      --faint: #6E757F;
+      --line: rgba(255, 255, 255, 0.10);
+      --line-strong: rgba(255, 255, 255, 0.20);
+      --accent: #F5B546;
+      --accent-bright: #F5A623;
+      --accent-wash: rgba(245, 166, 35, 0.13);
+      --ok: #4FC08D;
+      --ok-wash: rgba(79, 192, 141, 0.12);
+      --bad: #E4756E;
+      --bad-wash: rgba(228, 117, 110, 0.12);
+      --hold: #7FA3D8;
+      --hold-wash: rgba(127, 163, 216, 0.12);
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #0C0D10;
+    --surface: #15171B;
+    --surface-2: #1B1E23;
+    --ink: #ECEEF1;
+    --muted: #949BA6;
+    --faint: #6E757F;
+    --line: rgba(255, 255, 255, 0.10);
+    --line-strong: rgba(255, 255, 255, 0.20);
+    --accent: #F5B546;
+    --accent-bright: #F5A623;
+    --accent-wash: rgba(245, 166, 35, 0.13);
+    --ok: #4FC08D;
+    --ok-wash: rgba(79, 192, 141, 0.12);
+    --bad: #E4756E;
+    --bad-wash: rgba(228, 117, 110, 0.12);
+    --hold: #7FA3D8;
+    --hold-wash: rgba(127, 163, 216, 0.12);
+  }
+
+  :root[data-theme="light"] {
+    --bg: #EFF1F3;
+    --surface: #FFFFFF;
+    --surface-2: #F7F8F9;
+    --ink: #14161A;
+    --muted: #5B606A;
+    --faint: #878D97;
+    --line: rgba(20, 22, 26, 0.11);
+    --line-strong: rgba(20, 22, 26, 0.22);
+    --accent: #9A5B00;
+    --accent-bright: #F5A623;
+    --accent-wash: rgba(245, 166, 35, 0.12);
+    --ok: #1F7A52;
+    --ok-wash: rgba(31, 122, 82, 0.10);
+    --bad: #B03A34;
+    --bad-wash: rgba(176, 58, 52, 0.10);
+    --hold: #3D5F8F;
+    --hold-wash: rgba(61, 95, 143, 0.10);
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--body);
+    font-size: 17px;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: clamp(40px, 7vw, 96px) clamp(20px, 5vw, 48px) 120px;
+    display: flex;
+    flex-direction: column;
+    gap: 72px;
+  }
+
+  .prose { max-width: 68ch; }
+
+  /* ---- masthead ---- */
+  .masthead { display: flex; flex-direction: column; gap: 20px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(38px, 6vw, 62px);
+    line-height: 1.02;
+    letter-spacing: -0.018em;
+    text-wrap: balance;
+    margin: 0;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .standfirst {
+    font-size: clamp(18px, 2.2vw, 21px);
+    line-height: 1.55;
+    color: var(--muted);
+    max-width: 60ch;
+    text-wrap: pretty;
+  }
+
+  .rule { height: 1px; background: var(--line-strong); }
+
+  /* ---- stages ---- */
+  .stage { display: flex; flex-direction: column; gap: 24px; }
+
+  .stage-head {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    align-items: baseline;
+    gap: 18px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  .stage-num {
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    font-size: clamp(25px, 3.2vw, 33px);
+    line-height: 1.15;
+    letter-spacing: -0.012em;
+    margin: 0;
+    text-wrap: balance;
+  }
+
+  h3 {
+    font-family: var(--body);
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: -0.005em;
+    margin: 0 0 6px;
+  }
+
+  p { margin: 0 0 16px; text-wrap: pretty; }
+  p:last-child { margin-bottom: 0; }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.855em;
+    background: var(--accent-wash);
+    color: var(--accent);
+    padding: 0.12em 0.36em;
+    border-radius: 3px;
+  }
+
+  strong { font-weight: 640; }
+
+  /* ---- cards ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 24px 26px;
+  }
+
+  .cols {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 18px;
+  }
+
+  /* ---- payload blocks ---- */
+  .payload {
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .payload-head {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--faint);
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--line);
+    background: var(--surface);
+  }
+
+  .payload pre {
+    margin: 0;
+    padding: 16px;
+    overflow-x: auto;
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink);
+  }
+
+  .tok-key { color: var(--accent); }
+  .tok-str { color: var(--ok); }
+  .tok-dim { color: var(--faint); }
+
+  /* ---- pipeline chips ---- */
+  .pipeline {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: stretch;
+    gap: 10px;
+    padding: 22px;
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .step {
+    flex: 1 1 150px;
+    min-width: 150px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--stripe, var(--line-strong));
+    border-radius: 6px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .step-n {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    color: var(--faint);
+    text-transform: uppercase;
+  }
+
+  .step-t { font-weight: 600; font-size: 14.5px; line-height: 1.3; }
+  .step-d { font-size: 13px; color: var(--muted); line-height: 1.45; }
+
+  .step.gate { --stripe: var(--bad); }
+  .step.work { --stripe: var(--hold); }
+  .step.done { --stripe: var(--ok); }
+
+  /* ---- verdict pills ---- */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .pill.ok { background: var(--ok-wash); color: var(--ok); }
+  .pill.bad { background: var(--bad-wash); color: var(--bad); }
+  .pill.hold { background: var(--hold-wash); color: var(--hold); }
+
+  /* ---- table ---- */
+  .table-scroll { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+
+  table { border-collapse: collapse; width: 100%; min-width: 620px; }
+
+  th {
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--faint);
+    font-weight: 500;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    white-space: nowrap;
+  }
+
+  td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--line);
+    font-size: 14.5px;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ---- callout ---- */
+  .callout {
+    border: 1px solid var(--line);
+    border-left: 2px solid var(--accent-bright);
+    background: var(--surface);
+    border-radius: 8px;
+    padding: 20px 24px;
+  }
+
+  .callout.warn { border-left-color: var(--bad); }
+
+  .callout-label {
+    font-family: var(--mono);
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--faint);
+    display: block;
+    margin-bottom: 8px;
+  }
+
+  /* ---- checklist ---- */
+  ol.steps, ul.plain { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 14px; }
+
+  ol.steps li {
+    display: grid;
+    grid-template-columns: 26px 1fr;
+    gap: 14px;
+    align-items: baseline;
+    counter-increment: s;
+  }
+
+  ol.steps { counter-reset: s; }
+
+  ol.steps li::before {
+    content: counter(s);
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--accent);
+    border: 1px solid var(--line-strong);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: grid;
+    place-items: center;
+    font-variant-numeric: tabular-nums;
+  }
+
+  ul.plain li { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: start; font-size: 15px; }
+
+  .shell {
+    font-family: var(--mono);
+    font-size: 12.5px;
+    background: var(--surface-2);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    padding: 12px 14px;
+    overflow-x: auto;
+    line-height: 1.6;
+    margin: 12px 0 0;
+  }
+
+  .shell .p { color: var(--faint); user-select: none; }
+
+  footer {
+    font-size: 13.5px;
+    color: var(--faint);
+    border-top: 1px solid var(--line);
+    padding-top: 24px;
+    font-family: var(--mono);
+    line-height: 1.7;
+  }
+
+  a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:focus-visible, li:focus-visible { outline: 2px solid var(--accent-bright); outline-offset: 3px; border-radius: 2px; }
+
+  .fade { animation: rise 0.55s cubic-bezier(0.16, 1, 0.3, 1) backwards; }
+  .fade:nth-child(2) { animation-delay: 0.05s; }
+  .fade:nth-child(3) { animation-delay: 0.1s; }
+
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade { animation: none; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead fade">
+    <div class="eyebrow">Amigo · iOS Shortcuts integration</div>
+    <h1>You tap your card. The expense <em>is already logged.</em></h1>
+    <p class="standfirst">
+      Nuno's integration lets your iPhone write to Amigo without you opening it. Here is every moving part,
+      in the order a real payment travels through them — and the three places I changed how it behaves.
+    </p>
+  </header>
+
+  <div class="rule"></div>
+
+  <!-- 1 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="stage-num">01</span>
+      <h2>A token is how your phone proves it's you</h2>
+    </div>
+    <div class="prose">
+      <p>
+        Amigo's website knows you by a login cookie. Your iPhone's Shortcuts app has no cookie — it just fires off a
+        bare web request. So Settings grows a card where you mint a <strong>personal access token</strong>: a long
+        random string, shown to you exactly once.
+      </p>
+      <p>
+        What's stored in the database is only a one-way fingerprint of it, never the token itself. Same idea as your
+        password. If someone stole the whole database, they still couldn't send a request as you.
+      </p>
+      <p>
+        The token is bound to whichever workspace was active when you created it. That's deliberate — an automation
+        that silently changed which budget it wrote to, depending on what you'd last clicked, would be a nightmare.
+      </p>
+    </div>
+
+    <div class="callout">
+      <span class="callout-label">What I changed</span>
+      <p>
+        The token pointed straight at a workspace. It never re-checked that you were still a <em>member</em> of it.
+        Kick someone out of a shared workspace and their phone keeps posting expenses into it forever. Now every
+        request re-resolves through the membership record, exactly like the website does. No membership, no entry.
+      </p>
+    </div>
+  </section>
+
+  <!-- 2 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="stage-num">02</span>
+      <h2>Two doors in</h2>
+    </div>
+
+    <div class="cols">
+      <div class="card">
+        <h3>Apple Pay, hands-free</h3>
+        <p style="color: var(--muted); font-size: 15px;">
+          iOS has a Wallet trigger that fires on every card tap and hands you the merchant and the amount. The
+          Shortcut forwards those two facts to Amigo. You don't touch your phone. You pay for coffee, the expense
+          appears.
+        </p>
+        <div class="payload" style="margin-top: 16px;">
+          <div class="payload-head">Wallet sends</div>
+<pre>{
+  <span class="tok-key">"merchant"</span>: <span class="tok-str">"McDonald's"</span>,
+  <span class="tok-key">"amount"</span>:   <span class="tok-str">"€ 12,40"</span>
+}</pre>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3>Siri, Back Tap, Action Button</h3>
+        <p style="color: var(--muted); font-size: 15px;">
+          Say or type it. The text runs through the <em>same</em> parser as the quick-add bar on the dashboard, so
+          <code>mcd 12</code> becomes McDonald's, €12.00, Lifestyle — with your keyword rules applied identically.
+        </p>
+        <div class="payload" style="margin-top: 16px;">
+          <div class="payload-head">Siri sends</div>
+<pre>{
+  <span class="tok-key">"text"</span>: <span class="tok-str">"mcd 12"</span>
+}</pre>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <span class="callout-label">What I changed</span>
+      <p>
+        That <code>"€ 12,40"</code> is messier than it looks. Currency symbols, comma decimals, dot thousands — and
+        for a <strong>refund</strong>, some locales put the minus sign at the <em>end</em>: <code>"12,34-"</code>.
+        The old reader threw that minus away, so money coming back to you was recorded as money going out. It now
+        reads the sign from either end, and refuses anything it can't parse cleanly rather than guessing.
+      </p>
+    </div>
+  </section>
+
+  <!-- 3 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="stage-num">03</span>
+      <h2>What the server does with it</h2>
+    </div>
+    <div class="prose">
+      <p>Every request runs the same gauntlet. The first three steps can throw it out; only the last one writes.</p>
+    </div>
+
+    <div class="pipeline">
+      <div class="step gate">
+        <span class="step-n">Gate</span>
+        <span class="step-t">Slow down</span>
+        <span class="step-d">Too many requests from one address, or one token, and it stops here.</span>
+      </div>
+      <div class="step gate">
+        <span class="step-n">Gate</span>
+        <span class="step-t">Who are you</span>
+        <span class="step-d">Fingerprint the token, find it, confirm you still belong to the workspace.</span>
+      </div>
+      <div class="step work">
+        <span class="step-n">Read</span>
+        <span class="step-t">Make sense of it</span>
+        <span class="step-d">Parse the amount, clean the merchant, apply your keyword rules and category.</span>
+      </div>
+      <div class="step gate">
+        <span class="step-n">Gate</span>
+        <span class="step-t">Seen this already?</span>
+        <span class="step-d">Wallet sometimes fires twice for one payment. Catch the echo.</span>
+      </div>
+      <div class="step done">
+        <span class="step-n">Write</span>
+        <span class="step-t">Log it</span>
+        <span class="step-d">Convert to EUR, save, reply with a line Siri can read back to you.</span>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>
+        Worth knowing: this endpoint can only <em>create</em> expenses. It cannot read your data, cannot delete
+        anything, cannot touch settings. A leaked token is an annoyance, not a breach.
+      </p>
+    </div>
+  </section>
+
+  <!-- 4 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="stage-num">04</span>
+      <h2>The echo catcher, and why it was eating your coffee</h2>
+    </div>
+    <div class="prose">
+      <p>
+        Wallet occasionally sends the same payment twice. So the endpoint looks back in time: <em>have I just seen
+        this exact name and amount?</em> If yes, it says "already logged" and writes nothing.
+      </p>
+      <p>
+        The problem was <strong>how far it looked</strong>. It scanned every expense in the whole workspace, from any
+        source, over three minutes. That is indistinguishable from real life.
+      </p>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Situation</th>
+            <th>Was</th>
+            <th>Now</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Wallet fires twice for one tap</td>
+            <td><span class="pill hold">Caught</span></td>
+            <td><span class="pill hold">Caught</span></td>
+          </tr>
+          <tr>
+            <td>You buy two coffees, tapping twice, 90s apart</td>
+            <td><span class="pill bad">Second one vanished</span></td>
+            <td><span class="pill ok">Both logged</span></td>
+          </tr>
+          <tr>
+            <td>You and Nuno buy the same lunch in a shared workspace</td>
+            <td><span class="pill bad">His vanished</span></td>
+            <td><span class="pill ok">Both logged</span></td>
+          </tr>
+          <tr>
+            <td>You type it in the web app, then Siri logs it too</td>
+            <td><span class="pill bad">Siri's vanished</span></td>
+            <td><span class="pill ok">Both logged</span></td>
+          </tr>
+          <tr>
+            <td>Two identical taps at the same shop within 60s</td>
+            <td><span class="pill bad">Collapsed</span></td>
+            <td><span class="pill bad">Still collapsed</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose">
+      <p>
+        Expenses now carry a stamp saying which token wrote them, so the echo check only ever compares a token against
+        <em>its own</em> recent writes, inside a sixty-second window.
+      </p>
+      <p>
+        That last row is the honest cost. Two genuinely separate identical taps, less than a minute apart, at the same
+        merchant, still merge into one. There is no way to tell that apart from a Wallet double-fire without asking
+        you — and asking you defeats the point of it being silent. Sixty seconds is the trade.
+      </p>
+    </div>
+  </section>
+
+  <!-- 5 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="stage-num">05</span>
+      <h2>If you'd rather look before it saves</h2>
+    </div>
+    <div class="prose">
+      <p>
+        There's a third mode that never posts anything. The Shortcut opens Amigo at
+        <code>/dashboard?add=mcd%2012</code>, and the dashboard fills the quick-add bar with those words and focuses
+        it — on mobile too, where that bar is normally hidden. Nothing is submitted. You read it, you press Add.
+      </p>
+      <p>Good for the Action Button, when you want a beat of confirmation instead of blind trust.</p>
+    </div>
+  </section>
+
+  <!-- 6 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="stage-num">06</span>
+      <h2>Getting it live</h2>
+    </div>
+    <div class="prose">
+      <p>
+        The code adds a new table for tokens and a new column on expenses. Those don't exist in the live database yet,
+        and <code>deploy.sh</code> does not create them.
+      </p>
+    </div>
+
+    <div class="callout warn">
+      <span class="callout-label">Order matters</span>
+      <p style="margin-bottom: 0;">
+        Deploy before pushing the schema and the app boots against a database missing both — every Shortcuts request
+        returns a 500, and the Settings token card breaks. Schema first, always.
+      </p>
+    </div>
+
+    <div class="card">
+      <ol class="steps">
+        <li><div><strong>Merge the follow-up PR</strong> so the fixes are on <code>main</code> alongside Nuno's work.</div></li>
+        <li>
+          <div>
+            <strong>Push the schema</strong> to the live database — creates the tokens table and the new column.
+            <div class="shell"><span class="p">$</span> ssh root@vibecode 'docker exec amigo npx prisma db push'</div>
+          </div>
+        </li>
+        <li>
+          <div>
+            <strong>Deploy</strong> with the sanctioned script, never <code>docker compose</code> directly.
+            <div class="shell"><span class="p">$</span> ssh root@vibecode 'bash /root/amigo/deploy.sh'</div>
+          </div>
+        </li>
+        <li><div><strong>Mint a token</strong> in Settings on your phone, and copy it — you only see it once.</div></li>
+        <li><div><strong>Build the Shortcut</strong>, following the guide that now sits in the Settings card.</div></li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- 7 -->
+  <section class="stage">
+    <div class="stage-head">
+      <span class="stage-num">07</span>
+      <h2>What nobody has actually proven yet</h2>
+    </div>
+    <div class="prose">
+      <p>
+        The build is green and the amount reader is tested against seventeen awkward strings. But the tokens table
+        doesn't exist in production until you run that schema push, so <strong>no part of this has ever run against a
+        real token.</strong> Everything above is verified by reading the code and by the type checker — not by a phone.
+      </p>
+      <p>Once it's deployed, check these four, in this order:</p>
+      <ul class="plain">
+        <li><span class="pill hold">1</span><div>Mint a token, hit the connection test in the setup guide. It should greet you by workspace name.</div></li>
+        <li><span class="pill hold">2</span><div>Tap Apple Pay once. Exactly one expense, with the right merchant and amount.</div></li>
+        <li><span class="pill hold">3</span><div>Tap the same merchant twice, fast. Still exactly one — that's the echo catcher earning its keep.</div></li>
+        <li><span class="pill hold">4</span><div>Refund something, or fake one. It must land <em>green</em>, as a credit, not as another charge.</div></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>
+    Feature by Nuno (MonoBL) · Review and fixes tracked as AMIGO-291, 292, 293<br>
+    Amigo · amigo.slendyzo.pt
+  </footer>
+
+</div>
