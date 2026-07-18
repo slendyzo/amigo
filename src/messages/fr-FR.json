@@ -1,4 +1,4 @@
-﻿{
+{
   "shortcuts": {
     "title": "Raccourcis iPhone",
     "description": "Enregistrez vos dépenses automatiquement en payant avec Apple Pay, ou à la voix avec Siri.",
@@ -102,7 +102,13 @@
     "money": "Argent",
     "themeLight": "Clair",
     "themeDark": "Sombre",
-    "themeSystem": "Auto"
+    "themeSystem": "Auto",
+    "wealth": "Patrimoine",
+    "workspace": "Espace",
+    "moreProjectsSub": "Budgets et tags",
+    "moreInsightsSub": "Rapports mensuels",
+    "moreTidyUpSub": "Catégoriser les dépenses",
+    "moreImportSub": "CSV · Excel · OFX"
   },
   "auth": {
     "signIn": "Connexion",
@@ -135,7 +141,7 @@
     "statSpent": "Dépensé",
     "statPortfolio": "Portefeuille",
     "pctOfBudget": "{pct}% du budget",
-    "thisMonth": "ce mois-ci",
+    "thisMonth": "Ce Mois",
     "railExchanges": "{count} plateformes",
     "railRwaEquity": "Valeur nette · Capital RWA",
     "railTopCategories": "Principales catégories",
@@ -163,7 +169,6 @@
     "viewAll": "Voir tout",
     "noExpensesYet": "Pas encore de dépenses",
     "addFirstExpense": "Ajoutez votre première dépense",
-    "thisMonth": "Ce Mois",
     "lastMonth": "Mois Dernier",
     "survivalBudget": "Budget Mensuel",
     "used": "utilisé",

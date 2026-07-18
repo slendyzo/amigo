@@ -1,142 +1,181 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
 import { ThemeToggle } from "./theme-controls";
 
+// 22px stroke icons at 1.8 weight, per the Calm Violet handoff tab bar
 const icons: Record<string, ReactNode> = {
-  layout: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v5a1 1 0 01-1 1H5a1 1 0 01-1-1V5zm10 0a1 1 0 011-1h4a1 1 0 011 1v2a1 1 0 01-1 1h-4a1 1 0 01-1-1V5zM4 16a1 1 0 011-1h4a1 1 0 011 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-3zm10-3a1 1 0 011-1h4a1 1 0 011 1v6a1 1 0 01-1 1h-4a1 1 0 01-1-1v-6z" />,
-  dollar: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />,
-  "trending-up": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />,
-  menu: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 6h16M4 12h16M4 18h16" />,
-  plus: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />,
-  folder: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />,
-  settings: <><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" /><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></>,
-  "bar-chart": <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />,
-  inbox: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />,
-  sparkles: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />,
-  close: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />,
-  signout: <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />,
+  home: <path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z" />,
+  money: <path d="M4 6h16M4 12h16M4 18h10" />,
+  wealth: <path d="M4 17l5-5 4 3 7-8" />,
+  more: <><circle cx="5" cy="12" r="1.6" /><circle cx="12" cy="12" r="1.6" /><circle cx="19" cy="12" r="1.6" /></>,
+  plus: <path d="M12 5v14M5 12h14" />,
+  close: <path d="M6 6l12 12M18 6L6 18" />,
+  folder: <path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z" />,
+  trend: <path d="M4 17l5-5 4 3 7-8" />,
+  check: <path d="M5 13l4 4L19 7" />,
+  download: <><path d="M12 4v10m0 0l-4-4m4 4l4-4" /><path d="M5 19h14" /></>,
+  chevron: <path d="M9 6l6 6-6 6" />,
+  inbox: <><path d="M4 13h4l2 3h4l2-3h4" /><path d="M4 13V6a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v7" /></>,
+  signout: <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3V7a3 3 0 0 1 3-3h4a3 3 0 0 1 3 3v1" />,
 };
 
-const Icon = ({ name, cls = "w-6 h-6" }: { name: string; cls?: string }) => (
-  <svg className={cls} fill="none" stroke="currentColor" viewBox="0 0 24 24">{icons[name]}</svg>
+const Icon = ({ name, size = 22, sw = 1.8 }: { name: string; size?: number; sw?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round">
+    {icons[name]}
+  </svg>
 );
 
 interface MobileNavProps {
   onAddClick?: () => void;
   userEmail?: string;
+  workspaceName?: string;
   onSignOut?: () => void;
   aiEnabled?: boolean;
   isAdmin?: boolean;
   onWhatsNew?: () => void;
 }
 
-export default function MobileNav({ onAddClick, userEmail, onSignOut, aiEnabled, isAdmin, onWhatsNew }: MobileNavProps) {
+export default function MobileNav({ onAddClick, userEmail, workspaceName, onSignOut, aiEnabled, isAdmin, onWhatsNew }: MobileNavProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [sheetIn, setSheetIn] = useState(false);
   const t = useTranslations("nav");
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
   useEffect(() => {
     document.body.classList.toggle("modal-open", menuOpen);
+    if (menuOpen) {
+      const raf = requestAnimationFrame(() => setSheetIn(true));
+      return () => { cancelAnimationFrame(raf); document.body.classList.remove("modal-open"); };
+    }
+    setSheetIn(false);
     return () => document.body.classList.remove("modal-open");
   }, [menuOpen]);
 
+  const closeSheet = () => {
+    setSheetIn(false);
+    setTimeout(() => setMenuOpen(false), 300);
+  };
+
+  const go = (href: string) => { closeSheet(); router.push(href); };
+
   const moneyActive = ["/dashboard/expenses", "/dashboard/incomes", "/dashboard/recurring", "/dashboard/import"].some((p) => pathname.startsWith(p));
-  const portfolioActive = ["/dashboard/portfolio", "/dashboard/networth", "/dashboard/exchanges"].some((p) => pathname.startsWith(p));
+  const wealthActive = ["/dashboard/portfolio", "/dashboard/networth", "/dashboard/exchanges"].some((p) => pathname.startsWith(p));
   const dashActive = pathname === "/dashboard";
 
   const tab = (active: boolean, href: string, icon: string, label: string) => (
-    <Link href={href} className="flex flex-col items-center justify-center w-16 h-full tap-none transition-colors"
+    <Link href={href} className="flex flex-col items-center justify-center gap-[3px] w-16 h-full tap-none transition-colors"
       style={{ color: active ? "var(--accent)" : "var(--ink-subtle)" }}>
       <Icon name={icon} />
-      <span className="text-[10px] mt-0.5 font-medium">{label}</span>
+      <span className="text-[10px]" style={{ fontWeight: active ? 600 : 500 }}>{label}</span>
     </Link>
   );
 
-  const drawerLink = (href: string, icon: string, label: string, active = false) => (
-    <Link href={href} onClick={() => setMenuOpen(false)}
-      className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium tap-none transition-colors"
-      style={{ background: active ? "var(--accent-tint)" : "transparent", color: active ? "var(--accent)" : "var(--ink)" }}>
-      <Icon name={icon} cls="w-5 h-5" />
-      <span className="flex-1">{label}</span>
-    </Link>
+  const shortcut = (href: string, icon: string, tint: string, iconColor: string, label: string, sub: string) => (
+    <button onClick={() => go(href)} className="text-left rounded-[18px] p-[15px] tap-none active:scale-[.98] transition-transform"
+      style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
+      <div className="w-[38px] h-[38px] rounded-xl flex items-center justify-center mb-2.5" style={{ background: tint, color: iconColor }}>
+        <Icon name={icon} size={16} />
+      </div>
+      <div className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>{label}</div>
+      <div className="text-[11px] mt-px" style={{ color: "var(--ink-subtle)" }}>{sub}</div>
+    </button>
+  );
+
+  const listRow = (label: string, onClick: () => void, opts?: { dot?: boolean; last?: boolean }) => (
+    <button onClick={onClick} className="w-full flex items-center justify-between py-3 tap-none"
+      style={{ borderBottom: opts?.last ? "none" : "1px solid var(--line)", color: "var(--ink)" }}>
+      <span className="text-[13px] font-medium">{label}</span>
+      {opts?.dot
+        ? <span className="w-2 h-2 rounded-full" style={{ background: "var(--accent)" }} />
+        : <span style={{ color: "var(--ink-subtle)" }}><Icon name="chevron" size={14} sw={2} /></span>}
+    </button>
   );
 
   return (
     <>
-      {/* Bottom Tab Bar */}
+      {/* Bottom tab bar — Home / Money / FAB / Wealth / More */}
       <nav className="mobile-nav-bar md:hidden fixed bottom-0 left-0 right-0 z-40 pb-safe-bottom border-t"
         style={{ background: "var(--surface)", borderColor: "var(--line)" }}>
-        <div className="flex items-center justify-around h-16">
-          {tab(dashActive, "/dashboard", "layout", t("dashboard"))}
-          {tab(moneyActive, "/dashboard/expenses", "dollar", t("money"))}
+        <div className="flex items-center justify-around pt-2.5 pb-1.5">
+          {tab(dashActive, "/dashboard", "home", t("home"))}
+          {tab(moneyActive, "/dashboard/expenses", "money", t("money"))}
 
-          {/* Center Add */}
+          {/* Center FAB */}
           <button onClick={onAddClick} aria-label="Add"
-            className="flex items-center justify-center w-14 h-14 rounded-full -mt-6 text-white tap-none active:scale-95 transition-transform"
-            style={{ background: "var(--accent-strong)", boxShadow: "0 8px 22px var(--accent-tint), 0 4px 10px rgba(0,0,0,.3)" }}>
-            <Icon name="plus" cls="w-7 h-7" />
+            className="flex items-center justify-center w-[52px] h-[52px] rounded-full -mt-6 tap-none active:scale-[.94] transition-transform"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)", boxShadow: "var(--shadow-fab)" }}>
+            <Icon name="plus" size={24} sw={2} />
           </button>
 
-          {tab(portfolioActive, "/dashboard/portfolio", "trending-up", t("portfolio"))}
+          {tab(wealthActive, "/dashboard/portfolio", "wealth", t("wealth"))}
 
           <button onClick={() => setMenuOpen(true)}
-            className="flex flex-col items-center justify-center w-16 h-full tap-none transition-colors"
-            style={{ color: "var(--ink-subtle)" }}>
-            <Icon name="menu" />
-            <span className="text-[10px] mt-0.5 font-medium">{t("more")}</span>
+            className="flex flex-col items-center justify-center gap-[3px] w-16 h-full tap-none transition-colors"
+            style={{ color: menuOpen ? "var(--accent)" : "var(--ink-subtle)" }}>
+            <Icon name="more" />
+            <span className="text-[10px] font-medium">{t("more")}</span>
           </button>
         </div>
       </nav>
 
-      {/* Drawer overlay */}
-      {menuOpen && <div className="md:hidden fixed inset-0 bg-black/50 z-50" onClick={() => setMenuOpen(false)} />}
+      {/* More sheet (replaces the drawer) */}
+      {menuOpen && (
+        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
+          <div className="absolute inset-0 transition-opacity duration-300"
+            style={{ background: "rgba(23,22,31,.45)", opacity: sheetIn ? 1 : 0 }}
+            onClick={closeSheet} />
+          <div className="relative flex flex-col gap-4 rounded-t-[28px] px-5 pt-3.5 transition-transform duration-300"
+            style={{ background: "var(--app-bg)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 28px)", transform: sheetIn ? "translateY(0)" : "translateY(100%)", transitionTimingFunction: "var(--ease)" }}>
+            <div className="w-10 h-1 rounded-sm mx-auto" style={{ background: "color-mix(in srgb, var(--ink) 15%, transparent)" }} />
 
-      {/* Drawer */}
-      <div
-        className={`md:hidden fixed top-0 right-0 bottom-0 w-72 max-w-[80vw] z-50 transform transition-transform duration-300 ease-out flex flex-col ${menuOpen ? "translate-x-0" : "translate-x-full"}`}
-        style={{ background: "var(--surface)" }}
-      >
-        <div className="flex items-center justify-between px-4 py-3 border-b pt-safe flex-shrink-0" style={{ borderColor: "var(--line)" }}>
-          <div className="min-w-0 flex-1">
-            <h2 className="text-base font-semibold" style={{ color: "var(--ink)" }}>{t("menu")}</h2>
-            {userEmail && <p className="text-xs truncate" style={{ color: "var(--ink-subtle)" }}>{userEmail}</p>}
+            <div className="flex items-center justify-between">
+              <div className="text-[17px] font-bold" style={{ color: "var(--ink)" }}>{t("more")}</div>
+              <button onClick={closeSheet} aria-label="Close"
+                className="w-8 h-8 rounded-full flex items-center justify-center tap-none"
+                style={{ background: "var(--surface)", color: "var(--ink-muted)", boxShadow: "var(--shadow-card)" }}>
+                <Icon name="close" size={14} sw={2} />
+              </button>
+            </div>
+
+            {/* 2×2 shortcut grid */}
+            <div className="grid grid-cols-2 gap-2.5">
+              {shortcut("/dashboard/projects", "folder", "var(--surface-2)", "var(--accent)", t("projects"), t("moreProjectsSub"))}
+              {aiEnabled && shortcut("/dashboard/insights", "trend", "color-mix(in srgb, var(--positive) 12%, transparent)", "var(--positive)", t("insights"), t("moreInsightsSub"))}
+              {shortcut("/dashboard/tidy-up", "check", "color-mix(in srgb, #a8823c 14%, transparent)", "#a8823c", t("tidyUp"), t("moreTidyUpSub"))}
+              {shortcut("/dashboard/import", "download", "color-mix(in srgb, #3d74b8 12%, transparent)", "#3d74b8", t("import"), t("moreImportSub"))}
+            </div>
+
+            {/* List card */}
+            <div className="rounded-[20px] px-4 py-1.5" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
+              {listRow(t("settings"), () => go("/dashboard/settings"))}
+              {listRow(workspaceName ? `${t("workspace")} — ${workspaceName}` : t("workspace"), () => go("/dashboard/workspace"))}
+              {isAdmin && listRow(t("inbox"), () => go("/dashboard/inbox"))}
+              {listRow(t("whatsNew"), () => { closeSheet(); onWhatsNew?.(); }, { dot: true, last: true })}
+            </div>
+
+            <div className="flex items-center justify-between gap-3">
+              <ThemeToggle />
+              {onSignOut && (
+                <button onClick={onSignOut}
+                  className="flex items-center gap-2 px-4 py-2.5 rounded-[14px] text-[13px] font-semibold tap-none"
+                  style={{ color: "var(--negative)", background: "color-mix(in srgb, var(--negative) 10%, transparent)" }}>
+                  <Icon name="signout" size={16} />{t("signOut")}
+                </button>
+              )}
+            </div>
+            {userEmail && (
+              <p className="text-[11px] text-center -mt-1 truncate" style={{ color: "var(--ink-subtle)" }}>{userEmail}</p>
+            )}
           </div>
-          <button onClick={() => setMenuOpen(false)} className="p-2 -mr-2 rounded-lg tap-none flex-shrink-0" style={{ color: "var(--ink-muted)" }}>
-            <Icon name="close" />
-          </button>
         </div>
-
-        <div className="flex-1 overflow-y-auto scroll-touch scrollbar-hide px-2 py-2 space-y-1">
-          {drawerLink("/dashboard/projects", "folder", t("projects"), pathname.startsWith("/dashboard/projects"))}
-          {drawerLink("/dashboard/settings", "settings", t("settings"), pathname.startsWith("/dashboard/settings"))}
-          {aiEnabled && drawerLink("/dashboard/insights", "bar-chart", t("insights"), pathname.startsWith("/dashboard/insights"))}
-          {isAdmin && drawerLink("/dashboard/inbox", "inbox", t("inbox"), pathname.startsWith("/dashboard/inbox"))}
-
-          <div className="h-px my-2 mx-1" style={{ background: "var(--line)" }} />
-          <div className="px-1"><ThemeToggle /></div>
-
-          <button onClick={() => { setMenuOpen(false); onWhatsNew?.(); }}
-            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium tap-none transition-colors" style={{ color: "var(--ink)" }}>
-            <Icon name="sparkles" cls="w-5 h-5" />{t("whatsNew")}
-          </button>
-        </div>
-
-        <div className="flex-shrink-0 border-t p-3 pb-safe" style={{ borderColor: "var(--line)" }}>
-          {onSignOut && (
-            <button onClick={onSignOut}
-              className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-sm font-medium tap-none transition-colors"
-              style={{ color: "var(--negative)", background: "color-mix(in srgb, var(--negative) 12%, transparent)" }}>
-              <Icon name="signout" cls="w-5 h-5" />{t("signOut")}
-            </button>
-          )}
-        </div>
-      </div>
+      )}
     </>
   );
 }

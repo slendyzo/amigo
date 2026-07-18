@@ -1,4 +1,4 @@
-﻿{
+{
   "shortcuts": {
     "title": "Atalhos do iPhone",
     "description": "Registe despesas automaticamente ao pagar com Apple Pay, ou por voz com a Siri.",
@@ -102,7 +102,13 @@
     "money": "Dinheiro",
     "themeLight": "Claro",
     "themeDark": "Escuro",
-    "themeSystem": "Auto"
+    "themeSystem": "Auto",
+    "wealth": "Património",
+    "workspace": "Espaço",
+    "moreProjectsSub": "Orçamentos e tags",
+    "moreInsightsSub": "Relatórios mensais",
+    "moreTidyUpSub": "Categorizar despesas",
+    "moreImportSub": "CSV · Excel · OFX"
   },
   "auth": {
     "signIn": "Iniciar Sessão",
@@ -135,7 +141,7 @@
     "statSpent": "Gasto",
     "statPortfolio": "Carteira",
     "pctOfBudget": "{pct}% do orçamento",
-    "thisMonth": "este mês",
+    "thisMonth": "Este Mês",
     "railExchanges": "{count} exchanges",
     "railRwaEquity": "Património · Capital RWA",
     "railTopCategories": "Principais categorias",
@@ -163,7 +169,6 @@
     "viewAll": "Ver tudo",
     "noExpensesYet": "Ainda sem despesas",
     "addFirstExpense": "Adiciona a tua primeira despesa",
-    "thisMonth": "Este Mês",
     "lastMonth": "Mês Passado",
     "survivalBudget": "Orçamento Mensal",
     "used": "usado",
