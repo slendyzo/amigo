@@ -392,6 +392,7 @@ model Expense {
   merchant            String?   @db.VarChar(255) // Normalized merchant name
   isRecurring         Boolean   @default(false)
   recurringTemplateId String? // Link to template if auto-generated
+  installmentNumber   Int? // 1-based position within an installment plan (template.installmentMonths total)
   importLogId         String? // Link to import batch for bulk delete
   excludeFromBudget   Boolean   @default(false) // Don't count towards monthly budget (offshore/one-off)
   imageUrls           String?   @db.Text // JSON array of compressed WebP base64 data URLs
@@ -457,7 +458,14 @@ model RecurringTemplate {
   isActive      Boolean   @default(true)
   lastGenerated DateTime? // Last time an expense was auto-created
   nextDue       DateTime? // Next scheduled generation
+  startDate     DateTime? // First occurrence date. Generation skips months before it. Anchor for installment numbering.
   endDate       DateTime? // Stop generating after this date (fixed-term plans, e.g. 6× installments). Null = open-ended.
+
+  // Installment plans ("12x"): when set, this template is a fixed-term split of
+  // installmentTotal over installmentMonths. amount holds the rounded monthly
+  // share; the final installment absorbs the rounding remainder.
+  installmentTotal  Decimal? @db.Decimal(12, 2)
+  installmentMonths Int?
 
   // Relations
   workspace   Workspace    @relation(fields: [workspaceId], references: [id], onDelete: Cascade)

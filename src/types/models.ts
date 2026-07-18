@@ -39,6 +39,8 @@ export type Expense = {
   date: string;
   isRecurring?: boolean;
   recurringTemplateId?: string | null;
+  installmentNumber?: number | null;
+  recurringTemplate?: { installmentMonths: number | null } | null;
   category: Category | null;
   bankAccount: BankAccount | null;
   projects: Project[];

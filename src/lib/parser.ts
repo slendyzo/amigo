@@ -139,8 +139,9 @@ export function parseWithKeywords(input: string): ParsedExpense | null {
 }
 
 /**
- * Parse quick-add input format: "name amount [account]"
- * Examples: "Lunch 15.50", "mcd 12€ millennium", "uber 8.50 account-a"
+ * Parse quick-add input format: "name amount [account] [Nx]"
+ * Examples: "Lunch 15.50", "mcd 12€ millennium", "uber 8.50 account-a",
+ * "iphone 600 12x" (installments: €600 split over 12 months)
  */
 export function parseQuickAdd(input: string): {
   name: string;
@@ -148,14 +149,25 @@ export function parseQuickAdd(input: string): {
   category: string | null;
   merchant: string | null;
   accountHint: string | null;
+  installmentMonths: number | null;
 } {
   const parts = input.trim().split(/\s+/);
 
   let amount = 0;
   let accountHint: string | null = null;
+  let installmentMonths: number | null = null;
   const nameParts: string[] = [];
 
   for (const part of parts) {
+    // Installment token: "12x" or "x12" → split over 12 months
+    const installmentMatch = part.match(/^(\d{1,3})x$/i) || part.match(/^x(\d{1,3})$/i);
+    if (installmentMatch) {
+      const months = parseInt(installmentMatch[1], 10);
+      if (months >= 2 && months <= 120) {
+        installmentMonths = months;
+        continue;
+      }
+    }
     // Check if it's an amount (number with optional currency symbol)
     const amountMatch = part.match(/^[\d.,]+[€$]?$|^[€$]?[\d.,]+$/);
     if (amountMatch) {
@@ -177,5 +189,6 @@ export function parseQuickAdd(input: string): {
     category: parsed?.category || null,
     merchant: parsed?.merchant || null,
     accountHint,
+    installmentMonths,
   };
 }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { parseQuickAdd, CATEGORY_VARIANTS } from "@/lib/parser";
 import { convertToEur } from "@/lib/currency";
 import { stripHtmlTags } from "@/lib/utils";
+import { createInstallmentPlan } from "@/lib/installments";
 
 /** Minimal workspace shape needed to create a quick-add expense */
 export interface QuickAddWorkspace {
@@ -116,8 +117,40 @@ export async function createQuickAddExpense(
     categoryId = defaultCategory.id;
   }
 
-  // Convert to EUR for consistent totals
+  // "iphone 600 12x" → create an installment plan (fixed-term recurring
+  // template) instead of a single expense, and return installment 1.
   const amount = opts.amount ?? parsed.amount;
+  if (parsed.installmentMonths && amount > 0) {
+    const { template } = await createInstallmentPlan({
+      workspaceId: workspace.id,
+      name: stripHtmlTags(parsed.name, 255),
+      totalAmount: amount,
+      months: parsed.installmentMonths,
+      currency: opts.currency || workspace.defaultCurrency || "EUR",
+      startDate: opts.date || new Date(),
+      type: mappedType,
+      categoryId,
+      bankAccountId: bankAccount?.id || null,
+      description: opts.description ?? null,
+      projectIds: opts.projectIds ?? [],
+      excludeFromBudget: opts.excludeFromBudget ?? false,
+    });
+    const firstInstallment = await prisma.expense.findFirst({
+      where: { recurringTemplateId: template.id },
+      orderBy: { date: "asc" },
+      include: {
+        category: { include: { parent: true } },
+        bankAccount: true,
+        projects: true,
+      },
+    });
+    if (!firstInstallment) {
+      throw new Error("Installment plan created but no installment was generated");
+    }
+    return firstInstallment;
+  }
+
+  // Convert to EUR for consistent totals
   const expenseCurrency = opts.currency || workspace.defaultCurrency || "EUR";
   const { amountEur, exchangeRate } = await convertToEur(amount, expenseCurrency);
 

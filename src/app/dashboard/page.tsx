@@ -129,6 +129,8 @@ export default async function DashboardPage({
         excludeFromBudget: true,
         splitCount: true,
         splitData: true,
+        installmentNumber: true,
+        recurringTemplate: { select: { installmentMonths: true } },
         createdAt: true,
         category: { select: { id: true, name: true, parentId: true, parent: { select: { id: true, name: true } } } },
         projects: { select: { id: true, name: true } },
@@ -153,6 +155,8 @@ export default async function DashboardPage({
         excludeFromBudget: true,
         splitCount: true,
         splitData: true,
+        installmentNumber: true,
+        recurringTemplate: { select: { installmentMonths: true } },
         createdAt: true,
         category: { select: { id: true, name: true, parentId: true, parent: { select: { id: true, name: true } } } },
         projects: { select: { id: true, name: true } },
@@ -311,6 +315,8 @@ export default async function DashboardPage({
     excludeFromBudget: e.excludeFromBudget,
     splitCount: e.splitCount,
     splitData: e.splitData,
+    installmentNumber: e.installmentNumber,
+    installmentMonths: e.recurringTemplate?.installmentMonths ?? null,
     createdAt: e.createdAt.toISOString(),
   });
 

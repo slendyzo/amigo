@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
+import { installmentAmount } from "@/lib/installment-math";
 
 // GET - Auto-generate expenses for templates with autoGenerate=true for current month
 export async function GET() {
@@ -84,6 +85,11 @@ export async function GET() {
         continue;
       }
 
+      // Future-start plans wait for their first month.
+      if (template.startDate && monthIndexNotStarted(targetYear, targetMonth, template.startDate)) {
+        continue;
+      }
+
       // Use day 1 for auto-generated expenses (they get created at month start)
       const dayOfMonth = template.dayOfMonth || 1;
       const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
@@ -91,11 +97,13 @@ export async function GET() {
       const expenseDate = new Date(targetYear, targetMonth, expenseDay);
 
       // Convert template amount to EUR
-      const templateAmount = Number(template.amount) || 0;
+      const { installmentNumber, amount: installmentMonthAmount } = installmentForMonth(template, targetYear, targetMonth);
+      const templateAmount = installmentMonthAmount ?? (Number(template.amount) || 0);
       const templateCurrency = template.currency || "EUR";
       const { amountEur, exchangeRate } = await convertToEur(templateAmount, templateCurrency);
 
       expensesToCreate.push({
+        installmentNumber,
         workspaceId: workspace.id,
         categoryId: template.categoryId || defaultCategory.id,
         name: template.name,
@@ -162,6 +170,35 @@ function monthIndexReached(targetYear: number, targetMonth: number, endDate: Dat
   const endIdx = end.getFullYear() * 12 + end.getMonth();
   const targetIdx = targetYear * 12 + targetMonth;
   return targetIdx >= endIdx;
+}
+
+// True while the target month is before the template's startDate month —
+// future-start plans (e.g. installments beginning next month) must not
+// generate early.
+function monthIndexNotStarted(targetYear: number, targetMonth: number, startDate: Date): boolean {
+  const start = new Date(startDate);
+  const startIdx = start.getUTCFullYear() * 12 + start.getUTCMonth();
+  return targetYear * 12 + targetMonth < startIdx;
+}
+
+// Installment plans: 1-based position of the target month in the plan, and the
+// amount for that position (final installment absorbs the rounding remainder).
+function installmentForMonth(
+  template: { installmentTotal: unknown; installmentMonths: number | null; startDate: Date | null },
+  targetYear: number,
+  targetMonth: number
+): { installmentNumber: number | null; amount: number | null } {
+  if (!template.installmentMonths || !template.installmentTotal || !template.startDate) {
+    return { installmentNumber: null, amount: null };
+  }
+  const start = new Date(template.startDate);
+  const startIdx = start.getUTCFullYear() * 12 + start.getUTCMonth();
+  const n = targetYear * 12 + targetMonth - startIdx + 1;
+  if (n < 1 || n > template.installmentMonths) return { installmentNumber: null, amount: null };
+  return {
+    installmentNumber: n,
+    amount: installmentAmount(Number(template.installmentTotal), template.installmentMonths, n),
+  };
 }
 
 // POST - Generate expenses from templates for a given month
@@ -272,6 +309,12 @@ export async function POST(request: Request) {
         continue;
       }
 
+      // Future-start plans wait for their first month.
+      if (template.startDate && monthIndexNotStarted(targetYear, targetMonth, template.startDate)) {
+        skipped++;
+        continue;
+      }
+
       // Calculate the expense date (using override, template dayOfMonth, or 1st of month)
       let dayOfMonth = template.dayOfMonth || 1;
 
@@ -289,11 +332,13 @@ export async function POST(request: Request) {
       const expenseDate = new Date(targetYear, targetMonth, expenseDay);
 
       // Convert template amount to EUR
-      const templateAmount = Number(template.amount) || 0;
+      const { installmentNumber, amount: installmentMonthAmount } = installmentForMonth(template, targetYear, targetMonth);
+      const templateAmount = installmentMonthAmount ?? (Number(template.amount) || 0);
       const templateCurrency = template.currency || "EUR";
       const { amountEur, exchangeRate } = await convertToEur(templateAmount, templateCurrency);
 
       expensesToCreate.push({
+        installmentNumber,
         workspaceId: workspace.id,
         categoryId: template.categoryId || defaultCategory.id,
         name: template.name,

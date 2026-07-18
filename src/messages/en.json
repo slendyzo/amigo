@@ -1110,6 +1110,19 @@
       "yourShare": "Your share",
       "youTag": "You",
       "ofTotal": "of {total}"
+    },
+    "installments": {
+      "title": "Split into installments",
+      "amountHint": "Enter the total amount above to see the monthly share",
+      "preview": "{months}× {amount} per month",
+      "startHint": "First installment on the date above, then one each month until paid off",
+      "offlineError": "Installment plans need an internet connection",
+      "planTitle": "Installment plan",
+      "progressLine": "{paid} of {total} paid · {remaining} remaining",
+      "cancelRemaining": "Cancel remaining",
+      "settleNow": "Settle now",
+      "cancelConfirm": "Stop future installments? Already-logged ones stay.",
+      "settleConfirm": "Log the remaining {amount} as one expense today and close the plan?"
     }
   },
   "install": {

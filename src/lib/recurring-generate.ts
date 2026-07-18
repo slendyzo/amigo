@@ -9,10 +9,7 @@
 
 import { prisma } from "./db";
 import { convertToEur } from "./currency";
-
-function monthIdx(d: Date): number {
-  return d.getUTCFullYear() * 12 + d.getUTCMonth();
-}
+import { installmentAmount, monthIdxUtc as monthIdx } from "./installment-math";
 
 export async function generateDueForTemplate(
   templateId: string,
@@ -25,7 +22,7 @@ export async function generateDueForTemplate(
   if (!template || !template.isActive || !template.autoGenerate) return 0;
 
   const now = opts?.now ?? new Date();
-  const start = opts?.startDate ?? template.createdAt;
+  const start = opts?.startDate ?? template.startDate ?? template.createdAt;
   const nowIdx = monthIdx(now);
   const startIdx = monthIdx(start);
   const endIdx = template.endDate ? monthIdx(template.endDate) : Infinity;
@@ -40,12 +37,23 @@ export async function generateDueForTemplate(
     });
   }
 
-  const amount = Number(template.amount) || 0;
   const currency = template.currency || "EUR";
-  const { amountEur, exchangeRate } = await convertToEur(amount, currency);
+  const installmentTotal = template.installmentTotal ? Number(template.installmentTotal) : null;
+  const installmentAnchorIdx = monthIdx(template.startDate ?? start);
 
   let created = 0;
   for (let idx = startIdx; idx <= nowIdx && idx < endIdx; idx++) {
+    // Installment plans: 1-based position in the plan; last one absorbs the
+    // rounding remainder, so the amount can differ per month.
+    const installmentNumber =
+      template.installmentMonths && installmentTotal != null
+        ? idx - installmentAnchorIdx + 1
+        : null;
+    const amount =
+      installmentNumber && installmentTotal != null && template.installmentMonths
+        ? installmentAmount(installmentTotal, template.installmentMonths, installmentNumber)
+        : Number(template.amount) || 0;
+    const { amountEur, exchangeRate } = await convertToEur(amount, currency);
     const y = Math.floor(idx / 12);
     const m = idx % 12;
     const monthStart = new Date(Date.UTC(y, m, 1));
@@ -74,6 +82,7 @@ export async function generateDueForTemplate(
         date,
         isRecurring: true,
         recurringTemplateId: templateId,
+        installmentNumber,
         description: template.description || null,
         excludeFromBudget: template.excludeFromBudget,
         ...(template.projects.length > 0

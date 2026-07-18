@@ -1110,6 +1110,19 @@
       "yourShare": "Votre part",
       "youTag": "Vous",
       "ofTotal": "sur {total}"
+    },
+    "installments": {
+      "title": "Payer en plusieurs fois",
+      "amountHint": "Saisissez le montant total ci-dessus pour voir la mensualité",
+      "preview": "{months}× {amount} par mois",
+      "startHint": "Première mensualité à la date ci-dessus, puis une par mois jusqu'à la fin",
+      "offlineError": "Les paiements en plusieurs fois nécessitent une connexion internet",
+      "planTitle": "Plan de mensualités",
+      "progressLine": "{paid} sur {total} payés · {remaining} restants",
+      "cancelRemaining": "Annuler les restantes",
+      "settleNow": "Solder maintenant",
+      "cancelConfirm": "Arrêter les mensualités futures ? Celles déjà enregistrées restent.",
+      "settleConfirm": "Enregistrer les {amount} restants comme une dépense aujourd'hui et clôturer le plan ?"
     }
   },
   "install": {

@@ -24,6 +24,8 @@ type Expense = {
   date: string;
   isRecurring?: boolean;
   recurringTemplateId?: string | null;
+  installmentNumber?: number | null;
+  recurringTemplate?: { installmentMonths: number | null } | null;
   category: { id: string; name: string } | null;
   bankAccount: { id: string; name: string } | null;
   projects: { id: string; name: string }[];
@@ -760,6 +762,11 @@ export default function ExpensesPage() {
                               ÷{expense.splitCount}
                             </span>
                           )}
+                          {expense.installmentNumber && expense.recurringTemplate?.installmentMonths && (
+                            <span className="text-[10px] px-1 py-0.5 rounded bg-violet-100 text-violet-600 font-medium">
+                              {expense.installmentNumber}/{expense.recurringTemplate.installmentMonths}
+                            </span>
+                          )}
                           {expense.imageUrls && (
                             <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
@@ -885,6 +892,11 @@ export default function ExpensesPage() {
                           {expense.splitCount && expense.splitCount > 1 && (
                             <span className="text-[10px] px-1 py-0.5 rounded bg-indigo-100 text-indigo-600 font-medium">
                               ÷{expense.splitCount}
+                            </span>
+                          )}
+                          {expense.installmentNumber && expense.recurringTemplate?.installmentMonths && (
+                            <span className="text-[10px] px-1 py-0.5 rounded bg-violet-100 text-violet-600 font-medium">
+                              {expense.installmentNumber}/{expense.recurringTemplate.installmentMonths}
                             </span>
                           )}
                           {expense.imageUrls && (

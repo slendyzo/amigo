@@ -125,6 +125,8 @@ export default function AddExpenseModal({
   const [splitEnabled, setSplitEnabled] = useState(false);
   const [splitCount, setSplitCount] = useState(2);
   const [splitPeople, setSplitPeople] = useState<SplitPerson[] | null>(null);
+  const [installmentsEnabled, setInstallmentsEnabled] = useState(false);
+  const [installmentMonths, setInstallmentMonths] = useState(12);
 
   const [description, setDescription] = useState("");
   const [linkedRealAssetId, setLinkedRealAssetId] = useState<string | null>(null);
@@ -173,6 +175,8 @@ export default function AddExpenseModal({
       setSplitEnabled(false);
       setSplitCount(2);
       setSplitPeople(null);
+      setInstallmentsEnabled(false);
+      setInstallmentMonths(12);
       setDescription("");
       setShowDetails(false);
       setShowNotes(false);
@@ -224,6 +228,37 @@ export default function AddExpenseModal({
       if (isNaN(parsedAmount)) {
         setError("Invalid amount");
         setIsLoading(false);
+        return;
+      }
+
+      // Installment plan: total split over N months, auto-added monthly.
+      if (installmentsEnabled && installmentMonths >= 2) {
+        if (!navigator.onLine) {
+          throw new Error(t("installments.offlineError"));
+        }
+        const response = await fetch("/api/installments", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name,
+            totalAmount: parsedAmount,
+            months: installmentMonths,
+            startDate: date,
+            type: expenseType,
+            categoryId: categoryId || undefined,
+            bankAccountId: bankAccountId || undefined,
+            currency,
+            description: description || undefined,
+            projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
+            excludeFromBudget,
+          }),
+        });
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || "Failed to create installment plan");
+        }
+        router.refresh();
+        onClose();
         return;
       }
 
@@ -450,8 +485,8 @@ export default function AddExpenseModal({
               />
             )}
 
-            {/* Schedule toggle (inside essentials card when future date) */}
-            {(isFutureDate || isScheduled) && (
+            {/* Schedule toggle (inside essentials card when future date; installment plans start on the date instead) */}
+            {(isFutureDate || isScheduled) && !installmentsEnabled && (
               <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input
@@ -475,8 +510,8 @@ export default function AddExpenseModal({
             )}
           </div>
 
-          {/* ── CARD 2: Split ── */}
-          {splitEnabled ? (
+          {/* ── CARD 2: Split (hidden while installments is on) ── */}
+          {!installmentsEnabled && (splitEnabled ? (
             /* Expanded split card */
             <div className="bg-indigo-50 rounded-2xl border border-indigo-200 p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">
@@ -530,7 +565,87 @@ export default function AddExpenseModal({
                 </button>
               </div>
             </div>
-          )}
+          ))}
+
+          {/* ── CARD 2.5: Installments (hidden while split is on) ── */}
+          {!splitEnabled && (installmentsEnabled ? (
+            <div className="bg-violet-50 rounded-2xl border border-violet-200 p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2.5">
+                  <svg className="w-[18px] h-[18px] text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h10" />
+                  </svg>
+                  <span className="text-sm font-semibold text-violet-800">{t("installments.title")}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setInstallmentsEnabled(false)}
+                  className="w-10 h-6 rounded-full bg-violet-500 relative transition-colors"
+                >
+                  <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5 shadow-sm" />
+                </button>
+              </div>
+
+              {/* Month presets + custom input */}
+              <div className="flex items-center gap-1.5 mb-3">
+                {[3, 6, 12, 24].map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => setInstallmentMonths(m)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                      installmentMonths === m
+                        ? "bg-violet-500 text-white"
+                        : "bg-white border border-violet-200 text-violet-700"
+                    }`}
+                  >
+                    {m}x
+                  </button>
+                ))}
+                <input
+                  type="number"
+                  min={2}
+                  max={120}
+                  value={installmentMonths}
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    setInstallmentMonths(isNaN(v) ? 2 : Math.max(2, Math.min(120, v)));
+                  }}
+                  className="w-16 px-2 py-1.5 rounded-lg border border-violet-200 bg-white text-sm text-violet-900 text-center outline-none focus:ring-2 focus:ring-violet-400"
+                />
+              </div>
+
+              {parsedAmount > 0 ? (
+                <p className="text-sm text-violet-700 font-medium">
+                  {t("installments.preview", {
+                    months: installmentMonths,
+                    amount: `${getCurrencySymbol(currency)}${(Math.round((parsedAmount / installmentMonths) * 100) / 100).toFixed(2)}`,
+                  })}
+                </p>
+              ) : (
+                <p className="text-xs text-violet-500">{t("installments.amountHint")}</p>
+              )}
+              <p className="text-xs text-violet-500 mt-1">{t("installments.startHint")}</p>
+            </div>
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h10" />
+                  </svg>
+                  <span className="text-sm text-slate-500">{t("installments.title")}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setInstallmentsEnabled(true)}
+                  className="w-10 h-6 rounded-full bg-slate-200 relative transition-colors"
+                >
+                  <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5 shadow-sm" />
+                </button>
+              </div>
+            </div>
+          ))}
 
           {/* ── CARD 3: Tags ── */}
           <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm">

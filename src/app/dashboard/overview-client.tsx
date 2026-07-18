@@ -58,6 +58,8 @@ type Expense = {
   status?: "PAID" | "PENDING";
   splitCount?: number | null;
   splitData?: string | null;
+  installmentNumber?: number | null;
+  installmentMonths?: number | null;
   createdAt: string;
 };
 
@@ -1428,6 +1430,14 @@ export default function DashboardOverview({
                       <div className="min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <p className="truncate text-sm font-medium">{e.name}</p>
+                          {e.installmentNumber && e.installmentMonths && (
+                            <span
+                              className="flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-medium"
+                              style={{ background: "color-mix(in srgb, #8b5cf6 15%, transparent)", color: "#8b5cf6" }}
+                            >
+                              {e.installmentNumber}/{e.installmentMonths}
+                            </span>
+                          )}
                           {e.projects && e.projects.length > 0 && e.projects.map((project) => (
                             <span
                               key={project.id}
@@ -1576,6 +1586,11 @@ export default function DashboardOverview({
                           <p className={`font-medium text-sm md:text-base truncate max-w-[200px] md:max-w-none ${
                             isIncome ? "text-green-700" : transaction.excludeFromBudget ? "text-slate-400" : "text-slate-900"
                           }`}>{transaction.name}</p>
+                          {!isIncome && transaction.installmentNumber && transaction.installmentMonths && (
+                            <span className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-violet-100 text-violet-700 font-medium">
+                              {transaction.installmentNumber}/{transaction.installmentMonths}
+                            </span>
+                          )}
                           {!isIncome && transaction.projects && transaction.projects.length > 0 && transaction.projects.map((project) => (
                             <span key={project.id} className="px-1.5 md:px-2 py-0.5 text-[10px] md:text-xs rounded-full bg-orange-100 text-orange-700">
                               {project.name}

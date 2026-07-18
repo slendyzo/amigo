@@ -1110,6 +1110,19 @@
       "yourShare": "A tua parte",
       "youTag": "Tu",
       "ofTotal": "de {total}"
+    },
+    "installments": {
+      "title": "Pagar em parcelas",
+      "amountHint": "Introduz o valor total acima para ver a parcela mensal",
+      "preview": "{months}× {amount} por mês",
+      "startHint": "Primeira parcela na data acima, depois uma por mês até terminar",
+      "offlineError": "Planos de parcelas precisam de ligação à internet",
+      "planTitle": "Plano de parcelas",
+      "progressLine": "{paid} de {total} pagos · {remaining} em falta",
+      "cancelRemaining": "Cancelar restantes",
+      "settleNow": "Liquidar agora",
+      "cancelConfirm": "Parar as parcelas futuras? As já registadas mantêm-se.",
+      "settleConfirm": "Registar os {amount} em falta como uma despesa hoje e fechar o plano?"
     }
   },
   "install": {
