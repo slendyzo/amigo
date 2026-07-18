@@ -954,7 +954,10 @@
     "requestNewLink": "Demander un nouveau lien",
     "passwordResetSuccess": "Mot de Passe Réinitialisé !",
     "passwordResetSuccessMessage": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "welcomeBack": "Bon retour",
+    "signInTagline": "Votre argent, calmement au même endroit.",
+    "or": "ou"
   },
   "errors": {
     "generic": "Quelque chose s'est mal passé",
@@ -1218,7 +1221,8 @@
     "addAnother": "Ajouter une autre dépense",
     "skipForNow": "Passer pour l'instant",
     "saving": "Enregistrement...",
-    "getStarted": "Commencer"
+    "getStarted": "Commencer",
+    "perMonth": "par mois"
   },
   "offline": {
     "youreOffline": "Vous êtes Hors Ligne",

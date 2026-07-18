@@ -954,7 +954,10 @@
     "requestNewLink": "Pedir novo link",
     "passwordResetSuccess": "Palavra-passe Redefinida!",
     "passwordResetSuccessMessage": "A tua palavra-passe foi redefinida com sucesso. Podes agora iniciar sessão com a nova palavra-passe.",
-    "loading": "A carregar..."
+    "loading": "A carregar...",
+    "welcomeBack": "Bem-vindo de volta",
+    "signInTagline": "O teu dinheiro, calmamente num só lugar.",
+    "or": "ou"
   },
   "errors": {
     "generic": "Algo correu mal",
@@ -1218,7 +1221,8 @@
     "addAnother": "Adicionar outra despesa",
     "skipForNow": "Saltar por agora",
     "saving": "A guardar...",
-    "getStarted": "Começar"
+    "getStarted": "Começar",
+    "perMonth": "por mês"
   },
   "offline": {
     "youreOffline": "Estás Offline",

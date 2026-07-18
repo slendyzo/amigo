@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { AnimatePresence, motion } from "framer-motion";
 
 type OnboardingModalProps = {
   isOpen: boolean;
@@ -32,6 +33,122 @@ const CURRENCIES = [
   { code: "KRW", symbol: "₩", name: "South Korean Won" },
   { code: "CNY", symbol: "¥", name: "Chinese Yuan" },
 ];
+
+const SALARY_PRESETS = [1500, 2000, 2500, 3000];
+const BUDGET_PRESETS = [1000, 1500, 2000, 2500];
+
+/* Horizontal scrolling currency chip row */
+function CurrencyChips({
+  label,
+  selected,
+  onSelect,
+}: {
+  label: string;
+  selected: string;
+  onSelect: (code: string) => void;
+}) {
+  return (
+    <div>
+      <p className="mb-2 text-[11.5px] font-semibold uppercase tracking-[.06em] text-[var(--ink-subtle)]">
+        {label}
+      </p>
+      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {CURRENCIES.map((c) => (
+          <button
+            key={c.code}
+            type="button"
+            onClick={() => onSelect(c.code)}
+            className={`flex min-h-[40px] shrink-0 items-center gap-1.5 rounded-[20px] px-3.5 text-[12px] font-semibold transition-colors duration-200 ${
+              selected === c.code
+                ? "bg-[var(--surface-2)] text-[var(--accent)]"
+                : "bg-[var(--surface)] text-[var(--ink-muted)] shadow-[var(--shadow-card)]"
+            }`}
+          >
+            <span>{c.symbol}</span>
+            <span className="text-[10.5px] font-medium opacity-70">{c.code}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* Giant centered amount card (accent border, 36px tabular value) */
+function AmountCard({
+  symbol,
+  value,
+  onChange,
+  placeholder,
+  caption,
+}: {
+  symbol: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder: string;
+  caption: string;
+}) {
+  const shown = value || "";
+  const widthCh = Math.min(Math.max(shown.length || placeholder.length, 1) + 0.5, 12);
+
+  return (
+    <label className="block cursor-text rounded-[18px] border-[1.5px] border-[var(--accent)] bg-[var(--surface)] px-5 py-5 text-center shadow-[var(--shadow-card)]">
+      <span className="flex items-baseline justify-center">
+        <span className="mr-1 text-[24px] font-bold text-[var(--ink-subtle)]">
+          {symbol}
+        </span>
+        <input
+          type="text"
+          inputMode="decimal"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/[^0-9.,-]/g, ""))}
+          placeholder={placeholder}
+          className="max-w-full bg-transparent text-center text-[36px] font-bold tracking-[-0.02em] tabular-nums text-[var(--ink)] outline-none placeholder:text-[var(--ink-subtle)]"
+          style={{ width: `${widthCh}ch` }}
+        />
+      </span>
+      <span className="mt-1 block text-[12px] text-[var(--ink-subtle)]">
+        {caption}
+      </span>
+    </label>
+  );
+}
+
+/* Preset amount chips */
+function PresetChips({
+  presets,
+  symbol,
+  value,
+  onSelect,
+}: {
+  presets: number[];
+  symbol: string;
+  value: string;
+  onSelect: (v: number) => void;
+}) {
+  const current = parseFloat((value || "").replace(",", "."));
+  return (
+    <div className="flex flex-wrap justify-center gap-2">
+      {presets.map((p) => {
+        const selected = current === p;
+        return (
+          <button
+            key={p}
+            type="button"
+            onClick={() => onSelect(p)}
+            className={`min-h-[40px] rounded-[20px] px-3.5 text-[12px] font-semibold tabular-nums transition-colors duration-200 ${
+              selected
+                ? "bg-[var(--surface-2)] text-[var(--accent)]"
+                : "bg-[var(--surface)] text-[var(--ink-muted)] shadow-[var(--shadow-card)]"
+            }`}
+          >
+            {symbol}
+            {p.toLocaleString()}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
 
 export default function OnboardingModal({
   isOpen,
@@ -148,244 +265,199 @@ export default function OnboardingModal({
     }
   };
 
+  const handleNext = () => {
+    // Cascade currencies: Step 1 → Step 2 → Step 3
+    if (step === 1) {
+      setBudgetCurrency(currency);
+    } else if (step === 2) {
+      setExpensesCurrency(budgetCurrency);
+    }
+    setStep(step + 1);
+  };
+
   if (!isOpen) return null;
 
+  const stepTitles: Record<number, { title: string; helper: string }> = {
+    1: { title: t("salaryTitle"), helper: t("salaryDescription") },
+    2: { title: t("budgetTitle"), helper: t("budgetDescription") },
+    3: { title: t("fixedExpensesTitle"), helper: t("fixedExpensesDescription") },
+  };
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+      <div
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ background: "rgba(23, 22, 31, 0.45)" }}
+      />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-slate-200 bg-gradient-to-r from-blue-500 to-blue-600">
-          <h2 className="text-xl font-bold text-white">{t("welcome")}</h2>
-          <p className="text-blue-100 text-sm mt-1">{t("welcomeSubtitle")}</p>
-        </div>
-
-        {/* Progress indicator */}
-        <div className="px-6 pt-4">
-          <div className="flex items-center gap-2">
-            {[1, 2, 3].map((s) => (
+      <div className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-y-auto rounded-[24px] bg-[var(--app-bg)] p-6 text-[var(--ink)] shadow-[var(--shadow-pop)]">
+        {/* 3-bar stepper */}
+        <div className="flex items-center gap-2">
+          {[1, 2, 3].map((s) => (
+            <div
+              key={s}
+              className="h-1 flex-1 overflow-hidden rounded-full bg-[var(--surface-3)]"
+            >
               <div
-                key={s}
-                className={`flex-1 h-1.5 rounded-full transition-colors ${
-                  s <= step ? "bg-blue-500" : "bg-slate-200"
-                }`}
+                className="h-full rounded-full bg-[var(--accent)] transition-[width] duration-[400ms]"
+                style={{
+                  width: s <= step ? "100%" : "0%",
+                  transitionTimingFunction: "var(--ease)",
+                }}
               />
-            ))}
-          </div>
-          <p className="text-xs text-slate-500 mt-2">
-            {t("step", { current: step, total: 3 })}
-          </p>
-        </div>
-
-        {/* Body */}
-        <div className="p-6 space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-              {error}
             </div>
-          )}
+          ))}
+        </div>
+        <p className="mt-2 text-[11px] font-medium text-[var(--ink-subtle)]">
+          {t("step", { current: step, total: 3 })}
+        </p>
 
-          {step === 1 && (
-            /* Step 1: Monthly Salary + Currency */
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                  {t("salaryTitle")}
-                </h3>
-                <p className="text-sm text-slate-500 mb-4">
-                  {t("salaryDescription")}
-                </p>
+        {/* Step content */}
+        <AnimatePresence mode="wait" initial={false}>
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            className="mt-5 flex flex-col gap-5"
+          >
+            {step === 1 && (
+              <p className="text-[11.5px] font-semibold uppercase tracking-[.06em] text-[var(--accent)]">
+                {t("welcome")}
+              </p>
+            )}
 
-                {/* Currency selector */}
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t("selectCurrency")}
-                  </label>
-                  <div className="grid grid-cols-5 gap-2">
-                    {CURRENCIES.map((c) => (
-                      <button
-                        key={c.code}
-                        type="button"
-                        onClick={() => setCurrency(c.code)}
-                        className={`p-3 rounded-lg border-2 text-center transition-all ${
-                          currency === c.code
-                            ? "border-blue-500 bg-blue-50 text-blue-700"
-                            : "border-slate-200 hover:border-slate-300 text-slate-600"
-                        }`}
-                      >
-                        <div className="text-lg font-bold">{c.symbol}</div>
-                        <div className="text-xs">{c.code}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
+            <div>
+              <h2 className="max-w-[22ch] text-[24px] font-bold leading-[1.2] tracking-[-0.02em]">
+                {stepTitles[step].title}
+              </h2>
+              <p className="mt-2 text-[13px] leading-normal text-[var(--ink-muted)]">
+                {stepTitles[step].helper}
+              </p>
+            </div>
 
-                {/* Amount input */}
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                    {getCurrencySymbol(currency)}
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={monthlySalary}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9.,-]/g, "");
-                      setMonthlySalary(value);
-                    }}
-                    placeholder="2000.00"
-                    className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-4 text-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-                <p className="text-xs text-slate-400 mt-2">
+            {step === 1 && (
+              <>
+                <CurrencyChips
+                  label={t("selectCurrency")}
+                  selected={currency}
+                  onSelect={setCurrency}
+                />
+                <AmountCard
+                  symbol={getCurrencySymbol(currency)}
+                  value={monthlySalary}
+                  onChange={setMonthlySalary}
+                  placeholder="2,000"
+                  caption={t("perMonth")}
+                />
+                <PresetChips
+                  presets={SALARY_PRESETS}
+                  symbol={getCurrencySymbol(currency)}
+                  value={monthlySalary}
+                  onSelect={(v) => setMonthlySalary(String(v))}
+                />
+                <p className="text-center text-[11px] leading-normal text-[var(--ink-subtle)]">
                   {t("salaryHint")}
                 </p>
-              </div>
-            </div>
-          )}
+              </>
+            )}
 
-          {step === 2 && (
-            /* Step 2: Monthly Budget */
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                  {t("budgetTitle")}
-                </h3>
-                <p className="text-sm text-slate-500 mb-4">
-                  {t("budgetDescription")}
-                </p>
-
-                {/* Currency selector - horizontal compact */}
-                <div className="flex items-center gap-1 mb-3 p-1 bg-slate-100 rounded-lg w-fit">
-                  {CURRENCIES.map((c) => (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => setBudgetCurrency(c.code)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                        budgetCurrency === c.code
-                          ? "bg-white text-blue-700 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
-                      }`}
-                    >
-                      {c.symbol}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="relative">
-                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
-                    {getCurrencySymbol(budgetCurrency)}
-                  </span>
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={monthlyBudget}
-                    onChange={(e) => {
-                      const value = e.target.value.replace(/[^0-9.,-]/g, "");
-                      setMonthlyBudget(value);
-                    }}
-                    placeholder={monthlySalary || "1500.00"}
-                    className="w-full rounded-xl border border-slate-300 bg-white pl-10 pr-4 py-4 text-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
+            {step === 2 && (
+              <>
+                <CurrencyChips
+                  label={t("selectCurrency")}
+                  selected={budgetCurrency}
+                  onSelect={setBudgetCurrency}
+                />
+                <AmountCard
+                  symbol={getCurrencySymbol(budgetCurrency)}
+                  value={monthlyBudget}
+                  onChange={setMonthlyBudget}
+                  placeholder={monthlySalary || "1,500"}
+                  caption={t("perMonth")}
+                />
+                <PresetChips
+                  presets={BUDGET_PRESETS}
+                  symbol={getCurrencySymbol(budgetCurrency)}
+                  value={monthlyBudget}
+                  onSelect={(v) => setMonthlyBudget(String(v))}
+                />
                 {monthlySalary && !monthlyBudget && (
                   <button
                     type="button"
                     onClick={() => setMonthlyBudget(monthlySalary)}
-                    className="mt-2 text-sm text-blue-600 hover:text-blue-800"
+                    className="mx-auto py-1 text-[12px] font-semibold text-[var(--accent)]"
                   >
                     {t("useSalaryAsBudget")}
                   </button>
                 )}
-                <p className="text-xs text-slate-400 mt-2">
+                <p className="text-center text-[11px] leading-normal text-[var(--ink-subtle)]">
                   {t("budgetHint")}
                 </p>
-              </div>
-            </div>
-          )}
+              </>
+            )}
 
-          {step === 3 && (
-            /* Step 3: Fixed Expenses */
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                  {t("fixedExpensesTitle")}
-                </h3>
-                <p className="text-sm text-slate-500 mb-4">
-                  {t("fixedExpensesDescription")}
-                </p>
+            {step === 3 && (
+              <>
+                <CurrencyChips
+                  label={t("selectCurrency")}
+                  selected={expensesCurrency}
+                  onSelect={setExpensesCurrency}
+                />
 
-                {/* Currency selector - horizontal compact */}
-                <div className="flex items-center gap-1 mb-3 p-1 bg-slate-100 rounded-lg w-fit">
-                  {CURRENCIES.map((c) => (
-                    <button
-                      key={c.code}
-                      type="button"
-                      onClick={() => setExpensesCurrency(c.code)}
-                      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-all ${
-                        expensesCurrency === c.code
-                          ? "bg-white text-blue-700 shadow-sm"
-                          : "text-slate-500 hover:text-slate-700"
-                      }`}
-                    >
-                      {c.symbol}
-                    </button>
-                  ))}
-                </div>
-
-                <div className="space-y-3 max-h-[250px] overflow-y-auto">
+                <div className="flex max-h-[240px] flex-col gap-2.5 overflow-y-auto">
                   {fixedExpenses.map((expense, index) => (
-                    <div key={index} className="flex flex-col sm:flex-row gap-2">
-                      <div className="flex gap-2 flex-1">
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 rounded-[14px] border-[1.5px] border-transparent bg-[var(--surface)] px-4 py-3 shadow-[var(--shadow-card)] transition-colors duration-200 focus-within:border-[var(--accent)]"
+                    >
+                      <input
+                        type="text"
+                        value={expense.name}
+                        onChange={(e) =>
+                          handleFixedExpenseChange(index, "name", e.target.value)
+                        }
+                        placeholder={t("expenseNamePlaceholder")}
+                        className="min-w-0 flex-1 bg-transparent text-[14px] font-medium text-[var(--ink)] outline-none placeholder:text-[var(--ink-subtle)]"
+                      />
+                      <div className="flex shrink-0 items-baseline gap-1">
+                        <span className="text-[12px] font-semibold text-[var(--ink-subtle)]">
+                          {getCurrencySymbol(expensesCurrency)}
+                        </span>
                         <input
                           type="text"
-                          value={expense.name}
-                          onChange={(e) =>
-                            handleFixedExpenseChange(index, "name", e.target.value)
-                          }
-                          placeholder={t("expenseNamePlaceholder")}
-                          className="flex-1 min-w-0 rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          inputMode="decimal"
+                          value={expense.amount}
+                          onChange={(e) => {
+                            const value = e.target.value.replace(
+                              /[^0-9.,-]/g,
+                              ""
+                            );
+                            handleFixedExpenseChange(index, "amount", value);
+                          }}
+                          placeholder="0.00"
+                          className="w-16 bg-transparent text-right text-[14px] font-semibold tabular-nums text-[var(--ink)] outline-none placeholder:text-[var(--ink-subtle)]"
                         />
-                        <div className="relative w-24 sm:w-28 flex-shrink-0">
-                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-sm">
-                            {getCurrencySymbol(expensesCurrency)}
-                          </span>
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            value={expense.amount}
-                            onChange={(e) => {
-                              const value = e.target.value.replace(
-                                /[^0-9.,-]/g,
-                                ""
-                              );
-                              handleFixedExpenseChange(index, "amount", value);
-                            }}
-                            placeholder="0.00"
-                            className="w-full rounded-lg border border-slate-300 bg-white pl-7 pr-2 py-2.5 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
                       </div>
                       {fixedExpenses.length > 1 && (
                         <button
                           type="button"
                           onClick={() => handleRemoveFixedExpense(index)}
-                          className="self-center p-2 text-slate-400 hover:text-red-500 sm:self-auto"
+                          className="-mr-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-[var(--ink-subtle)] transition-colors hover:text-[var(--negative)]"
                         >
                           <svg
-                            className="w-5 h-5"
+                            className="h-4 w-4"
                             fill="none"
                             stroke="currentColor"
+                            strokeWidth={1.8}
                             viewBox="0 0 24 24"
                           >
                             <path
                               strokeLinecap="round"
                               strokeLinejoin="round"
-                              strokeWidth={2}
                               d="M6 18L18 6M6 6l12 12"
                             />
                           </svg>
@@ -398,80 +470,85 @@ export default function OnboardingModal({
                 <button
                   type="button"
                   onClick={handleAddFixedExpense}
-                  className="mt-3 flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                  className="flex items-center gap-1.5 py-1 text-[13px] font-semibold text-[var(--accent)]"
                 >
                   <svg
-                    className="w-4 h-4"
+                    className="h-4 w-4"
                     fill="none"
                     stroke="currentColor"
+                    strokeWidth={1.8}
                     viewBox="0 0 24 24"
                   >
                     <path
                       strokeLinecap="round"
                       strokeLinejoin="round"
-                      strokeWidth={2}
                       d="M12 4v16m8-8H4"
                     />
                   </svg>
                   {t("addAnother")}
                 </button>
 
-                <p className="text-xs text-slate-400 mt-4">
+                <p className="text-[11px] leading-normal text-[var(--ink-subtle)]">
                   {t("fixedExpensesHint")}
                 </p>
-              </div>
-            </div>
-          )}
-        </div>
+              </>
+            )}
+          </motion.div>
+        </AnimatePresence>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-200 flex items-center justify-between">
-          <button
-            type="button"
-            onClick={handleSkip}
-            disabled={isLoading}
-            className="text-sm text-slate-500 hover:text-slate-700"
+        {/* Error */}
+        {error && (
+          <div
+            className="mt-4 rounded-[14px] px-4 py-3 text-[13px] font-medium"
+            style={{
+              background: "color-mix(in srgb, var(--negative) 10%, transparent)",
+              color: "var(--negative)",
+            }}
           >
-            {t("skipForNow")}
-          </button>
+            {error}
+          </div>
+        )}
 
-          <div className="flex gap-3">
+        {/* Footer: CTA + back/skip */}
+        <div className="mt-6 flex flex-col gap-2.5">
+          {step < 3 ? (
+            <button
+              type="button"
+              onClick={handleNext}
+              className="w-full rounded-[18px] bg-[var(--accent)] py-[15px] text-center text-[15px] font-semibold text-[var(--accent-fg)] shadow-[var(--shadow-fab)] transition-transform duration-200 active:scale-[.98]"
+            >
+              {tCommon("next")}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="w-full rounded-[18px] bg-[var(--accent)] py-[15px] text-center text-[15px] font-semibold text-[var(--accent-fg)] shadow-[var(--shadow-fab)] transition-transform duration-200 active:scale-[.98] disabled:cursor-not-allowed disabled:bg-[var(--accent-faint)] disabled:shadow-none"
+            >
+              {isLoading ? t("saving") : t("getStarted")}
+            </button>
+          )}
+
+          <div className="flex items-center justify-center gap-6">
             {step > 1 && (
               <button
                 type="button"
                 onClick={() => setStep(step - 1)}
                 disabled={isLoading}
-                className="px-4 py-2 text-slate-600 hover:text-slate-900"
+                className="py-2.5 text-[13px] font-medium text-[var(--ink-subtle)] transition-colors hover:text-[var(--ink-muted)]"
               >
                 {tCommon("back")}
               </button>
             )}
-            {step < 3 ? (
-              <button
-                type="button"
-                onClick={() => {
-                  // Cascade currencies: Step 1 → Step 2 → Step 3
-                  if (step === 1) {
-                    setBudgetCurrency(currency);
-                  } else if (step === 2) {
-                    setExpensesCurrency(budgetCurrency);
-                  }
-                  setStep(step + 1);
-                }}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                {tCommon("next")}
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={handleSubmit}
-                disabled={isLoading}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-              >
-                {isLoading ? t("saving") : t("getStarted")}
-              </button>
-            )}
+            <button
+              type="button"
+              onClick={handleSkip}
+              disabled={isLoading}
+              className="py-2.5 text-[13px] font-medium text-[var(--ink-subtle)] transition-colors hover:text-[var(--ink-muted)]"
+            >
+              {t("skipForNow")}
+            </button>
           </div>
         </div>
       </div>

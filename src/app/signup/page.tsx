@@ -3,7 +3,15 @@
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import LanguageSwitcher from "@/components/language-switcher";
+import {
+  AuthShell,
+  AuthHeader,
+  FieldCard,
+  EyeToggle,
+  PrimaryButton,
+  StatusBanner,
+  FooterLine,
+} from "../signin/auth-ui";
 
 type Step = "form" | "verify";
 
@@ -14,6 +22,7 @@ export default function SignUpPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""]);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -179,209 +188,149 @@ export default function SignUpPage() {
 
   if (step === "verify") {
     return (
-      <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
-        {/* Language Switcher */}
-        <div className="absolute top-4 right-4">
-          <LanguageSwitcher />
-        </div>
+      <AuthShell>
+        <AuthHeader
+          title={t("verifyYourEmail")}
+          tagline={
+            <>
+              {t("weSentCode")}
+              <br />
+              <span className="font-semibold text-[var(--ink)]">{email}</span>
+            </>
+          }
+          logoSize={56}
+        />
 
-        <div className="w-full max-w-md">
-          <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
-            {t("verifyYourEmail")}
-          </h1>
-          <p className="text-center text-slate-600 dark:text-slate-400 mb-2">
-            {t("weSentCode")}
-          </p>
-          <p className="text-center text-slate-900 dark:text-white font-medium mb-8">
-            {email}
-          </p>
+        <div className="mt-6 flex flex-col gap-5">
+          {error && <StatusBanner tone="error">{error}</StatusBanner>}
 
-          <div className="space-y-6">
-            {error && (
-              <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
-                {error}
-              </div>
-            )}
+          <div className="flex justify-center gap-2" onPaste={handleCodePaste}>
+            {verificationCode.map((digit, index) => (
+              <input
+                key={index}
+                ref={(el) => { codeInputRefs.current[index] = el; }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                value={digit}
+                onChange={(e) => handleCodeChange(index, e.target.value)}
+                onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                disabled={isLoading}
+                className={`h-14 w-12 rounded-[14px] border-[1.5px] bg-[var(--surface)] text-center text-2xl font-bold tabular-nums text-[var(--ink)] shadow-[var(--shadow-card)] outline-none transition-colors duration-200 focus:border-[var(--accent)] disabled:opacity-50 ${
+                  digit ? "border-[var(--accent)]" : "border-transparent"
+                }`}
+              />
+            ))}
+          </div>
 
-            <div className="flex justify-center gap-2" onPaste={handleCodePaste}>
-              {verificationCode.map((digit, index) => (
-                <input
-                  key={index}
-                  ref={(el) => { codeInputRefs.current[index] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleCodeChange(index, e.target.value)}
-                  onKeyDown={(e) => handleCodeKeyDown(index, e)}
+          <PrimaryButton
+            onClick={handleVerifyCode}
+            disabled={isLoading || verificationCode.some(d => d === "")}
+          >
+            {isLoading ? t("verifying") : t("verifyEmail")}
+          </PrimaryButton>
+
+          <div className="space-y-3 text-center">
+            <p className="text-[13px] text-[var(--ink-muted)]">
+              {t("didntReceiveCode")}{" "}
+              {resendCooldown > 0 ? (
+                <span className="text-[var(--ink-subtle)]">
+                  {t("resendIn", { seconds: resendCooldown })}
+                </span>
+              ) : (
+                <button
+                  onClick={handleResendCode}
                   disabled={isLoading}
-                  className="w-12 h-14 text-center text-2xl font-bold rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent disabled:opacity-50"
-                />
-              ))}
-            </div>
+                  className="font-semibold text-[var(--accent)] disabled:opacity-50"
+                >
+                  {t("resendCode")}
+                </button>
+              )}
+            </p>
 
             <button
-              onClick={handleVerifyCode}
-              disabled={isLoading || verificationCode.some(d => d === "")}
-              className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              onClick={handleBackToForm}
+              disabled={isLoading}
+              className="py-1 text-[13px] font-medium text-[var(--ink-subtle)] transition-colors hover:text-[var(--ink-muted)]"
             >
-              {isLoading ? t("verifying") : t("verifyEmail")}
+              ← {t("changeEmailAddress")}
             </button>
-
-            <div className="text-center space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                {t("didntReceiveCode")}{" "}
-                {resendCooldown > 0 ? (
-                  <span className="text-slate-400 dark:text-slate-500">
-                    {t("resendIn", { seconds: resendCooldown })}
-                  </span>
-                ) : (
-                  <button
-                    onClick={handleResendCode}
-                    disabled={isLoading}
-                    className="text-[#0070f3] hover:underline font-medium disabled:opacity-50"
-                  >
-                    {t("resendCode")}
-                  </button>
-                )}
-              </p>
-
-              <button
-                onClick={handleBackToForm}
-                disabled={isLoading}
-                className="text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-              >
-                ← {t("changeEmailAddress")}
-              </button>
-            </div>
           </div>
         </div>
-      </main>
+      </AuthShell>
     );
   }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-6 bg-white dark:bg-slate-950 relative">
-      {/* Language Switcher */}
-      <div className="absolute top-4 right-4">
-        <LanguageSwitcher />
+    <AuthShell>
+      <AuthHeader title={t("createYourAccount")} tagline={t("signInTagline")} />
+
+      <form onSubmit={handleSendVerification} className="mt-6 flex flex-col gap-4">
+        {error && <StatusBanner tone="error">{error}</StatusBanner>}
+
+        <FieldCard
+          id="name"
+          label={t("name")}
+          type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          required
+          placeholder={t("namePlaceholder")}
+        />
+
+        <FieldCard
+          id="username"
+          label={t("username")}
+          type="text"
+          value={username}
+          onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
+          required
+          minLength={3}
+          maxLength={20}
+          placeholder="johndoe"
+          hint={t("usernameHint")}
+        />
+
+        <FieldCard
+          id="email"
+          label={t("email")}
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
+          placeholder={t("emailPlaceholder")}
+        />
+
+        <FieldCard
+          id="password"
+          label={t("password")}
+          type={showPassword ? "text" : "password"}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          required
+          minLength={8}
+          placeholder="••••••••"
+          hint={t("passwordHint")}
+          rightSlot={
+            <EyeToggle
+              shown={showPassword}
+              onToggle={() => setShowPassword((s) => !s)}
+            />
+          }
+        />
+
+        <PrimaryButton type="submit" disabled={isLoading}>
+          {isLoading ? t("sendingCode") : t("continue")}
+        </PrimaryButton>
+      </form>
+
+      <div className="mt-6">
+        <FooterLine
+          text={t("alreadyHaveAccount")}
+          linkLabel={t("signIn")}
+          href="/signin"
+        />
       </div>
-
-      <div className="w-full max-w-md">
-        <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-white mb-2">
-          Amigo
-        </h1>
-        <p className="text-center text-slate-600 dark:text-slate-400 mb-8">
-          {t("createYourAccount")}
-        </p>
-
-        <form onSubmit={handleSendVerification} className="space-y-4">
-          {error && (
-            <div className="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 text-sm">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label
-              htmlFor="name"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-            >
-              {t("name")}
-            </label>
-            <input
-              id="name"
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              placeholder={t("namePlaceholder")}
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="username"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-            >
-              {t("username")}
-            </label>
-            <input
-              id="username"
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, ""))}
-              required
-              minLength={3}
-              maxLength={20}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              placeholder="johndoe"
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              {t("usernameHint")}
-            </p>
-          </div>
-
-          <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-            >
-              {t("email")}
-            </label>
-            <input
-              id="email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              placeholder={t("emailPlaceholder")}
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1"
-            >
-              {t("password")}
-            </label>
-            <input
-              id="password"
-              type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={8}
-              className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-              placeholder="••••••••"
-            />
-            <p className="mt-1 text-xs text-slate-500">
-              {t("passwordHint")}
-            </p>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className="w-full rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isLoading ? t("sendingCode") : t("continue")}
-          </button>
-        </form>
-
-        <p className="mt-6 text-center text-sm text-slate-600 dark:text-slate-400">
-          {t("alreadyHaveAccount")}{" "}
-          <a
-            href="/signin"
-            className="text-[#0070f3] hover:underline font-medium"
-          >
-            {t("signIn")}
-          </a>
-        </p>
-      </div>
-    </main>
+    </AuthShell>
   );
 }

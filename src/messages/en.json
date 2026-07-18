@@ -954,7 +954,10 @@
     "requestNewLink": "Request new link",
     "passwordResetSuccess": "Password Reset!",
     "passwordResetSuccessMessage": "Your password has been successfully reset. You can now sign in with your new password.",
-    "loading": "Loading..."
+    "loading": "Loading...",
+    "welcomeBack": "Welcome back",
+    "signInTagline": "Your money, calmly in one place.",
+    "or": "or"
   },
   "errors": {
     "generic": "Something went wrong",
@@ -1218,7 +1221,8 @@
     "addAnother": "Add another expense",
     "skipForNow": "Skip for now",
     "saving": "Saving...",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "perMonth": "per month"
   },
   "offline": {
     "youreOffline": "You're Offline",
