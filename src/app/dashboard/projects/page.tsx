@@ -288,7 +288,7 @@ export default function ProjectsPage() {
             const count = project._count?.expenses ?? 0;
             const hasBudget = project.budget != null && Number(project.budget) > 0;
             const pct = hasBudget ? Math.min((spent / Number(project.budget)) * 100, 100) : 0;
-            const isActive = project.status === "ACTIVE";
+            const isActive = project.isActive !== false;
             return (
               <motion.div
                 key={project.id}
@@ -317,7 +317,7 @@ export default function ProjectsPage() {
                         : { background: "var(--app-bg)", color: "var(--ink-muted)" }
                     }
                   >
-                    {t(`statuses.${project.status.toLowerCase()}` as string)}
+                    {isActive ? t("statuses.active") : t("inactive")}
                   </span>
                 </div>
 

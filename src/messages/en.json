@@ -66,7 +66,9 @@
     "deselectAll": "Deselect All",
     "noResults": "No results found",
     "optional": "Optional",
-    "required": "Required"
+    "required": "Required",
+    "recurring": "Recurring",
+    "recurringDescription": "Set up a fixed monthly bill or subscription"
   },
   "nav": {
     "dashboard": "Dashboard",
@@ -398,7 +400,8 @@
     "splitSummary": "Split {count} ways",
     "perPersonUnit": "person",
     "fixed": "fixed",
-    "yourShare": "Your share"
+    "yourShare": "Your share",
+    "photos": "Photos"
   },
   "incomes": {
     "title": "Incomes",
@@ -535,7 +538,10 @@
       "credit": "Credit Card",
       "cash": "Cash",
       "investment": "Investment"
-    }
+    },
+    "defaultBadge": "default",
+    "expensesCount": "{count} expenses",
+    "expensesLinked": "{count} expenses linked"
   },
   "projects": {
     "title": "Projects",
@@ -586,7 +592,18 @@
       "averageExpense": "Average Expense",
       "highestExpense": "Highest Expense",
       "done": "Done"
-    }
+    },
+    "ledgerExplainer": "Project spend lives in its own ledger, separate from your monthly budget.",
+    "expensesMeta": "{count} expenses",
+    "startedMeta": "Started {date} · {count} expenses",
+    "ofBudget": "of {budget} budget",
+    "noBudget": "No budget set",
+    "backToProjects": "Back to projects",
+    "budgetUsage": "Budget usage",
+    "inactive": "Closed",
+    "notFound": "Project not found",
+    "remaining": "Remaining",
+    "totalExpenses": "Total spent"
   },
   "recurring": {
     "title": "Recurring Templates",
@@ -1198,7 +1215,8 @@
       "settleNow": "Settle now",
       "cancelConfirm": "Stop future installments? Already-logged ones stay.",
       "settleConfirm": "Log the remaining {amount} as one expense today and close the plan?"
-    }
+    },
+    "invalidAmount": "Invalid amount"
   },
   "install": {
     "title": "Install Amigo",
@@ -1965,7 +1983,9 @@
       "showLess": "Show less",
       "empty": "No comparables to show",
       "openListing": "Open listing"
-    }
+    },
+    "interestRate": "Interest rate (%)",
+    "loanStart": "Loan start date"
   },
   "aiAdvisor": {
     "title": "AI Advisor",
@@ -2029,6 +2049,18 @@
         "newProjectPlaceholder": "Or type a new project name",
         "tagButton": "Tag expenses"
       }
+    },
+    "overview": {
+      "archiveHeading": "Past reports",
+      "back": "Back",
+      "burnRateDay": "As of day {day}",
+      "byCategory": "By category",
+      "noData": "Not enough data yet",
+      "spentThisMonth": "Spent this month",
+      "takeawayLess": "{amount} less than last month",
+      "takeawayMore": "{amount} more than last month",
+      "uncategorized": "Uncategorized",
+      "vsMonth": "vs last month"
     }
   }
 }

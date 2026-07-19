@@ -66,7 +66,9 @@
     "deselectAll": "Tout désélectionner",
     "noResults": "Aucun résultat trouvé",
     "optional": "Facultatif",
-    "required": "Obligatoire"
+    "required": "Obligatoire",
+    "recurring": "Récurrent",
+    "recurringDescription": "Configurez une dépense fixe ou un abonnement mensuel"
   },
   "nav": {
     "dashboard": "Tableau de Bord",
@@ -398,7 +400,8 @@
     "splitSummary": "Partagé en {count}",
     "perPersonUnit": "personne",
     "fixed": "fixe",
-    "yourShare": "Votre part"
+    "yourShare": "Votre part",
+    "photos": "Photos"
   },
   "incomes": {
     "title": "Revenus",
@@ -535,7 +538,10 @@
       "credit": "Carte de Crédit",
       "cash": "Espèces",
       "investment": "Investissement"
-    }
+    },
+    "defaultBadge": "par défaut",
+    "expensesCount": "{count} dépenses",
+    "expensesLinked": "{count} dépenses liées"
   },
   "projects": {
     "title": "Projets",
@@ -586,7 +592,18 @@
       "averageExpense": "Dépense Moyenne",
       "highestExpense": "Dépense la Plus Élevée",
       "done": "Terminé"
-    }
+    },
+    "ledgerExplainer": "Les dépenses de projet vivent dans leur propre registre, séparé du budget mensuel.",
+    "expensesMeta": "{count} dépenses",
+    "startedMeta": "Démarré {date} · {count} dépenses",
+    "ofBudget": "sur {budget} de budget",
+    "noBudget": "Aucun budget défini",
+    "backToProjects": "Retour aux projets",
+    "budgetUsage": "Utilisation du budget",
+    "inactive": "Clôturé",
+    "notFound": "Projet introuvable",
+    "remaining": "Restant",
+    "totalExpenses": "Total dépensé"
   },
   "recurring": {
     "title": "Modèles Récurrents",
@@ -1198,7 +1215,8 @@
       "settleNow": "Solder maintenant",
       "cancelConfirm": "Arrêter les mensualités futures ? Celles déjà enregistrées restent.",
       "settleConfirm": "Enregistrer les {amount} restants comme une dépense aujourd'hui et clôturer le plan ?"
-    }
+    },
+    "invalidAmount": "Montant invalide"
   },
   "install": {
     "title": "Installer Amigo",
@@ -1936,7 +1954,9 @@
       "showLess": "Afficher moins",
       "empty": "Aucune annonce comparable",
       "openListing": "Ouvrir l'annonce"
-    }
+    },
+    "interestRate": "Taux d'intérêt (%)",
+    "loanStart": "Début du prêt"
   },
   "aiAdvisor": {
     "title": "Conseiller IA",
@@ -2000,6 +2020,18 @@
         "newProjectPlaceholder": "Ou tapez un nouveau nom de projet",
         "tagButton": "Étiqueter les dépenses"
       }
+    },
+    "overview": {
+      "archiveHeading": "Rapports précédents",
+      "back": "Retour",
+      "burnRateDay": "Au jour {day}",
+      "byCategory": "Par catégorie",
+      "noData": "Pas encore assez de données",
+      "spentThisMonth": "Dépensé ce mois-ci",
+      "takeawayLess": "{amount} de moins que le mois dernier",
+      "takeawayMore": "{amount} de plus que le mois dernier",
+      "uncategorized": "Non catégorisé",
+      "vsMonth": "vs mois dernier"
     }
   }
 }

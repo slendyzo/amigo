@@ -66,7 +66,9 @@
     "deselectAll": "Desselecionar Tudo",
     "noResults": "Nenhum resultado encontrado",
     "optional": "Opcional",
-    "required": "Obrigatório"
+    "required": "Obrigatório",
+    "recurring": "Recorrente",
+    "recurringDescription": "Cria uma despesa fixa ou subscrição mensal"
   },
   "nav": {
     "dashboard": "Painel",
@@ -398,7 +400,8 @@
     "splitSummary": "Dividido por {count}",
     "perPersonUnit": "pessoa",
     "fixed": "fixo",
-    "yourShare": "A tua parte"
+    "yourShare": "A tua parte",
+    "photos": "Fotos"
   },
   "incomes": {
     "title": "Receitas",
@@ -535,7 +538,10 @@
       "credit": "Cartão de Crédito",
       "cash": "Dinheiro",
       "investment": "Investimento"
-    }
+    },
+    "defaultBadge": "predefinida",
+    "expensesCount": "{count} despesas",
+    "expensesLinked": "{count} despesas associadas"
   },
   "projects": {
     "title": "Projetos",
@@ -586,7 +592,18 @@
       "averageExpense": "Despesa Média",
       "highestExpense": "Maior Despesa",
       "done": "Feito"
-    }
+    },
+    "ledgerExplainer": "As despesas de projeto vivem no seu próprio registo, separadas do orçamento mensal.",
+    "expensesMeta": "{count} despesas",
+    "startedMeta": "Iniciado {date} · {count} despesas",
+    "ofBudget": "de {budget} de orçamento",
+    "noBudget": "Sem orçamento definido",
+    "backToProjects": "Voltar aos projetos",
+    "budgetUsage": "Uso do orçamento",
+    "inactive": "Fechado",
+    "notFound": "Projeto não encontrado",
+    "remaining": "Restante",
+    "totalExpenses": "Total gasto"
   },
   "recurring": {
     "title": "Modelos Recorrentes",
@@ -1198,7 +1215,8 @@
       "settleNow": "Liquidar agora",
       "cancelConfirm": "Parar as parcelas futuras? As já registadas mantêm-se.",
       "settleConfirm": "Registar os {amount} em falta como uma despesa hoje e fechar o plano?"
-    }
+    },
+    "invalidAmount": "Valor inválido"
   },
   "install": {
     "title": "Instalar Amigo",
@@ -1934,7 +1952,9 @@
       "showLess": "Mostrar menos",
       "empty": "Sem comparáveis para mostrar",
       "openListing": "Abrir anúncio"
-    }
+    },
+    "interestRate": "Taxa de juro (%)",
+    "loanStart": "Início do empréstimo"
   },
   "aiAdvisor": {
     "title": "Consultor IA",
@@ -1998,6 +2018,18 @@
         "newProjectPlaceholder": "Ou escreva o nome de um projeto novo",
         "tagButton": "Etiquetar despesas"
       }
+    },
+    "overview": {
+      "archiveHeading": "Relatórios anteriores",
+      "back": "Voltar",
+      "burnRateDay": "Até ao dia {day}",
+      "byCategory": "Por categoria",
+      "noData": "Ainda sem dados suficientes",
+      "spentThisMonth": "Gasto este mês",
+      "takeawayLess": "{amount} menos que no mês passado",
+      "takeawayMore": "{amount} mais que no mês passado",
+      "uncategorized": "Sem categoria",
+      "vsMonth": "vs mês passado"
     }
   }
 }
