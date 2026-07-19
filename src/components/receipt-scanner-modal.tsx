@@ -240,7 +240,7 @@ export default function ReceiptScannerModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full md:max-w-lg md:mx-4 bg-[var(--surface)] rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-lg mx-4 bg-[var(--surface)] rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="px-4 md:px-6 py-3 md:py-4 border-b border-[var(--line)] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">

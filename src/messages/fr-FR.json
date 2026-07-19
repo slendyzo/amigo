@@ -1216,7 +1216,10 @@
       "cancelConfirm": "Arrêter les mensualités futures ? Celles déjà enregistrées restent.",
       "settleConfirm": "Enregistrer les {amount} restants comme une dépense aujourd'hui et clôturer le plan ?"
     },
-    "invalidAmount": "Montant invalide"
+    "invalidAmount": "Montant invalide",
+    "amountLabel": "MONTANT",
+    "nameLabel": "C'ÉTAIT POUR QUOI ?",
+    "namePlaceholder": "ex. Vols Grèce 2026"
   },
   "install": {
     "title": "Installer Amigo",

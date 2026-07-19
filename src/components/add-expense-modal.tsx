@@ -58,6 +58,21 @@ function inferType(category: string | null): ExpenseType {
   return "LIFESTYLE";
 }
 
+// Evaluate the amount field — supports a plain number or simple arithmetic
+// ("5+5", "12.50*2"). Returns 0 for empty/invalid. Only digits and + - * / ( )
+// are allowed, so the eval is safe.
+function evalAmount(raw: string): number {
+  const s = (raw || "").trim().replace(/,/g, ".");
+  if (!s) return 0;
+  if (!/^[0-9+\-*/().\s]+$/.test(s)) return 0;
+  try {
+    const v = Function(`"use strict";return (${s})`)();
+    return typeof v === "number" && isFinite(v) && v >= 0 ? Math.round(v * 100) / 100 : 0;
+  } catch {
+    return 0;
+  }
+}
+
 export default function AddExpenseModal({
   isOpen,
   onClose,
@@ -103,11 +118,18 @@ export default function AddExpenseModal({
     }
   }, [fetchedProjects, localProjects.length, setLocalProjects]);
 
-  // Natural-language input + derived parse
+  // Name (free text — numbers/dates stay in the name) + explicit amount field.
+  // parseQuickAdd still runs on the name for category/type SUGGESTIONS only; it
+  // never sets the amount (that's its own field now).
   const [rawInput, setRawInput] = useState("");
-  const [inputFocused, setInputFocused] = useState(true);
+  const [inputFocused, setInputFocused] = useState(false);
+  const [amountInput, setAmountInput] = useState("");
+  const [amountFocused, setAmountFocused] = useState(true);
+  const amountRef = useRef<HTMLInputElement>(null);
   const parsed = useMemo(() => parseQuickAdd(rawInput), [rawInput]);
-  const hasParse = parsed.amount > 0 && !!parsed.name.trim();
+  const amountValue = useMemo(() => evalAmount(amountInput), [amountInput]);
+  const amountExpression = /[+\-*/]/.test(amountInput.trim()) && amountValue > 0 ? amountInput.trim() : null;
+  const hasParse = amountValue > 0 && !!rawInput.trim();
 
   // Type chip (auto until user overrides)
   const [expenseType, setExpenseType] = useState<ExpenseType>("LIFESTYLE");
@@ -141,16 +163,18 @@ export default function AddExpenseModal({
 
   const prevIsOpenRef = useRef(false);
 
-  // Focus input when modal opens
+  // Focus the amount field when modal opens
   useEffect(() => {
-    if (isOpen) setTimeout(() => inputRef.current?.focus(), 120);
+    if (isOpen) setTimeout(() => amountRef.current?.focus(), 120);
   }, [isOpen]);
 
   // Reset on open
   useEffect(() => {
     if (isOpen && !prevIsOpenRef.current) {
       setRawInput("");
-      setInputFocused(true);
+      setAmountInput("");
+      setInputFocused(false);
+      setAmountFocused(true);
       setExpenseType("LIFESTYLE");
       setTypeOverridden(false);
       setCategoryId("");
@@ -205,8 +229,8 @@ export default function AddExpenseModal({
     setIsLoading(true);
     setError("");
 
-    const name = parsed.name.trim();
-    const parsedAmount = parsed.amount;
+    const name = rawInput.trim();
+    const parsedAmount = amountValue;
 
     try {
       // Installment plan
@@ -236,6 +260,7 @@ export default function AddExpenseModal({
         categoryId: categoryId || undefined, bankAccountId: bankAccountId || undefined,
         projectIds: selectedProjectIds.length > 0 ? selectedProjectIds : undefined,
         date, excludeFromBudget, description: description || undefined,
+        amountExpression: amountExpression || undefined,
         rawInput,
         imageUrls: imageUrls.length > 0 ? JSON.stringify(imageUrls) : undefined,
         status: (isScheduled ? "PENDING" : "PAID") as "PAID" | "PENDING",
@@ -301,7 +326,7 @@ export default function AddExpenseModal({
   };
 
   // Preview display values
-  const previewInitial = (parsed.name.trim().charAt(0) || "?").toUpperCase();
+  const previewInitial = (rawInput.trim().charAt(0) || "?").toUpperCase();
   const previewCategoryName = resolvedCategory ? translateCategory(resolvedCategory.name) : (parsed.category || "—");
   const typeChipLabel = te(`chips.${TYPE_CHIPS.find((c) => c.value === expenseType)?.chip ?? "lifestyle"}`);
   const dateLabel = isToday ? t("today") : new Date(date).toLocaleDateString(undefined, { day: "numeric", month: "short", timeZone: "UTC" });
@@ -319,7 +344,7 @@ export default function AddExpenseModal({
         initial={{ y: "100%" }}
         animate={{ y: 0 }}
         transition={{ duration: 0.33, ease: EASE }}
-        className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[28px] md:mx-4 md:max-w-md md:rounded-[28px]"
+        className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[28px] mx-4 max-w-md md:rounded-[28px]"
         style={{ background: "var(--app-bg)", color: "var(--ink)" }}
       >
         <div className="flex flex-col gap-4 overflow-y-auto scroll-touch px-5 pb-6 pt-3.5" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}>
@@ -340,13 +365,39 @@ export default function AddExpenseModal({
             </div>
           )}
 
-          {/* NL input card */}
+          {/* Amount — its own field (name numbers never become the price) */}
+          <div
+            className="rounded-[18px] px-[18px] py-4"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)", border: `1.5px solid ${amountFocused ? "var(--accent)" : "transparent"}` }}
+          >
+            <div className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: "var(--ink-subtle)" }}>
+              {t("amountLabel")}
+            </div>
+            <div className="mt-1 flex items-center gap-1.5">
+              <span className="text-[24px] font-bold" style={{ color: amountValue > 0 ? "var(--ink)" : "var(--ink-subtle)" }}>{getCurrencySymbol(currency)}</span>
+              <input
+                ref={amountRef}
+                type="text"
+                inputMode="decimal"
+                value={amountInput}
+                onChange={(e) => setAmountInput(e.target.value)}
+                onFocus={() => setAmountFocused(true)}
+                onBlur={() => setAmountFocused(false)}
+                placeholder="0.00"
+                className="w-full bg-transparent text-[24px] font-bold tabular-nums outline-none placeholder:text-[var(--ink-subtle)]"
+                style={{ color: "var(--ink)" }}
+              />
+              {amountExpression && <span className="flex-none text-[13px] tabular-nums" style={{ color: "var(--ink-subtle)" }}>= {getCurrencySymbol(currency)}{amountValue.toFixed(2)}</span>}
+            </div>
+          </div>
+
+          {/* Name — free text, numbers and dates allowed */}
           <div
             className="rounded-[18px] px-[18px] py-4"
             style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)", border: `1.5px solid ${inputFocused ? "var(--accent)" : "transparent"}` }}
           >
             <div className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: "var(--ink-subtle)" }}>
-              {t("typeAnythingExample")}
+              {t("nameLabel")}
             </div>
             <input
               ref={inputRef}
@@ -355,8 +406,8 @@ export default function AddExpenseModal({
               onChange={(e) => setRawInput(e.target.value)}
               onFocus={() => setInputFocused(true)}
               onBlur={() => setInputFocused(false)}
-              placeholder="25 mcd"
-              className="mt-1 w-full bg-transparent text-[20px] font-semibold outline-none placeholder:text-[var(--ink-subtle)]"
+              placeholder={t("namePlaceholder")}
+              className="mt-1 w-full bg-transparent text-[17px] font-medium outline-none placeholder:text-[var(--ink-subtle)]"
               style={{ color: "var(--ink)" }}
             />
           </div>
@@ -375,7 +426,7 @@ export default function AddExpenseModal({
               </div>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-[13.5px] font-semibold">
-                  {parsed.name} — {getCurrencySymbol(currency)}{parsed.amount.toFixed(2)}
+                  {rawInput} — {getCurrencySymbol(currency)}{amountValue.toFixed(2)}
                 </div>
                 <div className="truncate text-[11.5px]" style={{ color: "var(--hero-ink)" }}>
                   {previewCategoryName} · {typeChipLabel} · {dateLabel}
@@ -536,12 +587,12 @@ export default function AddExpenseModal({
                       <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white" style={{ left: splitEnabled ? "18px" : "2px", transition: "left .2s var(--ease)" }} />
                     </button>
                   </div>
-                  {splitEnabled && parsed.amount > 0 && (
+                  {splitEnabled && amountValue > 0 && (
                     <div className="mt-3">
-                      <ExpenseSplitSection amount={parsed.amount} currency={currency} splitEnabled={splitEnabled} onSplitEnabledChange={setSplitEnabled} splitCount={splitCount} onSplitCountChange={setSplitCount} splitPeople={splitPeople} onSplitPeopleChange={setSplitPeople} hideToggle />
+                      <ExpenseSplitSection amount={amountValue} currency={currency} splitEnabled={splitEnabled} onSplitEnabledChange={setSplitEnabled} splitCount={splitCount} onSplitCountChange={setSplitCount} splitPeople={splitPeople} onSplitPeopleChange={setSplitPeople} hideToggle />
                     </div>
                   )}
-                  {splitEnabled && parsed.amount <= 0 && <p className="mt-2 text-[11px]" style={{ color: "var(--ink-subtle)" }}>{t("splitAmountHint")}</p>}
+                  {splitEnabled && amountValue <= 0 && <p className="mt-2 text-[11px]" style={{ color: "var(--ink-subtle)" }}>{t("splitAmountHint")}</p>}
                 </div>
               )}
 
@@ -562,9 +613,9 @@ export default function AddExpenseModal({
                         ))}
                         <input type="number" min={2} max={120} value={installmentMonths} onChange={(e) => { const v = parseInt(e.target.value, 10); setInstallmentMonths(isNaN(v) ? 2 : Math.max(2, Math.min(120, v))); }} className="w-16 rounded-[10px] px-2 py-1.5 text-center text-[13px] outline-none" style={{ background: "var(--app-bg)", color: "var(--ink)", border: "1px solid var(--line)" }} />
                       </div>
-                      {parsed.amount > 0 ? (
+                      {amountValue > 0 ? (
                         <p className="mt-2 text-[13px] font-medium" style={{ color: "var(--accent-strong)" }}>
-                          {t("installments.preview", { months: installmentMonths, amount: `${getCurrencySymbol(currency)}${(Math.round((parsed.amount / installmentMonths) * 100) / 100).toFixed(2)}` })}
+                          {t("installments.preview", { months: installmentMonths, amount: `${getCurrencySymbol(currency)}${(Math.round((amountValue / installmentMonths) * 100) / 100).toFixed(2)}` })}
                         </p>
                       ) : (
                         <p className="mt-2 text-[11px]" style={{ color: "var(--ink-subtle)" }}>{t("installments.amountHint")}</p>

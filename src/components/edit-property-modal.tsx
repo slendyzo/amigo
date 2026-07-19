@@ -196,7 +196,7 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: "100%", opacity: 0 }}
         transition={{ duration: 0.45, ease: EASE }}
-        className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-card shadow-2xl md:max-h-[88vh] md:max-w-md md:rounded-2xl"
+        className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-card shadow-2xl md:max-h-[88vh] max-w-md md:rounded-2xl"
       >
         <header className="flex items-center justify-between border-b border-border/50 px-5 py-4">
           <div className="flex items-center gap-3">

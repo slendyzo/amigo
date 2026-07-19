@@ -1216,7 +1216,10 @@
       "cancelConfirm": "Parar as parcelas futuras? As já registadas mantêm-se.",
       "settleConfirm": "Registar os {amount} em falta como uma despesa hoje e fechar o plano?"
     },
-    "invalidAmount": "Valor inválido"
+    "invalidAmount": "Valor inválido",
+    "amountLabel": "VALOR",
+    "nameLabel": "O QUE FOI?",
+    "namePlaceholder": "ex. Voos Grécia 2026"
   },
   "install": {
     "title": "Instalar Amigo",

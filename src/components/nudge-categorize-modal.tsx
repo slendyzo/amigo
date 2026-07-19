@@ -105,7 +105,7 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 16, scale: 0.98 }}
             transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full md:max-w-2xl bg-[var(--surface)] rounded-t-xl md:rounded-xl shadow-xl overflow-hidden"
+            className="w-full max-w-2xl bg-[var(--surface)] rounded-t-xl md:rounded-xl shadow-xl overflow-hidden"
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-[var(--line)]">

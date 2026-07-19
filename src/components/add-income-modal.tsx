@@ -164,7 +164,7 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
       {/* Modal */}
       <form
         onSubmit={handleSubmit}
-        className="relative w-full md:max-w-md md:mx-4 rounded-t-[28px] md:rounded-[28px] overflow-hidden max-h-[90vh] flex flex-col"
+        className="relative w-full max-w-md mx-4 rounded-t-[28px] md:rounded-[28px] overflow-hidden max-h-[90vh] flex flex-col"
         style={{ background: "var(--app-bg)", boxShadow: "var(--shadow-pop)" }}
       >
         {/* Drag handle (mobile) + Header */}

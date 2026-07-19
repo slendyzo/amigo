@@ -1216,7 +1216,10 @@
       "cancelConfirm": "Stop future installments? Already-logged ones stay.",
       "settleConfirm": "Log the remaining {amount} as one expense today and close the plan?"
     },
-    "invalidAmount": "Invalid amount"
+    "invalidAmount": "Invalid amount",
+    "amountLabel": "AMOUNT",
+    "nameLabel": "WHAT WAS IT FOR?",
+    "namePlaceholder": "e.g. Flights to Greece 2026"
   },
   "install": {
     "title": "Install Amigo",
