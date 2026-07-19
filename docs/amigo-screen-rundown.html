@@ -1,0 +1,641 @@
+<title>Amigo — Screen & UI Rundown</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+  /* ============ TOKENS (mirrors Amigo's real shell tokens) ============ */
+  :root {
+    --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --app-bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #f1f2f4;
+    --surface-3: #e9eaed;
+    --line: rgba(9, 9, 11, 0.09);
+    --line-strong: rgba(9, 9, 11, 0.14);
+    --ink: #18181b;
+    --ink-muted: #52525b;
+    --ink-subtle: #8a8a93;
+    --accent: #d97706;
+    --accent-strong: #b45309;
+    --accent-tint: rgba(217, 119, 6, 0.10);
+    --positive: #16a34a;
+    --negative: #dc2626;
+    --sky: #0284c7;
+    --violet: #7c3aed;
+    --warning: #f97316;
+    --shadow: 0 1px 2px rgba(9,9,11,.05), 0 8px 28px rgba(9,9,11,.06);
+    --shadow-pop: 0 12px 40px rgba(9, 9, 11, 0.12);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --app-bg: #0a0a0b; --surface: #131316; --surface-2: #1a1b1f; --surface-3: #212227;
+      --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.14);
+      --ink: #ededef; --ink-muted: #a1a1aa; --ink-subtle: #71717a;
+      --accent: #fbbf24; --accent-strong: #d97706; --accent-tint: rgba(251,191,36,.16);
+      --positive: #4ade80; --negative: #f87171; --sky: #38bdf8; --violet: #a78bfa; --warning: #fb923c;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 34px rgba(0,0,0,.45);
+      --shadow-pop: 0 12px 40px rgba(0,0,0,.5);
+    }
+  }
+  :root[data-theme="light"] {
+    --app-bg: #f4f5f7; --surface: #ffffff; --surface-2: #f1f2f4; --surface-3: #e9eaed;
+    --line: rgba(9,9,11,.09); --line-strong: rgba(9,9,11,.14);
+    --ink: #18181b; --ink-muted: #52525b; --ink-subtle: #8a8a93;
+    --accent: #d97706; --accent-strong: #b45309; --accent-tint: rgba(217,119,6,.10);
+    --positive: #16a34a; --negative: #dc2626; --sky: #0284c7; --violet: #7c3aed; --warning: #f97316;
+    --shadow: 0 1px 2px rgba(9,9,11,.05), 0 8px 28px rgba(9,9,11,.06);
+  }
+  :root[data-theme="dark"] {
+    --app-bg: #0a0a0b; --surface: #131316; --surface-2: #1a1b1f; --surface-3: #212227;
+    --line: rgba(255,255,255,.08); --line-strong: rgba(255,255,255,.14);
+    --ink: #ededef; --ink-muted: #a1a1aa; --ink-subtle: #71717a;
+    --accent: #fbbf24; --accent-strong: #d97706; --accent-tint: rgba(251,191,36,.16);
+    --positive: #4ade80; --negative: #f87171; --sky: #38bdf8; --violet: #a78bfa; --warning: #fb923c;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 34px rgba(0,0,0,.45);
+  }
+
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--app-bg); color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.5; -webkit-font-smoothing: antialiased;
+    font-feature-settings: "cv02","cv03","cv04";
+  }
+  .num { font-variant-numeric: tabular-nums; }
+  a { color: inherit; }
+
+  /* ============ LAYOUT ============ */
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 22px 96px; }
+
+  /* Hero */
+  header.hero {
+    padding: 64px 0 34px; border-bottom: 1px solid var(--line); margin-bottom: 38px;
+  }
+  .brandrow { display: flex; align-items: center; gap: 13px; margin-bottom: 30px; }
+  .logo {
+    width: 42px; height: 42px; border-radius: 11px; flex-shrink: 0;
+    background: linear-gradient(135deg, var(--accent-strong), var(--accent));
+    box-shadow: 0 6px 20px var(--accent-tint);
+    display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 21px;
+  }
+  .brandrow .name { font-size: 20px; font-weight: 800; letter-spacing: -.02em; }
+  .brandrow .kind { font-size: 12.5px; color: var(--ink-subtle); font-weight: 500; }
+  h1 {
+    font-size: clamp(30px, 5vw, 46px); line-height: 1.05; letter-spacing: -.035em;
+    font-weight: 800; margin: 0 0 16px; max-width: 20ch; text-wrap: balance;
+  }
+  h1 .amber { color: var(--accent); }
+  .lede { font-size: 17px; color: var(--ink-muted); max-width: 66ch; margin: 0 0 4px; }
+  .lede strong { color: var(--ink); font-weight: 650; }
+
+  .metastrip { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 6px; padding: 5px 11px;
+    border-radius: 999px; background: var(--surface); border: 1px solid var(--line);
+    font-size: 12.5px; color: var(--ink-muted); font-weight: 550; box-shadow: var(--shadow);
+  }
+  .chip b { color: var(--ink); font-weight: 700; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; }
+
+  /* Section scaffolding */
+  section { margin: 54px 0 0; scroll-margin-top: 20px; }
+  .eyebrow {
+    font-size: 11.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: var(--accent); margin: 0 0 8px;
+  }
+  h2 { font-size: 25px; letter-spacing: -.025em; font-weight: 780; margin: 0 0 6px; }
+  .sub { color: var(--ink-muted); font-size: 15px; margin: 0 0 22px; max-width: 72ch; }
+
+  /* ============ TOKEN SWATCHES ============ */
+  .tokgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(148px,1fr)); gap: 12px; }
+  .swatch {
+    border-radius: 13px; border: 1px solid var(--line); overflow: hidden;
+    background: var(--surface); box-shadow: var(--shadow);
+  }
+  .swatch .fill { height: 62px; }
+  .swatch .meta { padding: 9px 11px 11px; }
+  .swatch .lab { font-size: 12.5px; font-weight: 650; }
+  .swatch .hex { font-size: 11px; color: var(--ink-subtle); font-family: ui-monospace, monospace; }
+
+  .notecard {
+    margin-top: 20px; display: flex; gap: 13px; align-items: flex-start;
+    padding: 15px 17px; border-radius: 14px;
+    background: var(--accent-tint); border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent);
+  }
+  .notecard .ic { color: var(--accent); flex-shrink: 0; margin-top: 1px; }
+  .notecard p { margin: 0; font-size: 14px; color: var(--ink); }
+  .notecard b { font-weight: 700; }
+
+  /* ============ NAV MAP ============ */
+  .navmap { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; }
+  @media (max-width: 760px){ .navmap { grid-template-columns: 1fr; } }
+  .panel {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    box-shadow: var(--shadow); padding: 20px;
+  }
+  .panel h3 { margin: 0 0 3px; font-size: 15px; font-weight: 720; }
+  .panel .h3sub { margin: 0 0 16px; font-size: 12.5px; color: var(--ink-subtle); }
+
+  .navitem { display: flex; align-items: center; gap: 11px; padding: 9px 11px; border-radius: 11px; }
+  .navitem + .navitem { margin-top: 3px; }
+  .navitem.primary { background: var(--surface-2); }
+  .navitem .ni { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex-shrink: 0;
+    background: var(--surface-3); color: var(--ink-muted); }
+  .navitem.on .ni { background: var(--accent-tint); color: var(--accent); }
+  .navitem.on { color: var(--accent); }
+  .navitem .nl { font-size: 13.5px; font-weight: 620; }
+  .navitem .ntag { margin-left: auto; font-size: 10.5px; color: var(--ink-subtle); font-weight: 600;
+    background: var(--surface-3); padding: 2px 7px; border-radius: 999px; }
+  .subgroup { margin: 4px 0 0 37px; padding-left: 14px; border-left: 1.5px dashed var(--line-strong); }
+  .subgroup a { display: block; font-size: 12.5px; color: var(--ink-muted); padding: 4px 0; text-decoration: none; }
+  .subgroup a code { font-family: ui-monospace, monospace; font-size: 11px; color: var(--ink-subtle); }
+
+  /* phone mock */
+  .phone {
+    max-width: 250px; margin: 0 auto; border-radius: 26px; border: 8px solid var(--surface-3);
+    background: var(--app-bg); overflow: hidden; box-shadow: var(--shadow-pop);
+  }
+  .phone .pbody { padding: 14px 12px 0; min-height: 150px; }
+  .phone .pbar {
+    display: flex; align-items: flex-end; justify-content: space-around; height: 52px;
+    background: var(--surface); border-top: 1px solid var(--line); padding-bottom: 6px; position: relative;
+  }
+  .ptab { display: grid; justify-items: center; gap: 3px; color: var(--ink-subtle); font-size: 8px; font-weight: 600; }
+  .ptab.on { color: var(--accent); }
+  .ptab i { width: 15px; height: 15px; border-radius: 4px; background: currentColor; opacity: .82; }
+  .padd {
+    width: 40px; height: 40px; border-radius: 50%; margin-bottom: 14px;
+    background: var(--accent-strong); color: #fff; display: grid; place-items: center;
+    box-shadow: 0 8px 18px var(--accent-tint); font-size: 21px; font-weight: 300; line-height: 1;
+  }
+  .skel { border-radius: 7px; background: var(--surface-2); }
+
+  /* ============ SCREEN CARDS ============ */
+  .screens { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  @media (max-width: 860px){ .screens { grid-template-columns: 1fr; } }
+  .scard {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 18px;
+    box-shadow: var(--shadow); overflow: hidden; display: flex; flex-direction: column;
+  }
+  .scard.wide { grid-column: 1 / -1; }
+  .scard-head { padding: 16px 18px 14px; display: flex; align-items: flex-start; gap: 12px; border-bottom: 1px solid var(--line); }
+  .scard-head .idx { font-size: 12px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; padding-top: 2px; min-width: 20px; }
+  .scard-head .tt { flex: 1; min-width: 0; }
+  .scard-head h3 { margin: 0 0 3px; font-size: 16px; font-weight: 730; letter-spacing: -.01em; }
+  .scard-head .route { font-size: 11.5px; font-family: ui-monospace, monospace; color: var(--ink-subtle); word-break: break-all; }
+  .hubtag { font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+    padding: 3px 8px; border-radius: 999px; white-space: nowrap; }
+  .hub-home { background: color-mix(in srgb, var(--accent) 15%, transparent); color: var(--accent); }
+  .hub-money { background: color-mix(in srgb, var(--positive) 15%, transparent); color: var(--positive); }
+  .hub-port { background: color-mix(in srgb, var(--sky) 16%, transparent); color: var(--sky); }
+  .hub-proj { background: color-mix(in srgb, var(--violet) 16%, transparent); color: var(--violet); }
+  .hub-set { background: var(--surface-3); color: var(--ink-muted); }
+
+  .scard-body { padding: 15px 18px 18px; display: grid; gap: 14px; }
+  .scard.haswire .scard-body { grid-template-columns: 200px 1fr; }
+  @media (max-width: 560px){ .scard.haswire .scard-body { grid-template-columns: 1fr; } }
+  .purpose { font-size: 13.5px; color: var(--ink-muted); margin: 0; }
+  .purpose b { color: var(--ink); font-weight: 640; }
+  ul.sects { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+  ul.sects li { position: relative; padding-left: 16px; font-size: 12.8px; color: var(--ink-muted); line-height: 1.42; }
+  ul.sects li::before { content:""; position: absolute; left: 2px; top: 7px; width: 5px; height: 5px; border-radius: 50%; background: var(--accent); opacity: .75; }
+  ul.sects li b { color: var(--ink); font-weight: 620; }
+
+  /* wireframe mini */
+  .wire { background: var(--app-bg); border: 1px solid var(--line); border-radius: 12px; padding: 9px; display: grid; gap: 6px; align-content: start; }
+  .wb { background: var(--surface); border: 1px solid var(--line); border-radius: 7px; }
+  .wr { display: flex; gap: 6px; }
+  .wlbl { font-size: 8.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--ink-subtle); }
+  .ring { width: 44px; height: 44px; border-radius: 50%; margin: 2px auto;
+    background: conic-gradient(var(--accent) 0 62%, var(--surface-3) 62% 100%);
+    -webkit-mask: radial-gradient(circle 13px at center, transparent 98%, #000 100%);
+            mask: radial-gradient(circle 13px at center, transparent 98%, #000 100%); }
+  .bars { display: flex; align-items: flex-end; gap: 4px; height: 34px; }
+  .bars i { flex: 1; border-radius: 3px 3px 0 0; background: var(--accent); opacity: .8; }
+  .bars i.g { background: var(--surface-3); }
+  .donut { width: 46px; height: 46px; border-radius: 50%; margin: 0 auto;
+    background: conic-gradient(var(--accent) 0 45%, var(--sky) 45% 70%, var(--positive) 70% 88%, var(--surface-3) 88% 100%);
+    -webkit-mask: radial-gradient(circle 12px at center, transparent 98%, #000 100%);
+            mask: radial-gradient(circle 12px at center, transparent 98%, #000 100%); }
+  .line { height: 34px; border-radius: 6px; position: relative; overflow: hidden;
+    background: linear-gradient(180deg, var(--accent-tint), transparent); }
+  .line::after { content:""; position:absolute; left:0; right:0; bottom: 40%; height:2px;
+    background: var(--accent); clip-path: polygon(0 60%,18% 40%,38% 70%,60% 20%,80% 50%,100% 10%,100% 100%,0 100%);
+    opacity:.9; }
+  .tiles3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 5px; }
+  .tiles3 .wb { height: 30px; }
+  .swipecard { height: 62px; border-radius: 9px; display: grid; place-items: center;
+    background: var(--surface); border: 1px solid var(--line-strong); box-shadow: var(--shadow); }
+  .swipecard span { font-size: 9px; color: var(--ink-subtle); font-weight: 600; }
+
+  /* modal list */
+  .modgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px,1fr)); gap: 11px; }
+  .mod { background: var(--surface); border: 1px solid var(--line); border-radius: 13px; padding: 13px 15px; box-shadow: var(--shadow); }
+  .mod h4 { margin: 0 0 3px; font-size: 13px; font-weight: 680; display: flex; align-items: center; gap: 7px; }
+  .mod h4 .md { width: 6px; height: 6px; border-radius: 2px; background: var(--accent); }
+  .mod p { margin: 0; font-size: 12.2px; color: var(--ink-muted); line-height: 1.42; }
+
+  /* designer notes */
+  .notes { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px,1fr)); gap: 13px; }
+  .nc { background: var(--surface); border: 1px solid var(--line); border-radius: 15px; padding: 16px 17px; box-shadow: var(--shadow); }
+  .nc .t { font-size: 13.5px; font-weight: 700; margin: 0 0 6px; display:flex; gap: 8px; align-items:center; }
+  .nc .t .b { width: 22px; height: 22px; border-radius: 6px; display: grid; place-items: center; background: var(--accent-tint); color: var(--accent); flex-shrink: 0; }
+  .nc p { margin: 0; font-size: 12.8px; color: var(--ink-muted); line-height: 1.5; }
+  .nc code { font-family: ui-monospace, monospace; font-size: 11.5px; background: var(--surface-2); padding: 1px 5px; border-radius: 5px; color: var(--ink); }
+
+  footer { margin-top: 60px; padding-top: 22px; border-top: 1px solid var(--line); font-size: 12.5px; color: var(--ink-subtle); }
+
+  svg.i { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .thglow::selection { background: var(--accent-tint); }
+</style>
+
+<div class="wrap">
+
+  <header class="hero">
+    <div class="brandrow">
+      <div class="logo">a</div>
+      <div>
+        <div class="name">Amigo</div>
+        <div class="kind">Personal finance — expenses · portfolio · net worth</div>
+      </div>
+    </div>
+    <h1>Every screen in Amigo, mapped for a <span class="amber">redesign</span>.</h1>
+    <p class="lede">A complete inventory of the app's information architecture, design tokens, screens and overlays — rendered in Amigo's own <strong>amber</strong> visual language so you can see the surface you're redesigning, not read about it. Hand this to Claude Design as the brief.</p>
+    <div class="metastrip">
+      <span class="chip"><span class="dot" style="background:var(--accent)"></span> Next.js 15 · React 19 · Tailwind 4</span>
+      <span class="chip"><b>5</b> primary nav destinations</span>
+      <span class="chip"><b>~26</b> screens</span>
+      <span class="chip"><b>19</b> modals / overlays</span>
+      <span class="chip">Mobile-first PWA · offline-capable</span>
+      <span class="chip">Light + Dark, both first-class</span>
+    </div>
+  </header>
+
+  <!-- ============ DESIGN LANGUAGE ============ -->
+  <section id="tokens">
+    <p class="eyebrow">Design language</p>
+    <h2>The token system it lives in</h2>
+    <p class="sub">Amigo's shell is driven entirely by CSS custom properties — one warm neutral scale plus a single amber accent, with green/red/sky/violet reserved for meaning (money, loss, assets, projects). Everything below renders live in the current theme; use the toggle to check both.</p>
+
+    <div class="tokgrid">
+      <div class="swatch"><div class="fill" style="background:var(--accent)"></div><div class="meta"><div class="lab">Accent</div><div class="hex">#d97706 / #fbbf24</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--accent-strong)"></div><div class="meta"><div class="lab">Accent strong</div><div class="hex">#b45309 / #d97706</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--app-bg); border-bottom:1px solid var(--line)"></div><div class="meta"><div class="lab">App bg</div><div class="hex">#f4f5f7 / #0a0a0b</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--surface); border-bottom:1px solid var(--line)"></div><div class="meta"><div class="lab">Surface</div><div class="hex">#ffffff / #131316</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--surface-2)"></div><div class="meta"><div class="lab">Surface 2</div><div class="hex">#f1f2f4 / #1a1b1f</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--ink)"></div><div class="meta"><div class="lab">Ink</div><div class="hex">#18181b / #ededef</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--positive)"></div><div class="meta"><div class="lab">Positive</div><div class="hex">money · gains</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--negative)"></div><div class="meta"><div class="lab">Negative</div><div class="hex">loss · liabilities</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--sky)"></div><div class="meta"><div class="lab">Sky</div><div class="hex">real-world assets</div></div></div>
+      <div class="swatch"><div class="fill" style="background:var(--violet)"></div><div class="meta"><div class="lab">Violet</div><div class="hex">projects</div></div></div>
+    </div>
+
+    <div class="notecard">
+      <svg class="i ic" viewBox="0 0 24 24" style="width:19px;height:19px"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16.5v.5"/></svg>
+      <p><b>Heads-up for the brief:</b> the docs still call this a "Shadcn Electric Blue theme," but the live shell tokens override to <b>amber</b> (warm gold in dark). Radius is generous (<code style="font-family:ui-monospace,monospace">0.75rem</code> base, iOS-ish), motion runs on <code style="font-family:ui-monospace,monospace">cubic-bezier(.16,1,.3,1)</code> long eases, type is Inter/system. Treat amber as the identity to evolve.</p>
+    </div>
+  </section>
+
+  <!-- ============ IA / NAV ============ -->
+  <section id="nav">
+    <p class="eyebrow">Information architecture</p>
+    <h2>Five destinations, three of them hubs</h2>
+    <p class="sub">The primary nav is a flat 5-item rail (desktop sidebar, collapsible to icons). Money, Portfolio and Settings are <em>hubs</em> — their sub-pages light the parent up. Insights appears only when AI is enabled; Inbox only for the admin account. On mobile this becomes a 4-tab bottom bar with a center add-button and a "More" drawer.</p>
+
+    <div class="navmap">
+      <div class="panel">
+        <h3>Desktop sidebar</h3>
+        <p class="h3sub">240px rail · collapses to 68px icons</p>
+
+        <div class="navitem primary on"><span class="ni"><svg class="i" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="4" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="11" width="7" height="10" rx="1"/></svg></span><span class="nl">Dashboard</span></div>
+
+        <div class="navitem primary"><span class="ni"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v10M9.5 14.5c0 1 1.1 1.8 2.5 1.8s2.5-.8 2.5-1.8-1.1-1.8-2.5-1.8-2.5-.8-2.5-1.8S10.6 7.4 12 7.4s2.5.8 2.5 1.8"/></svg></span><span class="nl">Money</span><span class="ntag">hub</span></div>
+        <div class="subgroup">
+          <a>Expenses <code>/expenses</code></a>
+          <a>Incomes <code>/incomes</code></a>
+          <a>Recurring <code>/recurring</code></a>
+          <a>Import + History <code>/import · /imports</code></a>
+        </div>
+
+        <div class="navitem primary"><span class="ni"><svg class="i" viewBox="0 0 24 24"><path d="M4 16l5-5 4 4 7-8"/><path d="M20 7h-4M20 7v4"/></svg></span><span class="nl">Portfolio</span><span class="ntag">hub</span></div>
+        <div class="subgroup">
+          <a>Portfolio (holdings) <code>/portfolio</code></a>
+          <a>Exchanges <code>/exchanges</code></a>
+          <a>Net Worth <code>/networth</code></a>
+          <a>Asset · Property · Vehicle detail</a>
+        </div>
+
+        <div class="navitem primary"><span class="ni"><svg class="i" viewBox="0 0 24 24"><path d="M3 8a2 2 0 012-2h5l2 2h7a2 2 0 012 2v7a2 2 0 01-2 2H5a2 2 0 01-2-2z"/></svg></span><span class="nl">Projects</span></div>
+
+        <div class="navitem primary"><span class="ni"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg></span><span class="nl">Settings</span><span class="ntag">hub</span></div>
+        <div class="subgroup">
+          <a>Settings <code>/settings</code></a>
+          <a>Categories · Mappings · Accounts</a>
+          <a>Tidy-up <code>/tidy-up</code></a>
+          <a>Workspace <code>/workspace</code></a>
+        </div>
+
+        <div style="height:1px;background:var(--line);margin:10px 4px"></div>
+        <div class="navitem"><span class="ni"><svg class="i" viewBox="0 0 24 24"><path d="M5 20V10M12 20V4M19 20v-7"/></svg></span><span class="nl" style="color:var(--ink-subtle)">Insights</span><span class="ntag">AI only</span></div>
+        <div class="navitem"><span class="ni"><svg class="i" viewBox="0 0 24 24"><path d="M4 13h4l2 3h4l2-3h4"/><path d="M4 13V6a2 2 0 012-2h12a2 2 0 012 2v7"/></svg></span><span class="nl" style="color:var(--ink-subtle)">Inbox</span><span class="ntag">admin</span></div>
+      </div>
+
+      <div class="panel">
+        <h3>Mobile</h3>
+        <p class="h3sub">Bottom tab bar + right drawer for "More"</p>
+        <div class="phone">
+          <div class="pbody">
+            <div class="skel" style="height:11px;width:52%;margin-bottom:12px"></div>
+            <div class="skel" style="height:56px;margin-bottom:9px;background:var(--accent-tint)"></div>
+            <div class="wr" style="gap:8px"><div class="skel" style="height:34px;flex:1"></div><div class="skel" style="height:34px;flex:1"></div></div>
+            <div class="skel" style="height:11px;width:38%;margin:12px 0 8px"></div>
+            <div class="skel" style="height:13px;margin-bottom:6px"></div>
+            <div class="skel" style="height:13px;width:80%"></div>
+          </div>
+          <div class="pbar">
+            <div class="ptab on"><i></i>Home</div>
+            <div class="ptab"><i></i>Money</div>
+            <div class="padd">+</div>
+            <div class="ptab"><i></i>Assets</div>
+            <div class="ptab"><i></i>More</div>
+          </div>
+        </div>
+        <p style="font-size:12px;color:var(--ink-subtle);text-align:center;margin:14px 0 0">Center <b style="color:var(--accent)">+</b> opens the add-type chooser.<br>"More" drawer → Projects · Settings · Insights · theme · What's New · Sign out.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SCREENS ============ -->
+  <section id="screens">
+    <p class="eyebrow">Screen inventory</p>
+    <h2>The screens, with their real anatomy</h2>
+    <p class="sub">Each card lists the screen's job and the actual sections/widgets on it today. The six anchor screens carry a schematic wireframe of the current layout — the rest are laid out as structured content maps.</p>
+
+    <div class="screens">
+
+      <!-- DASHBOARD -->
+      <div class="scard wide haswire">
+        <div class="scard-head">
+          <div class="idx">01</div>
+          <div class="tt"><h3>Dashboard / Overview</h3><div class="route">/dashboard → overview-client.tsx</div></div>
+          <span class="hubtag hub-home">Home</span>
+        </div>
+        <div class="scard-body">
+          <div class="wire">
+            <div class="wlbl">Overview hero</div>
+            <div class="tiles3"><div class="wb"></div><div class="wb"></div><div class="wb"></div></div>
+            <div class="wr">
+              <div style="flex:2;display:grid;gap:6px">
+                <div class="wb" style="padding:8px;display:grid;gap:5px"><div class="ring"></div><div class="skel" style="height:6px;width:60%;margin:0 auto"></div></div>
+                <div class="wb" style="padding:7px"><div class="bars"><i style="height:40%"></i><i class="g" style="height:70%"></i><i style="height:55%"></i><i class="g" style="height:85%"></i><i style="height:60%"></i></div></div>
+                <div class="wb" style="height:12px"></div><div class="wb" style="height:12px"></div>
+              </div>
+              <div style="flex:1;display:grid;gap:6px">
+                <div class="wb" style="height:34px"></div><div class="wb" style="height:34px"></div><div class="wb" style="height:30px"></div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p class="purpose"><b>Bento home</b> — this month's spending health, plus net-worth / portfolio / RWA rails at a glance.</p>
+            <ul class="sects" style="margin-top:11px">
+              <li><b>OverviewHero</b> — greeting + three headline figures: Net Worth (Δ), Spent-vs-budget, Portfolio (Δ)</li>
+              <li><b>Spending box</b> — SVG budget ring gauge (% used, €spent/€budget, remaining) + compact BurnChart (this vs prev month)</li>
+              <li>Desktop <b>inline quick-add</b> ("mcd 12", deep-link <code style="font-family:ui-monospace,monospace">?add=</code>) + recent 5 expenses with project/installment chips</li>
+              <li>Right rail: <b>RailPortfolio</b>, <b>RailRwa</b> (equity + linked debt), <b>RailCategories</b> (top spend)</li>
+              <li><b>TidyUpNudge</b> banner when uncategorized &gt; 0 · empty state for first expense</li>
+              <li>Mounts: AddType, Edit/Detail expense, Onboarding, Announcement, Retrospective auto-popup</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPENSES -->
+      <div class="scard haswire">
+        <div class="scard-head"><div class="idx">02</div><div class="tt"><h3>Expenses ledger</h3><div class="route">/dashboard/expenses</div></div><span class="hubtag hub-money">Money</span></div>
+        <div class="scard-body">
+          <div class="wire">
+            <div class="wr"><div class="skel" style="height:9px;width:40%"></div></div>
+            <div class="wr"><div class="wb" style="height:16px;width:30px;background:var(--accent-tint)"></div><div class="wb" style="height:16px;width:30px"></div><div class="wb" style="height:16px;width:30px"></div><div class="wb" style="height:16px;width:24px"></div></div>
+            <div class="wr"><div class="wb" style="height:14px;flex:2"></div><div class="wb" style="height:14px;flex:1"></div></div>
+            <div class="wb" style="padding:7px;display:grid;gap:5px"><div class="skel" style="height:8px;width:45%"></div><div class="skel" style="height:11px"></div><div class="skel" style="height:11px"></div><div class="skel" style="height:11px;width:85%"></div></div>
+          </div>
+          <div>
+            <p class="purpose">Full searchable/filterable ledger, grouped by month, with bulk actions.</p>
+            <ul class="sects" style="margin-top:11px">
+              <li>Year pills + scrolling <b>month pills</b> (future disabled) + "All"</li>
+              <li>Filter bar: search, type, category, sort-by, order toggle, <b>export</b></li>
+              <li>Per-month card: € total + desktop <b>table</b> (split ÷N, installment, receipt/recurring icons, project chips, type badge) / mobile long-press rows</li>
+              <li>Sticky <b>selection bar</b>: bulk link-to-asset, bulk delete</li>
+              <li>NudgeCategorizeCard when AI on + ≥5 uncategorized</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- PORTFOLIO -->
+      <div class="scard haswire">
+        <div class="scard-head"><div class="idx">03</div><div class="tt"><h3>Portfolio</h3><div class="route">/dashboard/portfolio</div></div><span class="hubtag hub-port">Portfolio</span></div>
+        <div class="scard-body">
+          <div class="wire">
+            <div class="wr"><div class="skel" style="height:9px;width:35%"></div><div class="wb" style="height:16px;width:44px;margin-left:auto;background:var(--accent-tint)"></div></div>
+            <div class="wb" style="padding:8px"><div class="skel" style="height:8px;width:40%;margin-bottom:6px"></div><div class="skel" style="height:14px;width:60%"></div></div>
+            <div class="wr"><div class="wb" style="flex:1;padding:8px"><div class="donut"></div></div><div class="wb" style="flex:1;padding:8px"><div class="line"></div></div></div>
+            <div class="wb" style="height:13px"></div><div class="wb" style="height:13px"></div>
+          </div>
+          <div>
+            <p class="purpose">Aggregated crypto/asset portfolio across connected exchanges, auto-syncing.</p>
+            <ul class="sects" style="margin-top:11px">
+              <li>Header: DisplayCurrency toggle · Manage Exchanges · <b>Sync All</b></li>
+              <li><b>PortfolioSummaryCard</b> — value, invested, P&amp;L, free cash</li>
+              <li><b>AllocationChart</b> (donut) + <b>PerformanceChart</b> (line)</li>
+              <li><b>Pending Deposits</b> (amber rows, dismiss) — unlinked deposits</li>
+              <li>Asset list by symbol + "Holdings without price data" collapsible</li>
+              <li>States: empty · initial-sync spinner · sync-error banner</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- NET WORTH -->
+      <div class="scard haswire">
+        <div class="scard-head"><div class="idx">04</div><div class="tt"><h3>Net Worth</h3><div class="route">/dashboard/networth</div></div><span class="hubtag hub-port">Portfolio</span></div>
+        <div class="scard-body">
+          <div class="wire">
+            <div class="skel" style="height:16px;width:55%"></div>
+            <div class="tiles3"><div class="wb" style="height:32px;border-color:var(--positive)"></div><div class="wb" style="height:32px;border-color:var(--sky)"></div><div class="wb" style="height:32px;border-color:var(--negative)"></div></div>
+            <div class="wr"><div class="wb" style="height:14px;width:46px;background:var(--accent-tint)"></div><div class="wb" style="height:14px;width:40px"></div></div>
+            <div class="wr"><div class="wb" style="height:40px;flex:1"></div><div class="wb" style="height:40px;flex:1"></div></div>
+          </div>
+          <div>
+            <p class="purpose">Consolidated net worth = investments + real-world assets − liabilities.</p>
+            <ul class="sects" style="margin-top:11px">
+              <li>Big <b>net-worth total</b> + 3 summary tiles (Investments/emerald, RWA/sky, Liabilities/rose)</li>
+              <li>Tabs: <b>Active / Sold</b> (animated underline)</li>
+              <li>Active: RWA grid (Property/Vehicle cards), Liabilities list (€/mo), Investments summary row</li>
+              <li>Sold: closed positions grid with realized P&amp;L</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- TIDY-UP -->
+      <div class="scard haswire">
+        <div class="scard-head"><div class="idx">05</div><div class="tt"><h3>Tidy-up</h3><div class="route">/dashboard/tidy-up</div></div><span class="hubtag hub-set">Settings</span></div>
+        <div class="scard-body">
+          <div class="wire">
+            <div class="skel" style="height:6px;width:70%;margin:0 auto"></div>
+            <div class="swipecard"><span>expense card</span></div>
+            <div class="wb" style="height:16px;background:var(--accent-tint)"></div>
+            <div class="tiles3"><div class="wb" style="height:16px"></div><div class="wb" style="height:16px"></div><div class="wb" style="height:16px"></div></div>
+          </div>
+          <div>
+            <p class="purpose">Swipe-through flow to categorize uncategorized expenses one at a time.</p>
+            <ul class="sects" style="margin-top:11px">
+              <li>Progress bar + nav dots (mobile)</li>
+              <li>Expense <b>card</b> with suggested-category button + category grid + inline "New Category" + Skip</li>
+              <li>Desktop: <b>history sidebar</b> to review/fix past choices</li>
+              <li>Floating <b>undo toast</b> + "learned mapping" toast · all-done state</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- ASSET DETAIL -->
+      <div class="scard haswire">
+        <div class="scard-head"><div class="idx">06</div><div class="tt"><h3>Asset detail</h3><div class="route">/portfolio/[assetId] · /symbol/[symbol]</div></div><span class="hubtag hub-port">Portfolio</span></div>
+        <div class="scard-body">
+          <div class="wire">
+            <div class="skel" style="height:8px;width:30%"></div>
+            <div class="wb" style="padding:8px"><div class="skel" style="height:8px;width:35%;margin-bottom:6px"></div><div class="skel" style="height:15px;width:55%"></div></div>
+            <div class="tiles3"><div class="wb" style="height:26px"></div><div class="wb" style="height:26px"></div><div class="wb" style="height:26px"></div><div class="wb" style="height:26px"></div><div class="wb" style="height:26px"></div><div class="wb" style="height:26px"></div></div>
+            <div class="wb" style="height:16px"></div>
+          </div>
+          <div>
+            <p class="purpose">Single position (assetId) or symbol-aggregated holding (across exchanges).</p>
+            <ul class="sects" style="margin-top:11px">
+              <li><b>Hero card</b>: symbol + badges, sync status, current value + unrealized P&amp;L</li>
+              <li><b>DCA stats grid</b>: avg buy, quantity, total cost, current price</li>
+              <li><b>Invested-vs-current</b> bar comparison with P&amp;L highlight</li>
+              <li>[symbol]: <b>per-exchange breakdown</b> table when &gt;1 position</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Content-map cards (no wire) -->
+      <div class="scard">
+        <div class="scard-head"><div class="idx">07</div><div class="tt"><h3>Exchanges</h3><div class="route">/dashboard/portfolio/exchanges</div></div><span class="hubtag hub-port">Portfolio</span></div>
+        <div class="scard-body"><p class="purpose">Manage exchange API connections.</p>
+          <ul class="sects"><li>Connection cards: provider badge, sync status, error/partial message, asset-count &amp; free-cash stats</li><li>Actions: <b>Sync Now / Edit / Delete</b> · action-error banner · empty state</li><li>ExchangeConnectionModal (add/edit)</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">08</div><div class="tt"><h3>RWA detail — Property / Vehicle</h3><div class="route">/networth/property/[id] · /vehicle/[id]</div></div><span class="hubtag hub-port">Portfolio</span></div>
+        <div class="scard-body"><p class="purpose">Individual property/vehicle asset with valuation history.</p>
+          <ul class="sects"><li>Hero (image, name, purchase vs current value, source)</li><li><b>Value-over-time chart</b> — valuation dots; property adds an INE index reference line</li><li>Loans section (linked liabilities) · <b>TCO</b> + linked expenses list</li><li>Mark-as-Sold modal · property adds address/area/bedrooms</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">09</div><div class="tt"><h3>Projects</h3><div class="route">/dashboard/projects · /[id]</div></div><span class="hubtag hub-proj">Projects</span></div>
+        <div class="scard-body"><p class="purpose">Group expenses into projects/budgets, with per-project drill-down.</p>
+          <ul class="sects"><li>Projects grid: name, locked/status badges, budget / spent / count rows · empty state</li><li>Detail: stats cards, budget progress, expenses grouped by month</li><li><b>View Wrapped</b> → ProjectWrappedModal (5-slide animated summary)</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">10</div><div class="tt"><h3>Incomes</h3><div class="route">/dashboard/incomes</div></div><span class="hubtag hub-money">Money</span></div>
+        <div class="scard-body"><p class="purpose">Track one-off / periodic incomes.</p>
+          <ul class="sects"><li>Filter bar (month/amount, type, running <b>Total €</b>)</li><li>Incomes list card · empty state</li><li>Add/Edit income modal</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">11</div><div class="tt"><h3>Recurring templates</h3><div class="route">/dashboard/recurring</div></div><span class="hubtag hub-money">Money</span></div>
+        <div class="scard-body"><p class="purpose">Templates that auto-generate monthly expenses.</p>
+          <ul class="sects"><li>3 summary cards: Active templates · Monthly total · Total</li><li>Create form (amount/type/category, projects, auto-generate + exclude-from-budget toggles)</li><li>Templates list w/ inline edit + day-override · <b>Generate</b> modal · recurring-nudge cards</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">12</div><div class="tt"><h3>Import wizard + History</h3><div class="route">/dashboard/import · /imports</div></div><span class="hubtag hub-money">Money</span></div>
+        <div class="scard-body"><p class="purpose">CSV/XLSX import wizard + past-batch management.</p>
+          <ul class="sects"><li>4-step wizard: Upload → <b>Column mapping</b> (mixed exp/income, dupes, sheet + project-sheet mapping, preview table) → Importing → Results</li><li>History: import-log rows (file, type badge, stats, delete) · delete-confirm can also drop emptied projects</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">13</div><div class="tt"><h3>Insights</h3><div class="route">/dashboard/insights</div></div><span class="hubtag hub-set">AI</span></div>
+        <div class="scard-body"><p class="purpose">Archive of monthly spending "retrospectives". <b>AI generation is sunset</b> — archive stays browsable.</p>
+          <ul class="sects"><li>Heading + count · loading skeletons · empty state</li><li>Insight rows (period, headline, date) → RetrospectiveModal read-only</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">14</div><div class="tt"><h3>Categories · Mappings · Accounts</h3><div class="route">/dashboard/categories · /mappings · /accounts</div></div><span class="hubtag hub-set">Settings</span></div>
+        <div class="scard-body"><p class="purpose">Three management pages behind Settings.</p>
+          <ul class="sects"><li><b>Categories</b>: list + groups, "Add defaults" / "Organize into Groups" prompts, unmatched prompt</li><li><b>Mappings</b>: keyword→category rules, custom table + built-in keywords, nudge cards</li><li><b>Accounts</b>: bank-account grid + add/edit</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">15</div><div class="tt"><h3>Settings</h3><div class="route">/dashboard/settings</div></div><span class="hubtag hub-set">Settings</span></div>
+        <div class="scard-body"><p class="purpose">Account &amp; app configuration.</p>
+          <ul class="sects"><li>Budget card: monthly budget, currency, language, currency-display mode, default account</li><li>Recurring income (salary) + salary modal · Restart setup</li><li><b>AI Advisor</b> toggle (sunset surface, now just consent) · <b>Shortcuts tokens</b> (iPhone) · Danger Zone</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">16</div><div class="tt"><h3>Workspace</h3><div class="route">/dashboard/workspace</div></div><span class="hubtag hub-set">Settings</span></div>
+        <div class="scard-body"><p class="purpose">Manage shared workspace, members, invites.</p>
+          <ul class="sects"><li>Workspace info card (name/edit) · members list w/ roles</li><li>Invite section + pending invitations · leave/actions · Create Workspace modal</li></ul></div>
+      </div>
+
+      <div class="scard">
+        <div class="scard-head"><div class="idx">17</div><div class="tt"><h3>Auth &amp; onboarding</h3><div class="route">/signin · /signup · /forgot · /reset · /setup-username</div></div><span class="hubtag hub-home">Entry</span></div>
+        <div class="scard-body"><p class="purpose">Pre-app surfaces — the first impression, currently plainest of all.</p>
+          <ul class="sects"><li>Sign in (email/username + password) · Sign up with <b>6-digit email OTP</b></li><li>Forgot / reset password · OAuth setup-username · auth-error</li><li>First-run <b>Onboarding wizard</b>: welcome → salary → budget → fixed expenses</li></ul></div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ============ MODALS ============ -->
+  <section id="modals">
+    <p class="eyebrow">Overlays</p>
+    <h2>Modals &amp; sheets — 19 of them</h2>
+    <p class="sub">A large share of Amigo's real interaction happens in overlays, not pages. These are where the daily add/edit loops and the "delight" moments (Wrapped, Retrospective) live — worth as much design attention as the pages.</p>
+    <div class="modgrid">
+      <div class="mod"><h4><span class="md"></span>Add-type selector</h4><p>The "+" chooser — Expense vs Income — before opening the right modal; lazy-loads the heavy ones.</p></div>
+      <div class="mod"><h4><span class="md"></span>Add expense</h4><p>Full create form: amount/expression, type, category, account, projects, split, installment plan, receipt image.</p></div>
+      <div class="mod"><h4><span class="md"></span>Edit expense</h4><p>Same fields as add, incl. installment-plan title.</p></div>
+      <div class="mod"><h4><span class="md"></span>Expense detail</h4><p>Read-only detail view with Edit / Delete actions.</p></div>
+      <div class="mod"><h4><span class="md"></span>Receipt scanner</h4><p>Camera/photo capture + on-device OCR (tesseract.js) to prefill an expense; rescan / scan-another.</p></div>
+      <div class="mod"><h4><span class="md"></span>Add income</h4><p>Add/edit an income entry.</p></div>
+      <div class="mod"><h4><span class="md"></span>Add property</h4><p>New real-estate RWA — type, location, purchase value.</p></div>
+      <div class="mod"><h4><span class="md"></span>Add vehicle</h4><p>New vehicle RWA — class chooser (car/moto/bike) + cascading brand/model picker.</p></div>
+      <div class="mod"><h4><span class="md"></span>Add valuation</h4><p>Log a manual appraisal/insurance/offer value → diamond dot on the asset's chart.</p></div>
+      <div class="mod"><h4><span class="md"></span>Export</h4><p>Export expenses (respects current filters) to file; exporting state.</p></div>
+      <div class="mod"><h4><span class="md"></span>Onboarding</h4><p>First-run wizard: welcome, salary, monthly budget, fixed expenses.</p></div>
+      <div class="mod"><h4><span class="md"></span>AI consent</h4><p>Consent gate for AI processing — description, privacy note, view-terms.</p></div>
+      <div class="mod"><h4><span class="md"></span>Retrospective</h4><p>Monthly recap: headline, 3 observations, MoM category chart, link to archive.</p></div>
+      <div class="mod"><h4><span class="md"></span>Project Wrapped</h4><p>5-slide "Spotify Wrapped"-style animated project summary.</p></div>
+      <div class="mod"><h4><span class="md"></span>Nudge · categorize</h4><p>Card + guided flow to categorize a batch of uncategorized expenses.</p></div>
+      <div class="mod"><h4><span class="md"></span>Nudge · keyword</h4><p>Suggests creating a keyword→category mapping rule.</p></div>
+      <div class="mod"><h4><span class="md"></span>Nudge · project</h4><p>Suggests grouping related merchants into a project; pick/create + tag.</p></div>
+      <div class="mod"><h4><span class="md"></span>Nudge · recurring</h4><p>Suggests turning a repeating expense into a recurring template.</p></div>
+      <div class="mod"><h4><span class="md"></span>Announcement / Changelog</h4><p>"What's New" feature popups, seen-tracked per user.</p></div>
+    </div>
+  </section>
+
+  <!-- ============ DESIGNER NOTES ============ -->
+  <section id="notes">
+    <p class="eyebrow">Before you redesign</p>
+    <h2>What the brief needs to respect</h2>
+    <p class="sub">Constraints and quirks that will bite a redesign if missed — pulled from the live code, not the docs.</p>
+    <div class="notes">
+      <div class="nc"><div class="t"><span class="b"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9 12l2 2 4-4"/></svg></span>Amber is the identity</div><p>Single accent, <code>#d97706</code> light / <code>#fbbf24</code> dark. Semantic green/red/sky/violet are <b>not</b> accents — they mean money, loss, RWA, projects. Keep that separation.</p></div>
+      <div class="nc"><div class="t"><span class="b"><svg class="i" viewBox="0 0 24 24"><path d="M12 3a9 9 0 100 18 9 9 0 000-18z"/><path d="M12 3a9 9 0 000 18"/></svg></span>Both themes are first-class</div><p>Dark isn't an invert — it has its own warmer-gold accent and near-black ground. Design and check both; the toggle top-right proves this page does.</p></div>
+      <div class="nc"><div class="t"><span class="b"><svg class="i" viewBox="0 0 24 24"><rect x="7" y="3" width="10" height="18" rx="2"/><path d="M11 18h2"/></svg></span>Mobile-first PWA</div><p>Bottom-tab + center-add + right drawer is the primary surface, offline-capable (IndexedDB). Desktop sidebar is the adaptation. 44px touch targets.</p></div>
+      <div class="nc"><div class="t"><span class="b"><svg class="i" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></svg></span>Motion has a house curve</div><p>Long eases on <code>cubic-bezier(.16,1,.3,1)</code>, 300–500ms, staggered reveals, animated tab underlines. Wrapped/Retrospective are the flourish moments.</p></div>
+      <div class="nc"><div class="t"><span class="b"><svg class="i" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h10"/></svg></span>Data-dense, scan-first</div><p>This is a tool, not a doc — summary before detail, state encoded as chips/pills/severity, tabular-nums for aligned figures. Charts get area fills + faint grids.</p></div>
+      <div class="nc"><div class="t"><span class="b"><svg class="i" viewBox="0 0 24 24"><path d="M12 3v18M7 8l5-5 5 5"/></svg></span>AI is sunset</div><p>Insights + nudges + AI-consent exist but generation is off. Don't design new AI-dependent flows; the Advisor toggle is now just a consent switch.</p></div>
+    </div>
+  </section>
+
+  <footer>
+    Amigo · screen &amp; UI rundown · generated for a Claude Design pass · <span class="num">26</span> screens, <span class="num">19</span> overlays, one amber accent. Rendered live in the app's own tokens — toggle the theme to verify both.
+  </footer>
+
+</div>

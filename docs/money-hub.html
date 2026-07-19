@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amigo — Money hub</title>
+<style>
+  :root {
+    --app-bg:#f7f8fa; --surface:#fff; --surface-2:#f1f2f4; --surface-3:#e9eaed;
+    --line:rgba(9,9,11,.08); --line-strong:rgba(9,9,11,.13);
+    --ink:#18181b; --ink-muted:#52525b; --ink-subtle:#8a8a93;
+    --accent:#d97706; --accent-strong:#b45309; --accent-fg:#fff; --accent-tint:rgba(217,119,6,.10);
+    --positive:#16a34a; --negative:#dc2626; --warning:#f97316; --shadow-pop:0 12px 40px rgba(9,9,11,.12);
+  }
+  .dark {
+    --app-bg:#0a0a0b; --surface:#131316; --surface-2:#1a1b1f; --surface-3:#212227;
+    --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14);
+    --ink:#ededef; --ink-muted:#a1a1aa; --ink-subtle:#71717a;
+    --accent:#fbbf24; --accent-strong:#d97706; --accent-fg:#1a1300; --accent-tint:rgba(251,191,36,.16);
+    --positive:#4ade80; --negative:#f87171; --warning:#fb923c; --shadow-pop:0 12px 40px rgba(0,0,0,.5);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--app-bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; transition:background .4s,color .4s; }
+  .num{font-variant-numeric:tabular-nums;} .pos{color:var(--positive);} .neg{color:var(--negative);}
+  .wrap { max-width:1320px; margin:0 auto; padding:26px 22px 70px; }
+  .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .top h1 { font-size:20px; font-weight:700; letter-spacing:-.02em; margin:0; }
+  .toggle { cursor:pointer; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); padding:8px 14px; border-radius:10px; font-size:13px; font-weight:500; }
+  .sub { color:var(--ink-muted); font-size:13px; margin:2px 0 24px; }
+  .seclabel { display:flex; align-items:baseline; gap:10px; margin:30px 0 12px; }
+  .chip { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); background:var(--accent-tint); padding:3px 9px; border-radius:999px; }
+  .seclabel .t{font-size:15px;font-weight:650;} .seclabel .d{font-size:12.5px;color:var(--ink-muted);}
+
+  .app { display:flex; border:1px solid var(--line-strong); border-radius:18px; overflow:hidden; box-shadow:var(--shadow-pop); background:var(--app-bg); }
+  .side { width:200px; flex:none; background:var(--surface); border-right:1px solid var(--line); padding:14px 12px; display:flex; flex-direction:column; gap:3px; }
+  .brand { display:flex; align-items:center; gap:9px; padding:6px 8px 14px; font-weight:700; }
+  .mark { width:22px; height:22px; border-radius:7px; background:var(--accent); color:var(--accent-fg); display:grid; place-items:center; font-size:13px; font-weight:800; }
+  .nav { display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:9px; font-size:13.5px; font-weight:500; color:var(--ink-muted); position:relative; }
+  .nav .ic { width:16px; height:16px; border-radius:5px; border:1.6px solid currentColor; opacity:.85; }
+  .nav.active { color:var(--accent); background:var(--accent-tint); font-weight:600; }
+  .nav.active::before { content:""; position:absolute; left:0; top:7px; bottom:7px; width:2px; border-radius:2px; background:var(--accent); }
+  .side .spacer{flex:1;} .prof{display:flex;align-items:center;gap:9px;padding:8px;border-radius:10px;background:var(--surface-2);font-size:13px;font-weight:500;} .av{width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent-strong));}
+  .content { flex:1; padding:20px 22px; min-width:0; }
+
+  /* hub header */
+  .mrow { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+  .monthnav { display:flex; align-items:center; gap:12px; }
+  .monthnav b { font-size:18px; font-weight:700; letter-spacing:-.01em; }
+  .arw { width:30px; height:30px; border-radius:9px; border:1px solid var(--line); display:grid; place-items:center; color:var(--ink-muted); cursor:pointer; }
+  .btn { display:inline-flex; align-items:center; gap:7px; border-radius:10px; padding:8px 13px; font-size:13px; font-weight:600; cursor:pointer; }
+  .btn.accent { background:var(--accent); color:var(--accent-fg); }
+  .btn.ghost { background:var(--surface-2); color:var(--ink); border:1px solid var(--line); }
+  .summary { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:16px; }
+  .scard { background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:13px 16px; }
+  .scard .k{font-size:11px;color:var(--ink-muted);font-weight:500;} .scard .v{font-size:21px;font-weight:750;letter-spacing:-.02em;margin-top:3px;}
+
+  /* tabs */
+  .tabs { display:flex; gap:4px; border-bottom:1px solid var(--line); margin-bottom:14px; }
+  .tab { padding:9px 14px; font-size:13.5px; font-weight:600; color:var(--ink-muted); position:relative; cursor:pointer; }
+  .tab.active { color:var(--ink); }
+  .tab.active::after { content:""; position:absolute; left:10px; right:10px; bottom:-1px; height:2px; border-radius:2px; background:var(--accent); }
+
+  /* toolbar */
+  .toolbar { display:flex; align-items:center; gap:8px; margin-bottom:12px; flex-wrap:wrap; }
+  .pill { display:inline-flex; align-items:center; gap:6px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:7px 11px; font-size:12.5px; color:var(--ink-muted); cursor:pointer; }
+  .search { flex:1; min-width:140px; background:var(--surface-2); border:1px solid var(--line); border-radius:9px; padding:7px 11px; font-size:12.5px; color:var(--ink-subtle); }
+  .qadd { display:flex; gap:8px; margin-bottom:14px; }
+  .qadd input { flex:1; background:var(--surface-2); border:1px solid var(--line); border-radius:10px; padding:9px 12px; font-size:13px; color:var(--ink); font-family:ui-monospace,Menlo,monospace; }
+  .qadd input::placeholder{color:var(--ink-subtle);}
+  .qadd b { background:var(--accent); color:var(--accent-fg); border-radius:10px; padding:0 16px; font-size:13px; font-weight:650; display:flex; align-items:center; }
+
+  /* list */
+  .dhead { display:flex; align-items:center; justify-content:space-between; padding:14px 4px 6px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--ink-subtle); }
+  .rows { background:var(--surface); border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+  .r { display:flex; align-items:center; gap:12px; padding:11px 15px; border-top:1px solid var(--line); }
+  .r:first-child{border-top:0;}
+  .r .nm { font-size:13.5px; font-weight:500; }
+  .tag { font-size:10px; font-weight:600; padding:2px 7px; border-radius:999px; }
+  .r .meta { margin-top:3px; display:flex; gap:7px; align-items:center; font-size:11px; color:var(--ink-subtle); }
+  .r .amt { margin-left:auto; font-size:13.5px; font-weight:650; }
+  .ico { width:30px; height:30px; border-radius:9px; flex:none; display:grid; place-items:center; font-size:13px; }
+  .toggle2 { width:34px; height:20px; border-radius:999px; background:var(--accent); position:relative; }
+  .toggle2.off{background:var(--surface-3);}
+  .toggle2::after{content:"";position:absolute;top:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:.2s; left:16px;} .toggle2.off::after{left:2px;background:var(--ink-subtle);}
+  .note { margin-top:24px; padding:16px 18px; background:var(--surface); border:1px solid var(--line); border-radius:14px; font-size:13px; color:var(--ink-muted); line-height:1.6; }
+  .frame2 { border:1px solid var(--line-strong); border-radius:16px; padding:18px; background:var(--app-bg); box-shadow:var(--shadow-pop); }
+  .two { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  @media(max-width:980px){ .two{grid-template-columns:1fr;} }
+</style>
+</head>
+<body class="dark">
+<div class="wrap">
+  <div class="top"><h1>Money hub</h1><button class="toggle" onclick="document.body.classList.toggle('dark')">◐ Light / dark</button></div>
+  <p class="sub">Month-scoped summary + month nav, three tabs, Import as a header action. Expenses tab in full; Incomes &amp; Recurring below.</p>
+
+  <!-- MAIN: Expenses tab in the app shell -->
+  <div class="app">
+    <nav class="side">
+      <div class="brand"><span class="mark">A</span> Amigo</div>
+      <div class="nav"><span class="ic"></span>Dashboard</div>
+      <div class="nav active"><span class="ic"></span>Money</div>
+      <div class="nav"><span class="ic"></span>Portfolio</div>
+      <div class="nav"><span class="ic"></span>Projects</div>
+      <div class="nav"><span class="ic"></span>Settings</div>
+      <div class="spacer"></div>
+      <div class="prof"><span class="av"></span>Francisco</div>
+    </nav>
+    <div class="content">
+      <div class="mrow">
+        <div class="monthnav"><span class="arw">‹</span><b>June 2026</b><span class="arw">›</span></div>
+        <button class="btn ghost"><span>⤓</span> Import</button>
+      </div>
+      <div class="summary">
+        <div class="scard"><div class="k">Income</div><div class="v num pos">+€4,300</div></div>
+        <div class="scard"><div class="k">Spent</div><div class="v num">€3,906</div></div>
+        <div class="scard"><div class="k">Net</div><div class="v num pos">+€394</div></div>
+      </div>
+      <div class="tabs">
+        <div class="tab active">Expenses</div>
+        <div class="tab">Incomes</div>
+        <div class="tab">Recurring</div>
+      </div>
+      <div class="toolbar">
+        <span class="pill">Sort: Date ▾</span>
+        <span class="pill">Type: All ▾</span>
+        <span class="search">Search…</span>
+        <span class="pill">☑ Select</span>
+        <span class="pill">⤓ Export</span>
+      </div>
+      <div class="qadd"><input value="mcd 12" /><b>Add</b></div>
+
+      <div class="dhead"><span>Today</span><span>€20.00</span></div>
+      <div class="rows">
+        <div class="r"><div class="ico" style="background:var(--accent-tint);color:var(--accent)">🍔</div><div><div class="nm">McDonald's</div><div class="meta"><span class="tag" style="background:var(--accent-tint);color:var(--accent)">Lifestyle</span> Fast Food</div></div><div class="amt">−€12.00</div></div>
+        <div class="r"><div class="ico" style="background:color-mix(in srgb,var(--positive) 14%,transparent);color:var(--positive)">↩</div><div><div class="nm">Refund — Zara</div><div class="meta">Shopping</div></div><div class="amt pos">(€8.00)</div></div>
+      </div>
+
+      <div class="dhead"><span>2 June</span><span>€943.20</span></div>
+      <div class="rows">
+        <div class="r"><div class="ico" style="background:var(--surface-2)">🏠</div><div><div class="nm">Rent</div><div class="meta"><span class="tag" style="background:color-mix(in srgb,#3b82f6 16%,transparent);color:#60a5fa">Fixed</span> Housing</div></div><div class="amt">−€900.00</div></div>
+        <div class="r"><div class="ico" style="background:var(--surface-2)">🛒</div><div><div class="nm">Pingo Doce</div><div class="meta">Groceries</div></div><div class="amt">−€43.20</div></div>
+      </div>
+
+      <div class="dhead"><span>1 June</span><span>€71.00</span></div>
+      <div class="rows">
+        <div class="r"><div class="ico" style="background:var(--surface-2)">⛽</div><div><div class="nm">Galp fuel</div><div class="meta">Car</div></div><div class="amt">−€60.00</div></div>
+        <div class="r"><div class="ico" style="background:var(--surface-2)">☕</div><div><div class="nm">Starbucks</div><div class="meta">Coffee</div></div><div class="amt">−€11.00</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Incomes + Recurring tab content -->
+  <div class="seclabel"><span class="chip">Other tabs</span><span class="t">Incomes &amp; Recurring</span><span class="d">Same header + tabs; tab content shown.</span></div>
+  <div class="two">
+    <div class="frame2">
+      <div class="tabs"><div class="tab">Expenses</div><div class="tab active">Incomes</div><div class="tab">Recurring</div></div>
+      <div class="toolbar"><span class="pill">Type: All ▾</span><span class="search">Search…</span><span class="btn accent" style="margin-left:auto">+ Add income</span></div>
+      <div class="dhead"><span>June 2026</span><span>+€4,300.00</span></div>
+      <div class="rows">
+        <div class="r"><div class="ico" style="background:color-mix(in srgb,var(--positive) 14%,transparent);color:var(--positive)">💼</div><div><div class="nm">Salary</div><div class="meta"><span class="tag" style="background:color-mix(in srgb,var(--positive) 14%,transparent);color:var(--positive)">Salary</span> <span class="tag" style="background:var(--surface-2);color:var(--ink-muted)">↻ Recurring</span></div></div><div class="amt pos">+€3,800.00</div></div>
+        <div class="r"><div class="ico" style="background:var(--surface-2)">💻</div><div><div class="nm">Freelance — logo</div><div class="meta">Freelance</div></div><div class="amt pos">+€500.00</div></div>
+      </div>
+    </div>
+
+    <div class="frame2">
+      <div class="tabs"><div class="tab">Expenses</div><div class="tab">Incomes</div><div class="tab active">Recurring</div></div>
+      <div class="toolbar"><span class="pill" style="color:var(--ink-muted)">6 active · €1,840/mo</span><span class="btn accent" style="margin-left:auto">⟳ Generate</span></div>
+      <div class="rows">
+        <div class="r"><div class="toggle2"></div><div><div class="nm">Rent</div><div class="meta"><span class="tag" style="background:color-mix(in srgb,#3b82f6 16%,transparent);color:#60a5fa">Fixed</span> day 1</div></div><div class="amt">€900.00</div></div>
+        <div class="r"><div class="toggle2"></div><div><div class="nm">Car loan</div><div class="meta"><span class="tag" style="background:var(--accent-tint);color:var(--accent)">Installment</span> day 1</div></div><div class="amt">€340.00</div></div>
+        <div class="r"><div class="toggle2"></div><div><div class="nm">Spotify</div><div class="meta">Subscriptions · day 3</div></div><div class="amt">€10.99</div></div>
+        <div class="r"><div class="toggle2 off"></div><div><div class="nm">Gym (paused)</div><div class="meta">Health · day 5</div></div><div class="amt" style="color:var(--ink-subtle)">€39.00</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="note"><b>Locked so far:</b> month-summary header (In/Out/Net) + month nav · 3 tabs · Import = header action · Expenses = grouped row list (date headers, soft rows, type tags, refunds green) with sort/type/search/select/export toolbar + inline quick-add · Incomes = grouped list + type filter + Add · Recurring = template rows with active toggle + Generate action. Amber/dark tokens throughout. Tell me any tweaks, then I'll build it.</div>
+</div>
+</body>
+</html>

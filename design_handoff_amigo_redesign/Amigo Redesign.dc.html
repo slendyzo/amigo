@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#eceaf3;font-family:"Instrument Sans",system-ui,sans-serif}
+a{color:#5F4BE8}a:hover{color:#4735c4}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 "Instrument Sans",sans-serif;color:#1a1a1a}
+.dv-note{margin:0 0 24px;font:400 12px/1.5 "Instrument Sans",sans-serif;color:rgba(0,0,0,.55);max-width:720px}
+.dv-opts{display:flex;flex-wrap:wrap;gap:36px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 "Instrument Sans",sans-serif;color:rgba(0,0,0,.55)}
+.dv-opt:target .dv-oid{background:#5F4BE8;color:#fff}
+.dv-next{margin:26px 0 0;font:12px/1.5 "Instrument Sans",sans-serif;color:rgba(0,0,0,.5)}
+</style>
+</helmet>
+<section class="dv-turn" id="t2">
+<div class="dv-thd"><a class="dv-tid" href="#t2">2</a><span class="dv-tname">Full app — every page in the <a class="dv-oid" href="#1a">1a</a> system</span></div>
+<p class="dv-note">The complete screen map: Money hub (<a class="dv-oid" href="#2a">2a</a>–<a class="dv-oid" href="#2c">2c</a>), Wealth hub (<a class="dv-oid" href="#2d">2d</a>–<a class="dv-oid" href="#2e">2e</a>), secondary pages (<a class="dv-oid" href="#2f">2f</a>–<a class="dv-oid" href="#2l">2l</a>), and entry flows (<a class="dv-oid" href="#2m">2m</a>–<a class="dv-oid" href="#2n">2n</a>). Hub pages keep the tab bar; pushed pages use back navigation. Money's sub-pages (Expenses · Income · Recurring) become one segmented hub.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="2a"><div class="dv-olabel"><a class="dv-oid" href="#2a">2a</a>Insights — trend, categories, vs last month</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Insights</div>
+      <div style="font-size:12px;font-weight:600;color:#5F4BE8;background:#EEEBFD;border-radius:20px;padding:6px 12px">July ▾</div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="font-size:12px;color:#6B6880">Spent this month</div>
+      <div style="display:flex;align-items:baseline;gap:8px"><div style="font-size:26px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums">€1,384.52</div><div style="font-size:12px;font-weight:600;color:#1B9E63">▼ 8% vs June</div></div>
+      <div style="display:flex;align-items:flex-end;gap:6px;height:96px;margin-top:14px">
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:52px;background:#E3DEFA;border-radius:6px"></div><span style="font-size:10px;color:#9B98AC">Feb</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:66px;background:#E3DEFA;border-radius:6px"></div><span style="font-size:10px;color:#9B98AC">Mar</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:44px;background:#E3DEFA;border-radius:6px"></div><span style="font-size:10px;color:#9B98AC">Apr</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:72px;background:#E3DEFA;border-radius:6px"></div><span style="font-size:10px;color:#9B98AC">May</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:58px;background:#E3DEFA;border-radius:6px"></div><span style="font-size:10px;color:#9B98AC">Jun</span></div>
+        <div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:5px"><div style="width:100%;height:50px;background:linear-gradient(180deg,#5F4BE8,#8B7BFF);border-radius:6px"></div><span style="font-size:10px;font-weight:600;color:#5F4BE8">Jul</span></div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:13px;font-weight:600">By category</div>
+      <div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span style="font-weight:600">Housing</span><span style="color:#6B6880;font-variant-numeric:tabular-nums">€584.00</span></div><div style="height:6px;border-radius:3px;background:#F4F3F9"><div style="width:84%;height:100%;border-radius:3px;background:#5F4BE8"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span style="font-weight:600">Groceries</span><span style="color:#6B6880;font-variant-numeric:tabular-nums">€412.60</span></div><div style="height:6px;border-radius:3px;background:#F4F3F9"><div style="width:59%;height:100%;border-radius:3px;background:#8B7BFF"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span style="font-weight:600">Transport</span><span style="color:#6B6880;font-variant-numeric:tabular-nums">€146.00</span></div><div style="height:6px;border-radius:3px;background:#F4F3F9"><div style="width:21%;height:100%;border-radius:3px;background:#B9AEF3"></div></div></div>
+      <div><div style="display:flex;justify-content:space-between;font-size:12.5px;margin-bottom:6px"><span style="font-weight:600">Eating out</span><span style="color:#6B6880;font-variant-numeric:tabular-nums">€98.40</span></div><div style="height:6px;border-radius:3px;background:#F4F3F9"><div style="width:14%;height:100%;border-radius:3px;background:#DCD6F9"></div></div></div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-size:13px;font-weight:600">Burn rate · day 18</span><span style="font-size:11px;color:#9B98AC">vs June</span></div>
+      <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:#6B6880;width:28px">Jul</span><div style="flex:1;height:8px;border-radius:4px;background:#F4F3F9"><div style="width:58%;height:100%;border-radius:4px;background:linear-gradient(90deg,#5F4BE8,#8B7BFF)"></div></div><span style="font-size:11px;font-weight:600;font-variant-numeric:tabular-nums">€1,384</span></div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;color:#6B6880;width:28px">Jun</span><div style="flex:1;height:8px;border-radius:4px;background:#F4F3F9"><div style="width:64%;height:100%;border-radius:4px;background:#DCD6F9"></div></div><span style="font-size:11px;color:#9B98AC;font-variant-numeric:tabular-nums">€1,502</span></div>
+      </div>
+      <div style="font-size:11px;color:#1B9E63;font-weight:600;margin-top:10px">You're spending €118 less than this time last month</div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2b"><div class="dv-olabel"><a class="dv-oid" href="#2b">2b</a>Money hub · Income — segmented control unifies the hub</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:20px;font-weight:700;letter-spacing:-.02em">Money</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></div>
+    </div>
+    <div style="display:flex;background:#fff;border-radius:16px;padding:4px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <span style="flex:1;text-align:center;font-size:12.5px;font-weight:500;padding:8px 0;border-radius:12px;color:#6B6880">Expenses</span>
+      <span style="flex:1;text-align:center;font-size:12.5px;font-weight:600;padding:8px 0;border-radius:12px;background:#17161F;color:#fff">Income</span>
+      <span style="flex:1;text-align:center;font-size:12.5px;font-weight:500;padding:8px 0;border-radius:12px;color:#6B6880">Recurring</span>
+    </div>
+    <div style="background:linear-gradient(135deg,#E7F5EE 0%,#CBEBDA 100%);border-radius:20px;padding:16px 18px">
+      <div style="font-size:12px;color:#2A6A4C;font-weight:500">Received in July</div>
+      <div style="font-size:28px;font-weight:700;letter-spacing:-.02em;margin-top:2px;font-variant-numeric:tabular-nums">€3,180</div>
+      <div style="font-size:11.5px;color:#2A6A4C;margin-top:6px;font-variant-numeric:tabular-nums">Expected monthly: €2,850 · +€330 extra</div>
+    </div>
+    <div>
+      <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">This month</div>
+      <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;color:#1B9E63;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">S</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Salary</div><div style="font-size:11.5px;color:#9B98AC">Recurring · Jul 1 <span style="background:#EEEBFD;color:#5F4BE8;border-radius:6px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px">monthly</span></div></div><div style="font-size:13.5px;font-weight:600;color:#1B9E63;font-variant-numeric:tabular-nums">+€2,850</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;color:#1B9E63;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">F</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Freelance — logo design</div><div style="font-size:11.5px;color:#9B98AC">One-off · Jul 9</div></div><div style="font-size:13.5px;font-weight:600;color:#1B9E63;font-variant-numeric:tabular-nums">+€250</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;color:#1B9E63;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">V</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Vinted sale</div><div style="font-size:11.5px;color:#9B98AC">One-off · Jul 14</div></div><div style="font-size:13.5px;font-weight:600;color:#1B9E63;font-variant-numeric:tabular-nums">+€80</div></div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:14px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg></div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:600">Add income</div><div style="font-size:11.5px;color:#9B98AC">Salary, freelance, refunds…</div></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid rgba(23,22,31,.06);padding:10px 8px 6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg><span style="font-size:10px;font-weight:500">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#5F4BE8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="font-size:10px;font-weight:600">Money</span></div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#5F4BE8;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(95,75,232,.35)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg><span style="font-size:10px;font-weight:500">Wealth</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg><span style="font-size:10px;font-weight:500">More</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2c"><div class="dv-olabel"><a class="dv-oid" href="#2c">2c</a>Money hub · Recurring — commitments, installment progress</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:20px;font-weight:700;letter-spacing:-.02em">Money</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg></div>
+    </div>
+    <div style="display:flex;background:#fff;border-radius:16px;padding:4px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <span style="flex:1;text-align:center;font-size:12.5px;font-weight:500;padding:8px 0;border-radius:12px;color:#6B6880">Expenses</span>
+      <span style="flex:1;text-align:center;font-size:12.5px;font-weight:500;padding:8px 0;border-radius:12px;color:#6B6880">Income</span>
+      <span style="flex:1;text-align:center;font-size:12.5px;font-weight:600;padding:8px 0;border-radius:12px;background:#17161F;color:#fff">Recurring</span>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:12px;color:#6B6880">Monthly commitments</div><div style="font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums">€824.99</div></div>
+      <div style="font-size:11.5px;color:#9B98AC;text-align:right">7 active<br>templates</div>
+    </div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Bills &amp; loans</div>
+        <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">M</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Mortgage</div><div style="font-size:11.5px;color:#9B98AC">day 24 · Fixed</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">€520.00</div></div>
+          <div style="padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)">
+            <div style="display:flex;align-items:center;gap:12px"><div style="width:38px;height:38px;border-radius:12px;background:#FDEEEA;color:#C75A3A;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">C</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Car loan</div><div style="font-size:11.5px;color:#9B98AC">day 5 · installment 14 of 48</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">€185.00</div></div>
+            <div style="height:5px;border-radius:3px;background:#F4F3F9;margin-top:9px;margin-left:50px"><div style="width:29%;height:100%;border-radius:3px;background:#8B7BFF"></div></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">E</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">EDP Energy</div><div style="font-size:11.5px;color:#9B98AC">day 27 · Fixed · varies</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">~€64.00</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Subscriptions</div>
+        <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;color:#1B9E63;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">S</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Spotify</div><div style="font-size:11.5px;color:#9B98AC">day 30 · Lifestyle</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">€10.99</span><div style="width:36px;height:21px;border-radius:11px;background:#5F4BE8;position:relative"><span style="position:absolute;top:2.5px;right:2.5px;width:16px;height:16px;border-radius:50%;background:#fff"></span></div></div></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#FDEEEA;color:#C75A3A;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">N</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Netflix</div><div style="font-size:11.5px;color:#9B98AC">day 12 · Lifestyle</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">€12.99</span><div style="width:36px;height:21px;border-radius:11px;background:#5F4BE8;position:relative"><span style="position:absolute;top:2.5px;right:2.5px;width:16px;height:16px;border-radius:50%;background:#fff"></span></div></div></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#E9F1FB;color:#3D74B8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">G</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600;color:#9B98AC">Gym</div><div style="font-size:11.5px;color:#9B98AC">paused</div></div><div style="display:flex;align-items:center;gap:10px"><span style="font-size:13.5px;font-weight:600;color:#9B98AC;font-variant-numeric:tabular-nums">€35.00</span><div style="width:36px;height:21px;border-radius:11px;background:#E3E1EC;position:relative"><span style="position:absolute;top:2.5px;left:2.5px;width:16px;height:16px;border-radius:50%;background:#fff"></span></div></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid rgba(23,22,31,.06);padding:10px 8px 6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg><span style="font-size:10px;font-weight:500">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#5F4BE8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="font-size:10px;font-weight:600">Money</span></div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#5F4BE8;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(95,75,232,.35)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg><span style="font-size:10px;font-weight:500">Wealth</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg><span style="font-size:10px;font-weight:500">More</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2d"><div class="dv-olabel"><a class="dv-oid" href="#2d">2d</a>Portfolio — holdings, allocation, exchange sync</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:20px;font-weight:700;letter-spacing:-.02em">Portfolio</div>
+      <div style="font-size:12px;font-weight:600;color:#5F4BE8;background:#EEEBFD;border-radius:20px;padding:6px 12px">EUR ▾</div>
+    </div>
+    <div style="background:linear-gradient(135deg,#E9E4FC 0%,#CFC5F8 100%);border-radius:24px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-size:13px;color:#544D7A;font-weight:500">Total value</div>
+        <div style="font-size:12px;font-weight:600;color:#1B7A4E;background:rgba(255,255,255,.55);border-radius:20px;padding:4px 10px;font-variant-numeric:tabular-nums">▲ €1,120 (2.4%)</div>
+      </div>
+      <div style="font-size:34px;font-weight:700;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums">€48,320</div>
+      <div style="font-size:12px;color:#544D7A;margin-top:10px;font-variant-numeric:tabular-nums">Unrealized P/L +€6,840 · cost basis €41,480</div>
+    </div>
+    <div>
+      <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px"><div style="width:46%;background:#5F4BE8"></div><div style="width:38%;background:#8B7BFF"></div><div style="width:16%;background:#DCD6F9"></div></div>
+      <div style="display:flex;gap:14px;margin-top:8px;font-size:11.5px;color:#6B6880;font-variant-numeric:tabular-nums">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#5F4BE8;margin-right:5px"></span>Crypto 46%</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B7BFF;margin-right:5px"></span>ETFs 38%</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#DCD6F9;margin-right:5px"></span>Cash 16%</span>
+      </div>
+    </div>
+    <div style="flex:1;min-height:0">
+      <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Holdings</div>
+      <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#F5EEE1;color:#A8823C;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">BTC</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Bitcoin</div><div style="font-size:11.5px;color:#9B98AC;font-variant-numeric:tabular-nums">0.21 BTC · Kraken</div></div><div style="text-align:right"><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">€14,890</div><div style="font-size:11px;font-weight:600;color:#1B9E63;font-variant-numeric:tabular-nums">+31.2%</div></div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#E9F1FB;color:#3D74B8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">ETH</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Ethereum</div><div style="font-size:11.5px;color:#9B98AC;font-variant-numeric:tabular-nums">2.8 ETH · Kraken</div></div><div style="text-align:right"><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">€7,420</div><div style="font-size:11px;font-weight:600;color:#D64550;font-variant-numeric:tabular-nums">−4.8%</div></div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px">VWCE</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Vanguard FTSE All-World</div><div style="font-size:11.5px;color:#9B98AC;font-variant-numeric:tabular-nums">142 units · Trading 212</div></div><div style="text-align:right"><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">€16,240</div><div style="font-size:11px;font-weight:600;color:#1B9E63;font-variant-numeric:tabular-nums">+12.6%</div></div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;color:#1B9E63;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px">€</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Free cash</div><div style="font-size:11.5px;color:#9B98AC">Trading 212 + Kraken</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">€7,770</div></div>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:16px;padding:12px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:10px">
+      <span style="width:8px;height:8px;border-radius:50%;background:#1B9E63"></span>
+      <span style="font-size:12px;color:#6B6880;flex:1">Kraken &amp; Trading 212 synced · 2h ago</span>
+      <span style="font-size:12px;font-weight:600;color:#5F4BE8">Sync now</span>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid rgba(23,22,31,.06);padding:10px 8px 6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg><span style="font-size:10px;font-weight:500">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="font-size:10px;font-weight:500">Money</span></div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#5F4BE8;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(95,75,232,.35)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#5F4BE8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg><span style="font-size:10px;font-weight:600">Wealth</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg><span style="font-size:10px;font-weight:500">More</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2e"><div class="dv-olabel"><a class="dv-oid" href="#2e">2e</a>Asset detail — valuation history, linked loan</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">VW Golf 8</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg></div>
+    </div>
+    <div style="background:#fff;border-radius:24px;padding:18px 20px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="display:flex;align-items:center;gap:14px">
+        <div style="width:64px;height:64px;border-radius:16px;background:repeating-linear-gradient(45deg,#EEEBFD,#EEEBFD 6px,#E3DEFA 6px,#E3DEFA 12px);display:flex;align-items:center;justify-content:center"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16"></path><rect x="4" y="16" width="16" height="4" rx="1.5"></rect></svg></div>
+        <div><div style="font-size:12px;color:#6B6880">Current value</div><div style="font-size:28px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums">€14,500</div><div style="font-size:11.5px;font-weight:600;color:#D64550;font-variant-numeric:tabular-nums">▼ €210 this month</div></div>
+      </div>
+      <div style="display:flex;align-items:flex-end;gap:5px;height:72px;margin-top:16px">
+        <div style="flex:1;height:68px;background:#F0EDFB;border-radius:5px"></div><div style="flex:1;height:64px;background:#F0EDFB;border-radius:5px"></div><div style="flex:1;height:62px;background:#F0EDFB;border-radius:5px"></div><div style="flex:1;height:58px;background:#E3DEFA;border-radius:5px"></div><div style="flex:1;height:56px;background:#E3DEFA;border-radius:5px"></div><div style="flex:1;height:53px;background:#E3DEFA;border-radius:5px"></div><div style="flex:1;height:52px;background:#D5CDF8;border-radius:5px"></div><div style="flex:1;height:50px;background:linear-gradient(180deg,#5F4BE8,#8B7BFF);border-radius:5px"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;font-size:10px;color:#9B98AC;margin-top:6px"><span>Dec</span><span>Jul</span></div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:12.5px;color:#6B6880">Purchased</span><span style="font-size:12.5px;font-weight:600;font-variant-numeric:tabular-nums">€19,900 · Mar 2023</span></div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:12.5px;color:#6B6880">Depreciation</span><span style="font-size:12.5px;font-weight:600;color:#D64550;font-variant-numeric:tabular-nums">−€5,400 (−27%)</span></div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:12.5px;color:#6B6880">Valuation source</span><span style="font-size:12.5px;font-weight:600">Market comparables · 14 listings</span></div>
+      <div style="display:flex;justify-content:space-between;padding:11px 0"><span style="font-size:12.5px;color:#6B6880">Last updated</span><span style="font-size:12.5px;font-weight:600">3 days ago</span></div>
+    </div>
+    <div style="background:#EEEBFD;border-radius:20px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:12px;background:#fff;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><rect x="4" y="6" width="16" height="12" rx="2"></rect><path d="M4 10h16"></path></svg></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">Car loan linked</div><div style="font-size:11.5px;color:#544D7A;font-variant-numeric:tabular-nums">−€4,100 remaining · equity €10,400</div></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;background:#5F4BE8;color:#fff;border-radius:16px;padding:13px 0;text-align:center;font-size:13.5px;font-weight:600;box-shadow:0 8px 20px rgba(95,75,232,.3)">Update valuation</div>
+      <div style="flex:1;background:#fff;border-radius:16px;padding:13px 0;text-align:center;font-size:13.5px;font-weight:600;box-shadow:0 1px 2px rgba(23,22,31,.05)">Mark as sold</div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2f"><div class="dv-olabel"><a class="dv-oid" href="#2f">2f</a>Projects — budget tracking per project</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Projects</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg></div>
+    </div>
+    <div style="font-size:12px;color:#6B6880">Project spend lives in its own ledger — it never counts against your monthly living budget.</div>
+    <div style="background:#fff;border-radius:20px;padding:18px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="font-size:15px;font-weight:700">Home renovation</div><span style="font-size:11px;font-weight:600;color:#5F4BE8;background:#EEEBFD;border-radius:12px;padding:3px 9px">active</span></div>
+      <div style="font-size:11.5px;color:#9B98AC;margin-top:2px">Started Mar 2026 · 34 expenses</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><span style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">€6,420</span><span style="font-size:12px;color:#6B6880;font-variant-numeric:tabular-nums">of €10,000 budget</span></div>
+      <div style="height:8px;border-radius:4px;background:#EEEBFD;margin-top:8px"><div style="width:64%;height:100%;border-radius:4px;background:linear-gradient(90deg,#5F4BE8,#8B7BFF)"></div></div>
+      <div style="display:flex;gap:14px;margin-top:12px;font-size:11.5px;color:#6B6880;font-variant-numeric:tabular-nums"><span>Kitchen €3,850</span><span>Bathroom €1,940</span><span>Other €630</span></div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:18px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="font-size:15px;font-weight:700">Japan trip 2027</div><span style="font-size:11px;font-weight:600;color:#5F4BE8;background:#EEEBFD;border-radius:12px;padding:3px 9px">active</span></div>
+      <div style="font-size:11.5px;color:#9B98AC;margin-top:2px">Started Jun 2026 · 6 expenses</div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><span style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">€980</span><span style="font-size:12px;color:#6B6880;font-variant-numeric:tabular-nums">of €4,500 budget</span></div>
+      <div style="height:8px;border-radius:4px;background:#EEEBFD;margin-top:8px"><div style="width:22%;height:100%;border-radius:4px;background:linear-gradient(90deg,#5F4BE8,#8B7BFF)"></div></div>
+      <div style="display:flex;gap:14px;margin-top:12px;font-size:11.5px;color:#6B6880;font-variant-numeric:tabular-nums"><span>Flights €780</span><span>Gear €200</span></div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:18px;box-shadow:0 1px 2px rgba(23,22,31,.05);opacity:.65">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="font-size:15px;font-weight:700">Wedding</div><span style="font-size:11px;font-weight:600;color:#6B6880;background:#F4F3F9;border-radius:12px;padding:3px 9px">closed</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px"><span style="font-size:20px;font-weight:700;font-variant-numeric:tabular-nums">€12,340</span><span style="font-size:12px;color:#6B6880;font-variant-numeric:tabular-nums">final · Sep 2025</span></div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2g"><div class="dv-olabel"><a class="dv-oid" href="#2g">2g</a>Categories &amp; keyword rules</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Categories</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg></div>
+    </div>
+    <div style="display:flex;background:#fff;border-radius:16px;padding:4px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <span style="flex:1;text-align:center;font-size:12.5px;font-weight:600;padding:8px 0;border-radius:12px;background:#17161F;color:#fff">Categories</span>
+      <span style="flex:1;text-align:center;font-size:12.5px;font-weight:500;padding:8px 0;border-radius:12px;color:#6B6880">Keyword rules</span>
+    </div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Living</div>
+        <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Housing</div><div style="font-size:11.5px;color:#9B98AC">3 subcategories · 5 rules</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B9E63" stroke-width="1.8"><circle cx="9" cy="9" r="1.2"></circle><circle cx="15" cy="9" r="1.2"></circle><path d="M5 5h14v14H5z"></path></svg></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Groceries</div><div style="font-size:11.5px;color:#9B98AC">2 subcategories · 8 rules</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#FDEEEA;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C75A3A" stroke-width="1.8"><path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16"></path><rect x="4" y="16" width="16" height="4" rx="1.5"></rect></svg></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Transport</div><div style="font-size:11.5px;color:#9B98AC">4 subcategories · 6 rules</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Lifestyle</div>
+        <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#F5EEE1;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8823C" stroke-width="1.8"><circle cx="12" cy="12" r="8"></circle><path d="M12 8v4l3 2"></path></svg></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Eating out</div><div style="font-size:11.5px;color:#9B98AC">12 rules</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#E9F1FB;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D74B8" stroke-width="1.8"><circle cx="12" cy="12" r="8"></circle></svg></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Sports</div><div style="font-size:11.5px;color:#9B98AC">3 rules</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+        </div>
+      </div>
+      <div style="background:#EEEBFD;border-radius:20px;padding:14px 16px">
+        <div style="font-size:12px;font-weight:600;color:#4735C4;margin-bottom:8px">Keyword rules preview</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <span style="font-size:11px;font-weight:600;background:#fff;border-radius:12px;padding:5px 10px;color:#17161F">"gas" → Utilities</span>
+          <span style="font-size:11px;font-weight:600;background:#fff;border-radius:12px;padding:5px 10px;color:#17161F">"mcd" → Eating out</span>
+          <span style="font-size:11px;font-weight:600;background:#fff;border-radius:12px;padding:5px 10px;color:#17161F">"cont" → Groceries</span>
+          <span style="font-size:11px;font-weight:600;background:#fff;border-radius:12px;padding:5px 10px;color:#5F4BE8">+ 31 more</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2h"><div class="dv-olabel"><a class="dv-oid" href="#2h">2h</a>Import wizard — preview &amp; auto-match</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Import</div>
+      <div style="width:40px"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1;height:4px;border-radius:2px;background:#5F4BE8"></div>
+      <div style="flex:1;height:4px;border-radius:2px;background:#5F4BE8"></div>
+      <div style="flex:1;height:4px;border-radius:2px;background:#E3E1EC"></div>
+    </div>
+    <div style="font-size:13px;color:#6B6880">Step 2 of 3 — review what we found</div>
+    <div style="background:#fff;border-radius:20px;padding:14px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path></svg></div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:600">millennium_jul2026.csv</div><div style="font-size:11.5px;color:#9B98AC">14 rows · Millennium BCP</div></div>
+      <span style="font-size:11px;font-weight:600;color:#1B9E63;background:#E7F5EE;border-radius:12px;padding:4px 9px">12 matched</span>
+    </div>
+    <div style="flex:1;min-height:0">
+      <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Preview</div>
+      <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="flex:1"><div style="font-size:13px;font-weight:600">COMPRA CONTINENTE MAT</div><div style="font-size:11px;color:#9B98AC">Jul 16 · <span style="color:#5F4BE8;font-weight:600">Groceries · Variable</span> <span style="background:#EEEBFD;color:#5F4BE8;border-radius:6px;padding:1px 6px;font-size:10px;font-weight:600">auto</span></div></div><span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">−€63.12</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="flex:1"><div style="font-size:13px;font-weight:600">DD EDP COMERCIAL</div><div style="font-size:11px;color:#9B98AC">Jul 15 · <span style="color:#5F4BE8;font-weight:600">Utilities · Fixed</span> <span style="background:#EEEBFD;color:#5F4BE8;border-radius:6px;padding:1px 6px;font-size:10px;font-weight:600">auto</span></div></div><span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">−€64.00</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="flex:1"><div style="font-size:13px;font-weight:600">TRF P2P MBWAY JOAO M</div><div style="font-size:11px;color:#9B98AC">Jul 13 · <span style="color:#C75A3A;font-weight:600">needs category</span></div></div><span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">−€25.00</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="flex:1"><div style="font-size:13px;font-weight:600">COMPRA GALP FROSSOS</div><div style="font-size:11px;color:#9B98AC">Jul 12 · <span style="color:#5F4BE8;font-weight:600">Fuel · Variable</span> <span style="background:#EEEBFD;color:#5F4BE8;border-radius:6px;padding:1px 6px;font-size:10px;font-weight:600">auto</span></div></div><span style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">−€52.00</span></div>
+      </div>
+      <div style="font-size:11px;color:#9B98AC;margin-top:8px;text-align:center">2 duplicates were skipped automatically</div>
+    </div>
+    <div style="background:#5F4BE8;color:#fff;border-radius:18px;padding:15px 0;text-align:center;font-size:15px;font-weight:600;box-shadow:0 8px 20px rgba(95,75,232,.3)">Import 12 expenses</div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2i"><div class="dv-olabel"><a class="dv-oid" href="#2i">2i</a>Bank accounts</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Accounts</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg></div>
+    </div>
+    <div style="background:linear-gradient(135deg,#5F4BE8 0%,#8B7BFF 100%);border-radius:24px;padding:20px 22px;color:#fff">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start"><div style="font-size:13px;opacity:.8">Millennium BCP</div><span style="font-size:10.5px;font-weight:600;background:rgba(255,255,255,.2);border-radius:12px;padding:3px 9px">default</span></div>
+      <div style="font-size:16px;font-weight:600;letter-spacing:.12em;margin-top:18px;font-variant-numeric:tabular-nums">•••• •••• •••• 4821</div>
+      <div style="display:flex;justify-content:space-between;margin-top:16px;font-size:11.5px;opacity:.8"><span>Checking · EUR</span><span>212 expenses linked</span></div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">R</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Revolut</div><div style="font-size:11.5px;color:#9B98AC">EUR · 84 expenses</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+      <div style="display:flex;align-items:center;gap:12px;padding:12px 0"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;color:#1B9E63;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">W</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Wise</div><div style="font-size:11.5px;color:#9B98AC">USD · 11 expenses</div></div><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+    </div>
+    <div style="border:1.5px dashed #C9C5DE;border-radius:20px;padding:16px;text-align:center;font-size:13px;font-weight:600;color:#5F4BE8">+ Add account</div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2j"><div class="dv-olabel"><a class="dv-oid" href="#2j">2j</a>Settings</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Settings</div>
+      <div style="width:40px"></div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:14px">
+      <div style="width:52px;height:52px;border-radius:50%;background:#5F4BE8;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:20px">F</div>
+      <div style="flex:1"><div style="font-size:15px;font-weight:700">Francisco</div><div style="font-size:11.5px;color:#9B98AC">francisco@delphiconsulting.io · Personal workspace</div></div>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>
+    </div>
+    <div>
+      <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Money</div>
+      <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">Monthly budget</span><span style="font-size:13px;font-weight:600;color:#6B6880;font-variant-numeric:tabular-nums">€2,200 ›</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">Default currency</span><span style="font-size:13px;font-weight:600;color:#6B6880">EUR ›</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">Categories</span><span style="font-size:13px;font-weight:600;color:#6B6880">24 ›</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">Keyword rules</span><span style="font-size:13px;font-weight:600;color:#6B6880">34 ›</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0"><span style="font-size:13px;font-weight:500">Bank accounts</span><span style="font-size:13px;font-weight:600;color:#6B6880">3 ›</span></div>
+      </div>
+    </div>
+    <div>
+      <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">App</div>
+      <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">Theme</span><div style="display:flex;background:#F4F3F9;border-radius:12px;padding:3px"><span style="font-size:11px;font-weight:600;padding:4px 10px;border-radius:9px;background:#fff;box-shadow:0 1px 2px rgba(23,22,31,.08)">Light</span><span style="font-size:11px;font-weight:500;padding:4px 10px;color:#6B6880">Dark</span><span style="font-size:11px;font-weight:500;padding:4px 10px;color:#6B6880">Auto</span></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">Language</span><span style="font-size:13px;font-weight:600;color:#6B6880">English ›</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">AI categorization</span><div style="width:36px;height:21px;border-radius:11px;background:#5F4BE8;position:relative"><span style="position:absolute;top:2.5px;right:2.5px;width:16px;height:16px;border-radius:50%;background:#fff"></span></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0"><span style="font-size:13px;font-weight:500">Export data</span><span style="font-size:13px;font-weight:600;color:#6B6880">CSV · Excel ›</span></div>
+      </div>
+    </div>
+    <div style="background:#FDEEEE;border-radius:18px;padding:13px 0;text-align:center;font-size:13.5px;font-weight:600;color:#D64550">Sign out</div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2k"><div class="dv-olabel"><a class="dv-oid" href="#2k">2k</a>More — hub sheet replaces the drawer</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:rgba(23,22,31,.45);font-family:'Instrument Sans',sans-serif;color:#17161F;justify-content:flex-end">
+  <div style="background:#F4F3F9;border-radius:28px 28px 0 0;padding:14px 20px 28px;display:flex;flex-direction:column;gap:16px">
+    <div style="width:40px;height:4px;border-radius:2px;background:rgba(23,22,31,.15);margin:0 auto"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:700">More</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B6880" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:#fff;border-radius:18px;padding:15px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;display:flex;align-items:center;justify-content:center;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-6l-2-2H5a2 2 0 0 0-2 2z"></path></svg></div><div style="font-size:13px;font-weight:600">Projects</div><div style="font-size:11px;color:#9B98AC">2 active</div></div>
+      <div style="background:#fff;border-radius:18px;padding:15px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;display:flex;align-items:center;justify-content:center;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1B9E63" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg></div><div style="font-size:13px;font-weight:600">Insights</div><div style="font-size:11px;color:#9B98AC">July report ready</div></div>
+      <div style="background:#fff;border-radius:18px;padding:15px;box-shadow:0 1px 2px rgba(23,22,31,.05);position:relative"><div style="width:38px;height:38px;border-radius:12px;background:#F5EEE1;display:flex;align-items:center;justify-content:center;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#A8823C" stroke-width="1.8"><path d="M5 13l4 4L19 7"></path></svg></div><div style="font-size:13px;font-weight:600">Tidy up</div><div style="font-size:11px;color:#9B98AC">8 uncategorized</div><span style="position:absolute;top:12px;right:12px;min-width:18px;height:18px;border-radius:9px;background:#5F4BE8;color:#fff;font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;padding:0 5px">8</span></div>
+      <div style="background:#fff;border-radius:18px;padding:15px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="width:38px;height:38px;border-radius:12px;background:#E9F1FB;display:flex;align-items:center;justify-content:center;margin-bottom:10px"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3D74B8" stroke-width="1.8"><path d="M12 4v10m0 0l-4-4m4 4l4-4"></path><path d="M5 19h14"></path></svg></div><div style="font-size:13px;font-weight:600">Import</div><div style="font-size:11px;color:#9B98AC">CSV · Excel · OFX</div></div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">Settings</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(23,22,31,.06)"><span style="font-size:13px;font-weight:500">Workspace — Personal</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0"><span style="font-size:13px;font-weight:500">What's new</span><span style="width:8px;height:8px;border-radius:50%;background:#5F4BE8"></span></div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2l"><div class="dv-olabel"><a class="dv-oid" href="#2l">2l</a>Tidy up — swipe-through categorization</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Tidy up</div>
+      <div style="width:40px"></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div style="flex:1;height:6px;border-radius:3px;background:#E3E1EC"><div style="width:38%;height:100%;border-radius:3px;background:linear-gradient(90deg,#5F4BE8,#8B7BFF)"></div></div>
+      <span style="font-size:12px;font-weight:600;color:#6B6880;font-variant-numeric:tabular-nums">3 of 8</span>
+    </div>
+    <div style="background:#fff;border-radius:24px;padding:22px;box-shadow:0 12px 32px rgba(23,22,31,.1)">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:14px;background:#F0EFF6;color:#6B6880;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:16px">T</div>
+        <div style="flex:1"><div style="font-size:15px;font-weight:700">TRF P2P MBWAY JOAO M</div><div style="font-size:11.5px;color:#9B98AC">Jul 13 · Millennium BCP</div></div>
+        <div style="font-size:16px;font-weight:700;font-variant-numeric:tabular-nums">−€25.00</div>
+      </div>
+      <div style="background:#EEEBFD;border-radius:16px;padding:12px 14px;margin-top:16px;display:flex;align-items:center;gap:10px">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><path d="M12 3l2 5 5 .7-3.6 3.5.9 5-4.3-2.4L7.7 17l.9-5L5 8.7 10 8z"></path></svg>
+        <div style="flex:1;font-size:12.5px;color:#4735C4"><b>Suggestion:</b> Eating out · Lifestyle — you tagged João's last MBWay this way</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px">
+        <div style="flex:1;background:#5F4BE8;color:#fff;border-radius:14px;padding:12px 0;text-align:center;font-size:13px;font-weight:600">Accept</div>
+        <div style="flex:1;background:#F4F3F9;border-radius:14px;padding:12px 0;text-align:center;font-size:13px;font-weight:600;color:#6B6880">Pick other</div>
+        <div style="width:46px;background:#F4F3F9;border-radius:14px;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg></div>
+      </div>
+    </div>
+    <div style="opacity:.5;background:#fff;border-radius:20px;padding:14px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:12px;background:#F0EFF6;color:#6B6880;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">A</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:600">AMZN MKTP PT*2K4</div><div style="font-size:11px;color:#9B98AC">up next</div></div>
+      <div style="font-size:13px;font-weight:600;font-variant-numeric:tabular-nums">−€34.90</div>
+    </div>
+    <div style="text-align:center;font-size:12px;color:#9B98AC">Creating a keyword rule from your choice ✓</div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2m"><div class="dv-olabel"><a class="dv-oid" href="#2m">2m</a>Onboarding — 3-step setup</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:76px 24px 0;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;gap:8px">
+      <div style="flex:1;height:4px;border-radius:2px;background:#5F4BE8"></div>
+      <div style="flex:1;height:4px;border-radius:2px;background:#E3E1EC"></div>
+      <div style="flex:1;height:4px;border-radius:2px;background:#E3E1EC"></div>
+    </div>
+    <div>
+      <div style="font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.2">What's your monthly<br>living budget?</div>
+      <div style="font-size:13px;color:#6B6880;margin-top:8px;line-height:1.5">Fixed + variable living costs. Lifestyle and project spend are tracked separately — you can change this anytime.</div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:20px;box-shadow:0 1px 2px rgba(23,22,31,.05);border:1.5px solid #5F4BE8;text-align:center">
+      <div style="font-size:36px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums">€2,200<span style="display:inline-block;width:2px;height:30px;background:#5F4BE8;margin-left:3px;vertical-align:-4px"></span></div>
+      <div style="font-size:12px;color:#9B98AC;margin-top:4px">per month</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <span style="font-size:12px;font-weight:600;padding:8px 14px;border-radius:20px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">€1,500</span>
+      <span style="font-size:12px;font-weight:600;padding:8px 14px;border-radius:20px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">€2,000</span>
+      <span style="font-size:12px;font-weight:600;padding:8px 14px;border-radius:20px;background:#EEEBFD;color:#5F4BE8">€2,200</span>
+      <span style="font-size:12px;font-weight:600;padding:8px 14px;border-radius:20px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">€3,000</span>
+    </div>
+    <div style="flex:1"></div>
+    <div style="padding-bottom:24px;display:flex;flex-direction:column;gap:10px">
+      <div style="background:#5F4BE8;color:#fff;border-radius:18px;padding:15px 0;text-align:center;font-size:15px;font-weight:600;box-shadow:0 8px 20px rgba(95,75,232,.3)">Continue</div>
+      <div style="text-align:center;font-size:13px;font-weight:500;color:#9B98AC">Skip for now</div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="2n"><div class="dv-olabel"><a class="dv-oid" href="#2n">2n</a>Sign in</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:linear-gradient(180deg,#E9E4FC 0%,#F4F3F9 42%);font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:100px 24px 0;display:flex;flex-direction:column;gap:22px">
+    <div style="text-align:center">
+      <div style="width:64px;height:64px;border-radius:20px;background:linear-gradient(135deg,#4735C4,#5F4BE8);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:30px;margin:0 auto;box-shadow:0 12px 28px rgba(95,75,232,.35)">a</div>
+      <div style="font-size:26px;font-weight:700;letter-spacing:-.02em;margin-top:18px">Welcome back</div>
+      <div style="font-size:13px;color:#6B6880;margin-top:6px">Your money, calmly in one place.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:#fff;border-radius:16px;padding:15px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="font-size:10.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em">Email</div><div style="font-size:14px;font-weight:500;margin-top:2px">francisco@delphiconsulting.io</div></div>
+      <div style="background:#fff;border-radius:16px;padding:15px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center"><div style="flex:1"><div style="font-size:10.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em">Password</div><div style="font-size:14px;font-weight:500;margin-top:2px;letter-spacing:.2em">••••••••</div></div><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="1.8"><circle cx="12" cy="12" r="3"></circle><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6z"></path></svg></div>
+      <div style="text-align:right;font-size:12px;font-weight:600;color:#5F4BE8">Forgot password?</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="background:#5F4BE8;color:#fff;border-radius:18px;padding:15px 0;text-align:center;font-size:15px;font-weight:600;box-shadow:0 8px 20px rgba(95,75,232,.3)">Sign in</div>
+      <div style="display:flex;align-items:center;gap:12px;padding:2px 0"><div style="flex:1;height:1px;background:rgba(23,22,31,.1)"></div><span style="font-size:11px;color:#9B98AC">or</span><div style="flex:1;height:1px;background:rgba(23,22,31,.1)"></div></div>
+      <div style="background:#fff;border-radius:18px;padding:14px 0;text-align:center;font-size:14px;font-weight:600;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;justify-content:center;gap:8px"><span style="width:18px;height:18px;border-radius:50%;background:conic-gradient(#4285F4 0 25%,#34A853 25% 50%,#FBBC05 50% 75%,#EA4335 75% 100%)"></span>Continue with Google</div>
+    </div>
+    <div style="text-align:center;font-size:12.5px;color:#6B6880">New here? <span style="font-weight:600;color:#5F4BE8">Create an account</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+</div>
+<p class="dv-next">Try next: "tweak <a class="dv-oid" href="#2d">2d</a>'s allocation colors" · "add these to the handoff bundle" · "show the workspace/sharing screen too"</p>
+</section>
+<section class="dv-turn" id="t1">
+<div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Amigo redesign — calm violet, mobile-first</span></div>
+<p class="dv-note">One cohesive system across every screen: Instrument Sans, lavender-tinted background, white rounded cards, one violet accent (#5F4BE8), initial-avatars for merchants, tabular numbers. <a class="dv-oid" href="#1a">1a</a>–<a class="dv-oid" href="#1c">1c</a> are three dashboard layouts (same style, different UX); <a class="dv-oid" href="#1d">1d</a>–<a class="dv-oid" href="#1f">1f</a> show how the system extends to Expenses, Quick-add and Net worth. Data mirrors your real model: net worth = investments + real assets − liabilities.</p>
+<div class="dv-opts">
+
+<div class="dv-opt" id="1a"><div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a>Dashboard — hero gradient card, budget bar, upcoming row</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:13px;color:#6B6880">Good morning</div><div style="font-size:20px;font-weight:700;letter-spacing:-.02em">Francisco</div></div>
+      <div style="display:flex;gap:10px">
+        <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></div>
+        <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06);position:relative"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"></path><path d="M10 19a2 2 0 0 0 4 0"></path></svg><span style="position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:#5F4BE8;border:1.5px solid #fff"></span></div>
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,#E9E4FC 0%,#CFC5F8 100%);border-radius:24px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-size:13px;color:#544D7A;font-weight:500">Net worth</div>
+        <div style="font-size:12px;font-weight:600;color:#4735C4;background:rgba(255,255,255,.55);border-radius:20px;padding:4px 10px;font-variant-numeric:tabular-nums">▲ €2,140 this month</div>
+      </div>
+      <div style="font-size:34px;font-weight:700;letter-spacing:-.03em;margin-top:6px;font-variant-numeric:tabular-nums">€184,820</div>
+      <div style="display:flex;gap:16px;margin-top:14px;font-size:12px;color:#544D7A;font-variant-numeric:tabular-nums">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#5F4BE8;margin-right:5px"></span>Invested €48,320</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B7BFF;margin-right:5px"></span>Assets €179,500</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B9AEF3;margin-right:5px"></span>Debt −€43,000</span>
+      </div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:13px;font-weight:600">July budget</span>
+        <span style="font-size:12px;color:#6B6880;font-variant-numeric:tabular-nums"><b style="color:#17161F">€1,384</b> of €2,200</span>
+      </div>
+      <div style="height:8px;border-radius:4px;background:#EEEBFD;margin-top:10px;overflow:hidden"><div style="width:63%;height:100%;border-radius:4px;background:linear-gradient(90deg,#5F4BE8,#8B7BFF)"></div></div>
+      <div style="font-size:11px;color:#9B98AC;margin-top:8px">€816 left · 13 days to go</div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-size:14px;font-weight:600">Upcoming</span><span style="font-size:12px;color:#5F4BE8;font-weight:500">See all</span></div>
+      <div style="display:flex;gap:10px;overflow:hidden">
+        <div style="flex:none;width:128px;background:#5F4BE8;color:#fff;border-radius:18px;padding:14px"><div style="font-size:12px;opacity:.75">Mortgage</div><div style="font-size:17px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums">€520</div><div style="font-size:11px;opacity:.75;margin-top:8px">in 6 days</div></div>
+        <div style="flex:none;width:128px;background:#fff;border-radius:18px;padding:14px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="font-size:12px;color:#6B6880">EDP Energy</div><div style="font-size:17px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums">€64</div><div style="font-size:11px;color:#9B98AC;margin-top:8px">in 9 days</div></div>
+        <div style="flex:none;width:128px;background:#fff;border-radius:18px;padding:14px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="font-size:12px;color:#6B6880">Spotify</div><div style="font-size:17px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums">€10.99</div><div style="font-size:11px;color:#9B98AC;margin-top:8px">in 12 days</div></div>
+      </div>
+    </div>
+    <div style="flex:1;min-height:0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-size:14px;font-weight:600">Recent</span><span style="font-size:12px;color:#5F4BE8;font-weight:500">See all</span></div>
+      <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">C</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Continente</div><div style="font-size:11.5px;color:#9B98AC">Groceries · Today</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€84.20</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#FDEEEA;color:#C75A3A;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">G</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Galp</div><div style="font-size:11.5px;color:#9B98AC">Fuel · Yesterday</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€52.00</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;color:#1B9E63;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">S</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Salary</div><div style="font-size:11.5px;color:#9B98AC">Income · Jul 1</div></div><div style="font-size:13.5px;font-weight:600;color:#1B9E63;font-variant-numeric:tabular-nums">+€2,850</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid rgba(23,22,31,.06);padding:10px 8px 6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#5F4BE8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg><span style="font-size:10px;font-weight:600">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="font-size:10px;font-weight:500">Money</span></div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#5F4BE8;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(95,75,232,.35)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg><span style="font-size:10px;font-weight:500">Wealth</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg><span style="font-size:10px;font-weight:500">More</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="1b"><div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a>Dashboard — quieter, number-first (bank-like), category chips</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#5F4BE8;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">F</div>
+      <div style="font-size:14px;font-weight:600;color:#6B6880">July 2026</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"></path><path d="M10 19a2 2 0 0 0 4 0"></path></svg></div>
+    </div>
+    <div style="text-align:center;padding:8px 0 2px">
+      <div style="font-size:13px;color:#6B6880">Net worth</div>
+      <div style="font-size:42px;font-weight:700;letter-spacing:-.035em;margin-top:4px;font-variant-numeric:tabular-nums">€184,820</div>
+      <div style="font-size:13px;font-weight:600;color:#1B9E63;margin-top:6px;font-variant-numeric:tabular-nums">▲ €2,140 (1.2%) this month</div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="font-size:12px;color:#6B6880">Spent</div><div style="font-size:19px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums">€1,384</div><div style="font-size:11px;color:#9B98AC;margin-top:2px">63% of budget</div></div>
+      <div style="flex:1;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="font-size:12px;color:#6B6880">Portfolio</div><div style="font-size:19px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums">€48,320</div><div style="font-size:11px;color:#1B9E63;margin-top:2px;font-weight:600">▲ €1,120</div></div>
+      <div style="flex:1;background:#fff;border-radius:18px;padding:14px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="font-size:12px;color:#6B6880">Income</div><div style="font-size:19px;font-weight:700;margin-top:3px;font-variant-numeric:tabular-nums">€2,850</div><div style="font-size:11px;color:#9B98AC;margin-top:2px">salary in</div></div>
+    </div>
+    <div>
+      <div style="font-size:14px;font-weight:600;margin-bottom:10px">Spending by category</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:#5F4BE8"></span><div style="flex:1"><div style="font-size:12.5px;font-weight:600">Groceries</div><div style="font-size:11px;color:#9B98AC;font-variant-numeric:tabular-nums">€412.60</div></div></div>
+        <div style="background:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:#8B7BFF"></span><div style="flex:1"><div style="font-size:12.5px;font-weight:600">Housing</div><div style="font-size:11px;color:#9B98AC;font-variant-numeric:tabular-nums">€584.00</div></div></div>
+        <div style="background:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:#B9AEF3"></span><div style="flex:1"><div style="font-size:12.5px;font-weight:600">Transport</div><div style="font-size:11px;color:#9B98AC;font-variant-numeric:tabular-nums">€146.00</div></div></div>
+        <div style="background:#fff;border-radius:16px;padding:13px 15px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:10px"><span style="width:10px;height:10px;border-radius:3px;background:#DCD6F9"></span><div style="flex:1"><div style="font-size:12.5px;font-weight:600">Eating out</div><div style="font-size:11px;color:#9B98AC;font-variant-numeric:tabular-nums">€98.40</div></div></div>
+      </div>
+    </div>
+    <div style="flex:1;min-height:0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-size:14px;font-weight:600">Recent</span><span style="font-size:12px;color:#5F4BE8;font-weight:500">See all</span></div>
+      <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">C</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Continente</div><div style="font-size:11.5px;color:#9B98AC">Groceries · Today</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€84.20</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#FDEEEA;color:#C75A3A;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">G</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Galp</div><div style="font-size:11.5px;color:#9B98AC">Fuel · Yesterday</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€52.00</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid rgba(23,22,31,.06);padding:10px 8px 6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#5F4BE8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg><span style="font-size:10px;font-weight:600">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="font-size:10px;font-weight:500">Money</span></div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#5F4BE8;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(95,75,232,.35)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg><span style="font-size:10px;font-weight:500">Wealth</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg><span style="font-size:10px;font-weight:500">More</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="1c"><div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a>Dashboard — dark mode of <a class="dv-oid" href="#1a">1a</a> (theme toggle stays)</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" dark="{{ true }}" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#131218;font-family:'Instrument Sans',sans-serif;color:#F0EFF6">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div><div style="font-size:13px;color:#A5A2B8">Good evening</div><div style="font-size:20px;font-weight:700;letter-spacing:-.02em">Francisco</div></div>
+      <div style="display:flex;gap:10px">
+        <div style="width:40px;height:40px;border-radius:50%;background:#1C1B24;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0EFF6" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></div>
+        <div style="width:40px;height:40px;border-radius:50%;background:#1C1B24;display:flex;align-items:center;justify-content:center;position:relative"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#F0EFF6" stroke-width="1.8"><path d="M6 9a6 6 0 1 1 12 0c0 5 2 6 2 6H4s2-1 2-6"></path><path d="M10 19a2 2 0 0 0 4 0"></path></svg><span style="position:absolute;top:9px;right:10px;width:7px;height:7px;border-radius:50%;background:#8B7BFF;border:1.5px solid #1C1B24"></span></div>
+      </div>
+    </div>
+    <div style="background:linear-gradient(135deg,#3A3168 0%,#241F45 100%);border-radius:24px;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div style="font-size:13px;color:#B3ABDE;font-weight:500">Net worth</div>
+        <div style="font-size:12px;font-weight:600;color:#CFC5F8;background:rgba(255,255,255,.1);border-radius:20px;padding:4px 10px;font-variant-numeric:tabular-nums">▲ €2,140 this month</div>
+      </div>
+      <div style="font-size:34px;font-weight:700;letter-spacing:-.03em;margin-top:6px;color:#fff;font-variant-numeric:tabular-nums">€184,820</div>
+      <div style="display:flex;gap:16px;margin-top:14px;font-size:12px;color:#B3ABDE;font-variant-numeric:tabular-nums">
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#8B7BFF;margin-right:5px"></span>Invested €48,320</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#B9AEF3;margin-right:5px"></span>Assets €179,500</span>
+        <span><span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#6B6880;margin-right:5px"></span>Debt −€43,000</span>
+      </div>
+    </div>
+    <div style="background:#1C1B24;border-radius:20px;padding:16px 18px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline">
+        <span style="font-size:13px;font-weight:600">July budget</span>
+        <span style="font-size:12px;color:#A5A2B8;font-variant-numeric:tabular-nums"><b style="color:#F0EFF6">€1,384</b> of €2,200</span>
+      </div>
+      <div style="height:8px;border-radius:4px;background:#2A2836;margin-top:10px;overflow:hidden"><div style="width:63%;height:100%;border-radius:4px;background:linear-gradient(90deg,#8B7BFF,#B9AEF3)"></div></div>
+      <div style="font-size:11px;color:#6B6880;margin-top:8px">€816 left · 13 days to go</div>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-size:14px;font-weight:600">Upcoming</span><span style="font-size:12px;color:#8B7BFF;font-weight:500">See all</span></div>
+      <div style="display:flex;gap:10px;overflow:hidden">
+        <div style="flex:none;width:128px;background:#8B7BFF;color:#131218;border-radius:18px;padding:14px"><div style="font-size:12px;opacity:.7">Mortgage</div><div style="font-size:17px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums">€520</div><div style="font-size:11px;opacity:.7;margin-top:8px">in 6 days</div></div>
+        <div style="flex:none;width:128px;background:#1C1B24;border-radius:18px;padding:14px"><div style="font-size:12px;color:#A5A2B8">EDP Energy</div><div style="font-size:17px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums">€64</div><div style="font-size:11px;color:#6B6880;margin-top:8px">in 9 days</div></div>
+        <div style="flex:none;width:128px;background:#1C1B24;border-radius:18px;padding:14px"><div style="font-size:12px;color:#A5A2B8">Spotify</div><div style="font-size:17px;font-weight:700;margin-top:2px;font-variant-numeric:tabular-nums">€10.99</div><div style="font-size:11px;color:#6B6880;margin-top:8px">in 12 days</div></div>
+      </div>
+    </div>
+    <div style="flex:1;min-height:0">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><span style="font-size:14px;font-weight:600">Recent</span><span style="font-size:12px;color:#8B7BFF;font-weight:500">See all</span></div>
+      <div style="background:#1C1B24;border-radius:20px;padding:6px 16px">
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(255,255,255,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#2A2648;color:#B9AEF3;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">C</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Continente</div><div style="font-size:11.5px;color:#6B6880">Groceries · Today</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€84.20</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#3A2A26;color:#E8927A;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">G</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Galp</div><div style="font-size:11.5px;color:#6B6880">Fuel · Yesterday</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€52.00</div></div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-around;background:#1C1B24;border-top:1px solid rgba(255,255,255,.06);padding:10px 8px 6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#8B7BFF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg><span style="font-size:10px;font-weight:600">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#6B6880"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="font-size:10px;font-weight:500">Money</span></div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#8B7BFF;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(139,123,255,.3)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#131218" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#6B6880"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg><span style="font-size:10px;font-weight:500">Wealth</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#6B6880"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg><span style="font-size:10px;font-weight:500">More</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="1d"><div class="dv-olabel"><a class="dv-oid" href="#1d">1d</a>Expenses — month total, type filters, day-grouped list</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Expenses</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><circle cx="11" cy="11" r="7"></circle><path d="M20 20l-3.5-3.5"></path></svg></div>
+    </div>
+    <div style="background:#fff;border-radius:20px;padding:16px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M15 6l-6 6 6 6"></path></svg>
+        <div><div style="font-size:12px;color:#6B6880">July 2026</div><div style="font-size:24px;font-weight:700;letter-spacing:-.02em;font-variant-numeric:tabular-nums">€1,384.52</div></div>
+      </div>
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M9 6l6 6-6 6"></path></svg>
+    </div>
+    <div style="display:flex;gap:8px;overflow:hidden">
+      <span style="flex:none;font-size:12.5px;font-weight:600;padding:8px 14px;border-radius:20px;background:#17161F;color:#fff">All</span>
+      <span style="flex:none;font-size:12.5px;font-weight:500;padding:8px 14px;border-radius:20px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">Fixed</span>
+      <span style="flex:none;font-size:12.5px;font-weight:500;padding:8px 14px;border-radius:20px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">Variable</span>
+      <span style="flex:none;font-size:12.5px;font-weight:500;padding:8px 14px;border-radius:20px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">Lifestyle</span>
+      <span style="flex:none;font-size:12.5px;font-weight:500;padding:8px 14px;border-radius:20px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">Project</span>
+    </div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-variant-numeric:tabular-nums"><span>Today · Jul 18</span><span>−€96.60</span></div>
+        <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">C</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Continente</div><div style="font-size:11.5px;color:#9B98AC">Groceries · Variable</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€84.20</div></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#E9F1FB;color:#3D74B8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">F</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Farmácia Central</div><div style="font-size:11.5px;color:#9B98AC">Health · Variable</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€12.40</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-variant-numeric:tabular-nums"><span>Yesterday · Jul 17</span><span>−€70.90</span></div>
+        <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#FDEEEA;color:#C75A3A;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">G</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Galp</div><div style="font-size:11.5px;color:#9B98AC">Fuel · Variable</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€52.00</div></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#F5EEE1;color:#A8823C;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">U</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Uber Eats</div><div style="font-size:11.5px;color:#9B98AC">Eating out · Lifestyle</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€18.90</div></div>
+        </div>
+      </div>
+      <div>
+        <div style="display:flex;justify-content:space-between;font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;font-variant-numeric:tabular-nums"><span>Tue · Jul 15</span><span>−€94.99</span></div>
+        <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#EEEBFD;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">E</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">EDP Energy</div><div style="font-size:11.5px;color:#9B98AC">Utilities · Fixed <span style="background:#EEEBFD;color:#5F4BE8;border-radius:6px;padding:1px 6px;font-size:10px;font-weight:600;margin-left:4px">recurring</span></div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€64.00</div></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#E7F5EE;color:#1B9E63;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">D</div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Decathlon</div><div style="font-size:11.5px;color:#9B98AC">Sports · Lifestyle</div></div><div style="font-size:13.5px;font-weight:600;font-variant-numeric:tabular-nums">−€30.99</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid rgba(23,22,31,.06);padding:10px 8px 6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg><span style="font-size:10px;font-weight:500">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#5F4BE8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="font-size:10px;font-weight:600">Money</span></div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#5F4BE8;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(95,75,232,.35)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg><span style="font-size:10px;font-weight:500">Wealth</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg><span style="font-size:10px;font-weight:500">More</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="1e"><div class="dv-olabel"><a class="dv-oid" href="#1e">1e</a>Quick-add — natural language kept ("25 mcd"), parsed preview</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:rgba(23,22,31,.45);font-family:'Instrument Sans',sans-serif;color:#17161F;justify-content:flex-end">
+  <div style="background:#F4F3F9;border-radius:28px 28px 0 0;padding:14px 20px 24px;display:flex;flex-direction:column;gap:16px">
+    <div style="width:40px;height:4px;border-radius:2px;background:rgba(23,22,31,.15);margin:0 auto"></div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:17px;font-weight:700">Add expense</div>
+      <div style="width:32px;height:32px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B6880" stroke-width="2"><path d="M6 6l12 12M18 6L6 18"></path></svg></div>
+    </div>
+    <div style="background:#fff;border-radius:18px;padding:16px 18px;box-shadow:0 1px 2px rgba(23,22,31,.05);border:1.5px solid #5F4BE8">
+      <div style="font-size:11px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em">Type anything</div>
+      <div style="font-size:20px;font-weight:600;margin-top:4px">25 mcd<span style="display:inline-block;width:2px;height:20px;background:#5F4BE8;margin-left:2px;vertical-align:-3px"></span></div>
+    </div>
+    <div style="background:#EEEBFD;border-radius:18px;padding:14px 16px;display:flex;align-items:center;gap:12px">
+      <div style="width:38px;height:38px;border-radius:12px;background:#fff;color:#5F4BE8;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px">M</div>
+      <div style="flex:1"><div style="font-size:13.5px;font-weight:600">McDonalds — €25.00</div><div style="font-size:11.5px;color:#544D7A">Eating out · Lifestyle · today</div></div>
+      <div style="font-size:11px;font-weight:600;color:#5F4BE8;background:#fff;border-radius:14px;padding:5px 10px">auto</div>
+    </div>
+    <div>
+      <div style="font-size:12px;font-weight:600;color:#6B6880;margin-bottom:8px">Type</div>
+      <div style="display:flex;gap:8px">
+        <span style="flex:1;text-align:center;font-size:12px;font-weight:500;padding:9px 0;border-radius:14px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">Fixed</span>
+        <span style="flex:1;text-align:center;font-size:12px;font-weight:500;padding:9px 0;border-radius:14px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">Variable</span>
+        <span style="flex:1;text-align:center;font-size:12px;font-weight:600;padding:9px 0;border-radius:14px;background:#17161F;color:#fff">Lifestyle</span>
+        <span style="flex:1;text-align:center;font-size:12px;font-weight:500;padding:9px 0;border-radius:14px;background:#fff;color:#6B6880;box-shadow:0 1px 2px rgba(23,22,31,.05)">Project</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px">
+      <div style="flex:1;background:#fff;border-radius:14px;padding:11px 14px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;justify-content:space-between;align-items:center"><span style="font-size:12.5px;font-weight:500">Eating out</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></div>
+      <div style="flex:1;background:#fff;border-radius:14px;padding:11px 14px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;justify-content:space-between;align-items:center"><span style="font-size:12.5px;font-weight:500">Today</span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9B98AC" stroke-width="2"><path d="M6 9l6 6 6-6"></path></svg></div>
+    </div>
+    <div style="background:#5F4BE8;color:#fff;border-radius:18px;padding:15px 0;text-align:center;font-size:15px;font-weight:600;box-shadow:0 8px 20px rgba(95,75,232,.3)">Save expense</div>
+  </div>
+</div>
+</x-import>
+</div>
+
+<div class="dv-opt" id="1f"><div class="dv-olabel"><a class="dv-oid" href="#1f">1f</a>Net worth — breakdown tiles, real assets, liabilities</div>
+<x-import component-from-global-scope="IOSDevice" from="./ios-frame.jsx" hint-size="390px,844px">
+<div style="display:flex;flex-direction:column;height:100%;background:#F4F3F9;font-family:'Instrument Sans',sans-serif;color:#17161F">
+  <div style="flex:1;overflow:hidden;padding:64px 20px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M15 6l-6 6 6 6"></path></svg></div>
+      <div style="font-size:16px;font-weight:600">Net worth</div>
+      <div style="width:40px;height:40px;border-radius:50%;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 1px 2px rgba(23,22,31,.06)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#17161F" stroke-width="1.8"><path d="M12 5v14M5 12h14"></path></svg></div>
+    </div>
+    <div style="text-align:center;padding:4px 0">
+      <div style="font-size:38px;font-weight:700;letter-spacing:-.03em;font-variant-numeric:tabular-nums">€184,820</div>
+      <div style="font-size:13px;font-weight:600;color:#1B9E63;margin-top:4px;font-variant-numeric:tabular-nums">▲ €2,140 this month</div>
+    </div>
+    <div style="display:flex;height:10px;border-radius:5px;overflow:hidden;gap:2px">
+      <div style="width:21%;background:#5F4BE8"></div><div style="width:60%;background:#8B7BFF"></div><div style="width:19%;background:#DCD6F9"></div>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1;background:#fff;border-radius:18px;padding:13px 14px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6B6880"><span style="width:8px;height:8px;border-radius:2px;background:#5F4BE8"></span>Invested</div><div style="font-size:16px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums">€48,320</div></div>
+      <div style="flex:1;background:#fff;border-radius:18px;padding:13px 14px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6B6880"><span style="width:8px;height:8px;border-radius:2px;background:#8B7BFF"></span>Assets</div><div style="font-size:16px;font-weight:700;margin-top:4px;font-variant-numeric:tabular-nums">€179,500</div></div>
+      <div style="flex:1;background:#fff;border-radius:18px;padding:13px 14px;box-shadow:0 1px 2px rgba(23,22,31,.05)"><div style="display:flex;align-items:center;gap:6px;font-size:11.5px;color:#6B6880"><span style="width:8px;height:8px;border-radius:2px;background:#DCD6F9"></span>Debt</div><div style="font-size:16px;font-weight:700;margin-top:4px;color:#D64550;font-variant-numeric:tabular-nums">−€43,000</div></div>
+    </div>
+    <div style="flex:1;min-height:0;display:flex;flex-direction:column;gap:14px">
+      <div>
+        <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Real assets</div>
+        <div style="display:flex;flex-direction:column;gap:10px">
+          <div style="background:#fff;border-radius:20px;padding:14px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:14px">
+            <div style="width:52px;height:52px;border-radius:14px;background:repeating-linear-gradient(45deg,#EEEBFD,#EEEBFD 6px,#E3DEFA 6px,#E3DEFA 12px);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg></div>
+            <div style="flex:1"><div style="font-size:13.5px;font-weight:600">T2 Apartment, Lisboa</div><div style="font-size:11.5px;color:#9B98AC">Property · index valuation</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">€165,000</div><div style="font-size:11px;color:#1B9E63;font-weight:600;font-variant-numeric:tabular-nums">▲ €1,800</div></div>
+          </div>
+          <div style="background:#fff;border-radius:20px;padding:14px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05);display:flex;align-items:center;gap:14px">
+            <div style="width:52px;height:52px;border-radius:14px;background:repeating-linear-gradient(45deg,#EEEBFD,#EEEBFD 6px,#E3DEFA 6px,#E3DEFA 12px);display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#5F4BE8" stroke-width="1.8"><path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16"></path><rect x="4" y="16" width="16" height="4" rx="1.5"></rect></svg></div>
+            <div style="flex:1"><div style="font-size:13.5px;font-weight:600">VW Golf 8 · 2021</div><div style="font-size:11.5px;color:#9B98AC">Vehicle · market estimate</div></div>
+            <div style="text-align:right"><div style="font-size:14px;font-weight:700;font-variant-numeric:tabular-nums">€14,500</div><div style="font-size:11px;color:#D64550;font-weight:600;font-variant-numeric:tabular-nums">▼ €210</div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div style="font-size:11.5px;font-weight:600;color:#9B98AC;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Liabilities</div>
+        <div style="background:#fff;border-radius:20px;padding:6px 16px;box-shadow:0 1px 2px rgba(23,22,31,.05)">
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid rgba(23,22,31,.06)"><div style="width:38px;height:38px;border-radius:12px;background:#F4F3F9;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B6880" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Mortgage</div><div style="font-size:11.5px;color:#9B98AC">linked to apartment · €520/mo</div></div><div style="font-size:13.5px;font-weight:600;color:#D64550;font-variant-numeric:tabular-nums">−€38,900</div></div>
+          <div style="display:flex;align-items:center;gap:12px;padding:11px 0"><div style="width:38px;height:38px;border-radius:12px;background:#F4F3F9;display:flex;align-items:center;justify-content:center"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B6880" stroke-width="1.8"><path d="M5 16l1.5-5.5A2 2 0 0 1 8.4 9h7.2a2 2 0 0 1 1.9 1.5L19 16"></path><rect x="4" y="16" width="16" height="4" rx="1.5"></rect></svg></div><div style="flex:1"><div style="font-size:13.5px;font-weight:600">Car loan</div><div style="font-size:11.5px;color:#9B98AC">linked to VW Golf · €185/mo</div></div><div style="font-size:13.5px;font-weight:600;color:#D64550;font-variant-numeric:tabular-nums">−€4,100</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div style="flex:none;display:flex;align-items:center;justify-content:space-around;background:#fff;border-top:1px solid rgba(23,22,31,.06);padding:10px 8px 6px">
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 11l8-7 8 7v8a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 19z"></path></svg><span style="font-size:10px;font-weight:500">Home</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 6h16M4 12h16M4 18h10"></path></svg><span style="font-size:10px;font-weight:500">Money</span></div>
+    <div style="width:52px;height:52px;border-radius:50%;background:#5F4BE8;display:flex;align-items:center;justify-content:center;margin-top:-24px;box-shadow:0 8px 20px rgba(95,75,232,.35)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><path d="M12 5v14M5 12h14"></path></svg></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#5F4BE8"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 17l5-5 4 3 7-8"></path></svg><span style="font-size:10px;font-weight:600">Wealth</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:3px;color:#9B98AC"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="5" cy="12" r="1.6"></circle><circle cx="12" cy="12" r="1.6"></circle><circle cx="19" cy="12" r="1.6"></circle></svg><span style="font-size:10px;font-weight:500">More</span></div>
+  </div>
+</div>
+</x-import>
+</div>
+
+</div>
+<p class="dv-next">Try next: "go with <a class="dv-oid" href="#1a">1a</a>, build it as an interactive prototype" · "mix <a class="dv-oid" href="#1b">1b</a>'s stat tiles into <a class="dv-oid" href="#1a">1a</a>" · "show analytics + recurring screens in this style"</p>
+</section>
+
+</x-dc>
+</body>
+</html>

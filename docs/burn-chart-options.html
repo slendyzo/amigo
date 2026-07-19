@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Amigo — Spending chart options</title>
+<style>
+  :root {
+    --app-bg:#f7f8fa; --surface:#fff; --surface-2:#f1f2f4; --surface-3:#e9eaed;
+    --line:rgba(9,9,11,.08); --line-strong:rgba(9,9,11,.13);
+    --ink:#18181b; --ink-muted:#52525b; --ink-subtle:#8a8a93;
+    --accent:#d97706; --accent-strong:#b45309; --accent-fg:#fff; --accent-tint:rgba(217,119,6,.10);
+    --positive:#16a34a; --negative:#dc2626; --warning:#f97316; --shadow-pop:0 12px 40px rgba(9,9,11,.12);
+  }
+  .dark {
+    --app-bg:#0a0a0b; --surface:#131316; --surface-2:#1a1b1f; --surface-3:#212227;
+    --line:rgba(255,255,255,.08); --line-strong:rgba(255,255,255,.14);
+    --ink:#ededef; --ink-muted:#a1a1aa; --ink-subtle:#71717a;
+    --accent:#fbbf24; --accent-strong:#d97706; --accent-fg:#1a1300; --accent-tint:rgba(251,191,36,.16);
+    --positive:#4ade80; --negative:#f87171; --warning:#fb923c; --shadow-pop:0 12px 40px rgba(0,0,0,.5);
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--app-bg); color:var(--ink); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; transition:background .4s,color .4s; }
+  .num{font-variant-numeric:tabular-nums;}
+  .page { max-width:920px; margin:0 auto; padding:28px 22px 70px; }
+  .top { display:flex; justify-content:space-between; align-items:center; margin-bottom:4px; }
+  .top h1 { font-size:20px; font-weight:700; letter-spacing:-.02em; margin:0; }
+  .sub { color:var(--ink-muted); font-size:13px; margin:2px 0 24px; }
+  .toggle { cursor:pointer; background:var(--surface-2); border:1px solid var(--line); color:var(--ink); padding:8px 14px; border-radius:10px; font-size:13px; font-weight:500; }
+  .opt { margin-bottom:22px; }
+  .lbl { display:flex; align-items:baseline; gap:10px; margin-bottom:10px; }
+  .chip { font-size:11px; font-weight:700; letter-spacing:.04em; text-transform:uppercase; color:var(--accent); background:var(--accent-tint); padding:3px 9px; border-radius:999px; }
+  .t { font-size:15px; font-weight:650; } .d { font-size:12.5px; color:var(--ink-muted); }
+  .card { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:18px; }
+  .chead { display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+  .eyebrow { font-size:10px; font-weight:700; letter-spacing:.07em; text-transform:uppercase; color:var(--accent); }
+  .delta { font-size:12px; font-weight:700; text-align:right; }
+  .muted { color:var(--ink-muted); font-size:11px; }
+  .legend { display:flex; gap:16px; justify-content:center; margin-top:8px; font-size:11px; color:var(--ink-muted); }
+  .sw { width:12px; height:3px; border-radius:2px; display:inline-block; vertical-align:middle; margin-right:5px; }
+</style>
+</head>
+<body class="dark">
+<div class="page">
+  <div class="top"><h1>Spending chart — make it month-specific</h1><button class="toggle" onclick="document.body.classList.toggle('dark')">◐ Light / dark</button></div>
+  <p class="sub">June data: spent €3,906 of €2,500 (156% — over budget). The current cumulative line looks the same every month; these make June <em>look like June</em>. All use the Amber accent + theme tokens.</p>
+
+  <div class="opt">
+    <div class="lbl"><span class="chip">A · Recommended</span><span class="t">Daily bars</span><span class="d">One bar per day — rent spikes, shopping days, quiet weeks. Unique fingerprint every month. Faint line = last month's daily avg.</span></div>
+    <div class="card">
+      <div class="chead"><span class="eyebrow">Spending · June</span><div class="delta" style="color:var(--positive)">−€148.70<div class="muted">−3.7% vs last month</div></div></div>
+      <svg id="chartA" width="100%" height="120" preserveAspectRatio="none"></svg>
+      <div class="legend"><span><span class="sw" style="background:var(--accent)"></span>Daily spend</span><span><span class="sw" style="background:var(--ink-subtle)"></span>May daily avg</span></div>
+    </div>
+  </div>
+
+  <div class="opt">
+    <div class="lbl"><span class="chip" style="color:var(--ink-muted);background:var(--surface-2)">B</span><span class="t">Pace vs budget</span><span class="d">Cumulative spend vs a straight budget-pace line. The moment you cross into red is when you blew the budget — here, mid-month. Tells the over/under story.</span></div>
+    <div class="card">
+      <div class="chead"><span class="eyebrow">Spending pace · June</span><div class="delta" style="color:var(--negative)">€1,406 over<div class="muted">156% of €2,500</div></div></div>
+      <svg id="chartB" width="100%" height="120" preserveAspectRatio="none"></svg>
+      <div class="legend"><span><span class="sw" style="background:var(--accent)"></span>Spent</span><span><span class="sw" style="background:var(--ink-subtle)"></span>Budget pace</span></div>
+    </div>
+  </div>
+
+  <div class="opt">
+    <div class="lbl"><span class="chip" style="color:var(--ink-muted);background:var(--surface-2)">C</span><span class="t">Daily bars + cumulative line</span><span class="d">Both: bars show each day's rhythm, the amber line rides on top as the running total. Richest, slightly busier.</span></div>
+    <div class="card">
+      <div class="chead"><span class="eyebrow">Spending · June</span><div class="delta" style="color:var(--ink-muted)">€3,906 total<div class="muted">day 30 of 30</div></div></div>
+      <svg id="chartC" width="100%" height="120" preserveAspectRatio="none"></svg>
+      <div class="legend"><span><span class="sw" style="background:var(--accent);opacity:.55"></span>Daily</span><span><span class="sw" style="background:var(--accent)"></span>Running total</span></div>
+    </div>
+  </div>
+
+  <div class="card" style="color:var(--ink-muted);font-size:13px;line-height:1.6">
+    <b style="color:var(--ink)">Pick A, B, or C</b> (or a combo — e.g. "A's bars but colour the over-budget days red"). I'll rebuild the BurnChart with the Amber accent + dark-mode tokens at the same time, since it's still using the old template blue.
+  </div>
+</div>
+
+<script>
+  // Representative June daily spend (30 days) — rent spike early, shopping mid, quiet stretches
+  const daily = [820,40,12,8,95,28,0,140,18,9,55,12,210,7,33,18,9,260,14,6,48,120,9,15,7,330,22,11,9,18];
+  const mayAvgDaily = 135; // flat reference
+  const budget = 2500, days = 30;
+  const W = 880, H = 120, pad = 8;
+  const maxDaily = Math.max(...daily);
+  const cum = []; let run = 0; daily.forEach(v => { run += v; cum.push(run); });
+  const total = run;
+  const x = i => pad + (i + .5) * ((W - pad*2) / days);
+  const xEdge = i => pad + i * ((W - pad*2) / days);
+
+  function barW(){ return (W - pad*2)/days * 0.62; }
+
+  // A — daily bars + may avg line
+  (function(){
+    const svg = document.getElementById('chartA'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    let s = '';
+    daily.forEach((v,i)=>{ const h=(v/maxDaily)*(H-20); s+=`<rect x="${x(i)-barW()/2}" y="${H-8-h}" width="${barW()}" height="${h}" rx="2.5" fill="var(--accent)"/>`; });
+    const ay = H-8-(mayAvgDaily/maxDaily)*(H-20);
+    s+=`<line x1="${pad}" y1="${ay}" x2="${W-pad}" y2="${ay}" stroke="var(--ink-subtle)" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+    svg.innerHTML=s;
+  })();
+
+  // B — cumulative vs budget pace, area over budget in red
+  (function(){
+    const svg = document.getElementById('chartB'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    const maxY = Math.max(total, budget)*1.05;
+    const y = v => (H-8) - (v/maxY)*(H-16);
+    // budget pace line 0..budget
+    const pacePts = []; for(let i=0;i<days;i++){ pacePts.push(`${x(i)},${y(budget*(i+1)/days)}`); }
+    // cumulative path
+    const cumPts = cum.map((v,i)=>`${x(i)},${y(v)}`);
+    // find crossover (first day cum > pace)
+    let cross = days; for(let i=0;i<days;i++){ if(cum[i] > budget*(i+1)/days){ cross=i; break; } }
+    // red area between cum and pace after crossover
+    let area = `<path d="M ${x(cross)},${y(cum[cross])} `;
+    for(let i=cross;i<days;i++){ area += `L ${x(i)},${y(cum[i])} `; }
+    for(let i=days-1;i>=cross;i--){ area += `L ${x(i)},${y(budget*(i+1)/days)} `; }
+    area += 'Z" fill="var(--negative)" opacity="0.14"/>';
+    let s = area;
+    s += `<polyline points="${pacePts.join(' ')}" fill="none" stroke="var(--ink-subtle)" stroke-width="1.5" stroke-dasharray="5 5"/>`;
+    s += `<polyline points="${cumPts.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+    // crossover marker
+    s += `<circle cx="${x(cross)}" cy="${y(cum[cross])}" r="3.5" fill="var(--negative)"/>`;
+    svg.innerHTML=s;
+  })();
+
+  // C — daily bars (faded) + cumulative line
+  (function(){
+    const svg = document.getElementById('chartC'); svg.setAttribute('viewBox',`0 0 ${W} ${H}`);
+    let s='';
+    daily.forEach((v,i)=>{ const h=(v/maxDaily)*(H-24); s+=`<rect x="${x(i)-barW()/2}" y="${H-8-h}" width="${barW()}" height="${h}" rx="2.5" fill="var(--accent)" opacity="0.45"/>`; });
+    const maxC = total*1.03; const yC = v => (H-8)-(v/maxC)*(H-16);
+    const cumPts = cum.map((v,i)=>`${x(i)},${yC(v)}`);
+    s += `<polyline points="${cumPts.join(' ')}" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"/>`;
+    svg.innerHTML=s;
+  })();
+</script>
+</body>
+</html>
