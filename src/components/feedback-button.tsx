@@ -283,10 +283,10 @@ export default function FeedbackButton() {
 
                   <button
                     onClick={() => handleTypeSelect("FEATURE")}
-                    className="w-full p-4 rounded-xl border-2 border-slate-200 hover:border-blue-300 hover:bg-blue-50 transition-all flex items-center gap-4 group"
+                    className="w-full p-4 rounded-xl border-2 border-slate-200 hover:border-[var(--accent-soft)] hover:bg-[var(--accent-tint)] transition-all flex items-center gap-4 group"
                   >
-                    <div className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center group-hover:bg-blue-200 transition-colors">
-                      <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-12 h-12 rounded-full bg-[var(--accent-tint)] flex items-center justify-center group-hover:bg-[var(--accent-soft)] transition-colors">
+                      <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                       </svg>
                     </div>
@@ -316,7 +316,7 @@ export default function FeedbackButton() {
                       className={`px-3 py-1 rounded-full text-sm font-medium ${
                         feedbackType === "BUG"
                           ? "bg-red-100 text-red-700"
-                          : "bg-blue-100 text-blue-700"
+                          : "bg-[var(--accent-tint)] text-[var(--accent-strong)]"
                       }`}
                     >
                       {feedbackType === "BUG" ? t("reportBug") : t("requestFeature")}
@@ -333,7 +333,7 @@ export default function FeedbackButton() {
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder={feedbackType === "BUG" ? t("bugPlaceholder") : t("featurePlaceholder")}
                       rows={4}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] resize-none"
+                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
                       autoFocus
                     />
                   </div>
@@ -412,7 +412,7 @@ export default function FeedbackButton() {
                   <button
                     onClick={handleSubmit}
                     disabled={!message.trim() || isSubmitting || isUploading}
-                    className="w-full rounded-xl bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-[var(--accent-fg)] font-medium hover:bg-[var(--accent-strong)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {isUploading ? t("uploading") : isSubmitting ? t("submitting") : t("submit")}
                   </button>

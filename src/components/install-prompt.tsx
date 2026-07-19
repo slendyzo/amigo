@@ -83,8 +83,8 @@ export default function InstallPrompt() {
       <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-4 max-w-md mx-auto">
         <div className="flex items-start gap-4">
           {/* App Icon */}
-          <div className="w-14 h-14 rounded-xl bg-[#0070f3] flex items-center justify-center flex-shrink-0">
-            <span className="text-white text-2xl font-bold">A</span>
+          <div className="w-14 h-14 rounded-xl bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
+            <span className="text-[var(--accent-fg)] text-2xl font-bold">A</span>
           </div>
 
           <div className="flex-1 min-w-0">
@@ -118,7 +118,7 @@ export default function InstallPrompt() {
               <div className="flex gap-2 mt-3">
                 <button
                   onClick={handleInstall}
-                  className="flex-1 px-4 py-2 bg-[#0070f3] text-white text-sm font-medium rounded-lg hover:bg-[#0060df] transition-colors"
+                  className="flex-1 px-4 py-2 bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium rounded-lg hover:bg-[var(--accent-strong)] transition-colors"
                 >
                   {t("install")}
                 </button>

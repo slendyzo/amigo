@@ -106,7 +106,7 @@ export default function WorkspaceSwitcher({
           <div
             className={`w-6 h-6 rounded flex items-center justify-center text-xs font-medium ${
               displayType === "SHARED"
-                ? "bg-blue-100 text-blue-600"
+                ? "bg-[var(--accent-tint)] text-[var(--accent)]"
                 : "bg-slate-100 text-slate-600"
             }`}
           >
@@ -155,7 +155,7 @@ export default function WorkspaceSwitcher({
                     disabled={workspace.isActive || isSwitching}
                     className={`w-full px-4 py-2.5 flex items-center gap-3 text-left transition-colors ${
                       workspace.isActive
-                        ? "bg-blue-50 cursor-default"
+                        ? "bg-[var(--accent-tint)] cursor-default"
                         : "hover:bg-slate-50 cursor-pointer"
                     } ${isSwitching ? "opacity-50" : ""}`}
                   >
@@ -163,7 +163,7 @@ export default function WorkspaceSwitcher({
                     <div
                       className={`w-8 h-8 rounded flex items-center justify-center ${
                         workspace.type === "SHARED"
-                          ? "bg-blue-100 text-blue-600"
+                          ? "bg-[var(--accent-tint)] text-[var(--accent)]"
                           : "bg-slate-100 text-slate-600"
                       }`}
                     >
@@ -193,7 +193,7 @@ export default function WorkspaceSwitcher({
 
                     {/* Active Indicator */}
                     {workspace.isActive && (
-                      <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       </svg>
                     )}
@@ -220,7 +220,7 @@ export default function WorkspaceSwitcher({
               <Link
                 href="/dashboard/workspace?create=true"
                 onClick={() => setIsOpen(false)}
-                className="w-full px-4 py-2 flex items-center gap-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors"
+                className="w-full px-4 py-2 flex items-center gap-2 text-sm text-[var(--accent)] hover:bg-[var(--accent-tint)] transition-colors"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

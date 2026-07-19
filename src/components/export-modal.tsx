@@ -292,13 +292,13 @@ export default function ExportModal({
                   onClick={() => setFormat(opt.key)}
                   className={`flex items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? "border-blue-500 bg-blue-50 ring-2 ring-blue-500/20"
+                      ? "border-[var(--accent)] bg-[var(--accent-tint)] ring-2 ring-[var(--accent)]/20"
                       : "border-slate-200 bg-white hover:bg-slate-50"
                   }`}
                 >
                   <span
                     className={`mt-0.5 shrink-0 ${
-                      isSelected ? "text-blue-600" : "text-slate-400"
+                      isSelected ? "text-[var(--accent)]" : "text-slate-400"
                     }`}
                   >
                     {opt.icon}
@@ -306,14 +306,14 @@ export default function ExportModal({
                   <div className="min-w-0">
                     <div
                       className={`text-sm font-medium ${
-                        isSelected ? "text-blue-900" : "text-slate-900"
+                        isSelected ? "text-[var(--accent-strong)]" : "text-slate-900"
                       }`}
                     >
                       {t(labelKey as "csv" | "excel" | "pdf" | "markdown")}
                     </div>
                     <div
                       className={`text-xs mt-0.5 ${
-                        isSelected ? "text-blue-600" : "text-slate-500"
+                        isSelected ? "text-[var(--accent)]" : "text-slate-500"
                       }`}
                     >
                       {t(
@@ -346,7 +346,7 @@ export default function ExportModal({
                   onClick={() => setTimeRange(opt.key)}
                   className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all duration-200 cursor-pointer ${
                     isSelected
-                      ? "border-blue-500 bg-blue-50"
+                      ? "border-[var(--accent)] bg-[var(--accent-tint)]"
                       : "border-slate-200 bg-white hover:bg-slate-50"
                   }`}
                 >
@@ -354,18 +354,18 @@ export default function ExportModal({
                   <span
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 ${
                       isSelected
-                        ? "border-blue-500"
+                        ? "border-[var(--accent)]"
                         : "border-slate-300"
                     }`}
                   >
                     {isSelected && (
-                      <span className="h-2 w-2 rounded-full bg-blue-500" />
+                      <span className="h-2 w-2 rounded-full bg-[var(--accent)]" />
                     )}
                   </span>
                   <div className="min-w-0 flex-1">
                     <div
                       className={`text-sm font-medium ${
-                        isSelected ? "text-blue-900" : "text-slate-900"
+                        isSelected ? "text-[var(--accent-strong)]" : "text-slate-900"
                       }`}
                     >
                       {t(
@@ -378,7 +378,7 @@ export default function ExportModal({
                     </div>
                     <div
                       className={`text-xs mt-0.5 ${
-                        isSelected ? "text-blue-600" : "text-slate-500"
+                        isSelected ? "text-[var(--accent)]" : "text-slate-500"
                       }`}
                     >
                       {opt.desc}
@@ -404,7 +404,7 @@ export default function ExportModal({
             type="button"
             onClick={handleExport}
             disabled={isExporting}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 text-sm font-medium text-white transition-colors duration-150 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 rounded-lg bg-[var(--accent)] px-5 py-2 text-sm font-medium text-[var(--accent-fg)] transition-colors duration-150 hover:bg-[var(--accent-strong)] disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isExporting && (
               <svg

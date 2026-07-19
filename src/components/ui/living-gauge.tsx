@@ -36,7 +36,7 @@ export function LivingGauge({ current, budget, label }: LivingGaugeProps) {
   const getColor = () => {
     if (isOverBudget) return "#ef4444"; // red
     if (percentage > 80) return "#f59e0b"; // amber
-    return "#0070f3"; // electric blue
+    return "var(--accent)"; // accent (violet)
   };
 
   return (
@@ -62,7 +62,7 @@ export function LivingGauge({ current, budget, label }: LivingGaugeProps) {
             cy={size / 2}
             r={radius}
             fill="none"
-            stroke={getColor()}
+            style={{ stroke: getColor() }}
             strokeWidth={strokeWidth}
             strokeLinecap="round"
             strokeDasharray={circumference}

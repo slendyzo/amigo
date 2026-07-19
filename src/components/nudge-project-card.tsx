@@ -141,7 +141,7 @@ export default function NudgeProjectCard({
         <select
           value={selectedProjectId}
           onChange={(e) => handleDropdownChange(e.target.value)}
-          className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
         >
           <option value="">{t("nudges.project.pickProject")}</option>
           {existingProjects.map((p) => (
@@ -158,7 +158,7 @@ export default function NudgeProjectCard({
           onChange={(e) => handleNameChange(e.target.value)}
           disabled={!!selectedProjectId}
           placeholder={t("nudges.project.newProjectPlaceholder")}
-          className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 px-3 py-1.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] disabled:opacity-40 disabled:cursor-not-allowed"
         />
       </div>
 
@@ -167,7 +167,7 @@ export default function NudgeProjectCard({
         <button
           onClick={handleTag}
           disabled={!canSubmit || loading}
-          className="flex-1 rounded-md bg-[#0070f3] px-3 py-1.5 text-sm font-medium text-white hover:bg-[#0060df] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          className="flex-1 rounded-md bg-[var(--accent)] px-3 py-1.5 text-sm font-medium text-[var(--accent-fg)] hover:bg-[var(--accent-strong)] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? "…" : t("nudges.project.tagButton")}
         </button>

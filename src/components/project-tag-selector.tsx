@@ -97,7 +97,7 @@ export default function ProjectTagSelector({
             value={newTagName}
             onChange={(e) => onNewTagNameChange(e.target.value)}
             placeholder={t("tagPlaceholder")}
-            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -109,7 +109,7 @@ export default function ProjectTagSelector({
             type="button"
             onClick={onCreateTag}
             disabled={!newTagName.trim() || isCreating}
-            className="px-3 py-2 rounded-lg bg-[#0070f3] text-white text-sm font-medium hover:bg-[#0060df] disabled:opacity-50"
+            className="px-3 py-2 rounded-lg bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium hover:bg-[var(--accent-strong)] disabled:opacity-50"
           >
             {tCommon("add")}
           </button>

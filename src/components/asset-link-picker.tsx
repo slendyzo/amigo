@@ -60,9 +60,9 @@ export default function AssetLinkPicker({ value, onChange, className }: AssetLin
         {t("linkedAsset")}
       </label>
       {selected ? (
-        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-900/40 dark:bg-blue-950/20">
+        <div className="flex items-center justify-between rounded-lg border border-[var(--accent-soft)] bg-[var(--accent-tint)] px-3 py-2">
           <div className="flex items-center gap-2">
-            <SelectedIcon className="h-4 w-4 text-blue-600" />
+            <SelectedIcon className="h-4 w-4 text-[var(--accent)]" />
             <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
               {displayName(selected)}
             </span>
@@ -70,7 +70,7 @@ export default function AssetLinkPicker({ value, onChange, className }: AssetLin
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="rounded p-1 text-slate-400 hover:bg-blue-100 hover:text-slate-700"
+            className="rounded p-1 text-slate-400 hover:bg-[var(--accent-soft)] hover:text-slate-700"
             aria-label={t("unlinkAsset")}
           >
             <X className="h-3.5 w-3.5" />

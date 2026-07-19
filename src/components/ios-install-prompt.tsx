@@ -54,8 +54,8 @@ export default function IOSInstallPrompt() {
       <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 max-w-md mx-auto">
         <div className="flex items-start gap-3">
           {/* App icon */}
-          <div className="w-12 h-12 bg-[#0070f3] rounded-xl flex items-center justify-center flex-shrink-0">
-            <span className="text-white font-bold text-xl">A</span>
+          <div className="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center flex-shrink-0">
+            <span className="text-[var(--accent-fg)] font-bold text-xl">A</span>
           </div>
 
           <div className="flex-1 min-w-0">
@@ -84,7 +84,7 @@ export default function IOSInstallPrompt() {
                 <span className="font-medium">1.</span>
                 <span>Tap</span>
                 {/* iOS Share icon */}
-                <svg className="w-5 h-5 text-[#0070f3]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                <svg className="w-5 h-5 text-[var(--accent)]" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 3v12m0-12l4 4m-4-4L8 7" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 14v5a2 2 0 002 2h12a2 2 0 002-2v-5" />
                 </svg>

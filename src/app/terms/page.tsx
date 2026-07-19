@@ -77,7 +77,7 @@ export default function TermsPage() {
                   href="https://github.com/slendyzo/amigo"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#0070f3] hover:underline"
+                  className="text-[var(--accent)] hover:underline"
                 >
                   github.com/slendyzo/amigo
                 </a>
@@ -126,7 +126,7 @@ export default function TermsPage() {
                   href="https://github.com/slendyzo/amigo/issues"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-[#0070f3] hover:underline"
+                  className="text-[var(--accent)] hover:underline"
                 >
                   GitHub repository
                 </a>
@@ -138,7 +138,7 @@ export default function TermsPage() {
           <div className="mt-8 pt-6 border-t border-slate-200">
             <Link
               href="/"
-              className="text-[#0070f3] hover:underline text-sm"
+              className="text-[var(--accent)] hover:underline text-sm"
             >
               &larr; Back to home
             </Link>

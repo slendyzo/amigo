@@ -15,7 +15,7 @@ type CategoryBreakdownProps = {
 
 // Predefined colors for categories
 const CATEGORY_COLORS = [
-  "#0070f3", // blue
+  "var(--accent)", // accent (violet)
   "#8b5cf6", // purple
   "#10b981", // green
   "#f59e0b", // amber
@@ -84,7 +84,7 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
   const getColor = () => {
     if (isOverBudget) return "#ef4444"; // red
     if (percentage > 80) return "#f59e0b"; // amber
-    return "#0070f3"; // electric blue
+    return "var(--accent)"; // accent (violet)
   };
 
   if (expenses.length === 0) {
@@ -126,7 +126,7 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke={getColor()}
+              style={{ stroke: getColor() }}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeDasharray={circumference}

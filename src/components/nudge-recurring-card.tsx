@@ -105,7 +105,7 @@ export default function NudgeRecurringCard({
         <button
           onClick={handleAccept}
           disabled={loading}
-          className="px-3 py-1.5 bg-[#0070f3] text-white text-xs rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50 flex items-center gap-1.5"
+          className="px-3 py-1.5 bg-[var(--accent)] text-[var(--accent-fg)] text-xs rounded-md hover:bg-[var(--accent-strong)] transition-colors disabled:opacity-50 flex items-center gap-1.5"
         >
           {loading && (
             <svg className="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">

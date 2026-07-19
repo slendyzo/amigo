@@ -25,7 +25,7 @@ export default function OfflinePage() {
         <div className="space-y-3">
           <button
             onClick={handleRetry}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[#0070f3] text-white rounded-lg font-medium hover:bg-[#0060df] transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg font-medium hover:bg-[var(--accent-strong)] transition-colors"
           >
             <RefreshCw className="w-4 h-4" />
             Try Again

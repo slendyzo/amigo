@@ -209,7 +209,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
       {/* Modal */}
       <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
-        <div className="relative bg-gradient-to-r from-[#0070f3] to-purple-600 px-6 py-8 text-white">
+        <div className="relative bg-gradient-to-r from-[var(--accent-strong)] to-[var(--accent)] px-6 py-8 text-white">
           <button
             onClick={handleClose}
             className="absolute top-4 right-4 p-1 text-white/70 hover:text-white transition-colors"
@@ -289,7 +289,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
         <div className="px-6 py-4 border-t border-slate-200">
           <button
             onClick={handleClose}
-            className="w-full py-2.5 bg-[#0070f3] text-white font-medium rounded-lg hover:bg-[#0060df] transition-colors"
+            className="w-full py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg hover:bg-[var(--accent-strong)] transition-colors"
           >
             {t("close")}
           </button>

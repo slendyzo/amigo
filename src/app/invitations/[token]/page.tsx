@@ -137,7 +137,7 @@ export default function InvitationPage() {
   if (isLoading || status === "loading") {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" />
       </div>
     );
   }
@@ -173,10 +173,10 @@ export default function InvitationPage() {
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md w-full text-center">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
-            isAlreadyAccepted ? "bg-blue-100" : "bg-red-100"
+            isAlreadyAccepted ? "bg-[var(--accent-tint)]" : "bg-red-100"
           }`}>
             {isAlreadyAccepted ? (
-              <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
             ) : (
@@ -209,7 +209,7 @@ export default function InvitationPage() {
           </p>
           <Link
             href="/dashboard"
-            className="inline-flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="inline-flex items-center justify-center px-6 py-2 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)]"
           >
             Go to Dashboard
           </Link>
@@ -223,8 +223,8 @@ export default function InvitationPage() {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md w-full text-center">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-16 h-16 bg-[var(--accent-tint)] rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
@@ -234,14 +234,14 @@ export default function InvitationPage() {
               <p className="text-slate-600 mb-2">
                 <strong>{invitation.invitedBy.name || invitation.invitedBy.email}</strong> invited you to join
               </p>
-              <p className="text-xl font-semibold text-blue-600 mb-4">{invitation.workspace.name}</p>
+              <p className="text-xl font-semibold text-[var(--accent)] mb-4">{invitation.workspace.name}</p>
             </>
           )}
           <p className="text-slate-500 mb-6">Please sign in or create an account to accept this invitation.</p>
           <div className="space-y-3">
             <Link
               href={`/signin?callbackUrl=/invitations/${token}`}
-              className="block w-full px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium"
+              className="block w-full px-6 py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] font-medium"
             >
               Sign In
             </Link>
@@ -261,8 +261,8 @@ export default function InvitationPage() {
   return (
     <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md w-full text-center">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="w-16 h-16 bg-[var(--accent-tint)] rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
@@ -274,7 +274,7 @@ export default function InvitationPage() {
             <p className="text-slate-600 mb-1">
               <strong>{invitation.invitedBy.name || invitation.invitedBy.email}</strong> has invited you to join
             </p>
-            <p className="text-xl font-semibold text-blue-600 mb-4">{invitation.workspace.name}</p>
+            <p className="text-xl font-semibold text-[var(--accent)] mb-4">{invitation.workspace.name}</p>
 
             <div className="bg-slate-50 rounded-lg p-4 mb-6">
               <div className="flex justify-between text-sm">
@@ -293,7 +293,7 @@ export default function InvitationPage() {
               <button
                 onClick={handleAccept}
                 disabled={isAccepting}
-                className="w-full px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-medium disabled:opacity-50"
+                className="w-full px-6 py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] font-medium disabled:opacity-50"
               >
                 {isAccepting ? "Accepting..." : "Accept Invitation"}
               </button>

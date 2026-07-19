@@ -119,7 +119,7 @@ export default function ShortcutsTokensCard() {
             setCreatedToken(null);
             setError("");
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shrink-0"
+          className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] transition-colors flex items-center gap-2 shrink-0"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -140,12 +140,12 @@ export default function ShortcutsTokensCard() {
               onChange={(e) => setNewTokenName(e.target.value)}
               placeholder={t("defaultTokenName")}
               maxLength={100}
-              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <button
               onClick={handleCreate}
               disabled={isCreating}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] transition-colors disabled:opacity-50"
             >
               {isCreating ? tCommon("loading") : tCommon("create")}
             </button>
@@ -214,7 +214,7 @@ export default function ShortcutsTokensCard() {
       {/* Setup guide */}
       <button
         onClick={() => setShowGuide((v) => !v)}
-        className="mt-4 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+        className="mt-4 text-sm text-[var(--accent)] hover:text-[var(--accent-strong)] flex items-center gap-1"
       >
         {t("setupGuide")}
         <svg
