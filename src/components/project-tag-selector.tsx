@@ -65,8 +65,8 @@ export default function ProjectTagSelector({
               onClick={() => onToggle(project.id)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 isSelected
-                  ? "bg-amber-500 text-white"
-                  : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                  ? "bg-[var(--accent)] text-white"
+                  : "bg-[var(--accent-tint)] text-[var(--accent-strong)] hover:bg-[var(--accent-tint)]"
               }`}
             >
               {project.name}
@@ -124,7 +124,7 @@ export default function ProjectTagSelector({
       )}
 
       {showSelectedCount && selectedIds.length > 0 && (
-        <p className="mt-2 text-xs text-amber-600">
+        <p className="mt-2 text-xs text-[var(--accent)]">
           {t("taggedTo", { count: selectedIds.length })}
         </p>
       )}

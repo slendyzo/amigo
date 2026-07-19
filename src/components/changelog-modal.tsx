@@ -185,7 +185,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
       case "fix":
         return <Bug className="w-4 h-4 text-green-500" />;
       case "improvement":
-        return <Zap className="w-4 h-4 text-amber-500" />;
+        return <Zap className="w-4 h-4 text-[var(--accent)]" />;
     }
   };
 
@@ -270,7 +270,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
                           ? "bg-purple-100 text-purple-700"
                           : entry.type === "fix"
                           ? "bg-green-100 text-green-700"
-                          : "bg-amber-100 text-amber-700"
+                          : "bg-[var(--accent-tint)] text-[var(--accent-strong)]"
                       }`}
                     >
                       {getTypeLabel(entry.type)}

@@ -162,15 +162,15 @@ export default function ShortcutsTokensCard() {
 
       {/* One-time token reveal */}
       {createdToken && (
-        <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <p className="text-sm font-medium text-amber-800 mb-2">{t("tokenCreatedWarning")}</p>
+        <div className="mt-4 p-4 bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] rounded-lg border border-[color-mix(in_srgb,var(--warning)_35%,transparent)]">
+          <p className="text-sm font-medium text-[var(--warning)] mb-2">{t("tokenCreatedWarning")}</p>
           <div className="flex gap-2 items-center">
-            <code className="flex-1 px-3 py-2 bg-white border border-amber-200 rounded-lg text-xs font-mono break-all select-all">
+            <code className="flex-1 px-3 py-2 bg-white border border-[color-mix(in_srgb,var(--warning)_35%,transparent)] rounded-lg text-xs font-mono break-all select-all">
               {createdToken}
             </code>
             <button
               onClick={handleCopy}
-              className="px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm shrink-0"
+              className="px-3 py-2 bg-[var(--warning)] text-white rounded-lg hover:bg-[color-mix(in_srgb,var(--warning)_85%,black)] transition-colors text-sm shrink-0"
             >
               {copied ? t("copied") : t("copy")}
             </button>

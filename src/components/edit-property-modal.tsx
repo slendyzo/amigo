@@ -388,7 +388,7 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
                     setPurchasePrice(String(priceCheck.suggestion));
                     setPriceConfirmed(priceCheck.suggestion);
                   }}
-                  className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-left text-xs text-amber-700 dark:text-amber-300 hover:bg-amber-500/15 transition-colors"
+                  className="flex items-start gap-2 rounded-lg border border-[color-mix(in_srgb,var(--warning)_40%,transparent)] bg-[color-mix(in_srgb,var(--warning)_10%,transparent)] px-3 py-2 text-left text-xs text-[var(--warning)]  hover:bg-[color-mix(in_srgb,var(--warning)_16%,transparent)] transition-colors"
                 >
                   <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
                   <span>
