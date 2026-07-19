@@ -80,7 +80,7 @@ export default function InstallPrompt() {
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-50 animate-slide-up">
-      <div className="bg-white rounded-2xl shadow-xl border border-slate-200 p-4 max-w-md mx-auto">
+      <div className="bg-[var(--surface)] rounded-2xl shadow-xl border border-[var(--line)] p-4 max-w-md mx-auto">
         <div className="flex items-start gap-4">
           {/* App Icon */}
           <div className="w-14 h-14 rounded-xl bg-[var(--accent)] flex items-center justify-center flex-shrink-0">
@@ -88,14 +88,14 @@ export default function InstallPrompt() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-900">{t("title")}</h3>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <h3 className="font-semibold text-[var(--ink)]">{t("title")}</h3>
+            <p className="text-sm text-[var(--ink-subtle)] mt-0.5">
               {isIOS ? t("descriptionIOS") : t("descriptionAndroid")}
             </p>
 
             {isIOS ? (
               <div className="mt-3 space-y-2">
-                <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+                <div className="p-3 bg-[var(--surface-2)] rounded-lg text-sm text-[var(--ink-muted)]">
                   <p className="flex items-center gap-2">
                     <span>{t("iosStep1")}</span>
                     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -124,7 +124,7 @@ export default function InstallPrompt() {
                 </button>
                 <button
                   onClick={handleDismiss}
-                  className="px-4 py-2 text-slate-500 text-sm font-medium hover:bg-slate-100 rounded-lg transition-colors"
+                  className="px-4 py-2 text-[var(--ink-subtle)] text-sm font-medium hover:bg-[var(--surface-2)] rounded-lg transition-colors"
                 >
                   {t("notNow")}
                 </button>
@@ -136,7 +136,7 @@ export default function InstallPrompt() {
           {isIOS && (
             <button
               onClick={handleDismiss}
-              className="text-slate-400 hover:text-slate-600 p-1"
+              className="text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] p-1"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

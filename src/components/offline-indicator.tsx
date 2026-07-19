@@ -16,7 +16,7 @@ export function OfflineIndicator() {
   return (
     <div
       className={`fixed bottom-4 left-4 right-4 md:left-auto md:right-4 md:w-80 p-3 rounded-lg shadow-lg z-50 transition-all ${
-        isOnline ? "bg-[var(--accent-tint)] border border-[var(--accent-soft)]" : "bg-slate-800 text-white"
+        isOnline ? "bg-[var(--accent-tint)] border border-[var(--accent-soft)]" : "bg-[var(--ink)] text-[var(--surface)]"
       }`}
     >
       <div className="flex items-center gap-3">
@@ -29,14 +29,14 @@ export function OfflineIndicator() {
         )}
 
         <div className="flex-1 min-w-0">
-          <p className={`text-sm font-medium ${isOnline ? "text-[var(--accent-strong)]" : "text-white"}`}>
+          <p className={`text-sm font-medium ${isOnline ? "text-[var(--accent-strong)]" : "text-[var(--surface)]"}`}>
             {!isOnline
               ? t("youreOffline")
               : isSyncing
               ? t("syncing")
               : t("pendingExpenses", { count: pendingCount })}
           </p>
-          <p className={`text-xs ${isOnline ? "text-[var(--accent)]" : "text-slate-300"}`}>
+          <p className={`text-xs ${isOnline ? "text-[var(--accent)]" : "text-[var(--surface)]/70"}`}>
             {!isOnline
               ? t("expensesSavedLocally")
               : isSyncing
@@ -48,7 +48,7 @@ export function OfflineIndicator() {
         {isOnline && pendingCount > 0 && !isSyncing && (
           <button
             onClick={() => sync()}
-            className="px-3 py-1.5 bg-[var(--accent)] text-white text-sm font-medium rounded-md hover:bg-[var(--accent-strong)] transition-colors"
+            className="px-3 py-1.5 bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium rounded-md hover:bg-[var(--accent-strong)] transition-colors"
           >
             {t("sync")}
           </button>

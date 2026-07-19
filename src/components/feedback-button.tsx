@@ -207,7 +207,7 @@ export default function FeedbackButton() {
       {/* Floating Feedback Button - on mobile: left side above nav. On desktop: next to add button (right side) */}
       <button
         onClick={handleOpen}
-        className="floating-nav-button fixed left-4 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-center w-12 h-12 rounded-full bg-slate-700 text-white shadow-lg hover:bg-slate-600 transition-all hover:scale-105 active:scale-95 md:w-14 md:h-14 md:bottom-24 md:right-[6.5rem] md:left-auto"
+        className="floating-nav-button fixed left-4 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--ink)] text-[var(--surface)] shadow-lg hover:bg-[var(--ink-muted)] transition-all hover:scale-105 active:scale-95 md:w-14 md:h-14 md:bottom-24 md:right-[6.5rem] md:left-auto"
         title={t("title")}
         aria-label={t("title")}
       >
@@ -226,17 +226,17 @@ export default function FeedbackButton() {
           />
 
           {/* Modal Content */}
-          <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="relative w-full max-w-md mx-4 bg-[var(--surface)] rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
             {/* Header */}
-            <div className="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-semibold text-slate-900">
+            <div className="px-6 py-4 border-b border-[var(--line)] bg-[var(--surface-2)] flex items-center justify-between flex-shrink-0">
+              <h2 className="text-lg font-semibold text-[var(--ink)]">
                 {t("title")}
               </h2>
               <button
                 onClick={handleClose}
-                className="p-1 rounded-full hover:bg-slate-200 transition-colors"
+                className="p-1 rounded-full hover:bg-[var(--surface-3)] transition-colors"
               >
-                <svg className="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
@@ -252,23 +252,23 @@ export default function FeedbackButton() {
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
                   </div>
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  <h3 className="text-lg font-semibold text-[var(--ink)] mb-2">
                     {t("thankYou")}
                   </h3>
-                  <p className="text-slate-600">
+                  <p className="text-[var(--ink-muted)]">
                     {t("thankYouMessage")}
                   </p>
                 </div>
               ) : step === "select" ? (
                 /* Type Selection */
                 <div className="space-y-4">
-                  <p className="text-slate-600 text-center mb-6">
+                  <p className="text-[var(--ink-muted)] text-center mb-6">
                     {t("selectType")}
                   </p>
 
                   <button
                     onClick={() => handleTypeSelect("BUG")}
-                    className="w-full p-4 rounded-xl border-2 border-slate-200 hover:border-red-300 hover:bg-red-50 transition-all flex items-center gap-4 group"
+                    className="w-full p-4 rounded-xl border-2 border-[var(--line)] hover:border-red-300 hover:bg-red-50 transition-all flex items-center gap-4 group"
                   >
                     <div className="w-12 h-12 rounded-full bg-red-100 flex items-center justify-center group-hover:bg-red-200 transition-colors">
                       <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -276,14 +276,14 @@ export default function FeedbackButton() {
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-semibold text-slate-900">{t("reportBug")}</h3>
-                      <p className="text-sm text-slate-500">{t("reportBugDesc")}</p>
+                      <h3 className="font-semibold text-[var(--ink)]">{t("reportBug")}</h3>
+                      <p className="text-sm text-[var(--ink-subtle)]">{t("reportBugDesc")}</p>
                     </div>
                   </button>
 
                   <button
                     onClick={() => handleTypeSelect("FEATURE")}
-                    className="w-full p-4 rounded-xl border-2 border-slate-200 hover:border-[var(--accent-soft)] hover:bg-[var(--accent-tint)] transition-all flex items-center gap-4 group"
+                    className="w-full p-4 rounded-xl border-2 border-[var(--line)] hover:border-[var(--accent-soft)] hover:bg-[var(--accent-tint)] transition-all flex items-center gap-4 group"
                   >
                     <div className="w-12 h-12 rounded-full bg-[var(--accent-tint)] flex items-center justify-center group-hover:bg-[var(--accent-soft)] transition-colors">
                       <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,8 +291,8 @@ export default function FeedbackButton() {
                       </svg>
                     </div>
                     <div className="text-left">
-                      <h3 className="font-semibold text-slate-900">{t("requestFeature")}</h3>
-                      <p className="text-sm text-slate-500">{t("requestFeatureDesc")}</p>
+                      <h3 className="font-semibold text-[var(--ink)]">{t("requestFeature")}</h3>
+                      <p className="text-sm text-[var(--ink-subtle)]">{t("requestFeatureDesc")}</p>
                     </div>
                   </button>
                 </div>
@@ -302,7 +302,7 @@ export default function FeedbackButton() {
                   {/* Back button */}
                   <button
                     onClick={() => setStep("select")}
-                    className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+                    className="flex items-center gap-1 text-sm text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -325,7 +325,7 @@ export default function FeedbackButton() {
 
                   {/* Message Input */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--ink-muted)] mb-2">
                       {feedbackType === "BUG" ? t("describeBug") : t("describeFeature")}
                     </label>
                     <textarea
@@ -333,16 +333,16 @@ export default function FeedbackButton() {
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder={feedbackType === "BUG" ? t("bugPlaceholder") : t("featurePlaceholder")}
                       rows={4}
-                      className="w-full rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
+                      className="w-full rounded-xl border border-[var(--line-strong)] px-4 py-3 text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] resize-none"
                       autoFocus
                     />
                   </div>
 
                   {/* Image Upload - Multiple Images */}
                   <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                    <label className="block text-sm font-medium text-[var(--ink-muted)] mb-2">
                       {t("attachScreenshots")}
-                      <span className="text-slate-400 font-normal ml-1">
+                      <span className="text-[var(--ink-subtle)] font-normal ml-1">
                         ({imagePreviews.length}/{MAX_IMAGES})
                       </span>
                     </label>
@@ -362,7 +362,7 @@ export default function FeedbackButton() {
                       <div className="grid grid-cols-3 gap-2 mb-3">
                         {imagePreviews.map((preview, index) => (
                           <div key={index} className="relative aspect-square">
-                            <div className="relative w-full h-full rounded-lg overflow-hidden border border-slate-200">
+                            <div className="relative w-full h-full rounded-lg overflow-hidden border border-[var(--line)]">
                               <Image
                                 src={preview}
                                 alt={`Screenshot ${index + 1}`}
@@ -389,7 +389,7 @@ export default function FeedbackButton() {
                       <button
                         type="button"
                         onClick={() => fileInputRef.current?.click()}
-                        className="w-full p-4 rounded-xl border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors flex flex-col items-center gap-2 text-slate-500 hover:text-slate-600"
+                        className="w-full p-4 rounded-xl border-2 border-dashed border-[var(--line-strong)] hover:border-[var(--line-strong)] transition-colors flex flex-col items-center gap-2 text-[var(--ink-subtle)] hover:text-[var(--ink-muted)]"
                       >
                         <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />

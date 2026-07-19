@@ -51,7 +51,7 @@ export default function IOSInstallPrompt() {
       }`}
       style={{ paddingBottom: "max(1rem, env(safe-area-inset-bottom))" }}
     >
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 p-4 max-w-md mx-auto">
+      <div className="bg-[var(--surface)] rounded-2xl shadow-2xl border border-[var(--line)] p-4 max-w-md mx-auto">
         <div className="flex items-start gap-3">
           {/* App icon */}
           <div className="w-12 h-12 bg-[var(--accent)] rounded-xl flex items-center justify-center flex-shrink-0">
@@ -59,15 +59,15 @@ export default function IOSInstallPrompt() {
           </div>
 
           <div className="flex-1 min-w-0">
-            <h3 className="font-semibold text-slate-900 text-sm">Install Amigo</h3>
-            <p className="text-slate-500 text-xs mt-0.5">
+            <h3 className="font-semibold text-[var(--ink)] text-sm">Install Amigo</h3>
+            <p className="text-[var(--ink-subtle)] text-xs mt-0.5">
               Add to your home screen for the best experience
             </p>
           </div>
 
           <button
             onClick={handleDismiss}
-            className="text-slate-400 hover:text-slate-600 p-1 -mr-1 -mt-1"
+            className="text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] p-1 -mr-1 -mt-1"
             aria-label="Dismiss"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -78,9 +78,9 @@ export default function IOSInstallPrompt() {
 
         {/* Instructions */}
         <div className="mt-4 space-y-2">
-          <div className="bg-slate-50 rounded-xl p-3">
+          <div className="bg-[var(--surface-2)] rounded-xl p-3">
             <div className="flex items-center gap-3 text-sm">
-              <div className="flex items-center gap-2 text-slate-600">
+              <div className="flex items-center gap-2 text-[var(--ink-muted)]">
                 <span className="font-medium">1.</span>
                 <span>Tap</span>
                 {/* iOS Share icon */}
@@ -92,10 +92,10 @@ export default function IOSInstallPrompt() {
               </div>
             </div>
             <div className="flex items-center gap-3 text-sm mt-2">
-              <div className="flex items-center gap-2 text-slate-600">
+              <div className="flex items-center gap-2 text-[var(--ink-muted)]">
                 <span className="font-medium">2.</span>
                 <span>Select</span>
-                <span className="inline-flex items-center gap-1 bg-white px-2 py-0.5 rounded border text-xs font-medium">
+                <span className="inline-flex items-center gap-1 bg-[var(--surface)] px-2 py-0.5 rounded border border-[var(--line)] text-xs font-medium">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                   </svg>
@@ -117,7 +117,7 @@ export default function IOSInstallPrompt() {
 
         <button
           onClick={handleDismiss}
-          className="mt-3 w-full py-2.5 text-sm font-medium text-slate-500 hover:text-slate-700 transition-colors"
+          className="mt-3 w-full py-2.5 text-sm font-medium text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] transition-colors"
         >
           Maybe later
         </button>

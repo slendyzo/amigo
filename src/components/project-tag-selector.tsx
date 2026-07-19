@@ -48,8 +48,8 @@ export default function ProjectTagSelector({
           onClick={onClearAll}
           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
             selectedIds.length === 0
-              ? "bg-slate-800 text-white"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-[var(--ink)] text-[var(--surface)]"
+              : "bg-[var(--surface-2)] text-[var(--ink-muted)] hover:bg-[var(--surface-3)]"
           }`}
         >
           {t("noTags")}
@@ -79,7 +79,7 @@ export default function ProjectTagSelector({
           <button
             type="button"
             onClick={onShowNewTagInput}
-            className="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center gap-1"
+            className="px-3 py-1.5 rounded-full text-sm font-medium bg-[var(--surface-2)] text-[var(--ink-subtle)] hover:bg-[var(--surface-3)] flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -97,7 +97,7 @@ export default function ProjectTagSelector({
             value={newTagName}
             onChange={(e) => onNewTagNameChange(e.target.value)}
             placeholder={t("tagPlaceholder")}
-            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            className="flex-1 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -116,7 +116,7 @@ export default function ProjectTagSelector({
           <button
             type="button"
             onClick={onCancelNewTag}
-            className="px-3 py-2 rounded-lg text-slate-500 hover:text-slate-700"
+            className="px-3 py-2 rounded-lg text-[var(--ink-subtle)] hover:text-[var(--ink-muted)]"
           >
             {tCommon("cancel")}
           </button>

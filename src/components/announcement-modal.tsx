@@ -102,7 +102,7 @@ export default function AnnouncementModal({
   if (announcementId === "workspaces-v1") {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
           {/* Header with gradient */}
           <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -123,8 +123,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("workspaces.feature1.title")}</h3>
-                <p className="text-sm text-slate-600">{t("workspaces.feature1.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("workspaces.feature1.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("workspaces.feature1.description")}</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -134,8 +134,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("workspaces.feature2.title")}</h3>
-                <p className="text-sm text-slate-600">{t("workspaces.feature2.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("workspaces.feature2.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("workspaces.feature2.description")}</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -145,8 +145,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("workspaces.feature3.title")}</h3>
-                <p className="text-sm text-slate-600">{t("workspaces.feature3.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("workspaces.feature3.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("workspaces.feature3.description")}</p>
               </div>
             </div>
             <div className="flex items-start gap-4">
@@ -156,8 +156,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("workspaces.feature4.title")}</h3>
-                <p className="text-sm text-slate-600">{t("workspaces.feature4.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("workspaces.feature4.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("workspaces.feature4.description")}</p>
               </div>
             </div>
           </div>
@@ -167,7 +167,7 @@ export default function AnnouncementModal({
             <button
               onClick={handleDismiss}
               disabled={isLoading}
-              className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium disabled:opacity-50 transition-colors"
+              className="flex-1 px-4 py-2.5 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] font-medium disabled:opacity-50 transition-colors"
             >
               {t("workspaces.dismiss")}
             </button>
@@ -188,7 +188,7 @@ export default function AnnouncementModal({
   if (announcementId === "unified-transactions-v1") {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
           {/* Header with gradient */}
           <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -210,8 +210,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("unified_transactions.feature1.title")}</h3>
-                <p className="text-sm text-slate-600">{t("unified_transactions.feature1.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("unified_transactions.feature1.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("unified_transactions.feature1.description")}</p>
               </div>
             </div>
 
@@ -223,8 +223,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("unified_transactions.feature2.title")}</h3>
-                <p className="text-sm text-slate-600">{t("unified_transactions.feature2.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("unified_transactions.feature2.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("unified_transactions.feature2.description")}</p>
               </div>
             </div>
 
@@ -236,8 +236,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("unified_transactions.feature3.title")}</h3>
-                <p className="text-sm text-slate-600">{t("unified_transactions.feature3.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("unified_transactions.feature3.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("unified_transactions.feature3.description")}</p>
               </div>
             </div>
 
@@ -249,8 +249,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("unified_transactions.feature4.title")}</h3>
-                <p className="text-sm text-slate-600">{t("unified_transactions.feature4.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("unified_transactions.feature4.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("unified_transactions.feature4.description")}</p>
               </div>
             </div>
           </div>
@@ -274,7 +274,7 @@ export default function AnnouncementModal({
   if (announcementId === "scheduled-expenses-v1") {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
           {/* Header with gradient */}
           <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -296,8 +296,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("scheduled_expenses.feature1.title")}</h3>
-                <p className="text-sm text-slate-600">{t("scheduled_expenses.feature1.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("scheduled_expenses.feature1.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("scheduled_expenses.feature1.description")}</p>
               </div>
             </div>
 
@@ -309,8 +309,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("scheduled_expenses.feature2.title")}</h3>
-                <p className="text-sm text-slate-600">{t("scheduled_expenses.feature2.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("scheduled_expenses.feature2.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("scheduled_expenses.feature2.description")}</p>
               </div>
             </div>
 
@@ -322,8 +322,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("scheduled_expenses.feature3.title")}</h3>
-                <p className="text-sm text-slate-600">{t("scheduled_expenses.feature3.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("scheduled_expenses.feature3.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("scheduled_expenses.feature3.description")}</p>
               </div>
             </div>
           </div>
@@ -347,7 +347,7 @@ export default function AnnouncementModal({
   if (announcementId === "category-groups-v1") {
     return (
       <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
           {/* Header with gradient */}
           <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -369,8 +369,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("category_groups.feature1.title")}</h3>
-                <p className="text-sm text-slate-600">{t("category_groups.feature1.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("category_groups.feature1.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("category_groups.feature1.description")}</p>
               </div>
             </div>
 
@@ -382,8 +382,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("category_groups.feature2.title")}</h3>
-                <p className="text-sm text-slate-600">{t("category_groups.feature2.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("category_groups.feature2.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("category_groups.feature2.description")}</p>
               </div>
             </div>
 
@@ -395,8 +395,8 @@ export default function AnnouncementModal({
                 </svg>
               </div>
               <div>
-                <h3 className="font-semibold text-slate-900">{t("category_groups.feature3.title")}</h3>
-                <p className="text-sm text-slate-600">{t("category_groups.feature3.description")}</p>
+                <h3 className="font-semibold text-[var(--ink)]">{t("category_groups.feature3.title")}</h3>
+                <p className="text-sm text-[var(--ink-muted)]">{t("category_groups.feature3.description")}</p>
               </div>
             </div>
           </div>
@@ -406,7 +406,7 @@ export default function AnnouncementModal({
             <button
               onClick={handleDismiss}
               disabled={isLoading}
-              className="flex-1 px-4 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium disabled:opacity-50 transition-colors"
+              className="flex-1 px-4 py-2.5 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] font-medium disabled:opacity-50 transition-colors"
             >
               {t("category_groups.dismiss")}
             </button>

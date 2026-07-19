@@ -242,16 +242,16 @@ export default function ExportModal({
 
       {/* Modal Card */}
       <div
-        className="relative mt-[15vh] mx-4 w-full max-w-md rounded-2xl bg-white shadow-xl p-6 transition-all duration-300 ease-out"
+        className="relative mt-[15vh] mx-4 w-full max-w-md rounded-2xl bg-[var(--surface)] shadow-xl p-6 transition-all duration-300 ease-out"
         style={{ animation: "exportModalSlideIn 0.3s ease-out" }}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-slate-900">{t("title")}</h2>
+          <h2 className="text-lg font-semibold text-[var(--ink)]">{t("title")}</h2>
           <button
             onClick={() => !isExporting && onClose()}
-            className="rounded-lg p-1.5 text-slate-400 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-600"
+            className="rounded-lg p-1.5 text-[var(--ink-subtle)] transition-colors duration-150 hover:bg-[var(--surface-2)] hover:text-[var(--ink-muted)]"
             disabled={isExporting}
           >
             <svg
@@ -270,7 +270,7 @@ export default function ExportModal({
 
         {/* Format Section */}
         <div className="mt-5">
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-[var(--ink-muted)]">
             {t("formatLabel")}
           </label>
           <div className="mt-2 grid grid-cols-2 gap-3">
@@ -293,12 +293,12 @@ export default function ExportModal({
                   className={`flex items-start gap-3 rounded-xl border p-3 text-left transition-all duration-200 cursor-pointer ${
                     isSelected
                       ? "border-[var(--accent)] bg-[var(--accent-tint)] ring-2 ring-[var(--accent)]/20"
-                      : "border-slate-200 bg-white hover:bg-slate-50"
+                      : "border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--surface-2)]"
                   }`}
                 >
                   <span
                     className={`mt-0.5 shrink-0 ${
-                      isSelected ? "text-[var(--accent)]" : "text-slate-400"
+                      isSelected ? "text-[var(--accent)]" : "text-[var(--ink-subtle)]"
                     }`}
                   >
                     {opt.icon}
@@ -306,14 +306,14 @@ export default function ExportModal({
                   <div className="min-w-0">
                     <div
                       className={`text-sm font-medium ${
-                        isSelected ? "text-[var(--accent-strong)]" : "text-slate-900"
+                        isSelected ? "text-[var(--accent-strong)]" : "text-[var(--ink)]"
                       }`}
                     >
                       {t(labelKey as "csv" | "excel" | "pdf" | "markdown")}
                     </div>
                     <div
                       className={`text-xs mt-0.5 ${
-                        isSelected ? "text-[var(--accent)]" : "text-slate-500"
+                        isSelected ? "text-[var(--accent)]" : "text-[var(--ink-subtle)]"
                       }`}
                     >
                       {t(
@@ -333,7 +333,7 @@ export default function ExportModal({
 
         {/* Time Range Section */}
         <div className="mt-5">
-          <label className="text-sm font-medium text-slate-700">
+          <label className="text-sm font-medium text-[var(--ink-muted)]">
             {t("rangeLabel")}
           </label>
           <div className="mt-2 space-y-2">
@@ -347,7 +347,7 @@ export default function ExportModal({
                   className={`flex w-full items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-all duration-200 cursor-pointer ${
                     isSelected
                       ? "border-[var(--accent)] bg-[var(--accent-tint)]"
-                      : "border-slate-200 bg-white hover:bg-slate-50"
+                      : "border-[var(--line)] bg-[var(--surface)] hover:bg-[var(--surface-2)]"
                   }`}
                 >
                   {/* Radio dot */}
@@ -355,7 +355,7 @@ export default function ExportModal({
                     className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full border-2 transition-colors duration-200 ${
                       isSelected
                         ? "border-[var(--accent)]"
-                        : "border-slate-300"
+                        : "border-[var(--line-strong)]"
                     }`}
                   >
                     {isSelected && (
@@ -365,7 +365,7 @@ export default function ExportModal({
                   <div className="min-w-0 flex-1">
                     <div
                       className={`text-sm font-medium ${
-                        isSelected ? "text-[var(--accent-strong)]" : "text-slate-900"
+                        isSelected ? "text-[var(--accent-strong)]" : "text-[var(--ink)]"
                       }`}
                     >
                       {t(
@@ -378,7 +378,7 @@ export default function ExportModal({
                     </div>
                     <div
                       className={`text-xs mt-0.5 ${
-                        isSelected ? "text-[var(--accent)]" : "text-slate-500"
+                        isSelected ? "text-[var(--accent)]" : "text-[var(--ink-subtle)]"
                       }`}
                     >
                       {opt.desc}
@@ -396,7 +396,7 @@ export default function ExportModal({
             type="button"
             onClick={() => !isExporting && onClose()}
             disabled={isExporting}
-            className="px-4 py-2 text-sm text-slate-600 transition-colors duration-150 hover:text-slate-900 disabled:opacity-50"
+            className="px-4 py-2 text-sm text-[var(--ink-muted)] transition-colors duration-150 hover:text-[var(--ink)] disabled:opacity-50"
           >
             {t("cancel")}
           </button>

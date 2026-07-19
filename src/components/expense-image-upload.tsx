@@ -93,9 +93,9 @@ export default function ExpenseImageUpload({
 
   return (
     <div>
-      <label className="block text-sm font-medium text-slate-700 mb-1.5">
+      <label className="block text-sm font-medium text-[var(--ink-muted)] mb-1.5">
         {t("attachPhotos")}
-        <span className="text-slate-400 font-normal ml-1">
+        <span className="text-[var(--ink-subtle)] font-normal ml-1">
           ({imageUrls.length}/{MAX_IMAGES})
         </span>
       </label>
@@ -116,7 +116,7 @@ export default function ExpenseImageUpload({
         <div className="grid grid-cols-3 gap-2 mb-2">
           {imageUrls.map((url, index) => (
             <div key={index} className="relative aspect-square">
-              <div className="relative w-full h-full rounded-lg overflow-hidden border border-slate-200">
+              <div className="relative w-full h-full rounded-lg overflow-hidden border border-[var(--line)]">
                 <Image
                   src={url}
                   alt={`Photo ${index + 1}`}
@@ -144,7 +144,7 @@ export default function ExpenseImageUpload({
           type="button"
           disabled={disabled || uploading}
           onClick={() => fileInputRef.current?.click()}
-          className="w-full p-3 rounded-lg border-2 border-dashed border-slate-300 hover:border-slate-400 transition-colors flex items-center justify-center gap-2 text-slate-500 hover:text-slate-600 disabled:opacity-50"
+          className="w-full p-3 rounded-lg border-2 border-dashed border-[var(--line)] hover:border-[var(--line-strong)] transition-colors flex items-center justify-center gap-2 text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] disabled:opacity-50"
         >
           {uploading ? (
             <svg className="w-5 h-5 animate-spin" fill="none" viewBox="0 0 24 24">

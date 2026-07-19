@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, lazy, Suspense } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 
 // Lazy-load all modals to avoid pulling tesseract.js (~300KB) and other heavy deps into initial bundle
@@ -35,6 +36,7 @@ type AddTypeSelectorProps = {
 };
 
 export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: AddTypeSelectorProps) {
+  const router = useRouter();
   const t = useTranslations("common");
   const tScanner = useTranslations("receiptScanner");
   const tRwa = useTranslations("rwa");

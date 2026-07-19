@@ -40,7 +40,7 @@ export default function LanguageSwitcher() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-sm"
+        className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[var(--line)] bg-[var(--surface)] text-[var(--ink-muted)] hover:bg-[var(--surface-2)] transition-colors text-sm"
       >
         <span>{currentLanguage.flag}</span>
         <span className="hidden sm:inline">{currentLanguage.name}</span>
@@ -55,15 +55,15 @@ export default function LanguageSwitcher() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-40 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-lg z-50">
+        <div className="absolute right-0 mt-2 w-40 rounded-lg border border-[var(--line)] bg-[var(--surface)] shadow-lg z-50">
           {LANGUAGES.map((lang) => (
             <button
               key={lang.code}
               onClick={() => handleLanguageChange(lang.code)}
-              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-slate-50 dark:hover:bg-slate-800 first:rounded-t-lg last:rounded-b-lg transition-colors ${
+              className={`w-full flex items-center gap-2 px-3 py-2 text-left text-sm hover:bg-[var(--surface-2)] first:rounded-t-lg last:rounded-b-lg transition-colors ${
                 lang.code === locale
                   ? "text-[var(--accent)] font-medium"
-                  : "text-slate-700 dark:text-slate-200"
+                  : "text-[var(--ink-muted)]"
               }`}
             >
               <span>{lang.flag}</span>

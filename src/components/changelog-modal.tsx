@@ -207,7 +207,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden">
+      <div className="relative w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl overflow-hidden">
         {/* Header */}
         <div className="relative bg-gradient-to-r from-[var(--accent-strong)] to-[var(--accent)] px-6 py-8 text-white">
           <button
@@ -261,7 +261,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
                 </div>
                 <div>
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-slate-900">
+                    <span className="text-sm font-medium text-[var(--ink)]">
                       {entry.title[locale] || entry.title.en}
                     </span>
                     <span
@@ -276,7 +276,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
                       {getTypeLabel(entry.type)}
                     </span>
                   </div>
-                  <p className="text-sm text-slate-600 mt-0.5">
+                  <p className="text-sm text-[var(--ink-muted)] mt-0.5">
                     {entry.description[locale] || entry.description.en}
                   </p>
                 </div>
@@ -286,7 +286,7 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-slate-200">
+        <div className="px-6 py-4 border-t border-[var(--line)]">
           <button
             onClick={handleClose}
             className="w-full py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg hover:bg-[var(--accent-strong)] transition-colors"

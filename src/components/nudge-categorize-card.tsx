@@ -15,7 +15,7 @@ export default function NudgeCategorizeCard({ count, onClick }: NudgeCategorizeC
   if (dismissed) return null;
 
   return (
-    <div className="relative w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-4 py-3.5">
+    <div className="relative w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-4 py-3.5">
       <button
         onClick={async () => {
           setDismissed(true); // optimistic
@@ -30,18 +30,18 @@ export default function NudgeCategorizeCard({ count, onClick }: NudgeCategorizeC
           }
         }}
         aria-label={t("nudges.common.dismiss")}
-        className="absolute top-3 right-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+        className="absolute top-3 right-3 text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
         </svg>
       </button>
-      <p className="text-sm font-medium text-slate-900 dark:text-white pr-6">
+      <p className="text-sm font-medium text-[var(--ink)] pr-6">
         {t("nudges.categorize.cardHeading", { count })}
       </p>
       <button
         onClick={onClick}
-        className="mt-2 text-xs text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+        className="mt-2 text-xs text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] transition-colors"
       >
         {t("nudges.categorize.cardCta")} →
       </button>

@@ -136,7 +136,7 @@ export default function InvitationPage() {
   // Loading state
   if (isLoading || status === "loading") {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[var(--app-bg)] flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--accent)]" />
       </div>
     );
@@ -145,18 +145,18 @@ export default function InvitationPage() {
   // Success state
   if (success) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-[var(--app-bg)] flex items-center justify-center p-4">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--line)] p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome!</h1>
-          <p className="text-slate-600 mb-6">
+          <h1 className="text-2xl font-bold text-[var(--ink)] mb-2">Welcome!</h1>
+          <p className="text-[var(--ink-muted)] mb-6">
             You&apos;ve joined <strong>{invitation?.workspace.name}</strong> as a {invitation?.role.toLowerCase()}.
           </p>
-          <p className="text-sm text-slate-500">Redirecting to dashboard...</p>
+          <p className="text-sm text-[var(--ink-subtle)]">Redirecting to dashboard...</p>
         </div>
       </div>
     );
@@ -170,8 +170,8 @@ export default function InvitationPage() {
     const isEmailMismatch = errorCode === "EMAIL_MISMATCH";
 
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-[var(--app-bg)] flex items-center justify-center p-4">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--line)] p-8 max-w-md w-full text-center">
           <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
             isAlreadyAccepted ? "bg-[var(--accent-tint)]" : "bg-red-100"
           }`}>
@@ -185,7 +185,7 @@ export default function InvitationPage() {
               </svg>
             )}
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">
+          <h1 className="text-2xl font-bold text-[var(--ink)] mb-2">
             {isExpired
               ? "Invitation Expired"
               : isNotFound
@@ -196,7 +196,7 @@ export default function InvitationPage() {
               ? "Wrong Account"
               : "Error"}
           </h1>
-          <p className="text-slate-600 mb-6">
+          <p className="text-[var(--ink-muted)] mb-6">
             {isExpired
               ? "This invitation has expired. Please ask the workspace owner to send a new invitation."
               : isNotFound
@@ -221,23 +221,23 @@ export default function InvitationPage() {
   // Not signed in - show sign in prompt
   if (!session) {
     return (
-      <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md w-full text-center">
+      <div className="min-h-screen bg-[var(--app-bg)] flex items-center justify-center p-4">
+        <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--line)] p-8 max-w-md w-full text-center">
           <div className="w-16 h-16 bg-[var(--accent-tint)] rounded-full flex items-center justify-center mx-auto mb-4">
             <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">You&apos;re Invited!</h1>
+          <h1 className="text-2xl font-bold text-[var(--ink)] mb-2">You&apos;re Invited!</h1>
           {invitation && (
             <>
-              <p className="text-slate-600 mb-2">
+              <p className="text-[var(--ink-muted)] mb-2">
                 <strong>{invitation.invitedBy.name || invitation.invitedBy.email}</strong> invited you to join
               </p>
               <p className="text-xl font-semibold text-[var(--accent)] mb-4">{invitation.workspace.name}</p>
             </>
           )}
-          <p className="text-slate-500 mb-6">Please sign in or create an account to accept this invitation.</p>
+          <p className="text-[var(--ink-subtle)] mb-6">Please sign in or create an account to accept this invitation.</p>
           <div className="space-y-3">
             <Link
               href={`/signin?callbackUrl=/invitations/${token}`}
@@ -247,7 +247,7 @@ export default function InvitationPage() {
             </Link>
             <Link
               href={`/signup?callbackUrl=/invitations/${token}`}
-              className="block w-full px-6 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium"
+              className="block w-full px-6 py-2.5 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] font-medium"
             >
               Create Account
             </Link>
@@ -259,31 +259,31 @@ export default function InvitationPage() {
 
   // Signed in - show accept/decline
   return (
-    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 max-w-md w-full text-center">
+    <div className="min-h-screen bg-[var(--app-bg)] flex items-center justify-center p-4">
+      <div className="bg-[var(--surface)] rounded-2xl shadow-sm border border-[var(--line)] p-8 max-w-md w-full text-center">
         <div className="w-16 h-16 bg-[var(--accent-tint)] rounded-full flex items-center justify-center mx-auto mb-4">
           <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
         </div>
 
-        <h1 className="text-2xl font-bold text-slate-900 mb-2">Workspace Invitation</h1>
+        <h1 className="text-2xl font-bold text-[var(--ink)] mb-2">Workspace Invitation</h1>
 
         {invitation && (
           <>
-            <p className="text-slate-600 mb-1">
+            <p className="text-[var(--ink-muted)] mb-1">
               <strong>{invitation.invitedBy.name || invitation.invitedBy.email}</strong> has invited you to join
             </p>
             <p className="text-xl font-semibold text-[var(--accent)] mb-4">{invitation.workspace.name}</p>
 
-            <div className="bg-slate-50 rounded-lg p-4 mb-6">
+            <div className="bg-[var(--surface-2)] rounded-lg p-4 mb-6">
               <div className="flex justify-between text-sm">
-                <span className="text-slate-500">Role:</span>
-                <span className="font-medium text-slate-900">{invitation.role}</span>
+                <span className="text-[var(--ink-subtle)]">Role:</span>
+                <span className="font-medium text-[var(--ink)]">{invitation.role}</span>
               </div>
               <div className="flex justify-between text-sm mt-2">
-                <span className="text-slate-500">Expires:</span>
-                <span className="font-medium text-slate-900">
+                <span className="text-[var(--ink-subtle)]">Expires:</span>
+                <span className="font-medium text-[var(--ink)]">
                   {new Date(invitation.expiresAt).toLocaleDateString()}
                 </span>
               </div>
@@ -300,7 +300,7 @@ export default function InvitationPage() {
               <button
                 onClick={handleDecline}
                 disabled={isDeclining}
-                className="w-full px-6 py-2.5 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 font-medium disabled:opacity-50"
+                className="w-full px-6 py-2.5 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] font-medium disabled:opacity-50"
               >
                 {isDeclining ? "Declining..." : "Decline"}
               </button>
@@ -308,7 +308,7 @@ export default function InvitationPage() {
           </>
         )}
 
-        <p className="text-xs text-slate-400 mt-6">
+        <p className="text-xs text-[var(--ink-subtle)] mt-6">
           Signed in as {session.user?.email}
         </p>
       </div>

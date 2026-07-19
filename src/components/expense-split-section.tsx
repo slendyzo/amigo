@@ -53,7 +53,7 @@ function SplitAmountInput({ amount, locked, onCommit }: SplitAmountInputProps) {
       className={`w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent ${
         locked
           ? "border-[var(--accent)] bg-[var(--accent-tint)]"
-          : "border-slate-300 bg-white"
+          : "border-[var(--line-strong)] bg-[var(--surface)]"
       }`}
     />
   );
@@ -202,7 +202,7 @@ export default function ExpenseSplitSection({
             type="button"
             onClick={() => handleCountChange(splitCount - 1)}
             disabled={splitCount <= 2}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-white text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
           >
             −
           </button>
@@ -213,7 +213,7 @@ export default function ExpenseSplitSection({
             type="button"
             onClick={() => handleCountChange(splitCount + 1)}
             disabled={splitCount >= 20}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-white text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
           >
             +
           </button>
@@ -287,7 +287,7 @@ export default function ExpenseSplitSection({
                   type="text"
                   value={person.label}
                   onChange={(e) => handleLabelChange(i, e.target.value)}
-                  className="flex-1 min-w-0 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent"
+                  className="flex-1 min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-xs text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               )}
               {/* Amount */}
@@ -305,7 +305,7 @@ export default function ExpenseSplitSection({
                 className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
                   person.locked
                     ? "bg-[var(--accent-tint)] text-[var(--accent)] hover:bg-[var(--accent-soft)]"
-                    : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                    : "bg-[var(--surface-2)] text-[var(--ink-subtle)] hover:bg-[var(--surface-3)]"
                 }`}
                 title={person.locked ? t("unlockAmount") : t("lockAmount")}
               >
@@ -345,7 +345,7 @@ export default function ExpenseSplitSection({
         className={`p-3 rounded-lg border transition-colors ${
           splitEnabled
             ? "bg-[var(--accent-tint)] border-[var(--accent-soft)]"
-            : "bg-slate-50 border-slate-200"
+            : "bg-[var(--surface-2)] border-[var(--line)]"
         }`}
       >
         <label className="flex items-center gap-3 cursor-pointer">
@@ -353,18 +353,18 @@ export default function ExpenseSplitSection({
             type="checkbox"
             checked={splitEnabled}
             onChange={(e) => handleToggle(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 text-[var(--accent)] focus:ring-[var(--accent)]"
+            className="w-4 h-4 rounded border-[var(--line-strong)] text-[var(--accent)] focus:ring-[var(--accent)]"
           />
           <div className="flex-1">
             <span
               className={`text-sm font-medium ${
-                splitEnabled ? "text-[var(--accent-strong)]" : "text-slate-700"
+                splitEnabled ? "text-[var(--accent-strong)]" : "text-[var(--ink-muted)]"
               }`}
             >
               {t("splitExpense")}
             </span>
             {!splitEnabled && (
-              <p className="text-xs text-slate-500 mt-0.5">{t("splitHint")}</p>
+              <p className="text-xs text-[var(--ink-subtle)] mt-0.5">{t("splitHint")}</p>
             )}
           </div>
         </label>
