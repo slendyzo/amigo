@@ -4,7 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "node scripts/set-build-info.js && next build",
+    "build": "node scripts/set-build-info.js && node scripts/check-i18n.mjs && next build",
+    "check:i18n": "node scripts/check-i18n.mjs",
     "start": "next start",
     "lint": "next lint",
     "db:migrate": "prisma migrate dev",
