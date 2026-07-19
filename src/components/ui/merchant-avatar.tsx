@@ -1,11 +1,17 @@
 "use client";
 
+import { matchBrand } from "@/lib/merchant-brands";
+
 /**
  * MerchantAvatar — Calm Violet redesign shared avatar.
  * 38×38 rounded-12 tile with a single uppercase initial, tinted by category
  * (per the design handoff README map). Dark mode derives its colors from the
  * light foreground via color-mix so both themes match the mocks
  * (e.g. violet: #EEEBFD/#5F4BE8 light → ~#2A2648/#B9AEF3 dark).
+ *
+ * When the expense name resolves to a known brand (see lib/merchant-brands),
+ * it renders that brand's logo on its brand color instead of the initial —
+ * retroactively, straight from the name, so every past row lights up.
  *
  * Reused by the dashboard Recent list (Phase 3) and the expenses ledger
  * (Phase 4).
@@ -44,6 +50,43 @@ export type MerchantAvatarProps = {
 };
 
 export default function MerchantAvatar({ name, category, size = 38 }: MerchantAvatarProps) {
+  const brand = matchBrand(name);
+
+  if (brand) {
+    const markFg = brand.fg ?? "#FFFFFF";
+    return (
+      <div
+        aria-hidden
+        title={brand.label}
+        className="flex flex-none items-center justify-center overflow-hidden"
+        style={{ width: size, height: size, borderRadius: 12, background: brand.color }}
+      >
+        {brand.mark.kind === "glyph" ? (
+          <svg
+            viewBox={brand.mark.viewBox}
+            width={Math.round(size * 0.56)}
+            height={Math.round(size * 0.56)}
+            fill={markFg}
+            fillRule={brand.mark.fillRule}
+          >
+            <path d={brand.mark.path} />
+          </svg>
+        ) : (
+          <span
+            className="font-bold leading-none tracking-tight"
+            style={{
+              color: markFg,
+              // Shrink as the wordmark grows so 1–4 chars all sit centered.
+              fontSize: Math.round(size * (brand.mark.text.length <= 1 ? 0.42 : brand.mark.text.length === 2 ? 0.32 : 0.26)),
+            }}
+          >
+            {brand.mark.text}
+          </span>
+        )}
+      </div>
+    );
+  }
+
   const { bg, fg } = getTint(category);
   const initial = (name.trim().charAt(0) || "?").toUpperCase();
 
