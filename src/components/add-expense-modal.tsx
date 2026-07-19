@@ -465,6 +465,40 @@ export default function AddExpenseModal({
             </label>
           )}
 
+          {/* Account + Projects — always visible (Nuno feedback: don't bury these) */}
+          <div className="flex flex-col gap-3 rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
+            {localBankAccounts.length > 0 && (
+              <div>
+                <label className="mb-1 block text-[12px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("bankAccount")}</label>
+                <select value={bankAccountId} onChange={(e) => setBankAccountId(e.target.value)} className="w-full rounded-[12px] px-3 py-2 text-[13px] outline-none" style={{ background: "var(--app-bg)", color: "var(--ink)", border: "1px solid var(--line)" }}>
+                  <option value="">{t("none")}</option>
+                  {localBankAccounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
+                </select>
+              </div>
+            )}
+            <ProjectTagSelector
+              projects={localProjects}
+              selectedIds={selectedProjectIds}
+              onToggle={toggleProject}
+              onClearAll={clearSelection}
+              showNewTagInput={showNewTagInput}
+              onShowNewTagInput={() => setShowNewTagInput(true)}
+              newTagName={newTagName}
+              onNewTagNameChange={setNewTagName}
+              onCreateTag={createTag}
+              onCancelNewTag={resetTagInput}
+            />
+            {selectedProjectIds.length > 0 && (
+              <label className="flex items-center gap-3 rounded-[12px] px-3 py-2.5" style={{ background: "var(--surface-2)" }}>
+                <input type="checkbox" checked={excludeFromBudget} onChange={(e) => setExcludeFromBudget(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
+                <div>
+                  <span className="text-[13px] font-medium" style={{ color: "var(--accent-strong)" }}>{t("excludeFromBudget")}</span>
+                  <p className="text-[11px]" style={{ color: "var(--ink-muted)" }}>{t("excludeFromBudgetHint")}</p>
+                </div>
+              </label>
+            )}
+          </div>
+
           {/* More options disclosure */}
           <button
             type="button"
@@ -486,41 +520,11 @@ export default function AddExpenseModal({
                     {CURRENCIES.map((curr) => <option key={curr} value={curr}>{curr}</option>)}
                   </select>
                 </div>
-                {localBankAccounts.length > 0 && (
-                  <div>
-                    <label className="mb-1 block text-[12px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("bankAccount")}</label>
-                    <select value={bankAccountId} onChange={(e) => setBankAccountId(e.target.value)} className="w-full rounded-[12px] px-3 py-2 text-[13px] outline-none" style={{ background: "var(--app-bg)", color: "var(--ink)", border: "1px solid var(--line)" }}>
-                      <option value="">{t("none")}</option>
-                      {localBankAccounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                    </select>
-                  </div>
-                )}
               </div>
 
-              {/* Projects + asset link */}
+              {/* Link to a real-world asset (advanced) */}
               <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
-                <ProjectTagSelector
-                  projects={localProjects}
-                  selectedIds={selectedProjectIds}
-                  onToggle={toggleProject}
-                  onClearAll={clearSelection}
-                  showNewTagInput={showNewTagInput}
-                  onShowNewTagInput={() => setShowNewTagInput(true)}
-                  newTagName={newTagName}
-                  onNewTagNameChange={setNewTagName}
-                  onCreateTag={createTag}
-                  onCancelNewTag={resetTagInput}
-                />
-                <AssetLinkPicker value={linkedRealAssetId} onChange={setLinkedRealAssetId} className="mt-3 border-t pt-3" />
-                {selectedProjectIds.length > 0 && (
-                  <label className="mt-3 flex items-center gap-3 rounded-[12px] px-3 py-2.5" style={{ background: "var(--surface-2)" }}>
-                    <input type="checkbox" checked={excludeFromBudget} onChange={(e) => setExcludeFromBudget(e.target.checked)} className="h-4 w-4 accent-[var(--accent)]" />
-                    <div>
-                      <span className="text-[13px] font-medium" style={{ color: "var(--accent-strong)" }}>{t("excludeFromBudget")}</span>
-                      <p className="text-[11px]" style={{ color: "var(--ink-muted)" }}>{t("excludeFromBudgetHint")}</p>
-                    </div>
-                  </label>
-                )}
+                <AssetLinkPicker value={linkedRealAssetId} onChange={setLinkedRealAssetId} />
               </div>
 
               {/* Split */}

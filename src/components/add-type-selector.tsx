@@ -162,6 +162,26 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                   </svg>
                 </button>
 
+                {/* Recurring / fixed expense Option (Nuno feedback: give fixed expenses a home) */}
+                <button
+                  onClick={() => { onClose(); router.push("/dashboard/recurring"); }}
+                  className="w-full flex items-center gap-4 p-4 rounded-[18px] border border-[var(--line)] transition-all tap-none active:scale-[0.98]"
+                  style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "var(--surface-2)" }}>
+                    <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h5M20 20v-5h-5M19 9A8 8 0 006.3 5.3M5 15a8 8 0 0012.7 3.7" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-[var(--ink)]">{t("recurring")}</h4>
+                    <p className="text-sm text-[var(--ink-muted)]">{t("recurringDescription")}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+
                 {/* Receipt Scanner Option */}
                 <button
                   onClick={handleReceiptClick}
