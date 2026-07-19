@@ -1,6 +1,7 @@
 "use client";
 
 import { matchBrand } from "@/lib/merchant-brands";
+import { resolveCategoryEmoji } from "@/lib/category-emoji";
 
 /**
  * MerchantAvatar — Calm Violet redesign shared avatar.
@@ -9,9 +10,12 @@ import { matchBrand } from "@/lib/merchant-brands";
  * light foreground via color-mix so both themes match the mocks
  * (e.g. violet: #EEEBFD/#5F4BE8 light → ~#2A2648/#B9AEF3 dark).
  *
- * When the expense name resolves to a known brand (see lib/merchant-brands),
- * it renders that brand's logo on its brand color instead of the initial —
- * retroactively, straight from the name, so every past row lights up.
+ * Three tiers, best available wins:
+ *   1. known brand (lib/merchant-brands) → real logo on the brand color
+ *   2. known category or keyword (lib/category-emoji) → emoji on the tint
+ *   3. neither → the uppercase initial on the tint
+ * All of it resolves at render time from the raw name, so every past row
+ * lights up with no data migration.
  *
  * Reused by the dashboard Recent list (Phase 3) and the expenses ledger
  * (Phase 4).
@@ -88,6 +92,7 @@ export default function MerchantAvatar({ name, category, size = 38 }: MerchantAv
   }
 
   const { bg, fg } = getTint(category);
+  const emoji = resolveCategoryEmoji(category, name);
   const initial = (name.trim().charAt(0) || "?").toUpperCase();
 
   return (
@@ -98,7 +103,8 @@ export default function MerchantAvatar({ name, category, size = 38 }: MerchantAv
         width: size,
         height: size,
         borderRadius: 12,
-        fontSize: Math.round(size * 0.37),
+        // Emoji need a touch more room than a letter to read at 38px.
+        fontSize: Math.round(size * (emoji ? 0.44 : 0.37)),
         // Light tints straight from the README map; dark derives from the
         // foreground color (18% tint bg + lightened letter), matching the
         // dark option board (1c).
@@ -108,7 +114,7 @@ export default function MerchantAvatar({ name, category, size = 38 }: MerchantAv
         ["--av-fg-dark" as string]: `color-mix(in srgb, ${fg} 55%, white)`,
       }}
     >
-      {initial}
+      {emoji ? <span className="leading-none">{emoji}</span> : initial}
     </div>
   );
 }

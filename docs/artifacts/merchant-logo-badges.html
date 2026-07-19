@@ -22,6 +22,9 @@ h2{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;
 .meta{min-width:0}
 .meta .name{font-weight:600;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta .cnt{font-size:13px;color:var(--ink-2);margin-top:1px}
+.ebadge{background:var(--b);line-height:1}
+:root[data-theme=dark] .ebadge{background:color-mix(in srgb,var(--f) 18%,transparent)}
+.grid .card .meta .cnt{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mono-txt{font-weight:700;letter-spacing:-0.02em;line-height:1}
 .ledger{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;margin-top:2px}
 .row{display:flex;align-items:center;gap:14px;padding:14px 18px;border-bottom:1px solid var(--line)}
@@ -36,13 +39,14 @@ footer{margin-top:56px;color:var(--ink-2);font-size:12.5px;text-align:center}
 </style></head><body>
 <div class="wrap">
 <header>
-<div><h1>Merchant logo badges</h1><div class="sub">The brands you actually spend at now render their real logo — brand-color tile, white/mono mark — derived live from each expense's name. Retroactive by design: every past row lights up. Non-brands keep the tinted initial.</div></div>
+<div><h1>Merchant logo badges</h1><div class="sub">Three tiers, best available wins. A known brand gets its real logo. Everything else now gets an <b>emoji for what it actually is</b> — travel &#9992;&#65039;, fast food &#127828;, fuel &#9981; — read off the category, or off the name when the category is empty. Only the genuinely unguessable rows keep the plain initial. All derived live from each expense, so the whole back-catalogue lights up.</div></div>
 <button class="toggle" id="tg">☾ Dark</button>
 </header>
 <div class="stats">
-<div class="stat"><div class="n">20</div><div class="l">brands with a logo badge</div></div>
-<div class="stat"><div class="n">317</div><div class="l">expenses retro-badged</div></div>
-<div class="stat"><div class="n">9 · 11</div><div class="l">real vector logos · brand-color monograms</div></div>
+<div class="stat"><div class="n">94&#37;</div><div class="l">of your 1,474 expenses now carry a real badge</div></div>
+<div class="stat"><div class="n">418</div><div class="l">brand logos</div></div>
+<div class="stat"><div class="n">973</div><div class="l">emoji badges · 39 distinct</div></div>
+<div class="stat"><div class="n">83</div><div class="l">left on the initial</div></div>
 </div>
 
 <h2>In context — how the ledger reads now</h2>
@@ -50,6 +54,14 @@ footer{margin-top:56px;color:var(--ink-2);font-size:12.5px;text-align:center}
 
 <h2>All 20 brands · ranked by how often you spend there</h2>
 <div class="grid" id="grid"></div>
+
+
+<h2>Tier 2 · the emoji badge — every no-logo row, ranked by how much of your ledger it covers</h2>
+<div class="grid" id="egrid"></div>
+<div class="note"><b>How it decides:</b> your own category wins first — <i>Viagens &amp; F&eacute;rias</i> &rarr; &#9992;&#65039;, <i>Fast Food</i> &rarr; &#127828; — matched against every default category in all three languages plus the legacy names still sitting in old workspaces. If the category is empty or custom, it falls back to keywords in the expense name, so an uncategorised <i>Repsol E1339</i> still lands on &#9981; and <i>Stay Atenas</i> on &#127976;. <i>Other</i> and <i>Uncategorized</i> deliberately resolve to nothing — a &#10067; badge is worse than the letter.</div>
+
+<h2>The 83 that stayed on the initial</h2>
+<div class="note" style="border-left-color:var(--ink-2)">These are the ones nothing could honestly infer — <i>test</i>, <i>Stuffs</i>, <i>Copo+iman</i>, <i>App Anda</i>, <i>CoinAPI</i>. Guessing here would be worse than the letter. If a pattern in that list bugs you, it&rsquo;s one line in <code>category-emoji.ts</code> to fix.</div>
 
 <div class="note"><b>Calls I made — tell me to change any:</b> McDonald's uses its gold arches on red (white arches don't read as McDonald's). PT/EU chains whose logo is just a wordmark — Mercadona, Pingo Doce, NOS, Recheio, Prio, Telepizza, Action, AliExpress, Aldi, Leroy Merlin, Via Verde — get a clean white monogram on the exact brand color instead of a squished logo. The rest (Spotify, YouTube, Uber, KFC, Burger King, Auchan, Continente, Domino's) are real vector marks. Every GPL + gasolina fill-up badges as Prio, even the ones physically at Auchan.</div>
 
@@ -79,6 +91,19 @@ const rows=[
  ['dominos','Dominos Pizza','Restaurantes','18,90'],
 ];
 document.getElementById('ledger').innerHTML=rows.map(r=>{const b=bySlug[r[0]];return '<div class="row">'+badge(b,44)+'<div><div class="rname">'+r[1]+(r[4]?'<span class="pill">÷'+r[4]+'</span>':'')+'</div><div class="rcat">'+r[2]+'</div></div><div class="ramt">€'+r[3]+'</div></div>';}).join('');
+
+const EMOJI=[{"e": "🍽️", "n": 156, "name": "Portugalia", "cat": "Restaurantes"}, {"e": "🚗", "n": 59, "name": "Pagamento Duster", "cat": "Carro"}, {"e": "🏛️", "n": 54, "name": "Seg Social", "cat": "Impostos"}, {"e": "🧱", "n": 51, "name": "2o Par Pernas Secretária", "cat": "Materiais"}, {"e": "🏠", "n": 51, "name": "Prestação Casa", "cat": "Casa"}, {"e": "💡", "n": 48, "name": "Gás", "cat": "Serviços"}, {"e": "🎬", "n": 42, "name": "Cinema", "cat": "Eventos & Saídas"}, {"e": "🎨", "n": 39, "name": "Jazz III Picks", "cat": "Hobbies"}, {"e": "💻", "n": 39, "name": "Zigbee Antena", "cat": "Eletrónica & Tecnologia"}, {"e": "🛋️", "n": 39, "name": "Aquecedor WC", "cat": "Mobília & Eletrodomésticos"}, {"e": "✈️", "n": 34, "name": "Iman", "cat": "Viagens & Férias"}, {"e": "💊", "n": 34, "name": "Caixa medicamentos", "cat": "Médico & Farmácia"}, {"e": "🛍️", "n": 32, "name": "mbway bm", "cat": "Compras Gerais"}, {"e": "🛒", "n": 28, "name": "Lidl", "cat": "Mercearia"}, {"e": "👗", "n": 26, "name": "Cabelo", "cat": "Roupa & Beleza"}, {"e": "📺", "n": 26, "name": "Cursor Pro", "cat": "Subscrições"}, {"e": "🎁", "n": 26, "name": "Caixa Ferramentas Daddies", "cat": "Presentes & Doações"}, {"e": "🍔", "n": 26, "name": "Glovo 18feb Opmykhc8p", "cat": "Uncategorized"}, {"e": "🏃", "n": 24, "name": "Endurance alcanede", "cat": "Fitness & Desporto"}, {"e": "📊", "n": 22, "name": "Contabilista", "cat": "Contabilidade"}, {"e": "💸", "n": 20, "name": "Paypal Europe S.a.r.l. Et Cie S.c.a", "cat": "Uncategorized"}, {"e": "💇", "n": 19, "name": "Table Camera Clamp + Hair Fade Brush", "cat": "Outros"}, {"e": "🔧", "n": 13, "name": "2.5L Tinta Verde", "cat": "Manutenção & Reparações"}, {"e": "🅿️", "n": 11, "name": "Portagens", "cat": "Portagens & Estacionamento"}, {"e": "☕", "n": 9, "name": "Pão c chouriço", "cat": "Café, Snacks & Pequeno-almoço"}, {"e": "🔨", "n": 9, "name": "Chao da sala + borda lava loiça", "cat": "Obras"}, {"e": "📱", "n": 7, "name": "SOMRIG 7x", "cat": "Internet & Telefone"}, {"e": "🏦", "n": 5, "name": "Manutenção Conta Millenium Pessoal", "cat": "Taxas Bancárias"}, {"e": "🎓", "n": 5, "name": "Aula guitarra 2", "cat": "Educação"}, {"e": "⛽", "n": 4, "name": "Repsol E1339", "cat": "Uncategorized"}, {"e": "📚", "n": 3, "name": "Samurai guitar theory course", "cat": "Cursos & Formação"}, {"e": "🛡️", "n": 3, "name": "Seguro trabalho", "cat": "Seguros"}, {"e": "🏨", "n": 2, "name": "Resort Santorini", "cat": "Uncategorized"}, {"e": "🚕", "n": 2, "name": "Viajem taxi", "cat": "Táxi / TVDE"}, {"e": "📖", "n": 1, "name": "Washing Machine Bag + Book End", "cat": "Outros"}, {"e": "🍕", "n": 1, "name": "Pizza Hut Pq Nascent", "cat": "Uncategorized"}, {"e": "🚌", "n": 1, "name": "Autocarro fig->lisboa", "cat": "Transporte Público"}, {"e": "📮", "n": 1, "name": "Ctt maria", "cat": "Outros"}, {"e": "📈", "n": 1, "name": "bybit invest", "cat": "Investimentos"}];
+const TINTS=[[["grocer","utilit","subscription","supermarket","mercearia","supermercado"],"#EEEBFD","#5F4BE8"],
+[["fuel","transport","car","gas","parking","combustivel"],"#FDEEEA","#C75A3A"],
+[["eating","restaurant","dining","food","cafe","coffee","restauracao"],"#F5EEE1","#A8823C"],
+[["health","saude","pharmacy","farmacia","medical"],"#E9F1FB","#3D74B8"],
+[["sport","gym","income","salary","desporto","ginasio"],"#E7F5EE","#1B9E63"]];
+function tint(cat){const c=(cat||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');
+ for(const[k,bg,fg]of TINTS){if(k.some(x=>c.includes(x)))return[bg,fg];}return["#F0EFF6","#6B6880"];}
+function ebadge(x,size){const[bg,fg]=tint(x.cat);
+ return '<div class="badge ebadge" style="width:'+size+'px;height:'+size+'px;border-radius:12px;--b:'+bg+';--f:'+fg+';font-size:'+Math.round(size*0.44)+'px">'+x.e+'</div>';}
+document.getElementById('egrid').innerHTML=EMOJI.map(x=>'<div class="card">'+ebadge(x,44)+'<div class="meta"><div class="name">'+x.name.replace(/</g,'&lt;')+'</div><div class="cnt">'+x.n+' · '+x.cat+'</div></div></div>').join('');
+
 const tg=document.getElementById('tg');const root=document.documentElement;
 function set(t){root.setAttribute('data-theme',t);tg.textContent=t==='dark'?'☀ Light':'☾ Dark';localStorage.setItem('amigo-badge-theme',t)}
 set(localStorage.getItem('amigo-badge-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'));
