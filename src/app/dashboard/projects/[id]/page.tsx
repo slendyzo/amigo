@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, useEffect, use } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
+import { ArrowLeft, Plus, Sparkles, Pencil, ImageIcon } from "lucide-react";
 import EditExpenseModal from "@/components/edit-expense-modal";
 import AddExpenseModal from "@/components/add-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
@@ -51,15 +53,29 @@ type Project = {
   createdAt: string;
 };
 
-const EXPENSE_TYPES: Record<string, { label: string; color: string }> = {
-  SURVIVAL_FIXED: { label: "Fixed", color: "bg-blue-100 text-blue-800" },
-  SURVIVAL_VARIABLE: { label: "Variable", color: "bg-cyan-100 text-cyan-800" },
-  LIFESTYLE: { label: "Lifestyle", color: "bg-purple-100 text-purple-800" },
-  PROJECT: { label: "Project", color: "bg-amber-100 text-amber-800" },
+const EXPENSE_TYPE_LABELS: Record<string, string> = {
+  SURVIVAL_FIXED: "Fixed",
+  SURVIVAL_VARIABLE: "Variable",
+  LIFESTYLE: "Lifestyle",
+  PROJECT: "Project",
 };
+
+// Framer-motion entrance: fade + rise, 0.05s stagger
+const EASE = [0.16, 1, 0.3, 1] as const;
+const sectionMotion = (i: number) => ({
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.35, ease: EASE, delay: i * 0.05 },
+});
+
+const fmtEur = (v: number) =>
+  `€${Number(v).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+const cardShadow = { boxShadow: "var(--shadow-card)" };
 
 export default function ProjectDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
+  const router = useRouter();
   const t = useTranslations("projects");
   const tExpenses = useTranslations("expenses");
   const tCommon = useTranslations("common");
@@ -208,10 +224,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   if (isLoading && !project) {
     return (
-      <div className="p-6">
+      <div className="mx-auto max-w-2xl">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 bg-slate-200 rounded w-1/4"></div>
-          <div className="h-64 bg-slate-200 rounded"></div>
+          <div className="h-10 w-1/3 rounded-[14px]" style={{ background: "var(--surface-2)" }} />
+          <div className="h-64 rounded-[20px]" style={{ background: "var(--surface-2)" }} />
         </div>
       </div>
     );
@@ -219,181 +235,214 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
   if (!project) {
     return (
-      <div className="p-6">
-        <div className="text-center py-12">
-          <p className="text-slate-500">Project not found</p>
-          <Link href="/dashboard/projects" className="text-blue-600 hover:underline mt-2 inline-block">
-            Back to Projects
-          </Link>
+      <div className="mx-auto max-w-2xl">
+        <div className="py-12 text-center">
+          <p style={{ color: "var(--ink-muted)" }}>{t("notFound")}</p>
+          <button
+            onClick={() => router.push("/dashboard/projects")}
+            className="mt-2 inline-block text-[13px] font-semibold"
+            style={{ color: "var(--accent)" }}
+          >
+            {t("backToProjects")}
+          </button>
         </div>
       </div>
     );
   }
 
   const budgetUsedPercent = project.budget ? (totalSpent / Number(project.budget)) * 100 : 0;
+  const remaining = project.budget ? Number(project.budget) - totalSpent : 0;
+
+  const iconBtn = "flex h-10 w-10 shrink-0 items-center justify-center rounded-full";
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link
-          href="/dashboard/projects"
-          className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+    <div className="mx-auto max-w-2xl space-y-5">
+      {/* Pushed-page header */}
+      <motion.header {...sectionMotion(0)} className="flex items-center gap-3 py-1">
+        <button
+          onClick={() => router.back()}
+          aria-label={tCommon("back")}
+          className={iconBtn}
+          style={{ background: "var(--surface)", ...cardShadow, color: "var(--ink)" }}
         >
-          <svg className="w-5 h-5 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-          </svg>
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">{project.name}</h1>
-            <span className={`px-2 py-0.5 text-xs rounded-full ${
-              project.isActive ? "bg-green-100 text-green-800" : "bg-slate-100 text-slate-600"
-            }`}>
-              {project.isActive ? "Active" : "Inactive"}
-            </span>
-          </div>
-          {project.description && (
-            <p className="text-sm text-slate-500 mt-1">{project.description}</p>
-          )}
-        </div>
-        {/* View Wrapped Button */}
+          <ArrowLeft className="h-[18px] w-[18px]" strokeWidth={1.8} />
+        </button>
+        <h1 className="flex-1 truncate text-center text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
+          {project.name}
+        </h1>
         <button
           onClick={() => setIsWrappedOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all font-medium shadow-lg shadow-amber-500/25"
+          aria-label={t("viewWrapped")}
+          className={iconBtn}
+          style={{ background: "var(--accent)", boxShadow: "var(--shadow-fab)", color: "var(--accent-fg)" }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-          </svg>
-          <span className="hidden sm:inline">{t("viewWrapped")}</span>
+          <Sparkles className="h-[18px] w-[18px]" strokeWidth={1.8} />
         </button>
-        {/* Add Expense Button */}
         <button
           onClick={() => setIsAddModalOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 sm:px-4 bg-[#0070f3] text-white rounded-lg hover:bg-[#005bb5] transition-colors font-medium"
+          aria-label={t("addExpense")}
+          className={iconBtn}
+          style={{ background: "var(--surface)", ...cardShadow, color: "var(--ink)" }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span className="hidden sm:inline">{t("addExpense")}</span>
+          <Plus className="h-[18px] w-[18px]" strokeWidth={1.8} />
         </button>
-      </div>
+      </motion.header>
 
-      {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white p-5 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500 mb-1">Total Spent</p>
-          <p className="text-2xl font-bold text-slate-900">€{totalSpent.toFixed(2)}</p>
+      {/* Status + description */}
+      <motion.div {...sectionMotion(1)} className="flex flex-wrap items-center gap-2 px-1">
+        <span
+          className="rounded-[12px] px-[9px] py-[3px] text-[11px] font-semibold"
+          style={
+            project.isActive
+              ? { background: "var(--surface-2)", color: "var(--accent)" }
+              : { background: "var(--app-bg)", color: "var(--ink-muted)" }
+          }
+        >
+          {project.isActive ? t("statuses.active") : t("inactive")}
+        </span>
+        {project.description && (
+          <span className="text-[12px]" style={{ color: "var(--ink-muted)" }}>{project.description}</span>
+        )}
+      </motion.div>
+
+      {/* Stat tiles */}
+      <motion.div {...sectionMotion(2)} className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
+          <p className="mb-1 text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("totalSpent")}</p>
+          <p className="text-[20px] font-bold tabular-nums" style={{ color: "var(--ink)" }}>{fmtEur(totalSpent)}</p>
         </div>
-        {project.budget && (
-          <div className="bg-white p-5 rounded-xl border border-slate-200">
-            <p className="text-sm text-slate-500 mb-1">Budget</p>
-            <p className="text-2xl font-bold text-slate-900">€{Number(project.budget).toFixed(2)}</p>
+        {project.budget != null && (
+          <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
+            <p className="mb-1 text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("budget")}</p>
+            <p className="text-[20px] font-bold tabular-nums" style={{ color: "var(--ink)" }}>{fmtEur(Number(project.budget))}</p>
           </div>
         )}
-        {project.budget && (
-          <div className="bg-white p-5 rounded-xl border border-slate-200">
-            <p className="text-sm text-slate-500 mb-1">Remaining</p>
-            <p className={`text-2xl font-bold ${
-              Number(project.budget) - totalSpent >= 0 ? "text-green-600" : "text-red-600"
-            }`}>
-              €{(Number(project.budget) - totalSpent).toFixed(2)}
+        {project.budget != null && (
+          <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
+            <p className="mb-1 text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("remaining")}</p>
+            <p
+              className="text-[20px] font-bold tabular-nums"
+              style={{ color: remaining >= 0 ? "var(--positive)" : "var(--negative)" }}
+            >
+              {fmtEur(remaining)}
             </p>
           </div>
         )}
-        <div className="bg-white p-5 rounded-xl border border-slate-200">
-          <p className="text-sm text-slate-500 mb-1">Total Expenses</p>
-          <p className="text-2xl font-bold text-slate-900">{expenses.length}</p>
+        <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
+          <p className="mb-1 text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("totalExpenses")}</p>
+          <p className="text-[20px] font-bold tabular-nums" style={{ color: "var(--ink)" }}>{expenses.length}</p>
         </div>
-      </div>
+      </motion.div>
 
       {/* Budget Progress */}
-      {project.budget && (
-        <div className="bg-white p-5 rounded-xl border border-slate-200">
-          <div className="flex justify-between items-center mb-2">
-            <span className="text-sm font-medium text-slate-700">Budget Usage</span>
-            <span className={`text-sm font-medium ${
-              budgetUsedPercent > 100 ? "text-red-600" : budgetUsedPercent > 80 ? "text-amber-600" : "text-slate-600"
-            }`}>
+      {project.budget != null && (
+        <motion.div {...sectionMotion(3)} className="rounded-[20px] p-[18px]" style={{ background: "var(--surface)", ...cardShadow }}>
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("budgetUsage")}</span>
+            <span
+              className="text-[13px] font-semibold tabular-nums"
+              style={{
+                color:
+                  budgetUsedPercent > 100
+                    ? "var(--negative)"
+                    : budgetUsedPercent > 80
+                    ? "var(--warning)"
+                    : "var(--ink-muted)",
+              }}
+            >
               {budgetUsedPercent.toFixed(1)}%
             </span>
           </div>
-          <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
-            <div
-              className={`h-full transition-all ${
-                budgetUsedPercent > 100 ? "bg-red-500" : budgetUsedPercent > 80 ? "bg-amber-500" : "bg-blue-500"
-              }`}
-              style={{ width: `${Math.min(budgetUsedPercent, 100)}%` }}
+          <div className="h-2 overflow-hidden rounded-[4px]" style={{ background: "var(--surface-2)" }}>
+            <motion.div
+              className="h-full rounded-[4px]"
+              style={{
+                background:
+                  budgetUsedPercent > 100 ? "var(--negative)" : "var(--bar-gradient)",
+              }}
+              initial={{ width: 0 }}
+              animate={{ width: `${Math.min(budgetUsedPercent, 100)}%` }}
+              transition={{ duration: 0.5, ease: EASE }}
             />
           </div>
-        </div>
+        </motion.div>
       )}
 
       {/* Expenses List by Month */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h2 className="font-semibold text-slate-900">Expenses ({expenses.length})</h2>
+      <motion.div {...sectionMotion(4)} className="overflow-hidden rounded-[20px]" style={{ background: "var(--surface)", ...cardShadow }}>
+        <div className="border-b px-5 py-4" style={{ borderColor: "var(--line)" }}>
+          <h2 className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+            {t("expenses")} ({expenses.length})
+          </h2>
         </div>
 
         {expenses.length === 0 ? (
-          <div className="p-12 text-center text-slate-500">
-            <svg className="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-            </svg>
-            <p>No expenses for this project yet</p>
+          <div className="p-12 text-center" style={{ color: "var(--ink-muted)" }}>
+            <div
+              className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full"
+              style={{ background: "var(--accent-fainter)", color: "var(--accent)" }}
+            >
+              <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            </div>
+            <p className="text-[13px]">{t("noExpensesInProject")}</p>
           </div>
         ) : (
-          <div className="divide-y divide-slate-100">
+          <div>
             {sortedMonths.map((monthKey) => {
               const monthData = expensesByMonth[monthKey];
               return (
                 <div key={monthKey}>
                   {/* Month Header */}
-                  <div className="px-6 py-3 bg-slate-50 flex justify-between items-center">
-                    <span className="font-medium text-slate-700">{monthData.label}</span>
-                    <span className="text-sm font-medium text-slate-900">
-                      €{monthData.total.toFixed(2)}
+                  <div className="flex items-center justify-between px-5 py-3" style={{ background: "var(--surface-2)" }}>
+                    <span className="text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>{monthData.label}</span>
+                    <span className="text-[13px] font-semibold tabular-nums" style={{ color: "var(--ink)" }}>
+                      {fmtEur(monthData.total)}
                     </span>
                   </div>
                   {/* Month Expenses */}
                   {monthData.expenses.map((expense) => (
                     <div
                       key={expense.id}
-                      className="px-6 py-3 flex items-center justify-between hover:bg-slate-50 group cursor-pointer"
+                      className="group flex cursor-pointer items-center justify-between border-t px-5 py-3 transition-colors hover:bg-[var(--surface-2)]"
+                      style={{ borderColor: "var(--line)" }}
                       onClick={(e) => {
-                        // Don't open detail if clicking on edit button
                         const target = e.target as HTMLElement;
                         if (target.closest("button")) return;
                         setViewingExpense(expense);
                       }}
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 text-xs text-slate-400">
+                      <div className="flex min-w-0 items-center gap-4">
+                        <div className="w-8 text-[11px] tabular-nums" style={{ color: "var(--ink-subtle)" }}>
                           {formatDate(expense.date).split(" ")[0]}
                         </div>
-                        <div>
-                          <p className="font-medium text-slate-900 flex items-center gap-1.5">
-                            {expense.name}
+                        <div className="min-w-0">
+                          <p className="flex items-center gap-1.5 text-[14px] font-medium" style={{ color: "var(--ink)" }}>
+                            <span className="truncate">{expense.name}</span>
                             {expense.splitCount && expense.splitCount > 1 && (
-                              <span className="text-[10px] px-1 py-0.5 rounded bg-indigo-100 text-indigo-600 font-medium">
+                              <span
+                                className="shrink-0 rounded-[6px] px-1 py-0.5 text-[10px] font-medium tabular-nums"
+                                style={{ background: "var(--accent-fainter)", color: "var(--accent)" }}
+                              >
                                 ÷{expense.splitCount}
                               </span>
                             )}
                             {expense.imageUrls && (
-                              <svg className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                              </svg>
+                              <ImageIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} style={{ color: "var(--ink-subtle)" }} />
                             )}
                           </p>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`px-1.5 py-0.5 text-xs rounded ${
-                              EXPENSE_TYPES[expense.type]?.color || "bg-slate-100 text-slate-600"
-                            }`}>
-                              {EXPENSE_TYPES[expense.type]?.label || expense.type}
+                          <div className="mt-0.5 flex items-center gap-2">
+                            <span
+                              className="rounded-[6px] px-1.5 py-0.5 text-[11px] font-medium"
+                              style={{ background: "var(--surface-3)", color: "var(--ink-muted)" }}
+                            >
+                              {EXPENSE_TYPE_LABELS[expense.type] || expense.type}
                             </span>
                             {expense.category && (
-                              <span className="text-xs text-slate-500 truncate max-w-[120px]">{translateCategory(expense.category.name)}</span>
+                              <span className="max-w-[120px] truncate text-[11px]" style={{ color: "var(--ink-subtle)" }}>
+                                {translateCategory(expense.category.name)}
+                              </span>
                             )}
                           </div>
                         </div>
@@ -407,18 +456,21 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                             const fullEur = Number(expense.amountEur);
                             return (
                               <>
-                                <p className={`font-medium ${displayEur < 0 ? 'text-green-600' : 'text-slate-900'}`}>
+                                <p
+                                  className="text-[14px] font-medium tabular-nums"
+                                  style={{ color: displayEur < 0 ? "var(--positive)" : "var(--ink)" }}
+                                >
                                   {displayEur < 0
                                     ? `(€${Math.abs(displayEur).toFixed(2)})`
                                     : `€${displayEur.toFixed(2)}`}
                                 </p>
                                 {expense.currency !== "EUR" && (
-                                  <p className="text-xs text-slate-400">
+                                  <p className="text-[11px] tabular-nums" style={{ color: "var(--ink-subtle)" }}>
                                     {formatCurrency(displayOriginal, expense.currency)}
                                   </p>
                                 )}
                                 {share !== null && (
-                                  <p className="text-[10px] text-slate-400 tabular-nums">
+                                  <p className="text-[10px] tabular-nums" style={{ color: "var(--ink-subtle)" }}>
                                     {`€${Math.abs(fullEur).toFixed(2)}`}
                                   </p>
                                 )}
@@ -428,12 +480,11 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                         </div>
                         <button
                           onClick={() => handleEditExpense(expense)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-slate-700 hover:bg-slate-100 md:opacity-0 md:group-hover:opacity-100 transition-all"
-                          title="Edit expense"
+                          className="rounded-[12px] p-1.5 transition-all hover:bg-[var(--surface-3)] md:opacity-0 md:group-hover:opacity-100"
+                          style={{ color: "var(--ink-muted)" }}
+                          title={tCommon("edit")}
                         >
-                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                          </svg>
+                          <Pencil className="h-4 w-4" strokeWidth={1.8} />
                         </button>
                       </div>
                     </div>
@@ -443,7 +494,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
             })}
           </div>
         )}
-      </div>
+      </motion.div>
 
       {/* Add Expense Modal - Pre-select this project and exclude from budget */}
       <AddExpenseModal
@@ -499,24 +550,32 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
-          <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">{tExpenses("deleteExpenseQuestion")}</h3>
-            <p className="text-slate-600 text-sm mb-4">{tExpenses("deleteWarning")}</p>
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="relative mx-4 max-w-sm rounded-[20px] p-6"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+          >
+            <h3 className="mb-2 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>{tExpenses("deleteExpenseQuestion")}</h3>
+            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{tExpenses("deleteWarning")}</p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-medium"
+                style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}
               >
                 {tCommon("cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteId)}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold text-white"
+                style={{ background: "var(--negative)" }}
               >
                 {tCommon("delete")}
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 

@@ -301,6 +301,18 @@
   },
   "expenses": {
     "title": "Expenses",
+    "money": "Money",
+    "tabExpenses": "Expenses",
+    "tabIncome": "Income",
+    "tabRecurring": "Recurring",
+    "allTime": "All time",
+    "chips": {
+      "all": "All",
+      "fixed": "Fixed",
+      "variable": "Variable",
+      "lifestyle": "Lifestyle",
+      "project": "Project"
+    },
     "addExpense": "Add Expense",
     "editExpense": "Edit Expense",
     "deleteExpense": "Delete Expense",
@@ -390,6 +402,14 @@
   },
   "incomes": {
     "title": "Incomes",
+    "receivedIn": "Received in {month}",
+    "expectedMonthly": "Expected monthly: {amount}",
+    "extraOverExpected": "+{amount} extra",
+    "thisMonthLabel": "This month",
+    "monthlyBadge": "monthly",
+    "oneOff": "One-off",
+    "addIncomeAffordance": "Add income",
+    "addIncomeAffordanceHint": "Salary, freelance, refunds…",
     "addIncome": "Add Income",
     "editIncome": "Edit Income",
     "deleteIncome": "Delete Income",
@@ -479,7 +499,10 @@
     "unmatchedTitle": "Some categories couldn't be matched",
     "unmatchedDescription": "These categories didn't match any standard group. You can manually assign them to a parent using the edit button, or leave them as they are.",
     "unmatchedHint": "Tip: Edit a category and pick a parent group to organize it.",
-    "viewExpenses": "View expenses in this category"
+    "viewExpenses": "View expenses in this category",
+    "tabCategories": "Categories",
+    "tabRules": "Keyword rules",
+    "expensesCount": "{count} expenses"
   },
   "accounts": {
     "title": "Bank Accounts",
@@ -567,6 +590,15 @@
   },
   "recurring": {
     "title": "Recurring Templates",
+    "money": "Money",
+    "monthlyCommitments": "Monthly commitments",
+    "activeCountLabel": "{count} active templates",
+    "billsLoans": "Bills & loans",
+    "subscriptions": "Subscriptions",
+    "installmentProgress": "installment {current} of {total}",
+    "paused": "paused",
+    "varies": "varies",
+    "dayShort": "day {day}",
     "addTemplate": "New Template",
     "editTemplate": "Edit Template",
     "deleteTemplate": "Delete Template",
@@ -739,7 +771,12 @@
     "failedToImportPdf": "Failed to import PDF",
     "failedToImport": "Failed to import file",
     "failedToImportFile": "Failed to import file",
-    "failedToPreview": "Failed to preview file"
+    "failedToPreview": "Failed to preview file",
+    "stepOf": "Step {current} of {total}",
+    "stepCaptionUpload": "choose a file to bring in",
+    "stepCaptionMapping": "review what we found",
+    "stepCaptionImport": "bringing everything in",
+    "fileSheetsRows": "{sheets} sheets · {rows} rows"
   },
   "mappings": {
     "title": "Keyword Mappings",
@@ -779,7 +816,11 @@
       "variable": "Bills (Variable)",
       "lifestyle": "Spending",
       "project": "Project"
-    }
+    },
+    "tabCategories": "Categories",
+    "tabRules": "Keyword rules",
+    "rulesPreview": "Keyword rules preview",
+    "moreCount": "+ {count} more"
   },
   "settings": {
     "title": "Settings",
@@ -858,7 +899,11 @@
     "noDefault": "None (no default)",
     "restartSetup": "Restart Setup",
     "restartSetupDescription": "Re-run the initial setup wizard to update your salary, budget, and fixed expenses",
-    "restartSetupButton": "Restart Setup Wizard"
+    "restartSetupButton": "Restart Setup Wizard",
+    "groupMoney": "Money",
+    "groupApp": "App",
+    "theme": "Theme",
+    "workspaceSuffix": "workspace"
   },
   "imports": {
     "title": "Import History",
@@ -1069,6 +1114,9 @@
   "modals": {
     "addExpense": "Add Expense",
     "editExpense": "Edit Expense",
+    "typeAnything": "Type anything",
+    "typeAnythingExample": "Type anything — e.g. \"25 mcd\"",
+    "saveExpense": "Save expense",
     "whatDidYouBuy": "What did you buy?",
     "whatDidYouBuyPlaceholder": "e.g., Groceries, Coffee, Netflix",
     "howMuch": "How much?",
@@ -1281,7 +1329,12 @@
     "autoAssignAll": "Auto-assign all",
     "autoAssigning": "Assigning...",
     "autoAssigned": "{count} expenses auto-categorized",
-    "noRecentlyDone": "Categorized items will appear here"
+    "noRecentlyDone": "Categorized items will appear here",
+    "progressCount": "{done} of {total}",
+    "accept": "Accept",
+    "pickOther": "Pick other",
+    "upNext": "up next",
+    "keywordRuleHint": "Creating a keyword rule from your choice"
   },
   "receiptScanner": {
     "title": "Scan Receipt",
@@ -1570,6 +1623,14 @@
     "pnl": "P&L",
     "dcaAverage": "DCA Avg",
     "costBasisPending": "Cost basis pending",
+    "allocationCrypto": "Crypto",
+    "allocationEtfs": "ETFs",
+    "allocationCash": "Cash",
+    "nExchanges": "{count} exchanges",
+    "staked": "staked",
+    "costBasisLabel": "cost basis",
+    "connectionsSynced": "{count, plural, one {# exchange synced} other {# exchanges synced}}",
+    "syncNow": "Sync now",
     "crypto": "Crypto",
     "etf": "ETF",
     "stock": "Stock",
@@ -1717,6 +1778,14 @@
     "deleteVehicleConfirm": "Delete this vehicle? Linked expenses will be unlinked but kept.",
     "generationPrefix": "Gen",
     "backToNetWorth": "Net Worth",
+    "netWorthChangeCaption": "unrealized",
+    "kindProperty": "Property",
+    "kindVehicle": "Vehicle",
+    "valuationPurchase": "purchase price",
+    "valuationManual": "manual valuation",
+    "valuationIndex": "index valuation",
+    "valuationMarket": "market estimate",
+    "linkedToAsset": "linked to {name}",
     "matchHeader": "Link past expenses?",
     "matchSubheader": "We found {count} expenses that look like they belong to your {name}. Link them so they count toward TCO.",
     "matchSelectAll": "Select all",

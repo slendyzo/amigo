@@ -3,6 +3,20 @@
 import { useState, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
+import {
+  ArrowLeft,
+  UploadCloud,
+  FileText,
+  AlertCircle,
+  AlertTriangle,
+  Info,
+  Loader2,
+  RefreshCw,
+  CheckCircle2,
+} from "lucide-react";
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 type SheetPreview = {
   name: string;
@@ -358,57 +372,91 @@ export default function ImportPage() {
     return sampleRows;
   }, [preview, mapping.headerRow]);
 
-  return (
-    <main className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="text-slate-600 hover:text-slate-900"
-              >
-                ← {tCommon("back")}
-              </button>
-              <h1 className="text-xl font-bold text-slate-900">
-                {t("importExpenses")}
-              </h1>
-            </div>
-            {/* Step indicator */}
-            <div className="flex items-center gap-2 text-sm">
-              <span className={step === "upload" ? "text-[#0070f3] font-medium" : "text-slate-400"}>
-                {t("stepUpload")}
-              </span>
-              <span className="text-slate-300">→</span>
-              <span className={step === "mapping" ? "text-[#0070f3] font-medium" : "text-slate-400"}>
-                {t("stepMapColumns")}
-              </span>
-              <span className="text-slate-300">→</span>
-              <span className={step === "result" || step === "importing" ? "text-[#0070f3] font-medium" : "text-slate-400"}>
-                {t("stepImport")}
-              </span>
-            </div>
-          </div>
-        </div>
-      </header>
+  const stepNum = step === "upload" ? 1 : step === "mapping" ? 2 : 3;
+  const stepCaption =
+    step === "upload"
+      ? t("stepCaptionUpload")
+      : step === "mapping"
+      ? t("stepCaptionMapping")
+      : t("stepCaptionImport");
 
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  const totalRows = preview
+    ? preview.sheets.reduce((sum, s) => sum + (s.rowCount || 0), 0)
+    : 0;
+
+  const selectClass =
+    "w-full px-4 py-2.5 rounded-[14px] text-[14px] appearance-none transition-colors focus:outline-none";
+  const selectStyle = {
+    background: "var(--surface)",
+    color: "var(--ink)",
+    border: "1px solid var(--line-strong)",
+  } as const;
+
+  return (
+    <main className="min-h-screen" style={{ background: "var(--app-bg)" }}>
+      <div className="max-w-2xl mx-auto px-4 py-6">
+        {/* Pushed header */}
+        <header className="relative flex items-center justify-center h-10 mb-5">
+          <button
+            onClick={() => router.back()}
+            aria-label={tCommon("back")}
+            className="absolute left-0 w-10 h-10 rounded-full flex items-center justify-center active:scale-95 transition-transform"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+          >
+            <ArrowLeft className="w-5 h-5" strokeWidth={1.8} style={{ color: "var(--ink)" }} />
+          </button>
+          <h1 className="text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
+            {t("importExpenses")}
+          </h1>
+          <div className="absolute right-0 w-10 h-10" />
+        </header>
+
+        {/* Stepper */}
+        <div className="mb-6">
+          <div className="flex gap-1.5 mb-2">
+            {[1, 2, 3].map((i) => (
+              <div
+                key={i}
+                className="flex-1 h-1 rounded-[2px]"
+                style={{
+                  background: i <= stepNum ? "var(--accent)" : "var(--surface-3)",
+                  transition: "background var(--ease) 0.4s",
+                }}
+              />
+            ))}
+          </div>
+          <p className="text-[12px]" style={{ color: "var(--ink-muted)" }}>
+            {t("stepOf", { current: stepNum, total: 3 })} — {stepCaption}
+          </p>
+        </div>
+
         {/* Error */}
         {error && (
-          <div className="mb-6 p-4 rounded-lg bg-red-50 text-red-600">
-            {error}
+          <div
+            className="mb-5 p-4 rounded-[16px] text-[13.5px] flex items-start gap-2.5"
+            style={{
+              background: "color-mix(in srgb, var(--negative) 12%, transparent)",
+              color: "var(--negative)",
+            }}
+          >
+            <AlertCircle className="w-[18px] h-[18px] shrink-0 mt-px" strokeWidth={1.8} />
+            <span>{error}</span>
           </div>
         )}
 
         {/* Step 1: Upload */}
         {step === "upload" && (
-          <>
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-2">
+          <motion.div
+            key="upload"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+          >
+            <div className="mb-5">
+              <h2 className="text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
                 {t("uploadYourFile")}
               </h2>
-              <p className="text-slate-600">
+              <p className="text-[13.5px] mt-1 leading-relaxed" style={{ color: "var(--ink-muted)" }}>
                 {t("uploadDescription")}
               </p>
             </div>
@@ -420,11 +468,13 @@ export default function ImportPage() {
               }}
               onDragLeave={() => setIsDragging(false)}
               onDrop={handleDrop}
-              className={`
-                relative border-2 border-dashed rounded-xl p-12 text-center transition-colors
-                ${isDragging ? "border-[#0070f3] bg-blue-50" : "border-slate-300"}
-                ${isLoading ? "opacity-50 pointer-events-none" : ""}
-              `}
+              className="relative rounded-[20px] p-10 text-center transition-colors"
+              style={{
+                border: `2px dashed ${isDragging ? "var(--accent)" : "var(--accent-faint)"}`,
+                background: isDragging ? "var(--accent-fainter)" : "var(--surface)",
+                opacity: isLoading ? 0.6 : 1,
+                pointerEvents: isLoading ? "none" : "auto",
+              }}
             >
               <input
                 type="file"
@@ -435,68 +485,120 @@ export default function ImportPage() {
               />
 
               <div className="flex flex-col items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center">
-                  <svg className="w-8 h-8 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                  </svg>
+                <div
+                  className="w-16 h-16 rounded-[18px] flex items-center justify-center"
+                  style={{ background: "var(--accent-tint)" }}
+                >
+                  {isLoading ? (
+                    <Loader2 className="w-7 h-7 animate-spin" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
+                  ) : (
+                    <UploadCloud className="w-7 h-7" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
+                  )}
                 </div>
 
                 {isLoading ? (
-                  <p className="text-slate-600">{t("analyzingFile")}</p>
+                  <p className="text-[14px]" style={{ color: "var(--ink-muted)" }}>{t("analyzingFile")}</p>
                 ) : (
                   <>
-                    <p className="text-slate-900 font-medium">
+                    <p className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
                       {t("dropOrBrowse")}
                     </p>
-                    <p className="text-sm text-slate-500">{t("supportsFormats")}</p>
+                    <p className="text-[12px]" style={{ color: "var(--ink-subtle)" }}>{t("supportsFormats")}</p>
                   </>
                 )}
               </div>
             </div>
-          </>
+
+            {/* How it works */}
+            <div
+              className="mt-6 p-5 rounded-[20px]"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+            >
+              <h3 className="text-[14px] font-semibold mb-3" style={{ color: "var(--ink)" }}>
+                {t("howItWorks")}
+              </h3>
+              <ul className="space-y-2.5 text-[13px]" style={{ color: "var(--ink-muted)" }}>
+                <li>
+                  <strong style={{ color: "var(--ink)" }}>{t("step1Upload")}</strong> — {t("step1Desc")}
+                </li>
+                <li>
+                  <strong style={{ color: "var(--ink)" }}>{t("step2Map")}</strong> — {t("step2Desc")}
+                </li>
+                <li>
+                  <strong style={{ color: "var(--ink)" }}>{t("step3Classification")}</strong> — {t("step3Desc")}
+                  <ul className="ml-4 mt-1.5 space-y-1">
+                    <li>• <strong style={{ color: "var(--ink)" }}>{tExpenses("types.fixed")}:</strong> {t("classLivingFixed")}</li>
+                    <li>• <strong style={{ color: "var(--ink)" }}>{tExpenses("types.variable")}:</strong> {t("classLivingVariable")}</li>
+                    <li>• <strong style={{ color: "var(--ink)" }}>{tExpenses("types.lifestyle")}:</strong> {t("classLifestyle")}</li>
+                    <li>• <strong style={{ color: "var(--ink)" }}>{tExpenses("types.project")}:</strong> {t("classProject")}</li>
+                  </ul>
+                </li>
+              </ul>
+            </div>
+          </motion.div>
         )}
 
         {/* Step 2: Column Mapping */}
         {step === "mapping" && preview && (
-          <>
-            <div className="mb-8">
-              <h2 className="text-lg font-semibold text-slate-900 mb-2">
-                {t("mapYourColumns")}
-              </h2>
-              <p className="text-slate-600">
-                {t("fileInfo", { fileName: file?.name || "", sheetCount: preview.sheets.length })}
-              </p>
+          <motion.div
+            key="mapping"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="space-y-5"
+          >
+            {/* File card */}
+            <div
+              className="p-4 rounded-[20px] flex items-center gap-3"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+            >
+              <div
+                className="w-[38px] h-[38px] rounded-[12px] flex items-center justify-center shrink-0"
+                style={{ background: "var(--surface-2)" }}
+              >
+                <FileText className="w-5 h-5" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="text-[13.5px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                  {file?.name || ""}
+                </p>
+                <p className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
+                  {t("fileSheetsRows", { sheets: preview.sheets.length, rows: totalRows })}
+                </p>
+              </div>
             </div>
 
             {/* Mapping Form */}
-            <div className="space-y-6 mb-8">
+            <div className="space-y-5">
               {/* Header Row */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
+                <label className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--ink-muted)" }}>
                   {t("headerRow")}
                 </label>
                 <select
                   value={mapping.headerRow}
                   onChange={(e) => setMapping({ ...mapping, headerRow: parseInt(e.target.value) })}
-                  className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900"
+                  className={selectClass}
+                  style={selectStyle}
                 >
                   {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15].map((row) => (
                     <option key={row} value={row}>{t("row")} {row}</option>
                   ))}
                 </select>
-                <p className="text-xs text-slate-500 mt-1">{t("headerRowHint")}</p>
+                <p className="text-[11.5px] mt-1" style={{ color: "var(--ink-subtle)" }}>{t("headerRowHint")}</p>
               </div>
 
               {/* Column Selectors */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--ink-muted)" }}>
                     {t("dateColumnOptional")}
                   </label>
                   <select
                     value={mapping.dateColumn || ""}
                     onChange={(e) => setMapping({ ...mapping, dateColumn: e.target.value ? parseInt(e.target.value) : null })}
-                    className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900"
+                    className={selectClass}
+                    style={selectStyle}
                   >
                     <option value="">{t("noDateColumn")}</option>
                     {availableColumns.map((col) => (
@@ -508,13 +610,14 @@ export default function ImportPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t("nameDescriptionColumn")} <span className="text-red-500">*</span>
+                  <label className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--ink-muted)" }}>
+                    {t("nameDescriptionColumn")} <span style={{ color: "var(--negative)" }}>*</span>
                   </label>
                   <select
                     value={mapping.nameColumn}
                     onChange={(e) => setMapping({ ...mapping, nameColumn: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900"
+                    className={selectClass}
+                    style={selectStyle}
                   >
                     {availableColumns.map((col) => (
                       <option key={col.column} value={col.column}>
@@ -525,13 +628,14 @@ export default function ImportPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
-                    {t("amountColumn")} <span className="text-red-500">*</span>
+                  <label className="block text-[13px] font-semibold mb-1.5" style={{ color: "var(--ink-muted)" }}>
+                    {t("amountColumn")} <span style={{ color: "var(--negative)" }}>*</span>
                   </label>
                   <select
                     value={mapping.amountColumn}
                     onChange={(e) => setMapping({ ...mapping, amountColumn: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 rounded-lg border border-slate-300 bg-white text-slate-900"
+                    className={selectClass}
+                    style={selectStyle}
                   >
                     {availableColumns.map((col) => (
                       <option key={col.column} value={col.column}>
@@ -543,26 +647,25 @@ export default function ImportPage() {
               </div>
 
               {/* Mixed Expenses/Incomes Checkbox */}
-              <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
+              <div className="p-4 rounded-[18px]" style={{ background: "var(--surface-2)" }}>
                 <label className="flex items-start gap-3 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={mapping.splitExpensesIncomes}
                     onChange={(e) => setMapping({ ...mapping, splitExpensesIncomes: e.target.checked })}
-                    className="mt-1 w-4 h-4 rounded border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
+                    className="mt-0.5 w-4 h-4 rounded"
+                    style={{ accentColor: "var(--accent)" }}
                   />
                   <div className="flex-1">
-                    <span className="font-medium text-slate-900">
+                    <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
                       {t("splitExpensesIncomes")}
                     </span>
-                    <p className="text-sm text-slate-500 mt-0.5">
+                    <p className="text-[12.5px] mt-0.5" style={{ color: "var(--ink-muted)" }}>
                       {t("splitDescription")}
                     </p>
                     {preview.hasMixedValues && (
-                      <p className="text-sm text-[#0070f3] mt-1 flex items-center gap-1">
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
+                      <p className="text-[12.5px] mt-1.5 flex items-center gap-1.5 font-medium" style={{ color: "var(--accent)" }}>
+                        <Info className="w-4 h-4" strokeWidth={1.8} />
                         {t("mixedValuesDetected")}
                       </p>
                     )}
@@ -571,19 +674,17 @@ export default function ImportPage() {
               </div>
 
               {/* Duplicate Handling */}
-              <div className="p-4 rounded-lg border border-slate-200 bg-slate-50">
+              <div className="p-4 rounded-[18px]" style={{ background: "var(--surface-2)" }}>
                 <div className="flex items-start gap-3">
-                  <svg className="w-5 h-5 text-amber-500 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
+                  <AlertTriangle className="w-5 h-5 mt-0.5 shrink-0" strokeWidth={1.8} style={{ color: "var(--warning)" }} />
                   <div className="flex-1">
-                    <span className="font-medium text-slate-900">
+                    <span className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
                       {t("duplicateHandlingTitle")}
                     </span>
-                    <p className="text-sm text-slate-500 mt-0.5 mb-3">
+                    <p className="text-[12.5px] mt-0.5 mb-3" style={{ color: "var(--ink-muted)" }}>
                       {t("duplicateHandlingHint")}
                     </p>
-                    <div className="flex gap-3">
+                    <div className="flex gap-4">
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
                           type="radio"
@@ -591,9 +692,10 @@ export default function ImportPage() {
                           value="skip"
                           checked={duplicateHandling === "skip"}
                           onChange={() => setDuplicateHandling("skip")}
-                          className="w-4 h-4 border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
+                          className="w-4 h-4"
+                          style={{ accentColor: "var(--accent)" }}
                         />
-                        <span className="text-sm text-slate-700">{t("skipDuplicates")}</span>
+                        <span className="text-[13px]" style={{ color: "var(--ink)" }}>{t("skipDuplicates")}</span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -602,9 +704,10 @@ export default function ImportPage() {
                           value="replace"
                           checked={duplicateHandling === "replace"}
                           onChange={() => setDuplicateHandling("replace")}
-                          className="w-4 h-4 border-slate-300 text-[#0070f3] focus:ring-[#0070f3]"
+                          className="w-4 h-4"
+                          style={{ accentColor: "var(--accent)" }}
                         />
-                        <span className="text-sm text-slate-700">{t("replaceDuplicates")}</span>
+                        <span className="text-[13px]" style={{ color: "var(--ink)" }}>{t("replaceDuplicates")}</span>
                       </label>
                     </div>
                   </div>
@@ -615,22 +718,24 @@ export default function ImportPage() {
               {preview.sheets.length > 1 && (
                 <div>
                   <div className="flex items-center justify-between mb-2">
-                    <label className="block text-sm font-medium text-slate-700">
+                    <label className="block text-[13px] font-semibold" style={{ color: "var(--ink-muted)" }}>
                       {t("sheetsToImport")}
                     </label>
-                    <div className="flex gap-2 text-xs">
+                    <div className="flex items-center gap-2 text-[12px]">
                       <button
                         type="button"
                         onClick={selectAllSheets}
-                        className="text-[#0070f3] hover:underline"
+                        className="font-medium hover:underline"
+                        style={{ color: "var(--accent)" }}
                       >
                         {t("selectAll")}
                       </button>
-                      <span className="text-slate-300">|</span>
+                      <span style={{ color: "var(--line-strong)" }}>|</span>
                       <button
                         type="button"
                         onClick={deselectAllSheets}
-                        className="text-slate-500 hover:underline"
+                        className="hover:underline"
+                        style={{ color: "var(--ink-subtle)" }}
                       >
                         {t("deselectAll")}
                       </button>
@@ -644,20 +749,19 @@ export default function ImportPage() {
                           key={sheet.name}
                           type="button"
                           onClick={() => toggleSheet(sheet.name)}
-                          className={`
-                            px-3 py-2 rounded-lg border transition-colors
-                            ${isSelected
-                              ? "border-[#0070f3] bg-blue-50 text-[#0070f3]"
-                              : "border-slate-300 text-slate-400 bg-slate-50"
-                            }
-                          `}
+                          className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-colors"
+                          style={
+                            isSelected
+                              ? { background: "var(--accent-tint)", color: "var(--accent)", border: "1px solid var(--accent)" }
+                              : { background: "var(--surface-2)", color: "var(--ink-subtle)", border: "1px solid transparent" }
+                          }
                         >
                           {sheet.name} ({sheet.rowCount} {t("rowsImported").split(" ")[0]})
                         </button>
                       );
                     })}
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
+                  <p className="text-[11.5px] mt-1.5" style={{ color: "var(--ink-subtle)" }}>
                     {mapping.sheetsToImport.length === 0
                       ? t("noSheetsSelected")
                       : t("sheetsSelected", { selected: mapping.sheetsToImport.length, total: preview.sheets.length })}
@@ -668,10 +772,10 @@ export default function ImportPage() {
               {/* Project Sheets - only show sheets that are selected for import */}
               {preview.sheets.length > 1 && mapping.sheetsToImport.length > 0 && (
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">
+                  <label className="block text-[13px] font-semibold mb-1" style={{ color: "var(--ink-muted)" }}>
                     {t("projectSheetsOptional")}
                   </label>
-                  <p className="text-xs text-slate-500 mb-2">
+                  <p className="text-[11.5px] mb-2" style={{ color: "var(--ink-subtle)" }}>
                     {t("projectSheetsHint")}
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -684,13 +788,12 @@ export default function ImportPage() {
                             key={sheet.name}
                             type="button"
                             onClick={() => toggleProjectSheet(sheet.name)}
-                            className={`
-                              px-3 py-2 rounded-lg border transition-colors
-                              ${isProject
-                                ? "border-amber-500 bg-amber-50 text-amber-600"
-                                : "border-slate-300 text-slate-600 hover:bg-slate-50"
-                              }
-                            `}
+                            className="px-3.5 py-2 rounded-full text-[13px] font-medium transition-colors"
+                            style={
+                              isProject
+                                ? { background: "var(--accent)", color: "var(--accent-fg)", border: "1px solid var(--accent)" }
+                                : { background: "var(--surface-2)", color: "var(--ink-muted)", border: "1px solid transparent" }
+                            }
                           >
                             {sheet.name}
                           </button>
@@ -698,7 +801,7 @@ export default function ImportPage() {
                       })}
                   </div>
                   {mapping.projectSheets.length > 0 && (
-                    <p className="text-xs text-amber-600 mt-2">
+                    <p className="text-[11.5px] mt-2 font-medium" style={{ color: "var(--accent)" }}>
                       {t("sheetsAsProjects", { count: mapping.projectSheets.length })}
                     </p>
                   )}
@@ -707,57 +810,66 @@ export default function ImportPage() {
             </div>
 
             {/* Preview Table */}
-            <div className="mb-8">
-              <h3 className="text-sm font-medium text-slate-700 mb-3">
+            <div>
+              <h3 className="text-[13px] font-semibold mb-2.5" style={{ color: "var(--ink-muted)" }}>
                 {t("dataPreview")}
               </h3>
-              <div className="overflow-x-auto rounded-lg border border-slate-200">
-                <table className="w-full text-sm">
-                  <thead className="bg-slate-50">
-                    <tr>
-                      {availableColumns.map((col) => (
-                        <th
-                          key={col.column}
-                          className={`px-4 py-3 text-left font-medium ${
-                            col.column === mapping.dateColumn
-                              ? "text-blue-600 bg-blue-50"
-                              : col.column === mapping.nameColumn
-                              ? "text-green-600 bg-green-50"
-                              : col.column === mapping.amountColumn
-                              ? "text-orange-600 bg-orange-50"
-                              : "text-slate-600"
-                          }`}
-                        >
-                          <div className="flex flex-col">
-                            <span className="text-xs opacity-60">{t("col")} {col.column}</span>
-                            <span>{col.value}</span>
-                            {col.column === mapping.dateColumn && <span className="text-xs font-normal">→ {t("date")}</span>}
-                            {col.column === mapping.nameColumn && <span className="text-xs font-normal">→ {t("name")}</span>}
-                            {col.column === mapping.amountColumn && <span className="text-xs font-normal">→ {t("amount")}</span>}
-                          </div>
-                        </th>
-                      ))}
+              <div
+                className="overflow-x-auto rounded-[20px]"
+                style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+              >
+                <table className="w-full text-[13px]">
+                  <thead>
+                    <tr style={{ background: "var(--surface-2)" }}>
+                      {availableColumns.map((col) => {
+                        const isDate = col.column === mapping.dateColumn;
+                        const isName = col.column === mapping.nameColumn;
+                        const isAmount = col.column === mapping.amountColumn;
+                        const headStyle = isDate
+                          ? { color: "var(--accent)", background: "var(--accent-tint)" }
+                          : isName
+                          ? { color: "var(--positive)", background: "color-mix(in srgb, var(--positive) 12%, transparent)" }
+                          : isAmount
+                          ? { color: "var(--warning)", background: "color-mix(in srgb, var(--warning) 12%, transparent)" }
+                          : { color: "var(--ink-muted)" };
+                        return (
+                          <th key={col.column} className="px-4 py-3 text-left font-semibold whitespace-nowrap" style={headStyle}>
+                            <div className="flex flex-col">
+                              <span className="text-[10.5px] opacity-60">{t("col")} {col.column}</span>
+                              <span>{col.value}</span>
+                              {isDate && <span className="text-[10.5px] font-normal">→ {t("date")}</span>}
+                              {isName && <span className="text-[10.5px] font-normal">→ {t("name")}</span>}
+                              {isAmount && <span className="text-[10.5px] font-normal">→ {t("amount")}</span>}
+                            </div>
+                          </th>
+                        );
+                      })}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-200">
+                  <tbody>
                     {displaySampleRows.map((row, i) => (
-                      <tr key={i} className="bg-white">
-                        {availableColumns.map((col) => (
-                          <td
-                            key={col.column}
-                            className={`px-4 py-2 ${
-                              col.column === mapping.dateColumn
-                                ? "bg-blue-50/50"
-                                : col.column === mapping.nameColumn
-                                ? "bg-green-50/50"
-                                : col.column === mapping.amountColumn
-                                ? "bg-orange-50/50"
-                                : ""
-                            }`}
-                          >
-                            {row[col.column] !== undefined ? String(row[col.column]) : "—"}
-                          </td>
-                        ))}
+                      <tr key={i} style={{ borderTop: "1px solid var(--line)" }}>
+                        {availableColumns.map((col) => {
+                          const isDate = col.column === mapping.dateColumn;
+                          const isName = col.column === mapping.nameColumn;
+                          const isAmount = col.column === mapping.amountColumn;
+                          const cellStyle = isDate
+                            ? { background: "var(--accent-fainter)", color: "var(--ink)" }
+                            : isName
+                            ? { background: "color-mix(in srgb, var(--positive) 8%, transparent)", color: "var(--ink)" }
+                            : isAmount
+                            ? { background: "color-mix(in srgb, var(--warning) 8%, transparent)", color: "var(--ink)" }
+                            : { color: "var(--ink)" };
+                          return (
+                            <td
+                              key={col.column}
+                              className={`px-4 py-2.5 whitespace-nowrap ${isAmount ? "tabular-nums" : ""}`}
+                              style={cellStyle}
+                            >
+                              {row[col.column] !== undefined ? String(row[col.column]) : "—"}
+                            </td>
+                          );
+                        })}
                       </tr>
                     ))}
                   </tbody>
@@ -766,107 +878,138 @@ export default function ImportPage() {
             </div>
 
             {/* Actions */}
-            <div className="flex gap-4">
+            <div className="flex gap-3 pt-1">
               <button
                 onClick={resetImport}
-                className="px-6 py-3 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                className="px-6 py-3.5 rounded-[18px] text-[15px] font-semibold transition-colors active:scale-[0.99]"
+                style={{ background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line-strong)" }}
               >
                 {tCommon("back")}
               </button>
               <button
                 onClick={handleImport}
                 disabled={!mapping.nameColumn || !mapping.amountColumn || mapping.sheetsToImport.length === 0}
-                className="flex-1 rounded-lg bg-[#0070f3] px-6 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="flex-1 rounded-[18px] px-6 py-3.5 text-[15px] font-semibold transition-transform active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)", boxShadow: "var(--shadow-fab)" }}
               >
                 {mapping.sheetsToImport.length === 0
                   ? t("selectAtLeastOneSheet")
                   : t("importFromSheets", { count: mapping.sheetsToImport.length })}
               </button>
             </div>
-          </>
+          </motion.div>
         )}
 
         {/* Step 3: Importing */}
         {step === "importing" && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#0070f3]/10 flex items-center justify-center animate-pulse">
-              <svg className="w-8 h-8 text-[#0070f3] animate-spin" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-              </svg>
+          <motion.div
+            key="importing"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="text-center py-16"
+          >
+            <div
+              className="w-16 h-16 mx-auto mb-5 rounded-[18px] flex items-center justify-center"
+              style={{ background: "var(--accent-tint)" }}
+            >
+              <Loader2 className="w-8 h-8 animate-spin" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
             </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-2">
+            <h3 className="text-[17px] font-semibold mb-1.5" style={{ color: "var(--ink)" }}>
               {t("importingExpenses")}
             </h3>
-            <p className="text-slate-600">
+            <p className="text-[13.5px]" style={{ color: "var(--ink-muted)" }}>
               {t("importMayTakeMoment")}
             </p>
-          </div>
+          </motion.div>
         )}
 
         {/* Step 4: Results */}
         {step === "result" && result && (
-          <div className="space-y-6">
-            <div className={`p-4 rounded-lg ${result.success ? "bg-green-50 text-green-600" : "bg-red-50 text-red-600"}`}>
-              {result.success
-                ? t("successfullyImported", { count: result.imported })
-                : t("importWithIssues", { count: result.imported })}
-              {(result.duplicatesFound ?? 0) > 0 && (
-                <span className="ml-2">
-                  ({result.duplicatesFound} {t("duplicatesFound")}
-                  {((result.skipped ?? 0) > 0 || (result.replaced ?? 0) > 0) && ': '}
-                  {(result.skipped ?? 0) > 0 && <>{result.skipped} {t("skipped")}</>}
-                  {(result.skipped ?? 0) > 0 && (result.replaced ?? 0) > 0 && ', '}
-                  {(result.replaced ?? 0) > 0 && <>{result.replaced} {t("replaced")}</>})
-                </span>
+          <motion.div
+            key="result"
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="space-y-5"
+          >
+            <div
+              className="p-4 rounded-[18px] text-[14px] font-medium flex items-start gap-2.5"
+              style={
+                result.success
+                  ? { background: "color-mix(in srgb, var(--positive) 12%, transparent)", color: "var(--positive)" }
+                  : { background: "color-mix(in srgb, var(--negative) 12%, transparent)", color: "var(--negative)" }
+              }
+            >
+              {result.success ? (
+                <CheckCircle2 className="w-5 h-5 shrink-0 mt-px" strokeWidth={1.8} />
+              ) : (
+                <AlertCircle className="w-5 h-5 shrink-0 mt-px" strokeWidth={1.8} />
               )}
+              <span>
+                {result.success
+                  ? t("successfullyImported", { count: result.imported })
+                  : t("importWithIssues", { count: result.imported })}
+                {(result.duplicatesFound ?? 0) > 0 && (
+                  <span className="ml-1">
+                    ({result.duplicatesFound} {t("duplicatesFound")}
+                    {((result.skipped ?? 0) > 0 || (result.replaced ?? 0) > 0) && ": "}
+                    {(result.skipped ?? 0) > 0 && <>{result.skipped} {t("skipped")}</>}
+                    {(result.skipped ?? 0) > 0 && (result.replaced ?? 0) > 0 && ", "}
+                    {(result.replaced ?? 0) > 0 && <>{result.replaced} {t("replaced")}</>})
+                  </span>
+                )}
+              </span>
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-              <div className="p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500">{tExpenses("types.fixed")}</p>
-                <p className="text-2xl font-bold text-slate-900">{result.stats.survivalFixed}</p>
-              </div>
-              <div className="p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500">{tExpenses("types.variable")}</p>
-                <p className="text-2xl font-bold text-slate-900">{result.stats.survivalVariable}</p>
-              </div>
-              <div className="p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500">{tExpenses("types.lifestyle")}</p>
-                <p className="text-2xl font-bold text-slate-900">{result.stats.lifestyle}</p>
-              </div>
-              <div className="p-4 rounded-lg border border-slate-200">
-                <p className="text-sm text-slate-500">{tExpenses("types.project")}</p>
-                <p className="text-2xl font-bold text-slate-900">{result.stats.project}</p>
-              </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              {[
+                { label: tExpenses("types.fixed"), value: result.stats.survivalFixed },
+                { label: tExpenses("types.variable"), value: result.stats.survivalVariable },
+                { label: tExpenses("types.lifestyle"), value: result.stats.lifestyle },
+                { label: tExpenses("types.project"), value: result.stats.project },
+              ].map((s, i) => (
+                <div
+                  key={i}
+                  className="p-4 rounded-[20px]"
+                  style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+                >
+                  <p className="text-[12px]" style={{ color: "var(--ink-muted)" }}>{s.label}</p>
+                  <p className="text-2xl font-bold tabular-nums" style={{ color: "var(--ink)" }}>{s.value}</p>
+                </div>
+              ))}
               {result.stats.incomes > 0 && (
-                <div className="p-4 rounded-lg border border-green-200 bg-green-50">
-                  <p className="text-sm text-green-600">{tExpenses("title")}</p>
-                  <p className="text-2xl font-bold text-green-700">{result.stats.incomes}</p>
+                <div
+                  className="p-4 rounded-[20px]"
+                  style={{ background: "color-mix(in srgb, var(--positive) 12%, transparent)" }}
+                >
+                  <p className="text-[12px]" style={{ color: "var(--positive)" }}>{tExpenses("title")}</p>
+                  <p className="text-2xl font-bold tabular-nums" style={{ color: "var(--positive)" }}>{result.stats.incomes}</p>
                 </div>
               )}
             </div>
 
             {/* Duplicate Detection Summary */}
             {(result.duplicatesFound ?? 0) > 0 && (
-              <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                  <p className="font-medium text-amber-700">
+              <div
+                className="p-4 rounded-[18px]"
+                style={{ background: "color-mix(in srgb, var(--warning) 10%, transparent)" }}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <AlertTriangle className="w-5 h-5" strokeWidth={1.8} style={{ color: "var(--warning)" }} />
+                  <p className="text-[14px] font-semibold" style={{ color: "var(--warning)" }}>
                     {t("duplicatesDetected")}
                   </p>
                 </div>
-                <p className="text-sm text-amber-600">
-                  {t("duplicatesSummary", { count: result.duplicatesFound ?? 0 })}{' '}
+                <p className="text-[13px]" style={{ color: "var(--ink-muted)" }}>
+                  {t("duplicatesSummary", { count: result.duplicatesFound ?? 0 })}{" "}
                   {(result.skipped ?? 0) > 0 && (
-                    <span className="font-medium">{result.skipped} {t("skipped")}</span>
+                    <span className="font-semibold" style={{ color: "var(--ink)" }}>{result.skipped} {t("skipped")}</span>
                   )}
-                  {(result.skipped ?? 0) > 0 && (result.replaced ?? 0) > 0 && ', '}
+                  {(result.skipped ?? 0) > 0 && (result.replaced ?? 0) > 0 && ", "}
                   {(result.replaced ?? 0) > 0 && (
-                    <span className="font-medium">{result.replaced} {t("replaced")}</span>
+                    <span className="font-semibold" style={{ color: "var(--ink)" }}>{result.replaced} {t("replaced")}</span>
                   )}
                   .
                 </p>
@@ -875,16 +1018,17 @@ export default function ImportPage() {
 
             {/* Recurring Templates Created */}
             {(result.recurringTemplatesCreated ?? 0) > 0 && (
-              <div className="p-4 rounded-lg bg-purple-50 border border-purple-200">
-                <div className="flex items-center gap-2 mb-2">
-                  <svg className="w-5 h-5 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  <p className="font-medium text-purple-700">
+              <div
+                className="p-4 rounded-[18px]"
+                style={{ background: "var(--accent-tint)" }}
+              >
+                <div className="flex items-center gap-2 mb-1.5">
+                  <RefreshCw className="w-5 h-5" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
+                  <p className="text-[14px] font-semibold" style={{ color: "var(--accent)" }}>
                     {t("recurringTemplatesCreated", { count: result.recurringTemplatesCreated ?? 0 })}
                   </p>
                 </div>
-                <p className="text-sm text-purple-600 mb-3">
+                <p className="text-[13px] mb-3" style={{ color: "var(--ink-muted)" }}>
                   {t("recurringTemplatesDesc")}
                 </p>
                 {result.recurringCandidates && result.recurringCandidates.length > 0 && (
@@ -892,7 +1036,8 @@ export default function ImportPage() {
                     {result.recurringCandidates.map((rc, i) => (
                       <span
                         key={i}
-                        className="px-2 py-1 rounded-full bg-purple-100 text-xs text-purple-700"
+                        className="px-2.5 py-1 rounded-full text-[12px] font-medium tabular-nums"
+                        style={{ background: "var(--accent-fainter)", color: "var(--accent-strong)" }}
                       >
                         {rc.name} (€{rc.amount.toFixed(2)})
                       </span>
@@ -901,7 +1046,8 @@ export default function ImportPage() {
                 )}
                 <button
                   onClick={() => router.push("/dashboard/recurring")}
-                  className="mt-3 text-sm text-purple-600 hover:text-purple-800 font-medium underline"
+                  className="mt-3 text-[13px] font-semibold underline"
+                  style={{ color: "var(--accent)" }}
                 >
                   {t("viewRecurringTemplates")}
                 </button>
@@ -910,13 +1056,17 @@ export default function ImportPage() {
 
             {/* Sheets processed */}
             {result.sheets && result.sheets.length > 0 && (
-              <div className="p-4 rounded-lg bg-slate-50">
-                <p className="text-sm font-medium text-slate-700 mb-2">
+              <div className="p-4 rounded-[18px]" style={{ background: "var(--surface-2)" }}>
+                <p className="text-[13px] font-semibold mb-2" style={{ color: "var(--ink-muted)" }}>
                   {t("sheetsProcessed")}
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {result.sheets.map((sheet) => (
-                    <span key={sheet} className="px-2 py-1 rounded bg-slate-200 text-sm text-slate-700">
+                    <span
+                      key={sheet}
+                      className="px-2.5 py-1 rounded-full text-[12.5px]"
+                      style={{ background: "var(--surface)", color: "var(--ink)", boxShadow: "var(--shadow-card)" }}
+                    >
                       {sheet}
                     </span>
                   ))}
@@ -926,11 +1076,14 @@ export default function ImportPage() {
 
             {/* Errors */}
             {result.errors.length > 0 && (
-              <div className="p-4 rounded-lg bg-yellow-50">
-                <p className="font-medium text-yellow-700 mb-2">
+              <div
+                className="p-4 rounded-[18px]"
+                style={{ background: "color-mix(in srgb, var(--warning) 10%, transparent)" }}
+              >
+                <p className="text-[14px] font-semibold mb-2" style={{ color: "var(--warning)" }}>
                   {t("rowsHadIssues", { count: result.errors.length })}
                 </p>
-                <ul className="text-sm text-yellow-600 space-y-1">
+                <ul className="text-[13px] space-y-1" style={{ color: "var(--ink-muted)" }}>
                   {result.errors.map((err, i) => (
                     <li key={i}>• {err}</li>
                   ))}
@@ -939,47 +1092,23 @@ export default function ImportPage() {
             )}
 
             {/* Actions */}
-            <div className="flex gap-4">
+            <div className="flex gap-3 pt-1">
               <button
                 onClick={() => router.push("/dashboard")}
-                className="rounded-lg bg-[#0070f3] px-6 py-3 text-white font-medium hover:bg-[#0060df] transition-colors"
+                className="flex-1 rounded-[18px] px-6 py-3.5 text-[15px] font-semibold transition-transform active:scale-[0.99]"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)", boxShadow: "var(--shadow-fab)" }}
               >
                 {t("goToDashboard")}
               </button>
               <button
                 onClick={resetImport}
-                className="rounded-lg border border-slate-300 px-6 py-3 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                className="rounded-[18px] px-6 py-3.5 text-[15px] font-semibold transition-colors active:scale-[0.99]"
+                style={{ background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line-strong)" }}
               >
                 {t("importAnotherFile")}
               </button>
             </div>
-          </div>
-        )}
-
-        {/* Format Info */}
-        {step === "upload" && (
-          <div className="mt-12 p-6 rounded-xl bg-slate-50">
-            <h3 className="font-semibold text-slate-900 mb-3">
-              {t("howItWorks")}
-            </h3>
-            <ul className="space-y-2 text-sm text-slate-600">
-              <li>
-                <strong>{t("step1Upload")}</strong> — {t("step1Desc")}
-              </li>
-              <li>
-                <strong>{t("step2Map")}</strong> — {t("step2Desc")}
-              </li>
-              <li>
-                <strong>{t("step3Classification")}</strong> — {t("step3Desc")}
-                <ul className="ml-4 mt-1 space-y-1">
-                  <li>• <strong>{tExpenses("types.fixed")}:</strong> {t("classLivingFixed")}</li>
-                  <li>• <strong>{tExpenses("types.variable")}:</strong> {t("classLivingVariable")}</li>
-                  <li>• <strong>{tExpenses("types.lifestyle")}:</strong> {t("classLifestyle")}</li>
-                  <li>• <strong>{tExpenses("types.project")}:</strong> {t("classProject")}</li>
-                </ul>
-              </li>
-            </ul>
-          </div>
+          </motion.div>
         )}
       </div>
     </main>

@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Check, ChevronDown, ChevronRight, Clock, Tag, Loader2, Sparkles, Brain } from "lucide-react";
+import { Check, ChevronDown, ChevronLeft, ChevronRight, Clock, Tag, Loader2, Sparkles, Brain } from "lucide-react";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import { buildCategoryTree, type FlatCategory, type CategoryNode } from "@/lib/category-utils";
+import MerchantAvatar from "@/components/ui/merchant-avatar";
 
 type Expense = {
   id: string;
@@ -40,6 +42,7 @@ type DoneItem = {
 };
 
 export default function CategorizePage() {
+  const router = useRouter();
   const t = useTranslations("tidyUp");
   const tCommon = useTranslations("common");
   const tTime = useTranslations("time");
@@ -53,6 +56,7 @@ export default function CategorizePage() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [showPicker, setShowPicker] = useState(false);
 
   // New category creation state
   const [isCreatingCategory, setIsCreatingCategory] = useState(false);
@@ -274,6 +278,7 @@ export default function CategorizePage() {
           setShowSuccess(false);
           setSelectedCategory(null);
           setSuggestion(null);
+          setShowPicker(false);
           // Remove expense and adjust index using functional updaters (avoids stale closures)
           setExpenses((prev) => {
             const filtered = prev.filter((e) => e.id !== removedId);
@@ -298,6 +303,7 @@ export default function CategorizePage() {
   };
 
   const handleSkip = () => {
+    setShowPicker(false);
     if (currentIndex < expenses.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -402,25 +408,33 @@ export default function CategorizePage() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-[#0070f3]" />
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--accent)]" strokeWidth={1.8} />
       </div>
     );
   }
 
   if (expenses.length === 0) {
     return (
-      <div className="space-y-6">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("title")}</h1>
-          <p className="text-slate-500 text-sm mt-1">{t("subtitle")}</p>
+      <div className="space-y-5">
+        {/* Pushed header */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={() => router.back()}
+            aria-label={tCommon("back")}
+            className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink-muted)] shadow-[var(--shadow-card)] transition-colors hover:text-[var(--ink)]"
+          >
+            <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
+          </button>
+          <h1 className="text-[16px] font-semibold text-[var(--ink)]">{t("title")}</h1>
+          <div className="h-10 w-10" />
         </div>
 
-        <div className="bg-white rounded-xl p-8 md:p-12 shadow-sm border border-slate-200 text-center">
-          <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Check className="w-8 h-8 text-green-600" />
+        <div className="rounded-[24px] bg-[var(--surface)] p-8 md:p-12 text-center shadow-[var(--shadow-pop)]">
+          <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-[var(--accent-fainter)]">
+            <Check className="h-8 w-8 text-[var(--accent)]" strokeWidth={1.8} />
           </div>
-          <h2 className="text-xl font-semibold text-slate-900 mb-2">{t("allDone")}</h2>
-          <p className="text-slate-600">{t("allDoneDescription")}</p>
+          <h2 className="mb-2 text-[18px] font-bold text-[var(--ink)]">{t("allDone")}</h2>
+          <p className="text-[14px] text-[var(--ink-muted)]">{t("allDoneDescription")}</p>
         </div>
 
         {/* Show history even when all done, so user can fix mistakes */}
@@ -444,255 +458,305 @@ export default function CategorizePage() {
     );
   }
 
-  // Card content shared between mobile and desktop layouts
-  const renderCardContent = () => (
-    <div className={`bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden transition-all duration-300 ${showSuccess ? 'scale-95 opacity-50' : ''}`}>
-      <div className="p-6 border-b border-slate-100">
-        <div className="flex items-start justify-between mb-2">
-          <h2 className="text-lg font-semibold text-slate-900">{currentExpense.name}</h2>
-          <span className={`text-lg font-bold ${Number(currentExpense.amount) < 0 ? 'text-green-600' : 'text-slate-900'}`}>
-            {formatCurrency(Number(currentExpense.amount), currentExpense.currency)}
-          </span>
-        </div>
-        <div className="flex items-center gap-3 text-sm text-slate-500">
-          <span>{formatDate(currentExpense.date)}</span>
-          <span className="w-1 h-1 rounded-full bg-slate-300" />
-          <span className="capitalize">{currentExpense.type.toLowerCase().replace("_", " ")}</span>
-        </div>
-      </div>
+  const typeLabel = (type: string) => type.toLowerCase().replace("_", " ");
 
-      {/* Category buttons */}
-      <div className="p-4">
-        {/* Suggested category */}
-        {suggestion && (
-          <div className="mb-4">
-            <div className="flex items-center gap-2 text-sm font-medium text-purple-700 mb-2">
-              <Sparkles className="w-4 h-4" />
-              <span>{t("suggested")}</span>
-              {suggestion.source === "history" && suggestion.count && (
-                <span className="text-xs text-purple-500">
-                  ({t("usedTimes", { count: suggestion.count })})
-                </span>
-              )}
-            </div>
-            <button
-              onClick={() => handleCategorize(suggestion.categoryId)}
-              disabled={isSaving || isCreatingCategory}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 text-left transition-all ${
-                selectedCategory === suggestion.categoryId
-                  ? "border-purple-500 bg-purple-100 text-purple-700"
-                  : "border-purple-300 bg-purple-50 hover:bg-purple-100 text-purple-700"
-              } disabled:opacity-50`}
-            >
-              <Sparkles className="w-5 h-5 flex-shrink-0 text-purple-500" />
-              <span className="text-sm font-semibold">{translateCategory(suggestion.categoryName)}</span>
-              {selectedCategory === suggestion.categoryId && (
-                <Check className="w-4 h-4 ml-auto flex-shrink-0" />
-              )}
-            </button>
-          </div>
-        )}
+  // Restyled inline category grid picker (shared by Pick-other flow)
+  const renderCategoryGrid = () => (
+    <div className="mt-4">
+      <p className="mb-2.5 text-[13px] font-semibold text-[var(--ink)]">{t("selectCategory")}</p>
+      <div className="space-y-3">
+        {buildCategoryTree(categories as FlatCategory[]).map((parent) => {
+          const tileClass = (id: string) =>
+            `min-h-[38px] rounded-[14px] px-3.5 py-2 text-[13px] font-medium transition-colors disabled:opacity-50 ${
+              selectedCategory === id
+                ? "bg-[var(--surface-2)] text-[var(--accent-strong)] ring-1 ring-[var(--accent)]"
+                : "bg-[var(--app-bg)] text-[var(--ink-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--accent-strong)]"
+            }`;
 
-        <p className="text-sm font-medium text-slate-700 mb-3">{t("selectCategory")}</p>
-        <div className="space-y-2">
-          {buildCategoryTree(categories as FlatCategory[]).map((parent) => {
-            const visibleChildren = parent.children.filter(
-              (c) => !suggestion || c.id !== suggestion.categoryId
-            );
-            const isParentSuggested = suggestion && parent.id === suggestion.categoryId;
-
-            // Parent with children: show as grouped section
-            if (parent.children.length > 0) {
-              if (visibleChildren.length === 0) return null;
-              return (
-                <div key={parent.id}>
-                  <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                    {parent.icon && <span>{parent.icon}</span>}
-                    {translateCategory(parent.name)}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {visibleChildren.map((child) => (
-                      <button
-                        key={child.id}
-                        onClick={() => handleCategorize(child.id)}
-                        disabled={isSaving || isCreatingCategory}
-                        className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
-                          selectedCategory === child.id
-                            ? "bg-[#0070f3] text-white shadow-sm"
-                            : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                        } disabled:opacity-50`}
-                      >
-                        {translateCategory(child.name)}
-                        {selectedCategory === child.id && (
-                          <Check className="w-3.5 h-3.5 inline ml-1" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              );
-            }
-
-            // Flat parent (no children, like "Gifts & Donations"): render as button
-            if (isParentSuggested) return null;
+          // Parent with children: grouped section
+          if (parent.children.length > 0) {
             return (
-              <div key={parent.id} className="flex flex-wrap gap-1.5">
-                <button
-                  onClick={() => handleCategorize(parent.id)}
-                  disabled={isSaving || isCreatingCategory}
-                  className={`px-3.5 py-1.5 rounded-full text-sm font-medium transition-all ${
-                    selectedCategory === parent.id
-                      ? "bg-[#0070f3] text-white shadow-sm"
-                      : "bg-slate-100 text-slate-700 hover:bg-slate-200"
-                  } disabled:opacity-50`}
-                >
+              <div key={parent.id}>
+                <p className="mb-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-[var(--ink-subtle)]">
+                  {parent.icon && <span>{parent.icon}</span>}
                   {translateCategory(parent.name)}
-                  {selectedCategory === parent.id && (
-                    <Check className="w-3.5 h-3.5 inline ml-1" />
-                  )}
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {parent.children.map((child) => (
+                    <button
+                      key={child.id}
+                      onClick={() => handleCategorize(child.id)}
+                      disabled={isSaving || isCreatingCategory}
+                      className={tileClass(child.id)}
+                    >
+                      {translateCategory(child.name)}
+                      {selectedCategory === child.id && <Check className="ml-1 inline h-3.5 w-3.5" strokeWidth={1.8} />}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+
+          // Flat parent (no children): single tile
+          return (
+            <div key={parent.id} className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => handleCategorize(parent.id)}
+                disabled={isSaving || isCreatingCategory}
+                className={tileClass(parent.id)}
+              >
+                {translateCategory(parent.name)}
+                {selectedCategory === parent.id && <Check className="ml-1 inline h-3.5 w-3.5" strokeWidth={1.8} />}
+              </button>
+            </div>
+          );
+        })}
+
+        {/* New Category tile / inline form */}
+        <div className="flex flex-wrap gap-1.5">
+          {!isCreatingCategory ? (
+            <button
+              onClick={() => setIsCreatingCategory(true)}
+              disabled={isSaving}
+              className="min-h-[38px] rounded-[14px] border border-dashed border-[var(--line-strong)] px-3.5 py-2 text-[13px] font-medium text-[var(--ink-subtle)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)] disabled:opacity-50"
+            >
+              + {tQuickCategory("createNew")}
+            </button>
+          ) : (
+            <div className="w-full rounded-[16px] border border-[var(--accent)] bg-[var(--surface-2)] p-3">
+              <div className="mb-2 flex items-center gap-2">
+                <Tag className="h-4 w-4 text-[var(--accent)]" strokeWidth={1.8} />
+                <span className="text-[13px] font-semibold text-[var(--accent-strong)]">{tQuickCategory("title")}</span>
+              </div>
+              <div className="flex gap-2">
+                <input
+                  ref={newCategoryInputRef}
+                  type="text"
+                  value={newCategoryName}
+                  onChange={(e) => setNewCategoryName(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleCreateCategory();
+                    } else if (e.key === "Escape") {
+                      handleCancelCreateCategory();
+                    }
+                  }}
+                  placeholder={tQuickCategory("placeholder")}
+                  className="flex-1 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2 text-[13px] text-[var(--ink)] placeholder:text-[var(--ink-subtle)] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                  disabled={isCreatingCategorySaving}
+                />
+                <button
+                  onClick={handleCreateCategory}
+                  disabled={isCreatingCategorySaving || !newCategoryName.trim()}
+                  className="whitespace-nowrap rounded-[12px] bg-[var(--accent)] px-4 py-2 text-[13px] font-semibold text-[var(--accent-fg)] transition-colors hover:bg-[var(--accent-strong)] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isCreatingCategorySaving ? tQuickCategory("creating") : tCommon("create")}
+                </button>
+                <button
+                  onClick={handleCancelCreateCategory}
+                  disabled={isCreatingCategorySaving}
+                  className="rounded-[12px] px-3 py-2 text-[13px] text-[var(--ink-muted)] transition-colors hover:bg-[var(--surface-3)] hover:text-[var(--ink)]"
+                >
+                  {tCommon("cancel")}
                 </button>
               </div>
-            );
-          })}
-
-          {/* New Category button or inline form */}
-          <div className="flex flex-wrap gap-1.5">
-            {!isCreatingCategory ? (
-              <button
-                onClick={() => setIsCreatingCategory(true)}
-                disabled={isSaving}
-                className="px-3.5 py-1.5 rounded-full text-sm font-medium border border-dashed border-slate-300 text-slate-400 hover:border-[#0070f3] hover:text-[#0070f3] hover:bg-[#0070f3]/5 transition-all disabled:opacity-50"
-              >
-                + {tQuickCategory("createNew")}
-              </button>
-            ) : (
-              <div className="w-full p-3 rounded-lg border border-[#0070f3] bg-[#0070f3]/5">
-                <div className="flex items-center gap-2 mb-2">
-                  <Tag className="w-4 h-4 text-[#0070f3]" />
-                  <span className="text-sm font-medium text-[#0070f3]">{tQuickCategory("title")}</span>
-                </div>
-                <div className="flex gap-2">
-                  <input
-                    ref={newCategoryInputRef}
-                    type="text"
-                    value={newCategoryName}
-                    onChange={(e) => setNewCategoryName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") {
-                        e.preventDefault();
-                        handleCreateCategory();
-                      } else if (e.key === "Escape") {
-                        handleCancelCreateCategory();
-                      }
-                    }}
-                    placeholder={tQuickCategory("placeholder")}
-                    className="flex-1 px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
-                    disabled={isCreatingCategorySaving}
-                  />
-                  <button
-                    onClick={handleCreateCategory}
-                    disabled={isCreatingCategorySaving || !newCategoryName.trim()}
-                    className="px-4 py-2 bg-[#0070f3] text-white text-sm rounded-lg hover:bg-[#0070f3]/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
-                  >
-                    {isCreatingCategorySaving ? tQuickCategory("creating") : tCommon("create")}
-                  </button>
-                  <button
-                    onClick={handleCancelCreateCategory}
-                    disabled={isCreatingCategorySaving}
-                    className="px-3 py-2 text-slate-600 text-sm hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
-                  >
-                    {tCommon("cancel")}
-                  </button>
-                </div>
-                {createCategoryError && (
-                  <p className="text-xs text-red-500 mt-2">{createCategoryError}</p>
-                )}
-              </div>
-            )}
-          </div>
+              {createCategoryError && <p className="mt-2 text-[12px] text-[var(--negative)]">{createCategoryError}</p>}
+            </div>
+          )}
         </div>
-      </div>
 
-      {/* Skip button */}
-      <div className="px-4 pb-4">
+        {/* Skip inside picker */}
         <button
           onClick={handleSkip}
           disabled={isSaving}
-          className="w-full py-2.5 text-slate-600 hover:text-slate-800 hover:bg-slate-50 rounded-lg transition-colors text-sm font-medium disabled:opacity-50 flex items-center justify-center gap-1"
+          className="flex w-full items-center justify-center gap-1 rounded-[14px] py-2.5 text-[13px] font-medium text-[var(--ink-muted)] transition-colors hover:bg-[var(--app-bg)] hover:text-[var(--ink)] disabled:opacity-50"
         >
           {t("skip")}
-          <ChevronRight className="w-4 h-4" />
+          <ChevronRight className="h-4 w-4" strokeWidth={1.8} />
         </button>
       </div>
     </div>
   );
 
+  // Left-column content shared between mobile and desktop layouts
+  const renderMain = () => {
+    const nextExpense = expenses[currentIndex + 1];
+    const pickerOpen = showPicker || !suggestion;
+    const amountNeg = Number(currentExpense.amount) < 0;
+
+    return (
+      <div className="space-y-3">
+        {/* Focus card */}
+        <div
+          className={`rounded-[24px] bg-[var(--surface)] p-[22px] shadow-[var(--shadow-pop)] ${showSuccess ? "scale-95 opacity-50" : ""}`}
+          style={{ transition: "transform 0.35s var(--ease), opacity 0.35s var(--ease)" }}
+        >
+          {/* Top row */}
+          <div className="flex items-center gap-3">
+            <MerchantAvatar name={currentExpense.name} size={44} />
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[15px] font-bold text-[var(--ink)]">{currentExpense.name}</p>
+              <p className="mt-0.5 text-[11.5px] capitalize text-[var(--ink-subtle)]">
+                {formatDate(currentExpense.date)} · {typeLabel(currentExpense.type)}
+              </p>
+            </div>
+            <span
+              className="flex-none text-[16px] font-bold tabular-nums"
+              style={{ color: amountNeg ? "var(--positive)" : "var(--ink)" }}
+            >
+              {formatCurrency(Number(currentExpense.amount), currentExpense.currency)}
+            </span>
+          </div>
+
+          {/* Suggestion strip */}
+          {suggestion && (
+            <div className="mt-4 flex items-start gap-2.5 rounded-[16px] bg-[var(--surface-2)] px-3.5 py-3">
+              <Sparkles className="mt-0.5 h-4 w-4 flex-none text-[var(--accent)]" strokeWidth={1.8} />
+              <p className="text-[12.5px] leading-snug text-[var(--accent-strong)]">
+                <span className="font-semibold">{t("suggested")}: </span>
+                {translateCategory(suggestion.categoryName)}
+                {suggestion.source === "history" && suggestion.count
+                  ? ` · ${t("usedTimes", { count: suggestion.count })}`
+                  : ""}
+              </p>
+            </div>
+          )}
+
+          {/* Actions OR category picker */}
+          {!pickerOpen && suggestion ? (
+            <div className="mt-3.5 flex gap-2">
+              <button
+                onClick={() => handleCategorize(suggestion.categoryId)}
+                disabled={isSaving}
+                className="flex-1 rounded-[14px] bg-[var(--accent)] py-3 text-center text-[13px] font-semibold text-[var(--accent-fg)] transition-colors hover:bg-[var(--accent-strong)] disabled:opacity-50"
+              >
+                {t("accept")}
+              </button>
+              <button
+                onClick={() => setShowPicker(true)}
+                disabled={isSaving}
+                className="flex-1 rounded-[14px] bg-[var(--app-bg)] py-3 text-center text-[13px] font-semibold text-[var(--ink-muted)] transition-colors hover:text-[var(--ink)] disabled:opacity-50"
+              >
+                {t("pickOther")}
+              </button>
+              <button
+                onClick={handleSkip}
+                disabled={isSaving}
+                aria-label={t("skip")}
+                className="flex h-[46px] w-[46px] flex-none items-center justify-center rounded-[14px] bg-[var(--app-bg)] text-[var(--ink-subtle)] transition-colors hover:text-[var(--ink)] disabled:opacity-50"
+              >
+                <ChevronRight className="h-5 w-5" strokeWidth={1.8} />
+              </button>
+            </div>
+          ) : (
+            renderCategoryGrid()
+          )}
+        </div>
+
+        {/* Next item peek */}
+        {nextExpense && (
+          <div
+            className="rounded-[20px] bg-[var(--surface)] px-[18px] py-3.5 opacity-50 shadow-[var(--shadow-card)]"
+            style={{ transform: "scale(0.98)" }}
+          >
+            <div className="flex items-center gap-3">
+              <MerchantAvatar name={nextExpense.name} size={38} />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-[13px] font-semibold text-[var(--ink)]">{nextExpense.name}</p>
+                <p className="text-[11px] text-[var(--ink-subtle)]">{t("upNext")}</p>
+              </div>
+              <span
+                className="flex-none text-[13px] font-semibold tabular-nums"
+                style={{ color: Number(nextExpense.amount) < 0 ? "var(--positive)" : "var(--ink)" }}
+              >
+                {formatCurrency(Number(nextExpense.amount), nextExpense.currency)}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* Footer microcopy */}
+        <p className="text-center text-[11px] text-[var(--ink-subtle)]">{t("keywordRuleHint")} ✓</p>
+      </div>
+    );
+  };
+
   return (
     <div className="space-y-4 md:space-y-5">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-xl md:text-2xl font-bold text-slate-900">{t("title")}</h1>
-          <p className="text-slate-500 text-sm mt-1">{t("subtitle")}</p>
-          {expenses.length > 0 && (
-            <button
-              onClick={handleAutoAssign}
-              disabled={isAutoAssigning}
-              className="mt-2 flex items-center gap-1.5 text-sm text-purple-600 hover:text-purple-800 font-medium disabled:opacity-50 transition-colors"
-            >
-              <Sparkles className="w-4 h-4" />
-              {isAutoAssigning ? t("autoAssigning") : t("autoAssignAll")}
-            </button>
-          )}
+      {/* Pushed header */}
+      <div className="flex items-center justify-between">
+        <button
+          onClick={() => router.back()}
+          aria-label={tCommon("back")}
+          className="flex h-10 w-10 items-center justify-center rounded-full bg-[var(--surface)] text-[var(--ink-muted)] shadow-[var(--shadow-card)] transition-colors hover:text-[var(--ink)]"
+        >
+          <ChevronLeft className="h-5 w-5" strokeWidth={1.8} />
+        </button>
+        <h1 className="text-[16px] font-semibold text-[var(--ink)]">{t("title")}</h1>
+        <div className="h-10 w-10" />
+      </div>
+
+      {/* Progress bar + counter */}
+      <div className="flex items-center gap-3">
+        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-[var(--surface-3)]">
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${progressPercent}%`, background: "var(--bar-gradient)", transition: "width 0.5s var(--ease)" }}
+          />
+        </div>
+        <span className="text-[12px] font-semibold tabular-nums text-[var(--ink-muted)]">
+          {t("progressCount", { done: doneStack.length, total: totalItems })}
+        </span>
+      </div>
+
+      {/* Auto-assign (preserved feature) */}
+      {expenses.length > 0 && (
+        <div className="flex flex-col items-start gap-1">
+          <button
+            onClick={handleAutoAssign}
+            disabled={isAutoAssigning}
+            className="flex items-center gap-1.5 text-[13px] font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-strong)] disabled:opacity-50"
+          >
+            <Sparkles className="h-4 w-4" strokeWidth={1.8} />
+            {isAutoAssigning ? t("autoAssigning") : t("autoAssignAll")}
+          </button>
           {autoAssignResult && (
-            <p className="mt-1 text-xs text-green-600 font-medium">
+            <p className="text-[12px] font-medium text-[var(--positive)]">
               {t("autoAssigned", { count: autoAssignResult.assigned })}
             </p>
           )}
         </div>
-        <div className="text-right">
-          <div className="text-2xl font-bold text-slate-900">{expenses.length}</div>
-          <div className="text-xs text-slate-500">{t("remaining")}</div>
-        </div>
-      </div>
-
-      {/* Progress bar */}
-      <div className="bg-slate-200 rounded-full h-2 overflow-hidden">
-        <div
-          className="bg-[#0070f3] h-full transition-all duration-300 rounded-full"
-          style={{ width: `${progressPercent}%` }}
-        />
-      </div>
+      )}
 
       {/* Desktop layout - always two-column for stable layout */}
       <div className="hidden md:flex gap-5">
         {/* Card - left side */}
-        <div className="flex-1">
-          {currentExpense && renderCardContent()}
-        </div>
+        <div className="flex-1">{currentExpense && renderMain()}</div>
 
         {/* History sidebar - always visible */}
-        <div className="w-72 bg-white rounded-xl border border-slate-200 overflow-hidden flex-shrink-0 self-start">
-          <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+        <div className="w-72 flex-shrink-0 self-start overflow-hidden rounded-[20px] bg-[var(--surface)] shadow-[var(--shadow-card)]">
+          <div className="flex items-center justify-between border-b border-[var(--line)] px-4 py-3">
             <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4 text-slate-400" />
-              <span className="text-sm font-semibold text-slate-700">{t("recentlyDone")}</span>
+              <Clock className="h-4 w-4 text-[var(--ink-subtle)]" strokeWidth={1.8} />
+              <span className="text-[13px] font-semibold text-[var(--ink)]">{t("recentlyDone")}</span>
             </div>
-            <span className="text-xs text-slate-400">{doneStack.length}</span>
+            <span className="text-[12px] tabular-nums text-[var(--ink-subtle)]">{doneStack.length}</span>
           </div>
           {doneStack.length > 0 ? (
-            <div className="divide-y divide-slate-50 max-h-[400px] overflow-y-auto">
+            <div className="max-h-[400px] divide-y divide-[var(--line)] overflow-y-auto">
               {doneStack.map((item) => (
-                <div key={item.expense.id} className="px-4 py-2.5 hover:bg-slate-50 transition-colors group">
+                <div key={item.expense.id} className="group px-4 py-2.5 transition-colors hover:bg-[var(--app-bg)]">
                   {changingItemId === item.expense.id ? (
                     <div className="space-y-1.5">
-                      <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
+                      <p className="truncate text-[13px] font-medium text-[var(--ink)]">{item.expense.name}</p>
                       <select
                         autoFocus
                         defaultValue={item.categoryId}
                         onChange={(e) => handleChangeDoneItem(item, e.target.value)}
                         onBlur={() => setChangingItemId(null)}
-                        className="w-full text-xs border border-slate-200 rounded-lg px-2 py-1.5 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                        className="w-full rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-2 py-1.5 text-[12px] text-[var(--ink)] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                       >
                         {buildCategoryTree(categories as FlatCategory[]).map((parent) =>
                           parent.children.length > 0 ? (
@@ -710,19 +774,19 @@ export default function CategorizePage() {
                   ) : (
                     <>
                       <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
+                        <p className="truncate text-[13px] font-medium text-[var(--ink)]">{item.expense.name}</p>
                         <button
                           onClick={() => setChangingItemId(item.expense.id)}
-                          className="text-xs text-[#0070f3] opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-2"
+                          className="ml-2 flex-shrink-0 text-[12px] text-[var(--accent)] opacity-0 transition-opacity hover:text-[var(--accent-strong)] group-hover:opacity-100"
                         >
                           {t("change")}
                         </button>
                       </div>
-                      <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className="text-xs text-slate-500">
+                      <div className="mt-0.5 flex items-center gap-1.5">
+                        <span className="text-[12px] tabular-nums text-[var(--ink-muted)]">
                           {formatCurrency(Number(item.expense.amount), item.expense.currency)}
                         </span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-blue-100 text-blue-700">
+                        <span className="rounded-[8px] bg-[var(--accent-fainter)] px-1.5 py-0.5 text-[10px] text-[var(--accent-strong)]">
                           {translateCategory(item.categoryName)}
                         </span>
                       </div>
@@ -733,16 +797,14 @@ export default function CategorizePage() {
             </div>
           ) : (
             <div className="px-4 py-8 text-center">
-              <p className="text-sm text-slate-400">{t("noRecentlyDone")}</p>
+              <p className="text-[13px] text-[var(--ink-subtle)]">{t("noRecentlyDone")}</p>
             </div>
           )}
         </div>
       </div>
 
       {/* Mobile: single column layout */}
-      <div className="md:hidden">
-        {currentExpense && renderCardContent()}
-      </div>
+      <div className="md:hidden">{currentExpense && renderMain()}</div>
 
       {/* Navigation dots (mobile only) */}
       {expenses.length > 1 && (
@@ -751,13 +813,14 @@ export default function CategorizePage() {
             <button
               key={index}
               onClick={() => setCurrentIndex(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === currentIndex ? "bg-[#0070f3]" : "bg-slate-300"
+              aria-label={`${index + 1}`}
+              className={`h-2 w-2 rounded-full transition-colors ${
+                index === currentIndex ? "bg-[var(--accent)]" : "bg-[var(--surface-3)]"
               }`}
             />
           ))}
           {expenses.length > 10 && (
-            <span className="text-xs text-slate-400 ml-1">+{expenses.length - 10}</span>
+            <span className="ml-1 text-[12px] tabular-nums text-[var(--ink-subtle)]">+{expenses.length - 10}</span>
           )}
         </div>
       )}
@@ -783,24 +846,24 @@ export default function CategorizePage() {
       )}
 
       {/* Tips section (mobile only) */}
-      <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 md:hidden">
-        <h3 className="text-sm font-medium text-slate-700 mb-2">{t("tip")}</h3>
-        <p className="text-sm text-slate-600">{t("tipDescription")}</p>
+      <div className="rounded-[20px] border border-[var(--line)] bg-[var(--surface-2)] p-4 md:hidden">
+        <h3 className="mb-2 text-[13px] font-semibold text-[var(--accent-strong)]">{t("tip")}</h3>
+        <p className="text-[13px] text-[var(--ink-muted)]">{t("tipDescription")}</p>
       </div>
 
       {/* Floating undo toast */}
       {undoToast && (
         <div className={`fixed ${showLearnedToast ? "bottom-32" : "bottom-24"} md:bottom-6 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-md z-50 animate-in slide-in-from-bottom-4 transition-all`}>
-          <div className="bg-slate-800 text-white rounded-xl px-4 py-3 shadow-lg flex items-center justify-between gap-4 md:min-w-[320px]">
-            <div className="flex items-center gap-2 min-w-0">
-              <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
-              <span className="text-sm font-medium truncate">
+          <div className="flex items-center justify-between gap-4 rounded-[16px] bg-[var(--ink)] px-4 py-3 shadow-[var(--shadow-pop)] md:min-w-[320px]">
+            <div className="flex min-w-0 items-center gap-2">
+              <Check className="h-4 w-4 flex-shrink-0 text-[var(--positive)]" strokeWidth={1.8} />
+              <span className="truncate text-[13px] font-medium text-[var(--surface)]">
                 {undoToast.expense.name} → {translateCategory(undoToast.categoryName)}
               </span>
             </div>
             <button
               onClick={() => handleUndo()}
-              className="text-sm font-bold text-blue-400 hover:text-white flex-shrink-0 transition-colors"
+              className="flex-shrink-0 text-[13px] font-bold text-[var(--accent-soft)] transition-colors hover:text-[var(--surface)]"
             >
               {t("undo")}
             </button>
@@ -811,9 +874,9 @@ export default function CategorizePage() {
       {/* Learned mapping toast */}
       {showLearnedToast && (
         <div className="fixed bottom-20 md:bottom-4 left-4 right-4 md:left-1/2 md:-translate-x-1/2 md:max-w-md z-50 animate-in slide-in-from-bottom-4">
-          <div className="bg-purple-600 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-2">
-            <Brain className="w-5 h-5" />
-            <span className="text-sm font-medium">{t("learnedMapping")}</span>
+          <div className="flex items-center gap-2 rounded-[16px] bg-[var(--accent)] px-4 py-3 shadow-[var(--shadow-pop)]">
+            <Brain className="h-5 w-5 text-[var(--accent-fg)]" strokeWidth={1.8} />
+            <span className="text-[13px] font-medium text-[var(--accent-fg)]">{t("learnedMapping")}</span>
           </div>
         </div>
       )}
@@ -852,30 +915,30 @@ function HistorySection({
   t: (key: string) => string;
 }) {
   return (
-    <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
+    <div className="overflow-hidden rounded-[20px] bg-[var(--surface)] shadow-[var(--shadow-card)]">
       <button
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
+        className="flex w-full items-center justify-between px-4 py-3 text-left"
         onClick={() => setIsHistoryOpen(!isHistoryOpen)}
       >
         <div className="flex items-center gap-2">
-          <Clock className="w-4 h-4 text-slate-400" />
-          <span className="text-sm font-medium text-slate-700">{t("recentlyCategorized")}</span>
-          <span className="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full">{doneStack.length}</span>
+          <Clock className="h-4 w-4 text-[var(--ink-subtle)]" strokeWidth={1.8} />
+          <span className="text-[13px] font-semibold text-[var(--ink)]">{t("recentlyCategorized")}</span>
+          <span className="rounded-full bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] tabular-nums text-[var(--ink-muted)]">{doneStack.length}</span>
         </div>
-        <ChevronDown className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${isHistoryOpen ? "rotate-180" : ""}`} />
+        <ChevronDown className={`h-4 w-4 text-[var(--ink-subtle)] transition-transform duration-200 ${isHistoryOpen ? "rotate-180" : ""}`} strokeWidth={1.8} />
       </button>
       {isHistoryOpen && (
-        <div className="border-t border-slate-100 divide-y divide-slate-50">
+        <div className="divide-y divide-[var(--line)] border-t border-[var(--line)]">
           {doneStack.map((item) => (
-            <div key={item.expense.id} className="px-4 py-2.5 flex items-center justify-between">
-              <div className="flex-1 min-w-0">
+            <div key={item.expense.id} className="flex items-center justify-between px-4 py-2.5">
+              <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
-                  <p className="text-sm font-medium text-slate-900 truncate">{item.expense.name}</p>
-                  <span className="text-xs px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 flex-shrink-0">
+                  <p className="truncate text-[13px] font-medium text-[var(--ink)]">{item.expense.name}</p>
+                  <span className="flex-shrink-0 rounded-[8px] bg-[var(--accent-fainter)] px-1.5 py-0.5 text-[11px] text-[var(--accent-strong)]">
                     {translateCategory(item.categoryName)}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-[12px] tabular-nums text-[var(--ink-muted)]">
                   {formatCurrency(Number(item.expense.amount), item.expense.currency)} &middot; {formatShortDate(item.expense.date)}
                 </p>
               </div>
@@ -885,7 +948,7 @@ function HistorySection({
                   defaultValue={item.categoryId}
                   onChange={(e) => onChangeCategory(item, e.target.value)}
                   onBlur={() => setChangingItemId(null)}
-                  className="text-xs border border-slate-200 rounded-lg px-2 py-1.5 ml-2 focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                  className="ml-2 rounded-[12px] border border-[var(--line-strong)] bg-[var(--surface)] px-2 py-1.5 text-[12px] text-[var(--ink)] focus:border-transparent focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                 >
                   {buildCategoryTree(categories as FlatCategory[]).map((parent) =>
                     parent.children.length > 0 ? (
@@ -902,7 +965,7 @@ function HistorySection({
               ) : (
                 <button
                   onClick={() => setChangingItemId(item.expense.id)}
-                  className="text-xs font-medium text-[#0070f3] hover:underline flex-shrink-0 ml-2"
+                  className="ml-2 flex-shrink-0 text-[12px] font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-strong)]"
                 >
                   {t("change")}
                 </button>

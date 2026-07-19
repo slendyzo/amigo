@@ -180,9 +180,12 @@ export default function InboxPage() {
   if (error === "You don't have access to this page.") {
     return (
       <div className="space-y-6">
-        <h1 className="text-2xl font-bold text-slate-900">{t("feedbackInbox")}</h1>
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6 text-center">
-          <p className="text-red-600">{error}</p>
+        <h1 className="text-2xl font-bold text-[var(--ink)]">{t("feedbackInbox")}</h1>
+        <div
+          className="rounded-[20px] p-6 text-center border"
+          style={{ background: "var(--surface)", borderColor: "var(--line)", boxShadow: "var(--shadow-card)" }}
+        >
+          <p className="text-[var(--negative)]">{error}</p>
         </div>
       </div>
     );
@@ -193,9 +196,9 @@ export default function InboxPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t("feedbackInbox")}</h1>
+          <h1 className="text-2xl font-bold text-[var(--ink)]">{t("feedbackInbox")}</h1>
           {unreadCount > 0 && (
-            <p className="text-slate-500 text-sm mt-1">
+            <p className="text-[var(--ink-muted)] text-sm mt-1">
               {unreadCount} {t("unread").toLowerCase()}
             </p>
           )}
@@ -203,7 +206,8 @@ export default function InboxPage() {
         {feedback.some((f) => !f.isResolved) && (
           <button
             onClick={handleResolveAll}
-            className="px-4 py-2 text-sm font-medium text-green-700 bg-green-50 border border-green-200 rounded-lg hover:bg-green-100 transition-colors"
+            className="px-4 py-2 text-sm font-medium rounded-lg border transition-colors text-[var(--positive)]"
+            style={{ background: "var(--surface-2)", borderColor: "var(--line)" }}
           >
             {t("resolveAll")}
           </button>
@@ -218,8 +222,8 @@ export default function InboxPage() {
             onClick={() => setFilter(f)}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               filter === f
-                ? "bg-[#0070f3] text-white"
-                : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+                ? "bg-[var(--accent)] text-[var(--accent-fg)]"
+                : "bg-[var(--surface-2)] text-[var(--ink-muted)] hover:bg-[var(--surface-3)]"
             }`}
           >
             {f === "all" && t("allFeedback")}
@@ -227,7 +231,7 @@ export default function InboxPage() {
               <>
                 {t("unread")}
                 {unreadCount > 0 && (
-                  <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-red-500 text-white rounded-full">
+                  <span className="ml-1.5 px-1.5 py-0.5 text-xs bg-[var(--accent)] text-[var(--accent-fg)] rounded-full tabular-nums">
                     {unreadCount}
                   </span>
                 )}
@@ -241,11 +245,17 @@ export default function InboxPage() {
 
       {/* Feedback List */}
       {isLoading ? (
-        <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
+        <div
+          className="rounded-[20px] p-8 text-center text-[var(--ink-muted)] border"
+          style={{ background: "var(--surface)", borderColor: "var(--line)", boxShadow: "var(--shadow-card)" }}
+        >
           Loading...
         </div>
       ) : feedback.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
+        <div
+          className="rounded-[20px] p-8 text-center text-[var(--ink-muted)] border"
+          style={{ background: "var(--surface)", borderColor: "var(--line)", boxShadow: "var(--shadow-card)" }}
+        >
           {t("noFeedback")}
         </div>
       ) : (
@@ -253,47 +263,52 @@ export default function InboxPage() {
           {feedback.map((item) => (
             <div
               key={item.id}
-              className={`bg-white rounded-xl shadow-sm border overflow-hidden transition-all ${
-                item.isRead
-                  ? "border-slate-200"
-                  : "border-blue-300 bg-blue-50/30"
-              } ${item.isResolved ? "opacity-60" : ""}`}
+              className={`rounded-[20px] border overflow-hidden transition-all ${item.isResolved ? "opacity-60" : ""}`}
+              style={{
+                background: item.isRead ? "var(--surface)" : "var(--accent-faint)",
+                borderColor: item.isRead ? "var(--line)" : "var(--accent-soft)",
+                boxShadow: "var(--shadow-card)",
+              }}
             >
               {/* Header */}
-              <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between gap-4">
+              <div className="px-4 py-3 border-b border-[var(--line)] flex items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   {/* Type Badge */}
                   <span
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                    className="px-2.5 py-1 rounded-full text-xs font-medium"
+                    style={
                       item.type === "BUG"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-blue-100 text-blue-700"
-                    }`}
+                        ? { background: "color-mix(in srgb, var(--negative) 14%, transparent)", color: "var(--negative)" }
+                        : { background: "var(--accent-tint)", color: "var(--accent-strong)" }
+                    }
                   >
                     {item.type === "BUG" ? t("bugs") : t("features")}
                   </span>
 
                   {/* Resolved badge */}
                   {item.isResolved && (
-                    <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                    <span
+                      className="px-2.5 py-1 rounded-full text-xs font-medium"
+                      style={{ background: "color-mix(in srgb, var(--positive) 14%, transparent)", color: "var(--positive)" }}
+                    >
                       Resolved
                     </span>
                   )}
 
                   {/* Unread indicator */}
                   {!item.isRead && (
-                    <span className="w-2 h-2 rounded-full bg-blue-500" />
+                    <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
                   )}
                 </div>
 
-                <span className="text-xs text-slate-500">
+                <span className="text-xs text-[var(--ink-muted)]">
                   {formatDate(item.createdAt)}
                 </span>
               </div>
 
               {/* Content */}
               <div className="p-4 space-y-3">
-                <p className="text-slate-800 whitespace-pre-wrap">{item.message}</p>
+                <p className="text-[var(--ink)] whitespace-pre-wrap">{item.message}</p>
 
                 {/* Screenshots - supports multiple images */}
                 {getImageUrls(item).length > 0 && (
@@ -309,13 +324,13 @@ export default function InboxPage() {
                           <img
                             src={imgUrl}
                             alt={`Screenshot ${idx + 1}`}
-                            className="w-full h-32 object-cover rounded-lg border border-slate-200 hover:border-blue-400 transition-colors cursor-pointer"
+                            className="w-full h-32 object-cover rounded-lg border border-[var(--line)] hover:border-[var(--accent)] transition-colors cursor-pointer"
                           />
                         </button>
                       ))}
                     </div>
                     {getImageUrls(item).length > 1 && (
-                      <p className="text-xs text-slate-400 mt-1">
+                      <p className="text-xs text-[var(--ink-subtle)] mt-1">
                         {getImageUrls(item).length} images attached
                       </p>
                     )}
@@ -323,7 +338,7 @@ export default function InboxPage() {
                 )}
 
                 {/* Meta */}
-                <div className="flex flex-wrap gap-4 text-xs text-slate-500">
+                <div className="flex flex-wrap gap-4 text-xs text-[var(--ink-muted)]">
                   {item.user && (
                     <span>
                       <strong>{t("from")}:</strong> {item.user.name || item.user.email}
@@ -338,10 +353,11 @@ export default function InboxPage() {
               </div>
 
               {/* Actions */}
-              <div className="px-4 py-3 bg-slate-50 border-t border-slate-100 flex gap-2 flex-wrap">
+              <div className="px-4 py-3 border-t border-[var(--line)] flex gap-2 flex-wrap" style={{ background: "var(--surface-2)" }}>
                 <button
                   onClick={() => handleMarkAsRead(item.id, !item.isRead)}
-                  className="px-3 py-1.5 text-xs font-medium text-slate-600 bg-white border border-slate-200 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-[var(--ink-muted)] border border-[var(--line)] rounded-lg transition-colors"
+                  style={{ background: "var(--surface)" }}
                 >
                   {item.isRead ? t("markAsUnread") : t("markAsRead")}
                 </button>
@@ -349,7 +365,8 @@ export default function InboxPage() {
                 {!item.isResolved && (
                   <button
                     onClick={() => handleMarkAsResolved(item.id, true)}
-                    className="px-3 py-1.5 text-xs font-medium text-green-600 bg-white border border-green-200 rounded-lg hover:bg-green-50 transition-colors"
+                    className="px-3 py-1.5 text-xs font-medium text-[var(--positive)] border border-[var(--line)] rounded-lg transition-colors"
+                    style={{ background: "var(--surface)" }}
                   >
                     {t("markAsResolved")}
                   </button>
@@ -357,7 +374,8 @@ export default function InboxPage() {
 
                 <button
                   onClick={() => handleDelete(item.id)}
-                  className="px-3 py-1.5 text-xs font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                  className="px-3 py-1.5 text-xs font-medium text-[var(--negative)] border border-[var(--line)] rounded-lg transition-colors"
+                  style={{ background: "var(--surface)" }}
                 >
                   {t("delete")}
                 </button>

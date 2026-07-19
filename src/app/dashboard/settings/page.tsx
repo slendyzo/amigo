@@ -2,8 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronDown,
+  Plus,
+  Pencil,
+  Trash2,
+  RotateCcw,
+} from "lucide-react";
 import ShortcutsTokensCard from "@/components/shortcuts-tokens-card";
+import { useTheme, type Theme } from "@/components/theme-controls";
 
 type Stats = {
   totalExpenses: number;
@@ -54,16 +66,32 @@ const LANGUAGES = [
   { code: "fr-FR", name: "Français (France)" },
 ];
 
+const EASE = [0.16, 1, 0.3, 1] as const;
+const sectionMotion = (i: number) => ({
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.35, ease: EASE, delay: i * 0.05 },
+});
+const cardShadow = { boxShadow: "var(--shadow-card)" };
+
 export default function SettingsPage() {
   const t = useTranslations("settings");
   const tCommon = useTranslations("common");
+  const tNav = useTranslations("nav");
   const tAi = useTranslations("aiAdvisor");
+  const router = useRouter();
+  const { theme, setTheme } = useTheme();
+
   const [stats, setStats] = useState<Stats | null>(null);
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [recurringIncomes, setRecurringIncomes] = useState<RecurringIncome[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  // Current user (for the profile card)
+  const [userName, setUserName] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   // Budget form
   const [monthlyBudget, setMonthlyBudget] = useState("");
@@ -111,6 +139,16 @@ export default function SettingsPage() {
         if (data) {
           setAiEnabled(data.aiProcessingEnabled);
           setAiConsentAt(data.aiConsentAt);
+        }
+      })
+      .catch(() => {});
+    // Fetch current user for the profile card
+    fetch("/api/auth/session")
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data?.user) {
+          setUserName(data.user.name || null);
+          setUserEmail(data.user.email || null);
         }
       })
       .catch(() => {});
@@ -395,407 +433,598 @@ export default function SettingsPage() {
     }
   };
 
+  // ---- Shared token styles ----
+  const ctrlStyle = {
+    background: "var(--app-bg)",
+    color: "var(--ink)",
+    border: "1px solid var(--line-strong)",
+  };
+  const selectCls =
+    "tabular-nums text-[13px] font-semibold rounded-[14px] pl-3 pr-8 py-2 appearance-none focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)] cursor-pointer max-w-[180px] truncate";
+  const inputCls =
+    "w-full rounded-[14px] px-4 py-2.5 text-[14px] text-[color:var(--ink)] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]";
+  const rowCls =
+    "flex items-center justify-between gap-3 py-3 min-h-[44px] border-b last:border-b-0";
+
+  const groupLabel = (text: string) => (
+    <div
+      className="px-1 mb-2 text-[11.5px] font-semibold uppercase tracking-[0.06em]"
+      style={{ color: "var(--ink-subtle)" }}
+    >
+      {text}
+    </div>
+  );
+
+  const themeOptions: { value: Theme; label: string }[] = [
+    { value: "light", label: tNav("themeLight") },
+    { value: "dark", label: tNav("themeDark") },
+    { value: "system", label: tNav("themeSystem") },
+  ];
+
+  const initial = (userName?.[0] || userEmail?.[0] || "?").toUpperCase();
+
   return (
-    <div className="space-y-6 max-w-4xl">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
-        <p className="text-slate-500 text-sm mt-1">
-          {t("subtitle")}
-        </p>
+    <div className="mx-auto w-full max-w-[640px]">
+      {/* Pushed header */}
+      <div className="relative flex items-center justify-center mb-5">
+        <button
+          type="button"
+          onClick={() => router.back()}
+          aria-label={tCommon("back")}
+          className="absolute left-0 flex h-10 w-10 items-center justify-center rounded-full transition-transform active:scale-[.94]"
+          style={{ background: "var(--surface)", ...cardShadow }}
+        >
+          <ChevronLeft size={20} strokeWidth={1.8} style={{ color: "var(--ink)" }} />
+        </button>
+        <h1 className="text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
+          {t("title")}
+        </h1>
+        <div className="absolute right-0 h-10 w-10" />
       </div>
 
-      {/* Account Stats */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t("accountOverview")}</h2>
-        {isLoading ? (
-          <div className="text-slate-500">{tCommon("loading")}</div>
-        ) : stats ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-slate-900">{stats.totalExpenses}</div>
-              <div className="text-sm text-slate-500">{t("totalExpenses")}</div>
+      <div className="flex flex-col gap-[18px]">
+        {/* Profile card → workspace */}
+        <motion.button
+          {...sectionMotion(0)}
+          type="button"
+          onClick={() => router.push("/dashboard/workspace")}
+          className="flex items-center gap-[14px] rounded-[20px] px-4 py-[18px] text-left transition-transform active:scale-[.99]"
+          style={{ background: "var(--surface)", ...cardShadow }}
+        >
+          <div
+            className="flex h-[52px] w-[52px] shrink-0 items-center justify-center rounded-full text-[20px] font-bold"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+          >
+            {initial}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[15px] font-bold truncate" style={{ color: "var(--ink)" }}>
+              {userName || userEmail || tCommon("loading")}
             </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-slate-900">
-                {getCurrencySymbol(currency)}{stats.totalAmount.toFixed(2)}
-              </div>
-              <div className="text-sm text-slate-500">{t("totalSpent")}</div>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-green-600">
-                {getCurrencySymbol(currency)}{stats.totalIncomeAmount.toFixed(2)}
-              </div>
-              <div className="text-sm text-slate-500">{t("totalIncome")}</div>
-            </div>
-            <div className="bg-slate-50 rounded-lg p-4">
-              <div className="text-2xl font-bold text-slate-900">{stats.totalProjects}</div>
-              <div className="text-sm text-slate-500">{t("projects")}</div>
+            <div className="text-[11.5px] truncate" style={{ color: "var(--ink-subtle)" }}>
+              {userEmail ? `${userEmail} · ` : ""}
+              {workspace?.name ? `${workspace.name} ${t("workspaceSuffix")}` : ""}
             </div>
           </div>
-        ) : null}
-      </div>
+          <ChevronRight size={18} strokeWidth={1.8} style={{ color: "var(--ink-subtle)" }} />
+        </motion.button>
 
-      {/* Budget Settings */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <h2 className="text-lg font-semibold text-slate-900 mb-4">{t("budgetAndCurrency")}</h2>
-        <div className="space-y-4">
-          {/* Monthly Budget */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+        {/* Account stats */}
+        <motion.section {...sectionMotion(1)}>
+          {groupLabel(t("accountOverview"))}
+          <div className="rounded-[20px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
+            {isLoading ? (
+              <div className="text-[13px]" style={{ color: "var(--ink-muted)" }}>
+                {tCommon("loading")}
+              </div>
+            ) : stats ? (
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {[
+                  { value: String(stats.totalExpenses), label: t("totalExpenses"), color: "var(--ink)" },
+                  {
+                    value: `${getCurrencySymbol(currency)}${stats.totalAmount.toFixed(2)}`,
+                    label: t("totalSpent"),
+                    color: "var(--ink)",
+                  },
+                  {
+                    value: `${getCurrencySymbol(currency)}${stats.totalIncomeAmount.toFixed(2)}`,
+                    label: t("totalIncome"),
+                    color: "var(--positive)",
+                  },
+                  { value: String(stats.totalProjects), label: t("projects"), color: "var(--ink)" },
+                ].map((tile) => (
+                  <div key={tile.label} className="rounded-[14px] p-4" style={{ background: "var(--app-bg)" }}>
+                    <div className="text-[20px] font-bold tabular-nums" style={{ color: tile.color }}>
+                      {tile.value}
+                    </div>
+                    <div className="mt-0.5 text-[12px]" style={{ color: "var(--ink-subtle)" }}>
+                      {tile.label}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : null}
+          </div>
+        </motion.section>
+
+        {/* MONEY group */}
+        <motion.section {...sectionMotion(2)}>
+          {groupLabel(t("groupMoney"))}
+          <div className="rounded-[20px] px-4 py-1.5" style={{ background: "var(--surface)", ...cardShadow }}>
+            {/* Monthly budget */}
+            <div className={rowCls} style={{ borderColor: "var(--line)" }}>
+              <label htmlFor="budget" className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
                 {t("monthlyBudget")}
               </label>
-              <p className="text-xs text-slate-500">
-                {t("monthlyBudgetDescription")}
-              </p>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[13px]" style={{ color: "var(--ink-subtle)" }}>
+                  {getCurrencySymbol(currency)}
+                </span>
+                <input
+                  id="budget"
+                  type="number"
+                  value={monthlyBudget}
+                  onChange={(e) => setMonthlyBudget(e.target.value)}
+                  placeholder="0.00"
+                  className="w-28 rounded-[14px] px-3 py-2 text-right text-[13px] font-semibold tabular-nums focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                  style={ctrlStyle}
+                />
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="text-lg text-slate-500">{getCurrencySymbol(currency)}</span>
-              <input
-                type="number"
-                value={monthlyBudget}
-                onChange={(e) => setMonthlyBudget(e.target.value)}
-                placeholder="0.00"
-                className="w-32 rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-              />
-            </div>
-          </div>
 
-          {/* Currency */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+            {/* Default currency */}
+            <div className={rowCls} style={{ borderColor: "var(--line)" }}>
+              <label className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
                 {t("currency")}
               </label>
-              <p className="text-xs text-slate-500">
-                {t("currencyDescription")}
-              </p>
+              <div className="relative">
+                <select
+                  value={currency}
+                  onChange={(e) => setCurrency(e.target.value)}
+                  className={selectCls}
+                  style={ctrlStyle}
+                >
+                  {CURRENCIES.map((c) => (
+                    <option key={c.code} value={c.code}>
+                      {c.symbol} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={14}
+                  strokeWidth={1.8}
+                  className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2"
+                  style={{ color: "var(--ink-subtle)" }}
+                />
+              </div>
             </div>
-            <select
-              value={currency}
-              onChange={(e) => setCurrency(e.target.value)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-            >
-              {CURRENCIES.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.symbol} {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
 
-          {/* Language */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-slate-700 mb-1">
-                {t("language")}
-              </label>
-              <p className="text-xs text-slate-500">
-                {t("languageDescription")}
-              </p>
-            </div>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-            >
-              {LANGUAGES.map((l) => (
-                <option key={l.code} value={l.code}>
-                  {l.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Currency Display Mode */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-            <div className="flex-1">
-              <label className="block text-sm font-medium text-slate-700 mb-1">
+            {/* Currency display mode */}
+            <div className={rowCls} style={{ borderColor: "var(--line)" }}>
+              <label className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
                 {t("currencyDisplayMode")}
               </label>
-              <p className="text-xs text-slate-500">
-                {t("currencyDisplayModeDescription")}
-              </p>
+              <div className="relative">
+                <select
+                  value={currencyDisplayMode}
+                  onChange={(e) => setCurrencyDisplayMode(e.target.value)}
+                  className={selectCls}
+                  style={ctrlStyle}
+                >
+                  <option value="converted">{t("currencyModes.converted")}</option>
+                  <option value="original">{t("currencyModes.original")}</option>
+                  <option value="original_only">{t("currencyModes.originalOnly")}</option>
+                </select>
+                <ChevronDown
+                  size={14}
+                  strokeWidth={1.8}
+                  className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2"
+                  style={{ color: "var(--ink-subtle)" }}
+                />
+              </div>
             </div>
-            <select
-              value={currencyDisplayMode}
-              onChange={(e) => setCurrencyDisplayMode(e.target.value)}
-              className="rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-            >
-              <option value="converted">{t("currencyModes.converted")}</option>
-              <option value="original">{t("currencyModes.original")}</option>
-              <option value="original_only">{t("currencyModes.originalOnly")}</option>
-            </select>
-          </div>
 
-          {/* Default Bank Account */}
-          {bankAccounts.length > 0 && (
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <div className="flex-1">
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+            {/* Default bank account */}
+            {bankAccounts.length > 0 && (
+              <div className={rowCls} style={{ borderColor: "var(--line)" }}>
+                <label className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
                   {t("defaultBankAccount")}
                 </label>
-                <p className="text-xs text-slate-500">
-                  {t("defaultBankAccountDescription")}
-                </p>
+                <div className="relative">
+                  <select
+                    value={defaultBankAccountId}
+                    onChange={(e) => setDefaultBankAccountId(e.target.value)}
+                    className={selectCls}
+                    style={ctrlStyle}
+                  >
+                    <option value="">{t("noDefault")}</option>
+                    {bankAccounts.map((acc) => (
+                      <option key={acc.id} value={acc.id}>
+                        {acc.name}
+                      </option>
+                    ))}
+                  </select>
+                  <ChevronDown
+                    size={14}
+                    strokeWidth={1.8}
+                    className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2"
+                    style={{ color: "var(--ink-subtle)" }}
+                  />
+                </div>
               </div>
-              <select
-                value={defaultBankAccountId}
-                onChange={(e) => setDefaultBankAccountId(e.target.value)}
-                className="rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
-              >
-                <option value="">{t("noDefault")}</option>
-                {bankAccounts.map((acc) => (
-                  <option key={acc.id} value={acc.id}>
-                    {acc.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
+            )}
+          </div>
+        </motion.section>
 
+        {/* APP group */}
+        <motion.section {...sectionMotion(3)}>
+          {groupLabel(t("groupApp"))}
+          <div className="rounded-[20px] px-4 py-1.5" style={{ background: "var(--surface)", ...cardShadow }}>
+            {/* Theme segment */}
+            <div className={rowCls} style={{ borderColor: "var(--line)" }}>
+              <span className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
+                {t("theme")}
+              </span>
+              <div
+                className="flex gap-1 rounded-[12px] p-[3px]"
+                style={{ background: "var(--app-bg)" }}
+              >
+                {themeOptions.map((o) => {
+                  const on = theme === o.value;
+                  return (
+                    <button
+                      key={o.value}
+                      type="button"
+                      onClick={() => setTheme(o.value)}
+                      aria-pressed={on}
+                      className="rounded-[9px] px-3 py-1.5 text-[11px] transition-colors duration-200"
+                      style={
+                        on
+                          ? { background: "var(--surface)", color: "var(--ink)", fontWeight: 600, boxShadow: "var(--shadow-card)" }
+                          : { color: "var(--ink-muted)", fontWeight: 500 }
+                      }
+                    >
+                      {o.label}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Language */}
+            <div className={rowCls} style={{ borderColor: "var(--line)" }}>
+              <label className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
+                {t("language")}
+              </label>
+              <div className="relative">
+                <select
+                  value={language}
+                  onChange={(e) => setLanguage(e.target.value)}
+                  className={selectCls}
+                  style={ctrlStyle}
+                >
+                  {LANGUAGES.map((l) => (
+                    <option key={l.code} value={l.code}>
+                      {l.name}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown
+                  size={14}
+                  strokeWidth={1.8}
+                  className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2"
+                  style={{ color: "var(--ink-subtle)" }}
+                />
+              </div>
+            </div>
+
+            {/* AI categorization toggle */}
+            <div className={rowCls} style={{ borderColor: "var(--line)" }}>
+              <div className="min-w-0 pr-3">
+                <div className="text-[13px] font-medium" style={{ color: "var(--ink)" }}>
+                  {tAi("title")}
+                </div>
+                {aiConsentAt && (
+                  <div className="mt-0.5 text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
+                    {aiEnabled ? tAi("statusEnabled") : tAi("statusDisabled")}
+                  </div>
+                )}
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={aiEnabled}
+                onClick={handleToggleAi}
+                disabled={isTogglingAi}
+                className="relative inline-flex h-[21px] w-9 shrink-0 rounded-full transition-colors duration-200 disabled:opacity-50"
+                style={{ background: aiEnabled ? "var(--accent)" : "var(--surface-3)" }}
+              >
+                <motion.span
+                  className="absolute h-4 w-4 rounded-full bg-white shadow"
+                  style={{ top: 2.5 }}
+                  animate={{ left: aiEnabled ? 17 : 3 }}
+                  transition={{ type: "spring", stiffness: 500, damping: 32 }}
+                />
+              </button>
+            </div>
+          </div>
+          <p className="px-1 mt-2 text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
+            {tAi("toggleLabel")}
+          </p>
+
+          {/* Save settings */}
           {saveMessage && (
             <div
-              className={`p-3 rounded-lg text-sm ${
-                saveMessage.type === "success"
-                  ? "bg-green-50 text-green-700"
-                  : "bg-red-50 text-red-700"
-              }`}
+              className="mt-3 rounded-[14px] p-3 text-[13px]"
+              style={{
+                background:
+                  saveMessage.type === "success"
+                    ? "color-mix(in srgb, var(--positive) 10%, transparent)"
+                    : "color-mix(in srgb, var(--negative) 10%, transparent)",
+                color: saveMessage.type === "success" ? "var(--positive)" : "var(--negative)",
+              }}
             >
               {saveMessage.text}
             </div>
           )}
-
           <button
             onClick={handleSaveBudget}
             disabled={isSaving}
-            className="px-4 py-2 bg-[#0070f3] text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 transition-colors"
+            className="mt-3 w-full rounded-[18px] py-3 text-[14px] font-semibold transition-transform active:scale-[.99] disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
           >
             {isSaving ? tCommon("loading") : t("saveSettings")}
           </button>
-        </div>
-      </div>
+        </motion.section>
 
-      {/* Restart Setup */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">{t("restartSetup")}</h2>
-            <p className="text-sm text-slate-500">
-              {t("restartSetupDescription")}
-            </p>
-          </div>
-          <button
-            onClick={handleRestartOnboarding}
-            disabled={isRestartingOnboarding}
-            className="px-4 py-2 border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors flex items-center gap-2 disabled:opacity-50"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-            {isRestartingOnboarding ? tCommon("loading") : t("restartSetupButton")}
-          </button>
-        </div>
-      </div>
-
-      {/* Recurring Income (Salary) */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">{t("recurringIncome")}</h2>
-            <p className="text-sm text-slate-500">{t("salaryDescription")}</p>
-          </div>
-          <button
-            onClick={() => {
-              setEditingSalaryId(null);
-              setSalaryName(t("salary"));
-              setSalaryAmount("");
-              setSalaryCurrency("EUR");
-              setSalaryDay("1");
-              setShowSalaryModal(true);
-            }}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            {t("addSalary")}
-          </button>
-        </div>
-
-        {recurringIncomes.length === 0 ? (
-          <div className="text-center py-8 text-slate-500">
-            <svg className="w-12 h-12 mx-auto mb-3 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p>{t("noRecurringIncome")}</p>
-            <p className="text-xs mt-1">{t("addSalaryHint")}</p>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {recurringIncomes.map((income) => (
-              <div
-                key={income.id}
-                className="flex items-center justify-between p-4 bg-green-50 rounded-lg border border-green-100"
-              >
-                <div>
-                  <div className="font-medium text-slate-900">{income.name}</div>
-                  <div className="text-sm text-slate-500">
-                    {income.dayOfMonth ? t("dayOfMonth", { day: income.dayOfMonth }) : t("monthly")}
-                  </div>
-                </div>
-                <div className="flex items-center gap-4">
-                  <div className="text-right">
-                    <div className="text-xl font-bold text-green-600">
-                      {getCurrencySymbol(income.currency || "EUR")}{Number(income.amount).toFixed(2)}
-                    </div>
-                    {income.currency && income.currency !== "EUR" && (
-                      <div className="text-xs text-slate-500">
-                        ~{"\u20ac"}{Number(income.amountEur).toFixed(2)} EUR
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => openEditSalary(income)}
-                      className="p-2 text-slate-400 hover:text-slate-600 hover:bg-white rounded-lg"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                      </svg>
-                    </button>
-                    <button
-                      onClick={() => handleDeleteSalary(income.id)}
-                      className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg"
-                    >
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
+        {/* Recurring income (salary) */}
+        <motion.section {...sectionMotion(4)}>
+          <div className="rounded-[20px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-[15px] font-bold" style={{ color: "var(--ink)" }}>
+                  {t("recurringIncome")}
+                </h2>
+                <p className="text-[12px]" style={{ color: "var(--ink-subtle)" }}>
+                  {t("salaryDescription")}
+                </p>
               </div>
-            ))}
-          </div>
-        )}
-      </div>
+              <button
+                onClick={() => {
+                  setEditingSalaryId(null);
+                  setSalaryName(t("salary"));
+                  setSalaryAmount("");
+                  setSalaryCurrency("EUR");
+                  setSalaryDay("1");
+                  setShowSalaryModal(true);
+                }}
+                className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition-transform active:scale-[.96]"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+              >
+                <Plus size={16} strokeWidth={1.8} />
+                {t("addSalary")}
+              </button>
+            </div>
 
-      {/* Extra Incomes Link */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-lg font-semibold text-slate-900">{t("extraIncomes")}</h2>
-            <p className="text-sm text-slate-500">
-              {t("extraIncomesDescription")}
-            </p>
-          </div>
-          <a
-            href="/dashboard/incomes"
-            className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors flex items-center gap-2"
-          >
-            {t("manageIncomes")}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </a>
-        </div>
-      </div>
-
-      {/* AI Advisor */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className="flex-1">
-            <h2 className="text-lg font-semibold text-slate-900">{tAi("title")}</h2>
-            <p className="text-sm text-slate-500 mt-0.5">{tAi("description")}</p>
-            {aiConsentAt && (
-              <p className="text-xs text-slate-400 mt-1">
-                {aiEnabled ? tAi("statusEnabled") : tAi("statusDisabled")}
-              </p>
+            {recurringIncomes.length === 0 ? (
+              <div className="py-8 text-center text-[13px]" style={{ color: "var(--ink-subtle)" }}>
+                <p style={{ color: "var(--ink-muted)" }}>{t("noRecurringIncome")}</p>
+                <p className="mt-1 text-[11.5px]">{t("addSalaryHint")}</p>
+              </div>
+            ) : (
+              <div className="mt-3 space-y-2.5">
+                {recurringIncomes.map((income) => (
+                  <div
+                    key={income.id}
+                    className="flex items-center justify-between rounded-[14px] p-3.5"
+                    style={{ background: "color-mix(in srgb, var(--positive) 8%, transparent)" }}
+                  >
+                    <div className="min-w-0">
+                      <div className="text-[14px] font-semibold truncate" style={{ color: "var(--ink)" }}>
+                        {income.name}
+                      </div>
+                      <div className="text-[12px]" style={{ color: "var(--ink-subtle)" }}>
+                        {income.dayOfMonth ? t("dayOfMonth", { day: income.dayOfMonth }) : t("monthly")}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="text-[16px] font-bold tabular-nums" style={{ color: "var(--positive)" }}>
+                          {getCurrencySymbol(income.currency || "EUR")}
+                          {Number(income.amount).toFixed(2)}
+                        </div>
+                        {income.currency && income.currency !== "EUR" && (
+                          <div className="text-[11px] tabular-nums" style={{ color: "var(--ink-subtle)" }}>
+                            ~{"€"}
+                            {Number(income.amountEur).toFixed(2)} EUR
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => openEditSalary(income)}
+                          aria-label={tCommon("edit")}
+                          className="flex h-9 w-9 items-center justify-center rounded-full transition-colors"
+                          style={{ color: "var(--ink-muted)" }}
+                        >
+                          <Pencil size={16} strokeWidth={1.8} />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteSalary(income.id)}
+                          aria-label={tCommon("delete")}
+                          className="flex h-9 w-9 items-center justify-center rounded-full transition-colors"
+                          style={{ color: "var(--negative)" }}
+                        >
+                          <Trash2 size={16} strokeWidth={1.8} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             )}
           </div>
-          <button
-            role="switch"
-            aria-checked={aiEnabled}
-            onClick={handleToggleAi}
-            disabled={isTogglingAi}
-            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-900 disabled:opacity-50 disabled:cursor-not-allowed ${
-              aiEnabled ? "bg-slate-900" : "bg-slate-200"
-            }`}
+        </motion.section>
+
+        {/* Extra incomes link */}
+        <motion.section {...sectionMotion(5)}>
+          <a
+            href="/dashboard/incomes"
+            className="flex items-center justify-between gap-3 rounded-[20px] p-4 transition-transform active:scale-[.99]"
+            style={{ background: "var(--surface)", ...cardShadow }}
           >
-            <span
-              className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-                aiEnabled ? "translate-x-6" : "translate-x-1"
-              }`}
-            />
-          </button>
-        </div>
-        <p className="text-xs text-slate-400 mt-3">
-          {tAi("toggleLabel")}
-        </p>
-      </div>
+            <div className="min-w-0">
+              <h2 className="text-[15px] font-bold" style={{ color: "var(--ink)" }}>
+                {t("extraIncomes")}
+              </h2>
+              <p className="text-[12px]" style={{ color: "var(--ink-subtle)" }}>
+                {t("extraIncomesDescription")}
+              </p>
+            </div>
+            <div className="flex shrink-0 items-center gap-1 text-[13px] font-semibold" style={{ color: "var(--accent)" }}>
+              {t("manageIncomes")}
+              <ChevronRight size={16} strokeWidth={1.8} />
+            </div>
+          </a>
+        </motion.section>
 
-      {/* iPhone Shortcuts (API tokens) */}
-      <ShortcutsTokensCard />
-
-      {/* Danger Zone */}
-      <div className="bg-white rounded-xl p-6 shadow-sm border border-red-200">
-        <h2 className="text-lg font-semibold text-red-600 mb-4">{t("dangerZone")}</h2>
-
-        {deleteSuccess && (
-          <div className="mb-4 p-3 rounded-lg bg-green-50 text-green-700 text-sm">
-            {deleteSuccess}
+        {/* Restart setup */}
+        <motion.section {...sectionMotion(6)}>
+          <div
+            className="flex items-center justify-between gap-3 rounded-[20px] p-4"
+            style={{ background: "var(--surface)", ...cardShadow }}
+          >
+            <div className="min-w-0">
+              <h2 className="text-[15px] font-bold" style={{ color: "var(--ink)" }}>
+                {t("restartSetup")}
+              </h2>
+              <p className="text-[12px]" style={{ color: "var(--ink-subtle)" }}>
+                {t("restartSetupDescription")}
+              </p>
+            </div>
+            <button
+              onClick={handleRestartOnboarding}
+              disabled={isRestartingOnboarding}
+              className="flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition-transform active:scale-[.96] disabled:opacity-50"
+              style={{
+                border: "1px solid var(--accent)",
+                color: "var(--accent)",
+                background: "var(--accent-tint)",
+              }}
+            >
+              <RotateCcw size={16} strokeWidth={1.8} />
+              {isRestartingOnboarding ? tCommon("loading") : t("restartSetupButton")}
+            </button>
           </div>
-        )}
+        </motion.section>
 
-        <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg">
-          <div>
-            <div className="font-medium text-slate-900">{t("deleteAllExpenses")}</div>
-            <div className="text-sm text-slate-500">
-              {t("deleteAllExpensesCount", { count: stats?.totalExpenses || 0 })}
+        {/* iPhone Shortcuts (API tokens) — shared component, left wired */}
+        <motion.section {...sectionMotion(7)}>
+          <ShortcutsTokensCard />
+        </motion.section>
+
+        {/* DANGER group */}
+        <motion.section {...sectionMotion(8)}>
+          {groupLabel(t("dangerZone"))}
+          <div
+            className="rounded-[20px] p-4"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)", border: "1px solid color-mix(in srgb, var(--negative) 22%, transparent)" }}
+          >
+            {deleteSuccess && (
+              <div
+                className="mb-3 rounded-[14px] p-3 text-[13px]"
+                style={{
+                  background: "color-mix(in srgb, var(--positive) 10%, transparent)",
+                  color: "var(--positive)",
+                }}
+              >
+                {deleteSuccess}
+              </div>
+            )}
+
+            <div
+              className="flex items-center justify-between gap-3 rounded-[14px] p-3.5"
+              style={{ background: "color-mix(in srgb, var(--negative) 8%, transparent)" }}
+            >
+              <div className="min-w-0">
+                <div className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {t("deleteAllExpenses")}
+                </div>
+                <div className="text-[12px]" style={{ color: "var(--ink-subtle)" }}>
+                  {t("deleteAllExpensesCount", { count: stats?.totalExpenses || 0 })}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                className="h-9 shrink-0 rounded-full px-4 text-[13px] font-semibold transition-transform active:scale-[.96]"
+                style={{ border: "1px solid var(--negative)", color: "var(--negative)" }}
+              >
+                {t("deleteAll")}
+              </button>
+            </div>
+
+            <div
+              className="mt-3 flex items-center justify-between gap-3 rounded-[14px] p-3.5"
+              style={{ background: "color-mix(in srgb, var(--negative) 8%, transparent)" }}
+            >
+              <div className="min-w-0">
+                <div className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
+                  {t("deleteAccount")}
+                </div>
+                <div className="text-[12px]" style={{ color: "var(--ink-subtle)" }}>
+                  {t("deleteAccountDescription")}
+                </div>
+              </div>
+              <button
+                onClick={() => setShowDeleteAccountConfirm(true)}
+                className="h-9 shrink-0 rounded-full px-4 text-[13px] font-semibold text-white transition-transform active:scale-[.96]"
+                style={{ background: "var(--negative)" }}
+              >
+                {t("deleteAccount")}
+              </button>
             </div>
           </div>
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
-          >
-            {t("deleteAll")}
-          </button>
-        </div>
+        </motion.section>
 
-        <div className="flex items-center justify-between p-4 bg-red-50 rounded-lg mt-4">
-          <div>
-            <div className="font-medium text-slate-900">{t("deleteAccount")}</div>
-            <div className="text-sm text-slate-500">
-              {t("deleteAccountDescription")}
-            </div>
-          </div>
-          <button
-            onClick={() => setShowDeleteAccountConfirm(true)}
-            className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-          >
-            {t("deleteAccount")}
-          </button>
-        </div>
+        {/* Sign out */}
+        <motion.button
+          {...sectionMotion(9)}
+          type="button"
+          onClick={() => signOut({ callbackUrl: "/" })}
+          className="w-full rounded-[18px] py-[13px] text-center text-[13.5px] font-semibold transition-transform active:scale-[.99]"
+          style={{
+            background: "color-mix(in srgb, var(--negative) 8%, transparent)",
+            color: "var(--negative)",
+          }}
+        >
+          {tNav("signOut")}
+        </motion.button>
       </div>
 
       {/* Salary Modal */}
       {showSalaryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ background: "rgba(23,22,31,0.5)" }}
             onClick={() => setShowSalaryModal(false)}
           />
-          <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-green-50">
-              <h2 className="text-lg font-semibold text-green-700">
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            className="relative w-full max-w-md overflow-hidden rounded-[20px]"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+          >
+            <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--line)" }}>
+              <h2 className="text-[16px] font-bold" style={{ color: "var(--ink)" }}>
                 {editingSalaryId ? t("editRecurringIncome") : t("addRecurringIncome")}
               </h2>
             </div>
 
-            <div className="p-6 space-y-4">
+            <div className="space-y-4 p-6">
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
                   {t("name")}
                 </label>
                 <input
@@ -803,36 +1032,49 @@ export default function SettingsPage() {
                   value={salaryName}
                   onChange={(e) => setSalaryName(e.target.value)}
                   placeholder={t("salaryNamePlaceholder")}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className={inputCls}
+                  style={ctrlStyle}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
                   {t("amount")}
                 </label>
                 <div className="flex gap-2">
-                  <select
-                    value={salaryCurrency}
-                    onChange={(e) => setSalaryCurrency(e.target.value)}
-                    className="w-24 rounded-lg border border-slate-300 px-2 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
-                  >
-                    {CURRENCIES.map((c) => (
-                      <option key={c.code} value={c.code}>{c.symbol} {c.code}</option>
-                    ))}
-                  </select>
+                  <div className="relative">
+                    <select
+                      value={salaryCurrency}
+                      onChange={(e) => setSalaryCurrency(e.target.value)}
+                      className="h-full appearance-none rounded-[14px] pl-3 pr-8 py-2.5 text-[14px] focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                      style={ctrlStyle}
+                    >
+                      {CURRENCIES.map((c) => (
+                        <option key={c.code} value={c.code}>
+                          {c.symbol} {c.code}
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      size={14}
+                      strokeWidth={1.8}
+                      className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2"
+                      style={{ color: "var(--ink-subtle)" }}
+                    />
+                  </div>
                   <input
                     type="number"
                     value={salaryAmount}
                     onChange={(e) => setSalaryAmount(e.target.value)}
                     placeholder="0.00"
-                    className="flex-1 rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] tabular-nums focus:outline-none focus:ring-2 focus:ring-[color:var(--accent)]"
+                    style={ctrlStyle}
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
                   {t("dayOfMonthLabel")}
                 </label>
                 <input
@@ -842,9 +1084,10 @@ export default function SettingsPage() {
                   value={salaryDay}
                   onChange={(e) => setSalaryDay(e.target.value)}
                   placeholder="1"
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className={`${inputCls} tabular-nums`}
+                  style={ctrlStyle}
                 />
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="mt-1 text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
                   {t("dayOfMonthHint")}
                 </p>
               </div>
@@ -852,54 +1095,66 @@ export default function SettingsPage() {
               <div className="flex gap-3 pt-2">
                 <button
                   onClick={() => setShowSalaryModal(false)}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
+                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
                 >
                   {tCommon("cancel")}
                 </button>
                 <button
                   onClick={handleSaveSalary}
                   disabled={isSaving || !salaryAmount}
-                  className="flex-1 rounded-lg bg-green-600 px-4 py-2.5 text-white font-medium hover:bg-green-700 transition-colors disabled:opacity-50"
+                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98] disabled:opacity-50"
+                  style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
                 >
                   {isSaving ? tCommon("loading") : editingSalaryId ? tCommon("save") : t("addSalary")}
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ background: "rgba(23,22,31,0.5)" }}
             onClick={() => {
               setShowDeleteConfirm(false);
               setDeleteConfirmText("");
               setDeleteError("");
             }}
           />
-          <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-red-50">
-              <h2 className="text-lg font-semibold text-red-600">
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            className="relative w-full max-w-md overflow-hidden rounded-[20px]"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+          >
+            <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--line)" }}>
+              <h2 className="text-[16px] font-bold" style={{ color: "var(--negative)" }}>
                 {t("deleteAllExpensesTitle")}
               </h2>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="text-slate-600">
+            <div className="space-y-4 p-6">
+              <div className="text-[14px]" style={{ color: "var(--ink-muted)" }}>
                 {t("deleteAllExpensesWarning", { count: stats?.totalExpenses || 0 })}
               </div>
 
               {deleteError && (
-                <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
+                <div
+                  className="rounded-[14px] p-3 text-[13px]"
+                  style={{ background: "color-mix(in srgb, var(--negative) 10%, transparent)", color: "var(--negative)" }}
+                >
                   {deleteError}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
                   {t("typeDeleteAllConfirm")}
                 </label>
                 <input
@@ -907,7 +1162,8 @@ export default function SettingsPage() {
                   value={deleteConfirmText}
                   onChange={(e) => setDeleteConfirmText(e.target.value)}
                   placeholder="DELETE ALL"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className={inputCls}
+                  style={ctrlStyle}
                 />
               </div>
 
@@ -919,46 +1175,55 @@ export default function SettingsPage() {
                     setDeleteConfirmText("");
                     setDeleteError("");
                   }}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
+                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
                 >
                   {tCommon("cancel")}
                 </button>
                 <button
                   onClick={handleDeleteAllExpenses}
                   disabled={isDeleting || deleteConfirmText !== "DELETE ALL"}
-                  className="flex-1 rounded-lg bg-red-500 px-4 py-2.5 text-white font-medium hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "var(--negative)" }}
                 >
                   {isDeleting ? tCommon("loading") : t("deleteAllExpenses")}
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
 
       {/* Delete Account Confirmation Modal */}
       {showDeleteAccountConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            className="absolute inset-0 backdrop-blur-sm"
+            style={{ background: "rgba(23,22,31,0.5)" }}
             onClick={() => {
               setShowDeleteAccountConfirm(false);
               setDeleteAccountConfirmText("");
               setDeleteAccountError("");
             }}
           />
-          <div className="relative w-full max-w-md mx-4 bg-white rounded-2xl shadow-2xl overflow-hidden">
-            <div className="px-6 py-4 border-b border-slate-200 bg-red-50">
-              <h2 className="text-lg font-semibold text-red-600">
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.3, ease: EASE }}
+            className="relative w-full max-w-md overflow-hidden rounded-[20px]"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+          >
+            <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--line)" }}>
+              <h2 className="text-[16px] font-bold" style={{ color: "var(--negative)" }}>
                 {t("deleteAccountTitle")}
               </h2>
             </div>
 
-            <div className="p-6 space-y-4">
-              <div className="text-slate-600">
+            <div className="space-y-4 p-6">
+              <div className="text-[14px]" style={{ color: "var(--ink-muted)" }}>
                 {t("deleteAccountWarning")}
               </div>
-              <ul className="list-disc list-inside text-sm text-slate-600 space-y-1">
+              <ul className="list-inside list-disc space-y-1 text-[13px]" style={{ color: "var(--ink-muted)" }}>
                 <li>{t("deleteAccountItem1")}</li>
                 <li>{t("deleteAccountItem2")}</li>
                 <li>{t("deleteAccountItem3")}</li>
@@ -967,13 +1232,16 @@ export default function SettingsPage() {
               </ul>
 
               {deleteAccountError && (
-                <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
+                <div
+                  className="rounded-[14px] p-3 text-[13px]"
+                  style={{ background: "color-mix(in srgb, var(--negative) 10%, transparent)", color: "var(--negative)" }}
+                >
                   {deleteAccountError}
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
                   {t("typeDeleteAccountConfirm")}
                 </label>
                 <input
@@ -981,7 +1249,8 @@ export default function SettingsPage() {
                   value={deleteAccountConfirmText}
                   onChange={(e) => setDeleteAccountConfirmText(e.target.value)}
                   placeholder="DELETE MY ACCOUNT"
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-red-500"
+                  className={inputCls}
+                  style={ctrlStyle}
                 />
               </div>
 
@@ -993,20 +1262,22 @@ export default function SettingsPage() {
                     setDeleteAccountConfirmText("");
                     setDeleteAccountError("");
                   }}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
+                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
                 >
                   {tCommon("cancel")}
                 </button>
                 <button
                   onClick={handleDeleteAccount}
                   disabled={isDeletingAccount || deleteAccountConfirmText !== "DELETE MY ACCOUNT"}
-                  className="flex-1 rounded-lg bg-red-600 px-4 py-2.5 text-white font-medium hover:bg-red-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: "var(--negative)" }}
                 >
                   {isDeletingAccount ? tCommon("loading") : t("deleteAccount")}
                 </button>
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

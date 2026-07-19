@@ -163,7 +163,10 @@ export default function ProjectWrappedModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-lg mx-4 overflow-hidden rounded-2xl shadow-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500">
+      <div
+        className="relative w-full max-w-lg mx-4 overflow-hidden rounded-[24px] shadow-2xl"
+        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-soft))" }}
+      >
         {/* Close button */}
         <button
           onClick={onClose}
@@ -411,7 +414,8 @@ export default function ProjectWrappedModal({
               </button>
               <button
                 onClick={nextSlide}
-                className="px-6 py-2 rounded-lg bg-white text-orange-600 font-medium hover:bg-white/90 transition-colors"
+                className="px-6 py-2 rounded-[14px] bg-white font-semibold hover:bg-white/90 transition-colors"
+                style={{ color: "var(--accent)" }}
               >
                 {currentSlide === totalSlides - 1 ? t("done") : tCommon("next")}
               </button>

@@ -3,6 +3,10 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { motion, AnimatePresence } from "framer-motion";
+import { UploadCloud, FileSpreadsheet, FileText, Trash2, Loader2, AlertTriangle, Info } from "lucide-react";
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 type ImportLog = {
   id: string;
@@ -119,120 +123,132 @@ export default function ImportsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold" style={{ color: "var(--ink)" }}>{t("title")}</h1>
+          <p className="text-[13.5px] mt-1" style={{ color: "var(--ink-muted)" }}>
             {t("subtitle")}
           </p>
         </div>
         <button
           onClick={() => router.push("/dashboard/import")}
-          className="px-4 py-2 bg-[#0070f3] text-white rounded-lg hover:bg-[#0060df] transition-colors flex items-center gap-2"
+          className="px-4 py-2.5 rounded-[14px] text-[14px] font-semibold flex items-center gap-2 shrink-0 transition-transform active:scale-[0.98]"
+          style={{ background: "var(--accent)", color: "var(--accent-fg)", boxShadow: "var(--shadow-fab)" }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-          </svg>
+          <UploadCloud className="w-[18px] h-[18px]" strokeWidth={1.8} />
           {t("newImport")}
         </button>
       </div>
 
       {/* Import Logs List */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center text-slate-500">{tCommon("loading")}</div>
-        ) : importLogs.length === 0 ? (
-          <div className="p-12 text-center text-slate-500">
-            <svg className="w-12 h-12 mx-auto mb-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            <p>{t("noImportsYet")}</p>
-            <button
-              onClick={() => router.push("/dashboard/import")}
-              className="mt-4 text-[#0070f3] hover:text-[#0060df] font-medium"
-            >
-              {t("importFirstFile")}
-            </button>
+      {isLoading ? (
+        <div
+          className="p-8 text-center text-[14px] rounded-[20px]"
+          style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)", color: "var(--ink-muted)" }}
+        >
+          {tCommon("loading")}
+        </div>
+      ) : importLogs.length === 0 ? (
+        <div
+          className="p-12 text-center rounded-[20px]"
+          style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+        >
+          <div
+            className="w-14 h-14 mx-auto mb-4 rounded-[18px] flex items-center justify-center"
+            style={{ background: "var(--accent-tint)" }}
+          >
+            <UploadCloud className="w-7 h-7" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
           </div>
-        ) : (
-          <div className="divide-y divide-slate-100">
-            {importLogs.map((log) => (
-              <div key={log.id} className="p-4 flex items-center gap-4 hover:bg-slate-50">
+          <p className="text-[14px]" style={{ color: "var(--ink-muted)" }}>{t("noImportsYet")}</p>
+          <button
+            onClick={() => router.push("/dashboard/import")}
+            className="mt-4 text-[14px] font-semibold"
+            style={{ color: "var(--accent)" }}
+          >
+            {t("importFirstFile")}
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {importLogs.map((log, i) => {
+            const isXlsx = log.fileType === "xlsx" || log.fileType === "xls";
+            return (
+              <motion.div
+                key={log.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: EASE, delay: i * 0.05 }}
+                className="p-4 rounded-[20px] flex items-center gap-3.5"
+                style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+              >
                 {/* File Icon */}
-                <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                  log.fileType === "xlsx" ? "bg-green-100" : "bg-blue-100"
-                }`}>
-                  <svg className={`w-6 h-6 ${log.fileType === "xlsx" ? "text-green-600" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
+                <div
+                  className="w-12 h-12 rounded-[12px] flex items-center justify-center shrink-0"
+                  style={{ background: "var(--surface-2)" }}
+                >
+                  {isXlsx ? (
+                    <FileSpreadsheet className="w-6 h-6" strokeWidth={1.8} style={{ color: "var(--positive)" }} />
+                  ) : (
+                    <FileText className="w-6 h-6" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
+                  )}
                 </div>
 
                 {/* Info */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="font-medium text-slate-900 truncate">{log.fileName}</span>
-                    <span className="px-2 py-0.5 text-xs rounded-full bg-slate-100 text-slate-600 uppercase">
+                    <span className="text-[14px] font-semibold truncate" style={{ color: "var(--ink)" }}>{log.fileName}</span>
+                    <span
+                      className="px-2 py-0.5 text-[10.5px] font-semibold rounded-full uppercase shrink-0"
+                      style={{ background: "var(--surface-2)", color: "var(--ink-muted)" }}
+                    >
                       {log.fileType}
                     </span>
                   </div>
-                  <div className="text-sm text-slate-500 mt-1">
+                  <div className="text-[12px] mt-1" style={{ color: "var(--ink-subtle)" }}>
                     {formatDate(log.createdAt)}
                   </div>
                 </div>
 
                 {/* Stats */}
-                <div className="flex items-center gap-6 text-sm">
-                  <div className="text-center">
-                    <div className="font-semibold text-slate-900">{log.expenseCount}</div>
-                    <div className="text-slate-500">{t("expenses")}</div>
+                <div className="flex items-center gap-5 text-center shrink-0">
+                  <div>
+                    <div className="text-[15px] font-bold tabular-nums" style={{ color: "var(--ink)" }}>{log.expenseCount}</div>
+                    <div className="text-[11px]" style={{ color: "var(--ink-subtle)" }}>{t("expenses")}</div>
                   </div>
                   {log.rowsFailed > 0 && (
-                    <div className="text-center">
-                      <div className="font-semibold text-amber-600">{log.rowsFailed}</div>
-                      <div className="text-slate-500">{t("failed")}</div>
+                    <div>
+                      <div className="text-[15px] font-bold tabular-nums" style={{ color: "var(--warning)" }}>{log.rowsFailed}</div>
+                      <div className="text-[11px]" style={{ color: "var(--ink-subtle)" }}>{t("failed")}</div>
                     </div>
                   )}
                 </div>
 
                 {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => handleDeleteClick(log)}
-                    disabled={deletingId === log.id}
-                    className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50 flex items-center gap-1"
-                  >
-                    {deletingId === log.id ? (
-                      <>
-                        <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                        </svg>
-                        {t("deleting")}
-                      </>
-                    ) : (
-                      <>
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                        {t("deleteBatch")}
-                      </>
-                    )}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+                <button
+                  onClick={() => handleDeleteClick(log)}
+                  disabled={deletingId === log.id}
+                  aria-label={t("deleteBatch")}
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-colors disabled:opacity-50 active:scale-95"
+                  style={{ background: "color-mix(in srgb, var(--negative) 10%, transparent)", color: "var(--negative)" }}
+                >
+                  {deletingId === log.id ? (
+                    <Loader2 className="w-[18px] h-[18px] animate-spin" strokeWidth={1.8} />
+                  ) : (
+                    <Trash2 className="w-[18px] h-[18px]" strokeWidth={1.8} />
+                  )}
+                </button>
+              </motion.div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Info Box */}
-      <div className="p-4 rounded-xl bg-amber-50 border border-amber-200">
+      <div className="p-4 rounded-[20px]" style={{ background: "var(--surface-2)" }}>
         <div className="flex gap-3">
-          <svg className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="text-sm text-amber-800">
-            <p className="font-medium">{t("aboutImportBatches")}</p>
+          <Info className="w-5 h-5 shrink-0 mt-0.5" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
+          <div className="text-[13px]" style={{ color: "var(--ink-muted)" }}>
+            <p className="font-semibold" style={{ color: "var(--ink)" }}>{t("aboutImportBatches")}</p>
             <p className="mt-1">
               {t("aboutImportBatchesDescription")}
             </p>
@@ -241,82 +257,105 @@ export default function ImportsPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      {deleteConfirmation && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 shadow-xl">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 rounded-full bg-amber-100 flex items-center justify-center">
-                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900">{t("deleteImportQuestion")}</h3>
-            </div>
-
-            <p className="text-slate-600 mb-4">
-              {t("deletingWillRemove", {
-                fileName: deleteConfirmation.log.fileName,
-                count: deleteConfirmation.log.expenseCount
-              })}
-            </p>
-
-            {deleteConfirmation.emptyProjects.length > 0 && (
-              <div className="mb-4 p-3 rounded-lg bg-slate-50 border border-slate-200">
-                <p className="text-sm font-medium text-slate-700 mb-2">
-                  {t("projectsWillBecomeEmpty")}
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {deleteConfirmation.emptyProjects.map((project) => (
-                    <span
-                      key={project.id}
-                      className="px-2 py-1 text-sm rounded-full bg-amber-100 text-amber-700"
-                    >
-                      {project.name}
-                    </span>
-                  ))}
+      <AnimatePresence>
+        {deleteConfirmation && (
+          <motion.div
+            className="fixed inset-0 flex items-center justify-center z-50 p-4"
+            style={{ background: "rgba(23,22,31,0.5)" }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2, ease: EASE }}
+            onClick={() => setDeleteConfirmation(null)}
+          >
+            <motion.div
+              className="rounded-[24px] max-w-md w-full p-6"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+              initial={{ opacity: 0, scale: 0.96, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.96, y: 8 }}
+              transition={{ duration: 0.25, ease: EASE }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+                  style={{ background: "color-mix(in srgb, var(--negative) 12%, transparent)" }}
+                >
+                  <AlertTriangle className="w-5 h-5" strokeWidth={1.8} style={{ color: "var(--negative)" }} />
                 </div>
-
-                <label className="flex items-center gap-2 mt-3 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={deleteConfirmation.deleteEmptyProjects}
-                    onChange={(e) =>
-                      setDeleteConfirmation({
-                        ...deleteConfirmation,
-                        deleteEmptyProjects: e.target.checked,
-                      })
-                    }
-                    className="w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500"
-                  />
-                  <span className="text-sm text-slate-700">
-                    {t("alsoDeleteEmptyProjects")}
-                  </span>
-                </label>
+                <h3 className="text-[17px] font-semibold" style={{ color: "var(--ink)" }}>{t("deleteImportQuestion")}</h3>
               </div>
-            )}
 
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteConfirmation(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
-              >
-                {tCommon("cancel")}
-              </button>
-              <button
-                onClick={() =>
-                  executeDelete(
-                    deleteConfirmation.log.id,
-                    deleteConfirmation.deleteEmptyProjects
-                  )
-                }
-                className="flex-1 px-4 py-2 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700 transition-colors"
-              >
-                {tCommon("delete")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+              <p className="text-[13.5px] mb-4 leading-relaxed" style={{ color: "var(--ink-muted)" }}>
+                {t("deletingWillRemove", {
+                  fileName: deleteConfirmation.log.fileName,
+                  count: deleteConfirmation.log.expenseCount
+                })}
+              </p>
+
+              {deleteConfirmation.emptyProjects.length > 0 && (
+                <div className="mb-4 p-3.5 rounded-[16px]" style={{ background: "var(--surface-2)" }}>
+                  <p className="text-[13px] font-semibold mb-2" style={{ color: "var(--ink)" }}>
+                    {t("projectsWillBecomeEmpty")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {deleteConfirmation.emptyProjects.map((project) => (
+                      <span
+                        key={project.id}
+                        className="px-2.5 py-1 text-[12.5px] rounded-full"
+                        style={{ background: "color-mix(in srgb, var(--warning) 14%, transparent)", color: "var(--warning)" }}
+                      >
+                        {project.name}
+                      </span>
+                    ))}
+                  </div>
+
+                  <label className="flex items-center gap-2.5 mt-3 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={deleteConfirmation.deleteEmptyProjects}
+                      onChange={(e) =>
+                        setDeleteConfirmation({
+                          ...deleteConfirmation,
+                          deleteEmptyProjects: e.target.checked,
+                        })
+                      }
+                      className="w-4 h-4 rounded"
+                      style={{ accentColor: "var(--negative)" }}
+                    />
+                    <span className="text-[13px]" style={{ color: "var(--ink)" }}>
+                      {t("alsoDeleteEmptyProjects")}
+                    </span>
+                  </label>
+                </div>
+              )}
+
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setDeleteConfirmation(null)}
+                  className="flex-1 px-4 py-3 rounded-[14px] text-[14px] font-semibold transition-colors active:scale-[0.99]"
+                  style={{ background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line-strong)" }}
+                >
+                  {tCommon("cancel")}
+                </button>
+                <button
+                  onClick={() =>
+                    executeDelete(
+                      deleteConfirmation.log.id,
+                      deleteConfirmation.deleteEmptyProjects
+                    )
+                  }
+                  className="flex-1 px-4 py-3 rounded-[14px] text-[14px] font-semibold text-white transition-transform active:scale-[0.99]"
+                  style={{ background: "var(--negative)" }}
+                >
+                  {tCommon("delete")}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

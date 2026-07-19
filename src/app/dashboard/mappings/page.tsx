@@ -2,9 +2,13 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { ArrowLeft, Plus, Pencil, Trash2, ChevronDown, Info } from "lucide-react";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import NudgeKeywordCard from "@/components/nudge-keyword-card";
+
+const EASE = [0.16, 1, 0.3, 1] as const;
 
 type Category = {
   id: string;
@@ -49,6 +53,7 @@ export default function KeywordMappingsPage() {
   const [editingMapping, setEditingMapping] = useState<KeywordMapping | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [showBuiltins, setShowBuiltins] = useState(false);
+  const [showHowItWorks, setShowHowItWorks] = useState(false);
 
   // Form state
   const [keyword, setKeyword] = useState("");
@@ -208,11 +213,53 @@ export default function KeywordMappingsPage() {
   };
 
   const getTypeLabel = (type: string) => {
-    return EXPENSE_TYPES.find((t) => t.value === type)?.label || type;
+    return EXPENSE_TYPES.find((ty) => ty.value === type)?.label || type;
   };
 
+  // Build preview chips: custom mappings first, then builtins that map to a category
+  const previewItems = useMemo(() => {
+    const items: { keyword: string; category: string }[] = [];
+    mappings.forEach((m) => {
+      if (m.category) items.push({ keyword: m.keyword, category: translateCategory(m.category.name) });
+    });
+    builtins.forEach((b) => {
+      if (!customKeywordSet.has(b.keyword.toLowerCase())) {
+        items.push({ keyword: b.keyword, category: translateCategory(b.category) });
+      }
+    });
+    return items;
+  }, [mappings, builtins, customKeywordSet, translateCategory]);
+
+  const PREVIEW_LIMIT = 6;
+  const previewShown = previewItems.slice(0, PREVIEW_LIMIT);
+  const previewMore = previewItems.length - previewShown.length;
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
+      {/* Pushed header */}
+      <div className="relative flex items-center justify-center h-10">
+        <button
+          onClick={() => router.back()}
+          aria-label={tCommon("back")}
+          className="absolute left-0 flex items-center justify-center rounded-full transition-transform active:scale-95"
+          style={{ width: 40, height: 40, background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+        >
+          <ArrowLeft className="w-5 h-5" strokeWidth={1.8} style={{ color: "var(--ink)" }} />
+        </button>
+        <h1 style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>{t("tabRules")}</h1>
+        <button
+          onClick={() => openModal()}
+          aria-label={t("addMapping")}
+          className="absolute right-0 flex items-center justify-center rounded-full transition-transform active:scale-95"
+          style={{ width: 40, height: 40, background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+        >
+          <Plus className="w-5 h-5" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
+        </button>
+      </div>
+
+      {/* 2-segment control */}
+      <SegmentControl active="rules" router={router} labelCategories={t("tabCategories")} labelRules={t("tabRules")} />
+
       {/* Keyword nudge cards */}
       {aiEnabled && nudgeCandidates.length > 0 && (
         <div className="flex flex-col gap-2">
@@ -226,8 +273,7 @@ export default function KeywordMappingsPage() {
               onAccepted={() => {
                 setNudgeCandidates((prev) =>
                   prev.filter(
-                    (x) =>
-                      !(x.merchantKey === c.merchantKey && x.categoryId === c.categoryId)
+                    (x) => !(x.merchantKey === c.merchantKey && x.categoryId === c.categoryId)
                   )
                 );
                 router.refresh();
@@ -237,266 +283,237 @@ export default function KeywordMappingsPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            {t("subtitle")}
-          </p>
-        </div>
-        <button
-          onClick={() => openModal()}
-          className="flex items-center gap-2 bg-[#0070f3] text-white px-4 py-2 rounded-lg hover:bg-[#0060df] transition-colors"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {t("addMapping")}
-        </button>
-      </div>
-
-      {/* Info Card */}
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
-        <div className="flex gap-3">
-          <svg className="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <div className="text-sm text-blue-800">
-            <p className="font-medium mb-1">{t("howItWorks")}</p>
-            <ul className="list-disc list-inside space-y-1 text-blue-700">
-              <li>{t("howItWorksItem1")}</li>
-              <li>{t("howItWorksItem2")}</li>
-              <li>{t("howItWorksItem3")}</li>
-              <li>{t("howItWorksItem4")}</li>
-            </ul>
-          </div>
-        </div>
-      </div>
-
-      {/* Custom Mappings Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-200 bg-slate-50">
-          <h2 className="text-sm font-semibold text-slate-700">{t("yourMappings")}</h2>
-          <p className="text-xs text-slate-500 mt-0.5">{t("yourMappingsHint")}</p>
-        </div>
-        {isLoading ? (
-          <div className="p-8 text-center text-slate-500">{tCommon("loading")}</div>
-        ) : mappings.length === 0 ? (
-          <div className="p-8 text-center">
-            <div className="text-slate-400 mb-4">
-              <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-              </svg>
-            </div>
-            <h3 className="text-lg font-medium text-slate-900 mb-1">{t("noMappingsYet")}</h3>
-            <p className="text-slate-500 text-sm mb-4">{t("createMappingsHint")}</p>
-            <button
-              onClick={() => openModal()}
-              className="text-[#0070f3] hover:underline text-sm font-medium"
-            >
-              {t("createFirstMapping")}
-            </button>
-          </div>
-        ) : (
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("keyword")}</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("category")}</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("expenseType")}</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">{t("actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {mappings.map((mapping) => (
-                <tr key={mapping.id} className="hover:bg-slate-50">
-                  <td className="px-4 py-3">
-                    <code className="text-sm bg-slate-100 px-2 py-1 rounded text-slate-800">
-                      {mapping.keyword}
-                    </code>
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">
-                    {mapping.category ? translateCategory(mapping.category.name) : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-sm text-slate-600">
-                    {mapping.expenseType ? getTypeLabel(mapping.expenseType) : "-"}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        onClick={() => openModal(mapping)}
-                        className="text-slate-500 hover:text-slate-700 p-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => setDeleteId(mapping.id)}
-                        className="text-red-500 hover:text-red-700 p-1"
-                      >
-                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {/* Built-in Keywords Section */}
-      <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <button
-          onClick={() => setShowBuiltins(!showBuiltins)}
-          className="w-full px-4 py-3 border-b border-slate-200 bg-slate-50 flex items-center justify-between hover:bg-slate-100 transition-colors"
-        >
-          <div className="text-left">
-            <h2 className="text-sm font-semibold text-slate-700">{t("builtinKeywords")}</h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              {t("builtinHint", { count: builtins.length })}
-            </p>
-          </div>
-          <svg
-            className={`w-5 h-5 text-slate-400 transition-transform duration-200 ${showBuiltins ? "rotate-180" : ""}`}
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+      <motion.div
+        className="space-y-4"
+        initial="hidden"
+        animate="visible"
+        variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+      >
+        {/* Keyword rules preview */}
+        {!isLoading && previewItems.length > 0 && (
+          <motion.div
+            variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.35, ease: EASE }}
+            style={{ background: "var(--surface-2)", borderRadius: 20, padding: "14px 16px" }}
           >
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        {showBuiltins && (
-          <table className="w-full">
-            <thead className="bg-slate-50 border-b border-slate-200">
-              <tr>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("keyword")}</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("mapsTo")}</th>
-                <th className="text-left px-4 py-3 text-sm font-medium text-slate-600">{t("category")}</th>
-                <th className="text-right px-4 py-3 text-sm font-medium text-slate-600">{t("actions")}</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {builtins.map((builtin) => {
+            <p className="mb-2" style={{ fontSize: 12, fontWeight: 600, color: "var(--accent-strong)" }}>{t("rulesPreview")}</p>
+            <div className="flex flex-wrap gap-2">
+              {previewShown.map((it, i) => (
+                <span key={`${it.keyword}-${i}`} style={{ fontSize: 11, fontWeight: 600, color: "var(--ink)", background: "var(--surface)", borderRadius: 12, padding: "5px 10px" }}>
+                  &quot;{it.keyword}&quot; <span style={{ color: "var(--ink-subtle)" }}>&rarr;</span> {it.category}
+                </span>
+              ))}
+              {previewMore > 0 && (
+                <span style={{ fontSize: 11, fontWeight: 600, color: "var(--accent)", borderRadius: 12, padding: "5px 10px" }}>
+                  {t("moreCount", { count: previewMore })}
+                </span>
+              )}
+            </div>
+          </motion.div>
+        )}
+
+        {/* How it works (collapsible) */}
+        <motion.div
+          variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}
+          transition={{ duration: 0.35, ease: EASE }}
+          style={{ background: "var(--surface)", borderRadius: 20, boxShadow: "var(--shadow-card)", overflow: "hidden" }}
+        >
+          <button onClick={() => setShowHowItWorks((v) => !v)} className="w-full flex items-center gap-3" style={{ padding: "14px 16px" }}>
+            <div className="flex items-center justify-center shrink-0" style={{ width: 32, height: 32, borderRadius: 12, background: "var(--accent-fainter)" }}>
+              <Info className="w-4 h-4" strokeWidth={1.8} style={{ color: "var(--accent)" }} />
+            </div>
+            <span className="flex-1 text-left" style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>{t("howItWorks")}</span>
+            <ChevronDown className="w-4 h-4 shrink-0" strokeWidth={1.8} style={{ color: "var(--ink-subtle)", transform: showHowItWorks ? "rotate(180deg)" : "none", transition: "transform .2s var(--ease)" }} />
+          </button>
+          {showHowItWorks && (
+            <ul className="space-y-1.5" style={{ padding: "0 16px 16px 60px", listStyle: "disc" }}>
+              <li className="text-sm" style={{ color: "var(--ink-muted)" }}>{t("howItWorksItem1")}</li>
+              <li className="text-sm" style={{ color: "var(--ink-muted)" }}>{t("howItWorksItem2")}</li>
+              <li className="text-sm" style={{ color: "var(--ink-muted)" }}>{t("howItWorksItem3")}</li>
+              <li className="text-sm" style={{ color: "var(--ink-muted)" }}>{t("howItWorksItem4")}</li>
+            </ul>
+          )}
+        </motion.div>
+
+        {/* Custom mappings */}
+        <motion.div variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.35, ease: EASE }}>
+          <div className="px-1 mb-2">
+            <h2 className="uppercase" style={{ fontSize: 11.5, fontWeight: 600, letterSpacing: "0.06em", color: "var(--ink-subtle)" }}>{t("yourMappings")}</h2>
+          </div>
+          {isLoading ? (
+            <div className="text-center py-10" style={{ color: "var(--ink-subtle)" }}>{tCommon("loading")}</div>
+          ) : mappings.length === 0 ? (
+            <div className="text-center" style={{ background: "var(--surface)", borderRadius: 20, padding: 40, boxShadow: "var(--shadow-card)" }}>
+              <h3 className="mb-1" style={{ fontSize: 16, fontWeight: 600, color: "var(--ink)" }}>{t("noMappingsYet")}</h3>
+              <p className="text-sm mb-4" style={{ color: "var(--ink-muted)" }}>{t("createMappingsHint")}</p>
+              <button onClick={() => openModal()} className="text-sm font-semibold" style={{ color: "var(--accent)" }}>{t("createFirstMapping")}</button>
+            </div>
+          ) : (
+            <div style={{ background: "var(--surface)", borderRadius: 20, padding: "6px 16px", boxShadow: "var(--shadow-card)" }}>
+              {mappings.map((mapping, i) => (
+                <div key={mapping.id} className="flex items-center gap-3" style={{ padding: "11px 0", borderBottom: i === mappings.length - 1 ? "none" : "1px solid var(--line)" }}>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span style={{ fontSize: 12.5, fontWeight: 600, color: "var(--ink)", background: "var(--surface-2)", borderRadius: 8, padding: "2px 8px" }}>{mapping.keyword}</span>
+                      <span style={{ fontSize: 11.5, color: "var(--ink-subtle)" }}>&rarr;</span>
+                      <span style={{ fontSize: 12.5, color: "var(--ink-muted)" }}>
+                        {mapping.category ? translateCategory(mapping.category.name) : "—"}
+                        {mapping.expenseType && (
+                          <span style={{ color: "var(--ink-subtle)" }}> · {getTypeLabel(mapping.expenseType)}</span>
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => openModal(mapping)} className="flex items-center justify-center" style={{ width: 28, height: 28, color: "var(--ink-subtle)" }} aria-label={t("editMapping")}>
+                      <Pencil className="w-3.5 h-3.5" strokeWidth={1.8} />
+                    </button>
+                    <button onClick={() => setDeleteId(mapping.id)} className="flex items-center justify-center" style={{ width: 28, height: 28, color: "var(--negative)" }} aria-label={t("deleteMappingQuestion")}>
+                      <Trash2 className="w-3.5 h-3.5" strokeWidth={1.8} />
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </motion.div>
+
+        {/* Built-in keywords (collapsible) */}
+        <motion.div
+          variants={{ hidden: { opacity: 0, y: 8 }, visible: { opacity: 1, y: 0 } }}
+          transition={{ duration: 0.35, ease: EASE }}
+          style={{ background: "var(--surface)", borderRadius: 20, boxShadow: "var(--shadow-card)", overflow: "hidden" }}
+        >
+          <button onClick={() => setShowBuiltins(!showBuiltins)} className="w-full flex items-center gap-3" style={{ padding: "14px 16px" }}>
+            <div className="flex-1 text-left">
+              <h2 style={{ fontSize: 13.5, fontWeight: 600, color: "var(--ink)" }}>{t("builtinKeywords")}</h2>
+              <p style={{ fontSize: 11.5, color: "var(--ink-subtle)", marginTop: 2 }}>{t("builtinHint", { count: builtins.length })}</p>
+            </div>
+            <ChevronDown className="w-4 h-4 shrink-0" strokeWidth={1.8} style={{ color: "var(--ink-subtle)", transform: showBuiltins ? "rotate(180deg)" : "none", transition: "transform .2s var(--ease)" }} />
+          </button>
+          {showBuiltins && (
+            <div style={{ padding: "0 16px", borderTop: "1px solid var(--line)" }}>
+              {builtins.map((builtin, i) => {
                 const isOverridden = customKeywordSet.has(builtin.keyword.toLowerCase());
                 return (
-                  <tr key={builtin.keyword} className={`hover:bg-slate-50 ${isOverridden ? "opacity-50" : ""}`}>
-                    <td className="px-4 py-3">
-                      <div className="flex items-center gap-2">
-                        <code className={`text-sm px-2 py-1 rounded ${isOverridden ? "bg-slate-50 text-slate-400 line-through" : "bg-slate-100 text-slate-800"}`}>
-                          {builtin.keyword}
-                        </code>
-                        {isOverridden && (
-                          <span className="text-xs bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-medium">
-                            {t("overridden")}
-                          </span>
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {builtin.merchant}
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-600">
-                      {translateCategory(builtin.category)}
-                    </td>
-                    <td className="px-4 py-3 text-right">
-                      {!isOverridden && (
-                        <button
-                          onClick={() => openOverrideModal(builtin)}
-                          className="text-[#0070f3] hover:text-[#0060df] text-sm font-medium"
+                  <div
+                    key={builtin.keyword}
+                    className="flex items-center gap-3"
+                    style={{ padding: "11px 0", borderBottom: i === builtins.length - 1 ? "none" : "1px solid var(--line)", opacity: isOverridden ? 0.5 : 1 }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span
+                          style={{
+                            fontSize: 12.5,
+                            fontWeight: 600,
+                            color: "var(--ink)",
+                            background: "var(--surface-2)",
+                            borderRadius: 8,
+                            padding: "2px 8px",
+                            textDecoration: isOverridden ? "line-through" : "none",
+                          }}
                         >
-                          {t("override")}
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                          {builtin.keyword}
+                        </span>
+                        {isOverridden && (
+                          <span style={{ fontSize: 10.5, fontWeight: 600, color: "var(--accent-strong)", background: "var(--accent-fainter)", borderRadius: 999, padding: "2px 8px" }}>{t("overridden")}</span>
+                        )}
+                        <span style={{ fontSize: 11.5, color: "var(--ink-subtle)" }}>&rarr;</span>
+                        <span style={{ fontSize: 12.5, color: "var(--ink-muted)" }}>{translateCategory(builtin.category)}</span>
+                      </div>
+                      <p style={{ fontSize: 11.5, color: "var(--ink-subtle)", marginTop: 1 }}>{builtin.merchant}</p>
+                    </div>
+                    {!isOverridden && (
+                      <button onClick={() => openOverrideModal(builtin)} className="shrink-0" style={{ fontSize: 12, fontWeight: 600, color: "var(--accent)" }}>{t("override")}</button>
+                    )}
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
-        )}
-      </div>
+            </div>
+          )}
+        </motion.div>
+      </motion.div>
 
       {/* Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="relative w-full max-w-md mx-4"
+            style={{ background: "var(--surface)", borderRadius: 20, padding: 24, boxShadow: "var(--shadow-pop)" }}
+          >
+            <h2 className="mb-4" style={{ fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>
               {editingMapping ? t("editMapping") : t("newMapping")}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
-                  {error}
-                </div>
+                <div className="text-sm" style={{ borderRadius: 14, padding: 12, background: "var(--surface-2)", color: "var(--negative)" }}>{error}</div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("keyword")}</label>
+                <label className="block text-sm mb-1.5" style={{ fontWeight: 600, color: "var(--ink)" }}>{t("keyword")}</label>
                 <input
                   type="text"
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   required
                   placeholder={t("keywordPlaceholder")}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                  className="w-full focus:outline-none"
+                  style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 14px", color: "var(--ink)", background: "var(--surface)" }}
                 />
-                <p className="mt-1 text-xs text-slate-500">
-                  {t("keywordHint")}
-                </p>
+                <p className="mt-1.5" style={{ fontSize: 11.5, color: "var(--ink-subtle)" }}>{t("keywordHint")}</p>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("category")}</label>
+                <label className="block text-sm mb-1.5" style={{ fontWeight: 600, color: "var(--ink)" }}>{t("category")}</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                  className="w-full focus:outline-none"
+                  style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 14px", color: "var(--ink)", background: "var(--surface)" }}
                 >
                   <option value="">{t("noCategoryMapping")}</option>
                   {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {translateCategory(cat.name)}
-                    </option>
+                    <option key={cat.id} value={cat.id}>{translateCategory(cat.name)}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("expenseType")}</label>
+                <label className="block text-sm mb-1.5" style={{ fontWeight: 600, color: "var(--ink)" }}>{t("expenseType")}</label>
                 <select
                   value={expenseType}
                   onChange={(e) => setExpenseType(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                  className="w-full focus:outline-none"
+                  style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 14px", color: "var(--ink)", background: "var(--surface)" }}
                 >
                   <option value="">{t("noTypeMapping")}</option>
                   {EXPENSE_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.label}
-                    </option>
+                    <option key={type.value} value={type.value}>{type.label}</option>
                   ))}
                 </select>
               </div>
-              <div className="flex gap-3 pt-2">
+              <div className="flex gap-3 pt-1">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+                  className="flex-1"
+                  style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 0", color: "var(--ink)", fontWeight: 600 }}
                 >
                   {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !keyword}
-                  className="flex-1 px-4 py-2 rounded-lg bg-[#0070f3] text-white hover:bg-[#0060df] disabled:opacity-50"
+                  className="flex-1 disabled:opacity-50"
+                  style={{ borderRadius: 14, padding: "11px 0", background: "var(--accent)", color: "var(--accent-fg)", fontWeight: 600 }}
                 >
                   {isSubmitting ? t("saving") : tCommon("save")}
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
 
@@ -504,28 +521,63 @@ export default function KeywordMappingsPage() {
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
           <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
-          <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("deleteMappingQuestion")}</h3>
-            <p className="text-slate-600 text-sm mb-4">
-              {t("deleteMappingHint")}
-            </p>
+          <motion.div
+            initial={{ opacity: 0, y: 8, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="relative w-full max-w-sm mx-4"
+            style={{ background: "var(--surface)", borderRadius: 20, padding: 24, boxShadow: "var(--shadow-pop)" }}
+          >
+            <h3 className="mb-2" style={{ fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>{t("deleteMappingQuestion")}</h3>
+            <p className="text-sm mb-4" style={{ color: "var(--ink-muted)" }}>{t("deleteMappingHint")}</p>
             <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
-              >
+              <button onClick={() => setDeleteId(null)} className="flex-1" style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 0", color: "var(--ink)", fontWeight: 600 }}>
                 {tCommon("cancel")}
               </button>
-              <button
-                onClick={() => handleDelete(deleteId)}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
-              >
+              <button onClick={() => handleDelete(deleteId)} className="flex-1" style={{ borderRadius: 14, padding: "11px 0", background: "var(--negative)", color: "#fff", fontWeight: 600 }}>
                 {tCommon("delete")}
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
+    </div>
+  );
+}
+
+/* ==============================
+   SHARED 2-SEGMENT CONTROL
+   ============================== */
+function SegmentControl({
+  active,
+  router,
+  labelCategories,
+  labelRules,
+}: {
+  active: "categories" | "rules";
+  router: ReturnType<typeof useRouter>;
+  labelCategories: string;
+  labelRules: string;
+}) {
+  const seg = (isActive: boolean, label: string, onClick: () => void) => (
+    <button onClick={onClick} className="relative flex-1" style={{ padding: "12.5px 0", borderRadius: 12 }}>
+      {isActive && (
+        <motion.span
+          layoutId="catSegPill"
+          className="absolute inset-0"
+          style={{ background: "var(--ink)", borderRadius: 12 }}
+          transition={{ type: "spring", stiffness: 400, damping: 32 }}
+        />
+      )}
+      <span className="relative z-10" style={{ fontSize: 12.5, fontWeight: isActive ? 600 : 500, color: isActive ? "#fff" : "var(--ink-muted)" }}>
+        {label}
+      </span>
+    </button>
+  );
+  return (
+    <div className="flex" style={{ background: "var(--surface)", borderRadius: 16, padding: 4, boxShadow: "var(--shadow-card)" }}>
+      {seg(active === "categories", labelCategories, () => router.push("/dashboard/categories"))}
+      {seg(active === "rules", labelRules, () => router.push("/dashboard/mappings"))}
     </div>
   );
 }
