@@ -85,6 +85,16 @@ html {
 }
 
 @theme inline {
+  /* "Just like mobile" — the app is a mobile UI at every width. Push all
+     responsive breakpoints out of reach so every sm:/md:/lg: desktop override
+     goes inert and the base (mobile) layout renders on desktop too. The shell
+     then centers that mobile UI in a phone-width column. */
+  --breakpoint-sm: 99999px;
+  --breakpoint-md: 99999px;
+  --breakpoint-lg: 99999px;
+  --breakpoint-xl: 99999px;
+  --breakpoint-2xl: 99999px;
+
   /* iOS-style generous radius values for smoother corners */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: var(--radius);

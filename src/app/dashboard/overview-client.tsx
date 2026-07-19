@@ -621,7 +621,7 @@ export default function DashboardOverview({
         </div>
       )}
 
-      <div className="md:grid md:grid-cols-[minmax(0,620px)_minmax(280px,1fr)] md:items-start md:gap-[18px]">
+      <div className="flex flex-col gap-[18px]">
         {/* ============ LEFT COLUMN — the five dashboard sections ============ */}
         <div className="flex flex-col gap-[18px]">
           {/* 1 — Header row: greeting + search / bell */}

@@ -207,7 +207,7 @@ export default function FeedbackButton() {
       {/* Floating Feedback Button - on mobile: left side above nav. On desktop: next to add button (right side) */}
       <button
         onClick={handleOpen}
-        className="floating-nav-button fixed left-4 bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--ink)] text-[var(--surface)] shadow-lg hover:bg-[var(--ink-muted)] transition-all hover:scale-105 active:scale-95 md:w-14 md:h-14 md:bottom-24 md:right-[6.5rem] md:left-auto"
+        className="floating-nav-button fixed left-[max(1rem,calc(50%-314px))] bottom-[calc(80px+env(safe-area-inset-bottom,0px))] z-40 flex items-center justify-center w-12 h-12 rounded-full bg-[var(--ink)] text-[var(--surface)] shadow-lg hover:bg-[var(--ink-muted)] transition-all hover:scale-105 active:scale-95"
         title={t("title")}
         aria-label={t("title")}
       >

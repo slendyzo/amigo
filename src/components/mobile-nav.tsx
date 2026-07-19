@@ -101,7 +101,7 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
   return (
     <>
       {/* Bottom tab bar — Home / Money / FAB / Wealth / More */}
-      <nav className="mobile-nav-bar md:hidden fixed bottom-0 left-0 right-0 z-40 pb-safe-bottom border-t"
+      <nav className="mobile-nav-bar fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[660px] z-40 pb-safe-bottom border-t"
         style={{ background: "var(--surface)", borderColor: "var(--line)" }}>
         <div className="flex items-center justify-around pt-2.5 pb-1.5">
           {tab(dashActive, "/dashboard", "home", t("home"))}
@@ -127,11 +127,11 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
 
       {/* More sheet (replaces the drawer) */}
       {menuOpen && (
-        <div className="md:hidden fixed inset-0 z-50 flex flex-col justify-end">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-end">
           <div className="absolute inset-0 transition-opacity duration-300"
             style={{ background: "rgba(23,22,31,.45)", opacity: sheetIn ? 1 : 0 }}
             onClick={closeSheet} />
-          <div className="relative flex flex-col gap-4 rounded-t-[28px] px-5 pt-3.5 transition-transform duration-300"
+          <div className="relative w-full max-w-[660px] flex flex-col gap-4 rounded-t-[28px] px-5 pt-3.5 transition-transform duration-300"
             style={{ background: "var(--app-bg)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 28px)", transform: sheetIn ? "translateY(0)" : "translateY(100%)", transitionTimingFunction: "var(--ease)" }}>
             <div className="w-10 h-1 rounded-sm mx-auto" style={{ background: "color-mix(in srgb, var(--ink) 15%, transparent)" }} />
 

@@ -125,7 +125,7 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
   };
 
   return (
-    <div className="flex min-h-screen" style={{ background: "var(--app-bg)", color: "var(--ink)" }}>
+    <div className="flex min-h-screen justify-center" style={{ background: "var(--app-bg)", color: "var(--ink)" }}>
       {/* Desktop Sidebar */}
       <aside
         className="hidden md:flex flex-col min-h-screen border-r transition-[width] duration-300 relative"
@@ -177,14 +177,15 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
       </aside>
 
       {/* Main */}
-      <div className="flex-1 flex flex-col min-w-0">
+      {/* The mobile app, centered in a phone-width column at every screen size */}
+      <div className="flex flex-col min-w-0 w-full max-w-[660px]">
         {/* Mobile header */}
         <header className="md:hidden flex h-14 items-center justify-center px-4 sticky top-0 z-40 border-b"
           style={{ background: "var(--surface)", borderColor: "var(--line)" }}>
           <h1 className="text-lg font-bold tracking-tight">Amigo</h1>
         </header>
 
-        <main className="flex-1 px-5 py-4 md:p-6 pb-36 md:pb-6 overflow-x-hidden min-h-[calc(100vh-3.5rem)] md:min-h-0">
+        <main className="flex-1 px-5 py-4 pb-36 overflow-x-hidden min-h-[calc(100vh-3.5rem)]">
           {children}
         </main>
       </div>
