@@ -98,9 +98,9 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
           />
 
           {/* Selector Menu - appears from bottom on mobile, centered on desktop */}
-          <div className="fixed inset-x-0 bottom-0 z-50 md:inset-0 md:flex md:items-center md:justify-center">
+          <div className="fixed inset-0 z-50 flex items-end justify-center">
             <div
-              className="rounded-t-[28px] md:rounded-[28px] max-w-md w-full md:mx-4 animate-slide-up md:animate-none"
+              className="rounded-t-[28px] max-w-md w-full animate-slide-up"
               style={{ background: "var(--app-bg)", boxShadow: "var(--shadow-pop)" }}
             >
               {/* Header */}
