@@ -12,14 +12,15 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.55 0.2 250);
-  --primary-foreground: oklch(0.985 0 0);
+  --primary: #5f4be8;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
   --muted: oklch(0.97 0 0);
   --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
+  /* shadcn neutral hover-surface — renamed off "--accent" so it can't shadow the brand accent below */
+  --ui-accent: oklch(0.97 0 0);
+  --ui-accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
   --border: oklch(0.922 0 0);
   --input: oklch(0.922 0 0);
@@ -38,31 +39,39 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 
-  /* ===== Amigo shell tokens — LIGHT (accent: Amber) ===== */
+  /* ===== Amigo shell tokens — LIGHT ("Calm Violet") ===== */
   --ease: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
-  --app-bg: #f7f8fa;
+  --app-bg: #f4f3f9;
   --surface: #ffffff;
-  --surface-2: #f1f2f4;
-  --surface-3: #e9eaed;
-  --line: rgba(9, 9, 11, 0.08);
-  --line-strong: rgba(9, 9, 11, 0.13);
-  --ink: #18181b;
-  --ink-muted: #52525b;
-  --ink-subtle: #8a8a93;
-  --accent: #d97706;
-  --accent-strong: #b45309;
+  --surface-2: #eeebfd;
+  --surface-3: #e3e1ec;
+  --line: rgba(23, 22, 31, 0.06);
+  --line-strong: rgba(23, 22, 31, 0.12);
+  --ink: #17161f;
+  --ink-muted: #6b6880;
+  --ink-subtle: #9b98ac;
+  --accent: #5f4be8;
+  --accent-strong: #4735c4;
   --accent-fg: #ffffff;
-  --accent-tint: rgba(217, 119, 6, 0.10);
-  --positive: #16a34a;
-  --negative: #dc2626;
-  /* warning moved OFF amber → orange, so it never collides with the accent */
-  --warning: #f97316;
-  --shadow-pop: 0 12px 40px rgba(9, 9, 11, 0.12);
+  --accent-soft: #8b7bff;
+  --accent-faint: #b9aef3;
+  --accent-fainter: #dcd6f9;
+  --accent-tint: rgba(95, 75, 232, 0.10);
+  --positive: #1b9e63;
+  --negative: #d64550;
+  --warning: #c75a3a;
+  /* hero card gradient + label ink, budget bar gradient */
+  --hero-gradient: linear-gradient(135deg, #e9e4fc 0%, #cfc5f8 100%);
+  --hero-ink: #544d7a;
+  --bar-gradient: linear-gradient(90deg, #5f4be8, #8b7bff);
+  --shadow-card: 0 1px 2px rgba(23, 22, 31, 0.05);
+  --shadow-fab: 0 8px 20px rgba(95, 75, 232, 0.35);
+  --shadow-pop: 0 12px 32px rgba(23, 22, 31, 0.1);
 }
 
 body {
-  font-family: var(--font-inter), system-ui, sans-serif;
+  font-family: var(--font-sans-app), "Instrument Sans", system-ui, sans-serif;
 }
 
 /* Prevent zoom on mobile devices */
@@ -96,8 +105,8 @@ html {
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--ui-accent);
+  --color-accent-foreground: var(--ui-accent-foreground);
   --color-destructive: var(--destructive);
   --color-border: var(--border);
   --color-input: var(--input);
@@ -124,14 +133,14 @@ html {
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
+  --primary: #8b7bff;
+  --primary-foreground: #131218;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
   --muted: oklch(0.269 0 0);
   --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --ui-accent: oklch(0.269 0 0);
+  --ui-accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
   --border: oklch(1 0 0 / 10%);
   --input: oklch(1 0 0 / 15%);
@@ -150,24 +159,32 @@ html {
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
 
-  /* ===== Amigo shell tokens — DARK (accent: Amber, brighter for dark) ===== */
-  --app-bg: #0a0a0b;
-  --surface: #131316;
-  --surface-2: #1a1b1f;
-  --surface-3: #212227;
-  --line: rgba(255, 255, 255, 0.08);
-  --line-strong: rgba(255, 255, 255, 0.14);
-  --ink: #ededef;
-  --ink-muted: #a1a1aa;
-  --ink-subtle: #71717a;
-  --accent: #fbbf24;
-  --accent-strong: #d97706;
-  --accent-fg: #1a1300;
-  --accent-tint: rgba(251, 191, 36, 0.16);
-  --positive: #4ade80;
-  --negative: #f87171;
-  --warning: #fb923c;
-  --shadow-pop: 0 12px 40px rgba(0, 0, 0, 0.5);
+  /* ===== Amigo shell tokens — DARK ("Calm Violet") ===== */
+  --app-bg: #131218;
+  --surface: #1c1b24;
+  --surface-2: #2a2836;
+  --surface-3: #343241;
+  --line: rgba(255, 255, 255, 0.06);
+  --line-strong: rgba(255, 255, 255, 0.12);
+  --ink: #f0eff6;
+  --ink-muted: #a5a2b8;
+  --ink-subtle: #6b6880;
+  --accent: #8b7bff;
+  --accent-strong: #cfc5f8;
+  --accent-fg: #131218;
+  --accent-soft: #b9aef3;
+  --accent-faint: #6b6880;
+  --accent-fainter: #3a3168;
+  --accent-tint: rgba(139, 123, 255, 0.14);
+  --positive: #1b9e63;
+  --negative: #d64550;
+  --warning: #e8927a;
+  --hero-gradient: linear-gradient(135deg, #3a3168 0%, #241f45 100%);
+  --hero-ink: #b3abde;
+  --bar-gradient: linear-gradient(90deg, #8b7bff, #b9aef3);
+  --shadow-card: none;
+  --shadow-fab: 0 8px 20px rgba(139, 123, 255, 0.3);
+  --shadow-pop: 0 12px 32px rgba(0, 0, 0, 0.5);
 }
 
 @layer base {

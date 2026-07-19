@@ -184,13 +184,13 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
           <h1 className="text-lg font-bold tracking-tight">Amigo</h1>
         </header>
 
-        <main className="flex-1 p-4 md:p-6 pb-36 md:pb-6 overflow-x-hidden min-h-[calc(100vh-3.5rem)] md:min-h-0">
+        <main className="flex-1 px-5 py-4 md:p-6 pb-36 md:pb-6 overflow-x-hidden min-h-[calc(100vh-3.5rem)] md:min-h-0">
           {children}
         </main>
       </div>
 
       {/* Mobile Navigation */}
-      <MobileNav onAddClick={handleAddClick} userEmail={userEmail} onSignOut={handleSignOut} aiEnabled={aiEnabled} isAdmin={isAdmin} onWhatsNew={() => setShowAnnouncement(true)} />
+      <MobileNav onAddClick={handleAddClick} userEmail={userEmail} workspaceName={workspaceName} onSignOut={handleSignOut} aiEnabled={aiEnabled} isAdmin={isAdmin} onWhatsNew={() => setShowAnnouncement(true)} />
 
       <Suspense fallback={null}><GlobalAddButton /></Suspense>
       <Suspense fallback={null}><FeedbackButton /></Suspense>

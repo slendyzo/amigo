@@ -50,10 +50,10 @@ function SplitAmountInput({ amount, locked, onCommit }: SplitAmountInputProps) {
           (e.currentTarget as HTMLInputElement).blur();
         }
       }}
-      className={`w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent ${
+      className={`w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent ${
         locked
-          ? "border-indigo-400 bg-indigo-50/50"
-          : "border-slate-300 bg-white"
+          ? "border-[var(--accent)] bg-[var(--accent-tint)]"
+          : "border-[var(--line-strong)] bg-[var(--surface)]"
       }`}
     />
   );
@@ -194,7 +194,7 @@ export default function ExpenseSplitSection({
     <div className="space-y-3">
       {/* People count stepper */}
       <div className="flex items-center justify-between">
-        <span className="text-sm text-indigo-700">
+        <span className="text-sm text-[var(--accent-strong)]">
           {t("numberOfPeople")}
         </span>
         <div className="flex items-center gap-2">
@@ -202,18 +202,18 @@ export default function ExpenseSplitSection({
             type="button"
             onClick={() => handleCountChange(splitCount - 1)}
             disabled={splitCount <= 2}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-indigo-300 bg-white text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
           >
             −
           </button>
-          <span className="w-8 text-center text-sm font-semibold text-indigo-800">
+          <span className="w-8 text-center text-sm font-semibold text-[var(--accent-strong)]">
             {splitCount}
           </span>
           <button
             type="button"
             onClick={() => handleCountChange(splitCount + 1)}
             disabled={splitCount >= 20}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-indigo-300 bg-white text-indigo-600 hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
           >
             +
           </button>
@@ -221,17 +221,17 @@ export default function ExpenseSplitSection({
       </div>
 
       {/* Per-person summary — show equal-split hint only when the split is even. */}
-      <div className="text-sm text-indigo-600 font-medium">
+      <div className="text-sm text-[var(--accent)] font-medium">
         {splitPeople && splitPeople[0] ? (
           <>
             {t("yourShare")}: {formatCurrency(splitPeople[0].amount, currency)}
             {!isCustomized && (
-              <span className="text-indigo-400 ml-1">
+              <span className="text-[var(--accent)] ml-1">
                 ({formatCurrency(perPerson, currency)}/{t("perPersonUnit")} × {splitCount})
               </span>
             )}
             {isCustomized && (
-              <span className="text-indigo-400 ml-1">
+              <span className="text-[var(--accent)] ml-1">
                 {t("ofTotal", { total: formatCurrency(amount, currency) })}
               </span>
             )}
@@ -239,7 +239,7 @@ export default function ExpenseSplitSection({
         ) : (
           <>
             {formatCurrency(perPerson, currency)}/{t("perPersonUnit")}{" "}
-            <span className="text-indigo-400">× {splitCount}</span>
+            <span className="text-[var(--accent)]">× {splitCount}</span>
           </>
         )}
       </div>
@@ -248,7 +248,7 @@ export default function ExpenseSplitSection({
       <button
         type="button"
         onClick={() => setShowCustomize(!showCustomize)}
-        className="flex items-center gap-1.5 text-xs text-indigo-500 hover:text-indigo-700 transition-colors"
+        className="flex items-center gap-1.5 text-xs text-[var(--accent)] hover:text-[var(--accent-strong)] transition-colors"
       >
         <svg
           className={`w-3.5 h-3.5 transition-transform ${
@@ -275,19 +275,19 @@ export default function ExpenseSplitSection({
             <div key={i} className="flex items-center gap-2">
               {/* Label */}
               {i === 0 ? (
-                <div className="flex-1 min-w-0 rounded-md border border-indigo-400 bg-indigo-100 px-2.5 py-1.5 text-xs text-indigo-800 font-semibold flex items-center gap-1.5">
+                <div className="flex-1 min-w-0 rounded-md border border-[var(--accent)] bg-[var(--accent-tint)] px-2.5 py-1.5 text-xs text-[var(--accent-strong)] font-semibold flex items-center gap-1.5">
                   <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                   <span className="truncate">{person.label}</span>
-                  <span className="ml-auto text-[10px] uppercase tracking-wide text-indigo-500 font-bold flex-shrink-0">{t("youTag")}</span>
+                  <span className="ml-auto text-[10px] uppercase tracking-wide text-[var(--accent)] font-bold flex-shrink-0">{t("youTag")}</span>
                 </div>
               ) : (
                 <input
                   type="text"
                   value={person.label}
                   onChange={(e) => handleLabelChange(i, e.target.value)}
-                  className="flex-1 min-w-0 rounded-md border border-slate-300 bg-white px-2.5 py-1.5 text-xs text-slate-700 focus:outline-none focus:ring-1 focus:ring-indigo-400 focus:border-transparent"
+                  className="flex-1 min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-xs text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               )}
               {/* Amount */}
@@ -304,8 +304,8 @@ export default function ExpenseSplitSection({
                 onClick={() => handleToggleLock(i)}
                 className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
                   person.locked
-                    ? "bg-indigo-100 text-indigo-600 hover:bg-indigo-200"
-                    : "bg-slate-100 text-slate-400 hover:bg-slate-200"
+                    ? "bg-[var(--accent-tint)] text-[var(--accent)] hover:bg-[var(--accent-soft)]"
+                    : "bg-[var(--surface-2)] text-[var(--ink-subtle)] hover:bg-[var(--surface-3)]"
                 }`}
                 title={person.locked ? t("unlockAmount") : t("lockAmount")}
               >
@@ -344,8 +344,8 @@ export default function ExpenseSplitSection({
       <div
         className={`p-3 rounded-lg border transition-colors ${
           splitEnabled
-            ? "bg-indigo-50 border-indigo-200"
-            : "bg-slate-50 border-slate-200"
+            ? "bg-[var(--accent-tint)] border-[var(--accent-soft)]"
+            : "bg-[var(--surface-2)] border-[var(--line)]"
         }`}
       >
         <label className="flex items-center gap-3 cursor-pointer">
@@ -353,18 +353,18 @@ export default function ExpenseSplitSection({
             type="checkbox"
             checked={splitEnabled}
             onChange={(e) => handleToggle(e.target.checked)}
-            className="w-4 h-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+            className="w-4 h-4 rounded border-[var(--line-strong)] text-[var(--accent)] focus:ring-[var(--accent)]"
           />
           <div className="flex-1">
             <span
               className={`text-sm font-medium ${
-                splitEnabled ? "text-indigo-800" : "text-slate-700"
+                splitEnabled ? "text-[var(--accent-strong)]" : "text-[var(--ink-muted)]"
               }`}
             >
               {t("splitExpense")}
             </span>
             {!splitEnabled && (
-              <p className="text-xs text-slate-500 mt-0.5">{t("splitHint")}</p>
+              <p className="text-xs text-[var(--ink-subtle)] mt-0.5">{t("splitHint")}</p>
             )}
           </div>
         </label>

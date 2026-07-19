@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { ChevronLeft, Plus, RefreshCw, Pencil, Trash2, AlertTriangle } from "lucide-react";
 import ExchangeConnectionModal from "@/components/portfolio/exchange-connection-modal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -27,6 +28,7 @@ interface ExchangesClientProps {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Provider brand swatches — brand identity colours, intentionally kept.
 const PROVIDER_META: Record<string, { name: string; badgeBg: string; badgeLetter: string; badgeLetterClass?: string }> = {
   KRAKEN: { name: "Kraken", badgeBg: "bg-amber-500", badgeLetter: "K" },
   TRADING212: { name: "Trading 212", badgeBg: "bg-blue-500", badgeLetter: "T" },
@@ -36,11 +38,11 @@ const PROVIDER_META: Record<string, { name: string; badgeBg: string; badgeLetter
 };
 
 const STATUS_DOT: Record<string, string> = {
-  SUCCESS: "bg-emerald-500",
-  SYNCING: "bg-yellow-400 animate-pulse",
-  ERROR: "bg-red-500",
-  PARTIAL: "bg-amber-500",
-  IDLE: "bg-slate-300 dark:bg-slate-600",
+  SUCCESS: "var(--positive)",
+  SYNCING: "var(--accent)",
+  ERROR: "var(--negative)",
+  PARTIAL: "var(--warning)",
+  IDLE: "var(--ink-subtle)",
 };
 
 const STATUS_LABEL: Record<string, string> = {
@@ -52,11 +54,11 @@ const STATUS_LABEL: Record<string, string> = {
 };
 
 const STATUS_TEXT_COLOR: Record<string, string> = {
-  SUCCESS: "text-emerald-600 dark:text-emerald-400",
-  SYNCING: "text-yellow-600 dark:text-yellow-400",
-  ERROR: "text-red-600 dark:text-red-400",
-  PARTIAL: "text-amber-600 dark:text-amber-400",
-  IDLE: "text-slate-500 dark:text-slate-400",
+  SUCCESS: "var(--positive)",
+  SYNCING: "var(--accent)",
+  ERROR: "var(--negative)",
+  PARTIAL: "var(--warning)",
+  IDLE: "var(--ink-subtle)",
 };
 
 function formatRelativeTime(isoString: string | null): string {
@@ -77,6 +79,8 @@ function formatCurrency(amount: number | null, currency: string | null): string 
   return `${sym}${amount.toLocaleString("en", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
+const cardShadow = { boxShadow: "var(--shadow-card)" };
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function ExchangesClient({ connections }: ExchangesClientProps) {
@@ -91,15 +95,9 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
     label: string;
   } | null>(null);
 
-  // Confirm-delete state: stores the id being confirmed
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
-
-  // Syncing state: stores the id being synced
   const [syncingId, setSyncingId] = useState<string | null>(null);
-
-  // Surfaced error for a failed sync/delete (silent failures read as "nothing
-  // happened" otherwise).
   const [actionError, setActionError] = useState<string | null>(null);
 
   // ─── Handlers ───────────────────────────────────────────────────────────────
@@ -132,10 +130,6 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
     }
   };
 
-  // Sync is kicked off detached on the server (returns ~immediately). Poll
-  // /api/portfolio until this connection leaves SYNCING before clearing the
-  // spinner — otherwise we'd report "done" while the sync is still running and
-  // the refreshed data wouldn't reflect it.
   const pollConnectionSynced = async (id: string) => {
     const POLL_INTERVAL_MS = 2000;
     const POLL_TIMEOUT_MS = 10 * 60 * 1000;
@@ -166,7 +160,6 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ connectionId: id }),
       });
-      // 409 = a sync was already in flight — fine, just poll for it.
       if (!res.ok && res.status !== 409) {
         setActionError(t("syncFailed"));
         return;
@@ -182,61 +175,67 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
 
+  const pillBtn =
+    "flex items-center gap-1.5 rounded-[14px] px-3 py-1.5 text-[12px] font-semibold transition-transform active:scale-[0.97]";
+
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
+    <div className="mx-auto max-w-3xl space-y-5">
       {/* Header */}
-      <div className="flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <Link
             href="/dashboard/portfolio"
-            className="flex items-center gap-1.5 text-sm text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition"
+            aria-label={t("title")}
+            className="flex h-10 w-10 items-center justify-center rounded-full transition-transform active:scale-95"
+            style={{ background: "var(--surface)", ...cardShadow }}
           >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-            </svg>
-            {t("title")}
+            <ChevronLeft className="h-[18px] w-[18px]" style={{ color: "var(--ink)" }} strokeWidth={1.8} />
           </Link>
-          <span className="text-slate-300 dark:text-slate-600">/</span>
-          <h1 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+          <h1 className="text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
             {t("exchangeConnections")}
           </h1>
         </div>
         <button
           type="button"
           onClick={openAdd}
-          className="flex items-center gap-2 rounded-lg bg-[#0070f3] px-4 py-2 text-sm font-medium text-white hover:bg-[#0060d3] transition"
+          className={pillBtn}
+          style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
         >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-          </svg>
+          <Plus className="h-4 w-4" strokeWidth={2} />
           {t("addExchange")}
         </button>
       </div>
 
       {/* Action error banner */}
       {actionError && (
-        <div className="flex items-center gap-3 rounded-xl border border-red-200/60 dark:border-red-700/30 bg-red-50/80 dark:bg-red-900/10 px-4 py-3">
-          <svg className="w-4 h-4 shrink-0 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
-          </svg>
-          <p className="text-sm text-red-700 dark:text-red-400">{actionError}</p>
+        <div
+          className="flex items-center gap-3 rounded-[16px] px-4 py-3"
+          style={{ background: "var(--surface)", border: "1px solid var(--line-strong)" }}
+        >
+          <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: "var(--negative)" }} strokeWidth={1.8} />
+          <p className="text-[13px]" style={{ color: "var(--ink)" }}>{actionError}</p>
         </div>
       )}
 
       {/* Empty state */}
       {connections.length === 0 && (
-        <div className="rounded-2xl border border-dashed border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-6 py-14 text-center">
-          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-slate-100 dark:bg-slate-800">
-            <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" />
-            </svg>
+        <div
+          className="rounded-[20px] px-6 py-14 text-center"
+          style={{ background: "var(--surface)", border: "1.5px dashed var(--line-strong)" }}
+        >
+          <div
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[16px]"
+            style={{ background: "var(--surface-2)", color: "var(--accent)" }}
+          >
+            <Plus className="h-6 w-6" strokeWidth={1.6} />
           </div>
-          <p className="text-sm font-medium text-slate-700 dark:text-slate-300">{t("noExchanges")}</p>
-          <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">{t("noExchangesDescription")}</p>
+          <p className="text-[14px] font-semibold" style={{ color: "var(--ink)" }}>{t("noExchanges")}</p>
+          <p className="mt-1 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("noExchangesDescription")}</p>
           <button
             type="button"
             onClick={openAdd}
-            className="mt-5 rounded-lg bg-[#0070f3] px-5 py-2 text-sm font-medium text-white hover:bg-[#0060d3] transition"
+            className="mt-5 inline-flex items-center gap-2 rounded-[18px] px-5 py-2.5 text-[13px] font-semibold transition-transform active:scale-[0.98]"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)", boxShadow: "var(--shadow-fab)" }}
           >
             {t("addExchange")}
           </button>
@@ -251,22 +250,16 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
             badgeBg: "bg-slate-500",
             badgeLetter: conn.provider.charAt(0),
           };
-          const statusDot = STATUS_DOT[conn.syncStatus] ?? STATUS_DOT.IDLE;
           const isConfirmingDelete = confirmDeleteId === conn.id;
           const isSyncingThis = syncingId === conn.id;
 
           return (
-            <div
-              key={conn.id}
-              className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5"
-            >
+            <div key={conn.id} className="rounded-[20px] p-5" style={{ background: "var(--surface)", ...cardShadow }}>
               <div className="flex items-start justify-between gap-4">
-                {/* Left: identity + status */}
-                <div className="flex items-start gap-4 min-w-0">
-                  {/* Provider badge */}
+                <div className="flex min-w-0 items-start gap-4">
                   <span
                     className={[
-                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl font-bold text-white",
+                      "flex h-10 w-10 shrink-0 items-center justify-center rounded-[12px] font-bold text-white",
                       meta.badgeLetterClass ?? "text-base",
                       meta.badgeBg,
                     ].join(" ")}
@@ -275,19 +268,21 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                   </span>
 
                   <div className="min-w-0 space-y-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-semibold text-slate-900 dark:text-slate-100 truncate">
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span className="truncate text-[14px] font-semibold" style={{ color: "var(--ink)" }}>
                         {conn.label}
                       </span>
-                      <span className="text-xs text-slate-500 dark:text-slate-400">
+                      <span className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
                         {meta.name}
                       </span>
                     </div>
 
-                    {/* Status row */}
-                    <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-                      <span className={["w-2 h-2 rounded-full shrink-0", statusDot].join(" ")} />
-                      <span className={STATUS_TEXT_COLOR[conn.syncStatus] ?? STATUS_TEXT_COLOR.IDLE}>
+                    <div className="flex items-center gap-2 text-[11.5px]">
+                      <span
+                        className={`h-2 w-2 shrink-0 rounded-full ${conn.syncStatus === "SYNCING" ? "animate-pulse" : ""}`}
+                        style={{ background: STATUS_DOT[conn.syncStatus] ?? STATUS_DOT.IDLE }}
+                      />
+                      <span style={{ color: STATUS_TEXT_COLOR[conn.syncStatus] ?? STATUS_TEXT_COLOR.IDLE }}>
                         {conn.syncStatus === "SUCCESS" && conn.lastSyncAt
                           ? `${t("syncSuccess")} · ${formatRelativeTime(conn.lastSyncAt)}`
                           : conn.syncStatus === "PARTIAL" && conn.lastSyncAt
@@ -299,15 +294,11 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                       </span>
                     </div>
 
-                    {/* Error / partial message */}
                     {(conn.syncStatus === "ERROR" || conn.syncStatus === "PARTIAL") &&
                       conn.lastSyncError && (
                         <p
-                          className={`text-xs mt-0.5 ${
-                            conn.syncStatus === "PARTIAL"
-                              ? "text-amber-600 dark:text-amber-500"
-                              : "text-red-500 dark:text-red-400"
-                          }`}
+                          className="mt-0.5 text-[11.5px]"
+                          style={{ color: conn.syncStatus === "PARTIAL" ? "var(--warning)" : "var(--negative)" }}
                         >
                           {conn.lastSyncError}
                         </p>
@@ -315,18 +306,15 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                   </div>
                 </div>
 
-                {/* Right: stats */}
-                <div className="hidden sm:flex items-center gap-5 shrink-0 text-right">
+                <div className="hidden shrink-0 items-center gap-5 text-right sm:flex">
                   <div>
-                    <p className="text-xs text-slate-400 dark:text-slate-500">{t("assets")}</p>
-                    <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-                      {conn.assetCount}
-                    </p>
+                    <p className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>{t("assets")}</p>
+                    <p className="text-[13px] font-semibold" style={{ color: "var(--ink)" }}>{conn.assetCount}</p>
                   </div>
                   {conn.freeCash !== null && (
                     <div>
-                      <p className="text-xs text-slate-400 dark:text-slate-500">{t("freeCash")}</p>
-                      <p className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                      <p className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>{t("freeCash")}</p>
+                      <p className="text-[13px] font-semibold tabular-nums" style={{ color: "var(--ink)" }}>
                         {formatCurrency(conn.freeCash, conn.freeCashCurrency)}
                       </p>
                     </div>
@@ -335,15 +323,15 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
               </div>
 
               {/* Mobile stats */}
-              <div className="sm:hidden mt-3 flex gap-5 text-sm">
+              <div className="mt-3 flex gap-5 text-[13px] sm:hidden">
                 <div>
-                  <span className="text-slate-400 dark:text-slate-500 text-xs">{t("assets")}: </span>
-                  <span className="font-medium text-slate-800 dark:text-slate-200">{conn.assetCount}</span>
+                  <span className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>{t("assets")}: </span>
+                  <span className="font-semibold" style={{ color: "var(--ink)" }}>{conn.assetCount}</span>
                 </div>
                 {conn.freeCash !== null && (
                   <div>
-                    <span className="text-slate-400 dark:text-slate-500 text-xs">{t("freeCash")}: </span>
-                    <span className="font-medium text-slate-800 dark:text-slate-200">
+                    <span className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>{t("freeCash")}: </span>
+                    <span className="font-semibold tabular-nums" style={{ color: "var(--ink)" }}>
                       {formatCurrency(conn.freeCash, conn.freeCashCurrency)}
                     </span>
                   </div>
@@ -351,50 +339,39 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
               </div>
 
               {/* Actions */}
-              <div className="mt-4 flex items-center gap-2 flex-wrap">
-                {/* Sync Now */}
+              <div className="mt-4 flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => handleSync(conn.id)}
                   disabled={isSyncingThis || conn.syncStatus === "SYNCING"}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  className={pillBtn + " disabled:opacity-40"}
+                  style={{ background: "var(--surface-2)", color: "var(--accent-strong)" }}
                 >
-                  {isSyncingThis ? (
-                    <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                    </svg>
-                  ) : (
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                    </svg>
-                  )}
-                  Sync Now
+                  <RefreshCw className={`h-3.5 w-3.5 ${isSyncingThis ? "animate-spin" : ""}`} strokeWidth={2} />
+                  {t("syncAll")}
                 </button>
 
-                {/* Edit */}
                 <button
                   type="button"
                   onClick={() => openEdit(conn)}
-                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                  className={pillBtn}
+                  style={{ background: "var(--app-bg)", color: "var(--ink-muted)" }}
                 >
-                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10" />
-                  </svg>
+                  <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
                   {tCommon("edit")}
                 </button>
 
-                {/* Delete / confirm */}
                 {isConfirmingDelete ? (
-                  <div className="flex items-center gap-2 ml-auto">
-                    <span className="text-xs text-slate-500 dark:text-slate-400">
+                  <div className="ml-auto flex items-center gap-2">
+                    <span className="text-[11.5px]" style={{ color: "var(--ink-muted)" }}>
                       {t("deleteConnectionConfirm")}
                     </span>
                     <button
                       type="button"
                       onClick={() => handleDelete(conn.id)}
                       disabled={isDeleting}
-                      className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50 transition"
+                      className="rounded-[14px] px-3 py-1.5 text-[12px] font-semibold text-white disabled:opacity-50"
+                      style={{ background: "var(--negative)" }}
                     >
                       {isDeleting ? tCommon("loading") : tCommon("confirm")}
                     </button>
@@ -402,7 +379,8 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                       type="button"
                       onClick={() => setConfirmDeleteId(null)}
                       disabled={isDeleting}
-                      className="rounded-lg border border-slate-200 dark:border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition"
+                      className={pillBtn}
+                      style={{ background: "var(--app-bg)", color: "var(--ink-muted)" }}
                     >
                       {tCommon("cancel")}
                     </button>
@@ -411,11 +389,10 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
                   <button
                     type="button"
                     onClick={() => setConfirmDeleteId(conn.id)}
-                    className="ml-auto flex items-center gap-1.5 rounded-lg border border-red-200 dark:border-red-900 px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30 transition"
+                    className={pillBtn + " ml-auto"}
+                    style={{ background: "var(--app-bg)", color: "var(--negative)" }}
                   >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-                    </svg>
+                    <Trash2 className="h-3.5 w-3.5" strokeWidth={2} />
                     {tCommon("delete")}
                   </button>
                 )}
@@ -425,7 +402,6 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
         })}
       </div>
 
-      {/* Modal */}
       <ExchangeConnectionModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

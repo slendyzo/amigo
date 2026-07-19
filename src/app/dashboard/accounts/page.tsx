@@ -2,6 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import { ChevronLeft, Plus, ChevronRight } from "lucide-react";
 
 type BankAccount = {
   id: string;
@@ -10,10 +13,26 @@ type BankAccount = {
   _count?: { expenses: number };
 };
 
+// Framer-motion entrance per the codebase pattern: fade + rise, 0.05s stagger
+const EASE = [0.16, 1, 0.3, 1] as const;
+const sectionMotion = (i: number) => ({
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.35, ease: EASE, delay: i * 0.05 },
+});
+
+const cardShadow = { boxShadow: "var(--shadow-card)" };
+
+// Decorative masked number from the account id (there is no card-number field)
+const maskedNumber = (id: string) => {
+  const last4 = id.length >= 4 ? id.slice(-4).toUpperCase() : "••••";
+  return `•••• •••• •••• ${last4}`;
+};
+
 export default function BankAccountsPage() {
   const t = useTranslations("accounts");
   const tCommon = useTranslations("common");
-  const tExpenses = useTranslations("expenses");
+  const router = useRouter();
 
   const [accounts, setAccounts] = useState<BankAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -114,123 +133,194 @@ export default function BankAccountsPage() {
     setDeleteId(null);
   };
 
+  const featured = accounts[0];
+  const others = accounts.slice(1);
+
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">{t("title")}</h1>
-          <p className="text-slate-500 text-sm mt-1">
-            {t("trackExpenseSource")}
-          </p>
-        </div>
+    <div className="mx-auto flex max-w-md flex-col gap-4">
+      {/* Pushed-page header */}
+      <motion.div {...sectionMotion(0)} className="flex items-center justify-between">
+        <button
+          onClick={() => router.back()}
+          aria-label={tCommon("back")}
+          className="flex h-10 w-10 items-center justify-center rounded-full transition-transform active:scale-95"
+          style={{ background: "var(--surface)", ...cardShadow }}
+        >
+          <ChevronLeft size={20} strokeWidth={1.8} style={{ color: "var(--ink)" }} />
+        </button>
+        <h1 className="text-[16px] font-semibold" style={{ color: "var(--ink)" }}>
+          {t("title")}
+        </h1>
         <button
           onClick={() => openModal()}
-          className="flex items-center gap-2 bg-[#0070f3] text-white px-4 py-2 rounded-lg hover:bg-[#0060df] transition-colors"
+          aria-label={t("addAccount")}
+          className="flex h-10 w-10 items-center justify-center rounded-full transition-transform active:scale-95"
+          style={{ background: "var(--surface)", ...cardShadow }}
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          {t("addAccount")}
+          <Plus size={20} strokeWidth={1.8} style={{ color: "var(--ink)" }} />
         </button>
-      </div>
+      </motion.div>
 
-      {/* Accounts Grid */}
       {isLoading ? (
-        <div className="bg-white rounded-xl p-8 text-center text-slate-500 shadow-sm border border-slate-200">
+        <div
+          className="rounded-[20px] p-8 text-center text-[13px]"
+          style={{ background: "var(--surface)", color: "var(--ink-muted)", ...cardShadow }}
+        >
           {tCommon("loading")}
         </div>
       ) : accounts.length === 0 ? (
-        <div className="bg-white rounded-xl p-8 text-center shadow-sm border border-slate-200">
-          <div className="text-slate-400 mb-4">
-            <svg className="w-12 h-12 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+        <motion.div
+          {...sectionMotion(1)}
+          className="rounded-[20px] p-8 text-center"
+          style={{ background: "var(--surface)", ...cardShadow }}
+        >
+          <div
+            className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-[14px]"
+            style={{ background: "var(--surface-2)", color: "var(--accent)" }}
+          >
+            <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-1">{t("noAccountsYet")}</h3>
-          <p className="text-slate-500 text-sm mb-4">{t("addToTrack")}</p>
+          <h3 className="mb-1 text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
+            {t("noAccountsYet")}
+          </h3>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>
+            {t("addToTrack")}
+          </p>
           <button
             onClick={() => openModal()}
-            className="text-[#0070f3] hover:underline text-sm font-medium"
+            className="text-[13px] font-semibold"
+            style={{ color: "var(--accent)" }}
           >
             {t("addAnAccount")}
           </button>
-        </div>
+        </motion.div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {accounts.map((account) => (
-            <div
-              key={account.id}
-              className="bg-white rounded-xl p-5 shadow-sm border border-slate-200 hover:shadow-md transition-shadow"
-            >
-              <div className="flex items-start justify-between mb-3">
-                <h3 className="font-semibold text-slate-900">{account.name}</h3>
-                <span className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-600">
-                  {account.currency}
-                </span>
-              </div>
-              <div className="space-y-2 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-slate-500">{t("currency")}</span>
-                  <span className="font-medium text-slate-900">{account.currency}</span>
-                </div>
-                {account._count?.expenses !== undefined && (
-                  <div className="flex justify-between">
-                    <span className="text-slate-500">{tExpenses("title")}</span>
-                    <span className="font-medium text-slate-900">{account._count.expenses}</span>
-                  </div>
-                )}
-              </div>
-              <div className="mt-4 pt-3 border-t border-slate-100 flex gap-2">
-                <button
-                  onClick={() => openModal(account)}
-                  className="flex-1 text-sm text-slate-600 hover:text-slate-900 py-1"
-                >
-                  {tCommon("edit")}
-                </button>
-                <button
-                  onClick={() => setDeleteId(account.id)}
-                  className="flex-1 text-sm text-red-500 hover:text-red-700 py-1"
-                >
-                  {tCommon("delete")}
-                </button>
-              </div>
+        <>
+          {/* Featured (default) account — accent-gradient card */}
+          <motion.div
+            {...sectionMotion(1)}
+            onClick={() => openModal(featured)}
+            className="cursor-pointer rounded-[24px] px-[22px] py-5 text-white transition-transform active:scale-[.98]"
+            style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-soft))", boxShadow: "var(--shadow-fab)" }}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-[13px]" style={{ opacity: 0.8 }}>
+                {featured.name}
+              </span>
+              <span
+                className="rounded-[12px] px-[9px] py-[3px] text-[10.5px] font-semibold"
+                style={{ background: "rgba(255,255,255,.2)" }}
+              >
+                {t("defaultBadge")}
+              </span>
             </div>
-          ))}
-        </div>
+            <div className="mt-[18px] text-[16px] font-semibold tabular-nums" style={{ letterSpacing: "0.12em" }}>
+              {maskedNumber(featured.id)}
+            </div>
+            <div className="mt-4 flex items-center justify-between text-[11.5px]" style={{ opacity: 0.8 }}>
+              <span>{t("types.checking")} · {featured.currency}</span>
+              <span>{t("expensesLinked", { count: featured._count?.expenses ?? 0 })}</span>
+            </div>
+          </motion.div>
+
+          {/* Other accounts — rows inside a surface card */}
+          {others.length > 0 && (
+            <motion.div
+              {...sectionMotion(2)}
+              className="rounded-[20px] px-4 py-1.5"
+              style={{ background: "var(--surface)", ...cardShadow }}
+            >
+              {others.map((account, idx) => (
+                <button
+                  key={account.id}
+                  onClick={() => openModal(account)}
+                  className="flex w-full items-center gap-3 py-3 text-left transition-opacity active:opacity-70"
+                  style={idx > 0 ? { borderTop: "1px solid var(--line)" } : undefined}
+                >
+                  <span
+                    className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[12px] text-[13px] font-bold"
+                    style={{ background: "var(--surface-2)", color: "var(--accent)" }}
+                  >
+                    {account.name.charAt(0).toUpperCase()}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-[13.5px] font-semibold" style={{ color: "var(--ink)" }}>
+                      {account.name}
+                    </span>
+                    <span className="block text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
+                      {account.currency} · {t("expensesCount", { count: account._count?.expenses ?? 0 })}
+                    </span>
+                  </span>
+                  <ChevronRight size={18} strokeWidth={1.8} style={{ color: "var(--ink-subtle)" }} />
+                </button>
+              ))}
+            </motion.div>
+          )}
+
+          {/* Add account — dashed affordance */}
+          <motion.button
+            {...sectionMotion(3)}
+            onClick={() => openModal()}
+            className="rounded-[20px] p-4 text-center text-[13px] font-semibold transition-opacity active:opacity-70"
+            style={{ border: "1.5px dashed var(--accent-faint)", color: "var(--accent)" }}
+          >
+            + {t("addAccount")}
+          </motion.button>
+        </>
       )}
 
-      {/* Modal */}
+      {/* Add / Edit modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
-          <div className="relative bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-xl">
-            <h2 className="text-lg font-semibold text-slate-900 mb-4">
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(23,22,31,.45)" }}
+            onClick={() => setIsModalOpen(false)}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="relative mx-4 w-full max-w-md rounded-[24px] p-6"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+          >
+            <h2 className="mb-4 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
               {editingAccount ? t("editAccount") : t("newAccount")}
             </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               {error && (
-                <div className="p-3 rounded-lg bg-red-50 text-red-600 text-sm">
+                <div
+                  className="rounded-[14px] p-3 text-[13px]"
+                  style={{ background: "color-mix(in srgb, var(--negative) 12%, transparent)", color: "var(--negative)" }}
+                >
                   {error}
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("accountName")}</label>
+                <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
+                  {t("accountName")}
+                </label>
                 <input
                   type="text"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
                   placeholder={t("accountNamePlaceholder")}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                  className="w-full rounded-[14px] px-4 py-2.5 text-[14px] outline-none focus:ring-2"
+                  style={{ background: "var(--surface)", border: "1px solid var(--line-strong)", color: "var(--ink)", ["--tw-ring-color" as string]: "var(--accent)" }}
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">{t("currency")}</label>
+                <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
+                  {t("currency")}
+                </label>
                 <select
                   value={currency}
                   onChange={(e) => setCurrency(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 px-4 py-2 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                  className="w-full rounded-[14px] px-4 py-2.5 text-[14px] outline-none focus:ring-2"
+                  style={{ background: "var(--surface)", border: "1px solid var(--line-strong)", color: "var(--ink)", ["--tw-ring-color" as string]: "var(--accent)" }}
                 >
                   <option value="EUR">EUR</option>
                   <option value="USD">USD</option>
@@ -241,47 +331,63 @@ export default function BankAccountsPage() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+                  className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-medium transition-opacity active:opacity-70"
+                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
                 >
                   {tCommon("cancel")}
                 </button>
                 <button
                   type="submit"
                   disabled={isSubmitting || !name}
-                  className="flex-1 px-4 py-2 rounded-lg bg-[#0070f3] text-white hover:bg-[#0060df] disabled:opacity-50"
+                  className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+                  style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
                 >
                   {isSubmitting ? t("saving") : tCommon("save")}
                 </button>
               </div>
             </form>
-          </div>
+          </motion.div>
         </div>
       )}
 
-      {/* Delete Confirmation */}
+      {/* Delete confirmation */}
       {deleteId && (
         <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
-          <div className="relative bg-white rounded-xl p-6 max-w-sm mx-4 shadow-xl">
-            <h3 className="text-lg font-semibold text-slate-900 mb-2">{t("deleteAccountQuestion")}</h3>
-            <p className="text-slate-600 text-sm mb-4">
+          <div
+            className="absolute inset-0"
+            style={{ background: "rgba(23,22,31,.45)" }}
+            onClick={() => setDeleteId(null)}
+          />
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.35, ease: EASE }}
+            className="relative mx-4 w-full max-w-sm rounded-[24px] p-6"
+            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+          >
+            <h3 className="mb-2 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+              {t("deleteAccountQuestion")}
+            </h3>
+            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>
               {t("expensesWillUnlink")}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setDeleteId(null)}
-                className="flex-1 px-4 py-2 rounded-lg border border-slate-300 text-slate-700 hover:bg-slate-50"
+                className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-medium transition-opacity active:opacity-70"
+                style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
               >
                 {tCommon("cancel")}
               </button>
               <button
                 onClick={() => handleDelete(deleteId)}
-                className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600"
+                className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+                style={{ background: "var(--negative)" }}
               >
                 {tCommon("delete")}
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>

@@ -90,7 +90,7 @@ export function AmountInput({
   return (
     <div className={`relative ${className}`}>
       {!hideCurrencySymbol && (
-        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">
+        <span className="absolute left-4 top-1/2 -translate-y-1/2 text-[var(--ink-subtle)]">
           {getCurrencySymbol(currency)}
         </span>
       )}
@@ -103,10 +103,10 @@ export function AmountInput({
         onBlur={handleBlur}
         placeholder={placeholder}
         required={required}
-        className={`w-full rounded-lg border border-slate-300 bg-white ${hideCurrencySymbol ? "pl-0" : "pl-10"} pr-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent ${inputClassName}`}
+        className={`w-full rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] ${hideCurrencySymbol ? "pl-0" : "pl-10"} pr-4 py-3 text-[var(--ink)] placeholder-[var(--ink-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent ${inputClassName}`}
       />
       {isExpression && !showCalculated && (
-        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400">
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-[var(--ink-subtle)]">
           = {previewResult !== null ? previewResult : "?"}
         </span>
       )}

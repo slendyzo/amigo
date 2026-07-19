@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
+import { Instrument_Sans } from "next/font/google";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 
-const inter = Inter({
+const instrumentSans = Instrument_Sans({
   subsets: ["latin"],
-  variable: "--font-inter",
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-sans-app",
 });
 
 export const viewport: Viewport = {
@@ -63,7 +64,7 @@ export default async function RootLayout({
         <link rel="apple-touch-icon" sizes="152x152" href="/icons/icon-192.png" />
         <link rel="apple-touch-icon" sizes="120x120" href="/icons/icon-192.png" />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${instrumentSans.variable} font-sans antialiased`}>
         <NextIntlClientProvider messages={messages}>
           {children}
         </NextIntlClientProvider>

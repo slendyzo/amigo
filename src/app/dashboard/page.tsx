@@ -58,7 +58,7 @@ export default async function DashboardPage({
   if (!workspace) {
     return (
       <div className="text-center py-12">
-        <p className="text-slate-600">No workspace found. Please contact support.</p>
+        <p className="text-[var(--ink-muted)]">No workspace found. Please contact support.</p>
       </div>
     );
   }
@@ -91,6 +91,7 @@ export default async function DashboardPage({
     portfolioValueAgg,
     realAssets,
     liabilities,
+    recurringTemplates,
   ] = await Promise.all([
     // Projects for filter dropdown
     prisma.project.findMany({
@@ -252,6 +253,11 @@ export default async function DashboardPage({
     prisma.liability.findMany({
       where: { workspaceId: workspace.id, status: "ACTIVE" },
       select: { currentBalanceEur: true, realAssetId: true },
+    }),
+    // Active monthly recurring templates (for the dashboard "Upcoming" row)
+    prisma.recurringTemplate.findMany({
+      where: { workspaceId: workspace.id, isActive: true, interval: "MONTHLY" },
+      select: { id: true, name: true, amount: true, currency: true, dayOfMonth: true, endDate: true },
     }),
   ]);
 
@@ -435,6 +441,16 @@ export default async function DashboardPage({
       ? (portfolioDeltaEur ?? 0) + rwaDeltaEur
       : null;
 
+  // Recurring templates for the Upcoming row (Decimal → number, Date → ISO)
+  const upcomingTemplates = recurringTemplates.map((r) => ({
+    id: r.id,
+    name: r.name,
+    amount: r.amount !== null ? Number(r.amount) : null,
+    currency: r.currency,
+    dayOfMonth: r.dayOfMonth,
+    endDate: r.endDate ? r.endDate.toISOString() : null,
+  }));
+
   // Use username (nickname) if set, otherwise fall back to name or "User"
   const displayName = user?.username || user?.name || session.user.name || "User";
 
@@ -468,6 +484,7 @@ export default async function DashboardPage({
       rwaTopAssets={rwaTopAssets}
       rwaLinkedDebtEur={linkedLiabilitiesEur}
       topCategories={topCategories}
+      upcomingTemplates={upcomingTemplates}
     />
   );
 }

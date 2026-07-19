@@ -8,9 +8,10 @@ type Props = {
   count: number;
 };
 
-// Dismissible nudge — appears only when there are uncategorized expenses, in the
-// warning (orange) tint so it never reads as the amber brand accent. Dismissal
-// lasts the session; it reappears next visit if the count is still > 0.
+// Dismissible nudge — appears only when there are uncategorized expenses.
+// Calm Violet restyle: slim surface card (sits between Budget and Upcoming on
+// the dashboard). Dismissal lasts the session; it reappears next visit if the
+// count is still > 0.
 export default function TidyUpNudge({ count }: Props) {
   const t = useTranslations("dashboard");
   const [dismissed, setDismissed] = useState(false);
@@ -19,25 +20,22 @@ export default function TidyUpNudge({ count }: Props) {
 
   return (
     <div
-      className="mb-4 flex items-center gap-3 rounded-xl px-3.5 py-3 text-[13px]"
-      style={{
-        background: "color-mix(in srgb, var(--warning) 11%, transparent)",
-        border: "1px solid color-mix(in srgb, var(--warning) 30%, transparent)",
-      }}
+      className="flex items-center gap-3 rounded-[18px] px-4 py-3 text-[13px]"
+      style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
     >
       <span className="h-[7px] w-[7px] flex-none rounded-full" style={{ background: "var(--warning)" }} />
-      <span>{t("tidyUpCount", { count })}</span>
+      <span className="min-w-0 truncate" style={{ color: "var(--ink-muted)" }}>{t("tidyUpCount", { count })}</span>
       <Link
         href="/dashboard/tidy-up"
-        className="ml-auto font-semibold"
-        style={{ color: "var(--warning)" }}
+        className="ml-auto flex-none font-semibold"
+        style={{ color: "var(--accent)" }}
       >
         {t("tidyUpAction")} →
       </Link>
       <button
         type="button"
         onClick={() => setDismissed(true)}
-        className="pl-2 leading-none"
+        className="flex-none pl-1 leading-none"
         style={{ color: "var(--ink-subtle)" }}
         aria-label="Dismiss"
       >

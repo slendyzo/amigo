@@ -107,11 +107,11 @@ export default function ShortcutsTokensCard() {
   };
 
   return (
-    <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
+    <div className="bg-[var(--surface)] rounded-xl p-6 shadow-sm border border-[var(--line)]">
       <div className="flex items-center justify-between mb-1">
         <div>
-          <h2 className="text-lg font-semibold text-slate-900">{t("title")}</h2>
-          <p className="text-sm text-slate-500">{t("description")}</p>
+          <h2 className="text-lg font-semibold text-[var(--ink)]">{t("title")}</h2>
+          <p className="text-sm text-[var(--ink-subtle)]">{t("description")}</p>
         </div>
         <button
           onClick={() => {
@@ -119,7 +119,7 @@ export default function ShortcutsTokensCard() {
             setCreatedToken(null);
             setError("");
           }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 shrink-0"
+          className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] transition-colors flex items-center gap-2 shrink-0"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -130,8 +130,8 @@ export default function ShortcutsTokensCard() {
 
       {/* Create form */}
       {showCreateForm && (
-        <div className="mt-4 p-4 bg-slate-50 rounded-lg border border-slate-200">
-          <label className="block text-sm font-medium text-slate-700 mb-1">
+        <div className="mt-4 p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--line)]">
+          <label className="block text-sm font-medium text-[var(--ink-muted)] mb-1">
             {t("tokenNameLabel")}
           </label>
           <div className="flex gap-2">
@@ -140,18 +140,18 @@ export default function ShortcutsTokensCard() {
               onChange={(e) => setNewTokenName(e.target.value)}
               placeholder={t("defaultTokenName")}
               maxLength={100}
-              className="flex-1 px-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-[var(--line-strong)] rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             />
             <button
               onClick={handleCreate}
               disabled={isCreating}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+              className="px-4 py-2 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] transition-colors disabled:opacity-50"
             >
               {isCreating ? tCommon("loading") : tCommon("create")}
             </button>
             <button
               onClick={() => setShowCreateForm(false)}
-              className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors"
+              className="px-4 py-2 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] transition-colors"
             >
               {tCommon("cancel")}
             </button>
@@ -162,15 +162,15 @@ export default function ShortcutsTokensCard() {
 
       {/* One-time token reveal */}
       {createdToken && (
-        <div className="mt-4 p-4 bg-amber-50 rounded-lg border border-amber-200">
-          <p className="text-sm font-medium text-amber-800 mb-2">{t("tokenCreatedWarning")}</p>
+        <div className="mt-4 p-4 bg-[color-mix(in_srgb,var(--warning)_12%,transparent)] rounded-lg border border-[color-mix(in_srgb,var(--warning)_35%,transparent)]">
+          <p className="text-sm font-medium text-[var(--warning)] mb-2">{t("tokenCreatedWarning")}</p>
           <div className="flex gap-2 items-center">
-            <code className="flex-1 px-3 py-2 bg-white border border-amber-200 rounded-lg text-xs font-mono break-all select-all">
+            <code className="flex-1 px-3 py-2 bg-[var(--surface)] border border-[color-mix(in_srgb,var(--warning)_35%,transparent)] rounded-lg text-xs font-mono break-all select-all">
               {createdToken}
             </code>
             <button
               onClick={handleCopy}
-              className="px-3 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors text-sm shrink-0"
+              className="px-3 py-2 bg-[var(--warning)] text-white rounded-lg hover:bg-[color-mix(in_srgb,var(--warning)_85%,black)] transition-colors text-sm shrink-0"
             >
               {copied ? t("copied") : t("copy")}
             </button>
@@ -184,18 +184,18 @@ export default function ShortcutsTokensCard() {
           {tokens.map((token) => (
             <div
               key={token.id}
-              className="flex items-center justify-between p-3 bg-slate-50 rounded-lg border border-slate-100"
+              className="flex items-center justify-between p-3 bg-[var(--surface-2)] rounded-lg border border-[var(--line)]"
             >
               <div className="min-w-0">
-                <div className="font-medium text-slate-900 text-sm truncate">{token.name}</div>
-                <div className="text-xs text-slate-500 font-mono">
+                <div className="font-medium text-[var(--ink)] text-sm truncate">{token.name}</div>
+                <div className="text-xs text-[var(--ink-subtle)] font-mono">
                   {token.tokenPrefix}… · {t("lastUsed")}: {formatDate(token.lastUsedAt)}
                 </div>
               </div>
               <button
                 onClick={() => handleDelete(token.id)}
                 disabled={deletingId === token.id}
-                className="p-2 text-slate-400 hover:text-red-500 hover:bg-white rounded-lg disabled:opacity-50 shrink-0"
+                className="p-2 text-[var(--ink-subtle)] hover:text-red-500 hover:bg-[var(--surface)] rounded-lg disabled:opacity-50 shrink-0"
                 title={t("revokeToken")}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -208,13 +208,13 @@ export default function ShortcutsTokensCard() {
       )}
 
       {!isLoading && tokens.length === 0 && !showCreateForm && !createdToken && (
-        <p className="mt-4 text-sm text-slate-500">{t("emptyState")}</p>
+        <p className="mt-4 text-sm text-[var(--ink-subtle)]">{t("emptyState")}</p>
       )}
 
       {/* Setup guide */}
       <button
         onClick={() => setShowGuide((v) => !v)}
-        className="mt-4 text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+        className="mt-4 text-sm text-[var(--accent)] hover:text-[var(--accent-strong)] flex items-center gap-1"
       >
         {t("setupGuide")}
         <svg
@@ -228,16 +228,16 @@ export default function ShortcutsTokensCard() {
       </button>
 
       {showGuide && (
-        <div className="mt-3 space-y-4 text-sm text-slate-600">
+        <div className="mt-3 space-y-4 text-sm text-[var(--ink-muted)]">
           {/* A) Wallet auto-log */}
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
-            <h3 className="font-semibold text-slate-900 mb-2">{t("walletGuideTitle")}</h3>
+          <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--line)]">
+            <h3 className="font-semibold text-[var(--ink)] mb-2">{t("walletGuideTitle")}</h3>
             <ol className="list-decimal list-inside space-y-1.5">
               <li>{t("walletStep1")}</li>
               <li>{t("walletStep2")}</li>
               <li>
                 {t("walletStep3")}
-                <div className="mt-1.5 ml-4 p-2 bg-white rounded border border-slate-200 font-mono text-xs space-y-1 break-all">
+                <div className="mt-1.5 ml-4 p-2 bg-[var(--surface)] rounded border border-[var(--line)] font-mono text-xs space-y-1 break-all">
                   <div>POST {expenseUrl}</div>
                   <div>Authorization: Bearer &lt;{t("yourToken")}&gt;</div>
                   <div>{"{ \"merchant\": [Merchant], \"amount\": [Amount] }"}</div>
@@ -249,13 +249,13 @@ export default function ShortcutsTokensCard() {
           </div>
 
           {/* B) Siri / Action Button */}
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
-            <h3 className="font-semibold text-slate-900 mb-2">{t("siriGuideTitle")}</h3>
+          <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--line)]">
+            <h3 className="font-semibold text-[var(--ink)] mb-2">{t("siriGuideTitle")}</h3>
             <ol className="list-decimal list-inside space-y-1.5">
               <li>{t("siriStep1")}</li>
               <li>
                 {t("siriStep2")}
-                <div className="mt-1.5 ml-4 p-2 bg-white rounded border border-slate-200 font-mono text-xs space-y-1 break-all">
+                <div className="mt-1.5 ml-4 p-2 bg-[var(--surface)] rounded border border-[var(--line)] font-mono text-xs space-y-1 break-all">
                   <div>POST {expenseUrl}</div>
                   <div>Authorization: Bearer &lt;{t("yourToken")}&gt;</div>
                   <div>{"{ \"text\": [Provided Input] }"}</div>
@@ -266,8 +266,8 @@ export default function ShortcutsTokensCard() {
           </div>
 
           {/* C) Back Tap */}
-          <div className="p-4 bg-slate-50 rounded-lg border border-slate-100">
-            <h3 className="font-semibold text-slate-900 mb-2">{t("backTapGuideTitle")}</h3>
+          <div className="p-4 bg-[var(--surface-2)] rounded-lg border border-[var(--line)]">
+            <h3 className="font-semibold text-[var(--ink)] mb-2">{t("backTapGuideTitle")}</h3>
             <ol className="list-decimal list-inside space-y-1.5">
               <li>{t("backTapStep1")}</li>
               <li>{t("backTapStep2")}</li>

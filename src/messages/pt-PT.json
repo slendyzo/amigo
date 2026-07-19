@@ -1,4 +1,4 @@
-﻿{
+{
   "shortcuts": {
     "title": "Atalhos do iPhone",
     "description": "Registe despesas automaticamente ao pagar com Apple Pay, ou por voz com a Siri.",
@@ -102,7 +102,13 @@
     "money": "Dinheiro",
     "themeLight": "Claro",
     "themeDark": "Escuro",
-    "themeSystem": "Auto"
+    "themeSystem": "Auto",
+    "wealth": "Património",
+    "workspace": "Espaço",
+    "moreProjectsSub": "Orçamentos e tags",
+    "moreInsightsSub": "Relatórios mensais",
+    "moreTidyUpSub": "Categorizar despesas",
+    "moreImportSub": "CSV · Excel · OFX"
   },
   "auth": {
     "signIn": "Iniciar Sessão",
@@ -135,7 +141,7 @@
     "statSpent": "Gasto",
     "statPortfolio": "Carteira",
     "pctOfBudget": "{pct}% do orçamento",
-    "thisMonth": "este mês",
+    "thisMonth": "Este Mês",
     "railExchanges": "{count} exchanges",
     "railRwaEquity": "Património · Capital RWA",
     "railTopCategories": "Principais categorias",
@@ -151,6 +157,25 @@
     "tidyUpAction": "Organizar",
     "quickAddPlaceholder": "ex. mcd 12",
     "quickAddButton": "Adicionar",
+    "greetingShortMorning": "Bom dia",
+    "greetingShortAfternoon": "Boa tarde",
+    "greetingShortEvening": "Boa noite",
+    "searchAction": "Pesquisar despesas",
+    "whatsNewAction": "Novidades",
+    "thisMonthLower": "este mês",
+    "heroInvested": "Investido",
+    "heroAssets": "Ativos",
+    "heroDebt": "Dívida",
+    "monthBudget": "Orçamento de {month}",
+    "ofBudgetShort": "de {budget}",
+    "budgetMetaLeft": "{amount} restantes · {days, plural, =1 {falta 1 dia} other {faltam # dias}}",
+    "budgetMetaOver": "{amount} acima do orçamento · {days, plural, =1 {falta 1 dia} other {faltam # dias}}",
+    "setBudgetCta": "Definir um orçamento",
+    "upcoming": "Próximos",
+    "seeAll": "Ver tudo",
+    "recent": "Recentes",
+    "inDays": "{days, plural, =0 {hoje} =1 {em 1 dia} other {em # dias}}",
+    "confirmDeleteExpense": "Eliminar esta despesa?",
     "title": "Painel",
     "welcome": "Bem-vindo, {name}!",
     "financialOverview": "Aqui está o teu resumo financeiro",
@@ -163,7 +188,6 @@
     "viewAll": "Ver tudo",
     "noExpensesYet": "Ainda sem despesas",
     "addFirstExpense": "Adiciona a tua primeira despesa",
-    "thisMonth": "Este Mês",
     "lastMonth": "Mês Passado",
     "survivalBudget": "Orçamento Mensal",
     "used": "usado",
@@ -277,6 +301,18 @@
   },
   "expenses": {
     "title": "Despesas",
+    "money": "Dinheiro",
+    "tabExpenses": "Despesas",
+    "tabIncome": "Rendimento",
+    "tabRecurring": "Recorrente",
+    "allTime": "Sempre",
+    "chips": {
+      "all": "Tudo",
+      "fixed": "Fixas",
+      "variable": "Variáveis",
+      "lifestyle": "Gastos",
+      "project": "Projeto"
+    },
     "addExpense": "Adicionar Despesa",
     "editExpense": "Editar Despesa",
     "deleteExpense": "Eliminar Despesa",
@@ -366,6 +402,14 @@
   },
   "incomes": {
     "title": "Receitas",
+    "receivedIn": "Recebido em {month}",
+    "expectedMonthly": "Esperado mensal: {amount}",
+    "extraOverExpected": "+{amount} extra",
+    "thisMonthLabel": "Este mês",
+    "monthlyBadge": "mensal",
+    "oneOff": "Único",
+    "addIncomeAffordance": "Adicionar receita",
+    "addIncomeAffordanceHint": "Salário, freelance, reembolsos…",
     "addIncome": "Adicionar Receita",
     "editIncome": "Editar Receita",
     "deleteIncome": "Eliminar Receita",
@@ -455,7 +499,10 @@
     "unmatchedTitle": "Algumas categorias não foram reconhecidas",
     "unmatchedDescription": "Estas categorias não correspondem a nenhum grupo padrão. Podes atribuí-las manualmente a um grupo pai usando o botão de editar.",
     "unmatchedHint": "Dica: Edita uma categoria e escolhe um grupo pai para a organizar.",
-    "viewExpenses": "Ver despesas nesta categoria"
+    "viewExpenses": "Ver despesas nesta categoria",
+    "tabCategories": "Categorias",
+    "tabRules": "Regras",
+    "expensesCount": "{count} despesas"
   },
   "accounts": {
     "title": "Contas Bancárias",
@@ -543,6 +590,15 @@
   },
   "recurring": {
     "title": "Modelos Recorrentes",
+    "money": "Dinheiro",
+    "monthlyCommitments": "Compromissos mensais",
+    "activeCountLabel": "{count} modelos ativos",
+    "billsLoans": "Contas e empréstimos",
+    "subscriptions": "Subscrições",
+    "installmentProgress": "prestação {current} de {total}",
+    "paused": "em pausa",
+    "varies": "varia",
+    "dayShort": "dia {day}",
     "addTemplate": "Novo Modelo",
     "editTemplate": "Editar Modelo",
     "deleteTemplate": "Eliminar Modelo",
@@ -715,7 +771,12 @@
     "failedToImportPdf": "Erro ao importar PDF",
     "failedToImport": "Erro ao importar ficheiro",
     "failedToImportFile": "Erro ao importar ficheiro",
-    "failedToPreview": "Erro ao pré-visualizar ficheiro"
+    "failedToPreview": "Erro ao pré-visualizar ficheiro",
+    "stepOf": "Passo {current} de {total}",
+    "stepCaptionUpload": "escolhe um ficheiro para importar",
+    "stepCaptionMapping": "revê o que encontrámos",
+    "stepCaptionImport": "a trazer tudo",
+    "fileSheetsRows": "{sheets} folhas · {rows} linhas"
   },
   "mappings": {
     "title": "Mapeamento de Palavras-chave",
@@ -755,7 +816,11 @@
       "variable": "Contas (Variáveis)",
       "lifestyle": "Gastos",
       "project": "Projeto"
-    }
+    },
+    "tabCategories": "Categorias",
+    "tabRules": "Regras",
+    "rulesPreview": "Pré-visualização das regras",
+    "moreCount": "+ {count} mais"
   },
   "settings": {
     "title": "Definições",
@@ -834,7 +899,11 @@
     "noDefault": "Nenhuma (sem padrão)",
     "restartSetup": "Reiniciar Configuração",
     "restartSetupDescription": "Volta a executar o assistente de configuração inicial para atualizar o teu salário, orçamento e despesas fixas",
-    "restartSetupButton": "Reiniciar Assistente de Configuração"
+    "restartSetupButton": "Reiniciar Assistente de Configuração",
+    "groupMoney": "Dinheiro",
+    "groupApp": "Aplicação",
+    "theme": "Tema",
+    "workspaceSuffix": "workspace"
   },
   "imports": {
     "title": "Histórico de Importações",
@@ -949,7 +1018,10 @@
     "requestNewLink": "Pedir novo link",
     "passwordResetSuccess": "Palavra-passe Redefinida!",
     "passwordResetSuccessMessage": "A tua palavra-passe foi redefinida com sucesso. Podes agora iniciar sessão com a nova palavra-passe.",
-    "loading": "A carregar..."
+    "loading": "A carregar...",
+    "welcomeBack": "Bem-vindo de volta",
+    "signInTagline": "O teu dinheiro, calmamente num só lugar.",
+    "or": "ou"
   },
   "errors": {
     "generic": "Algo correu mal",
@@ -1042,6 +1114,9 @@
   "modals": {
     "addExpense": "Adicionar Despesa",
     "editExpense": "Editar Despesa",
+    "typeAnything": "Escreve o que quiseres",
+    "typeAnythingExample": "Escreve o que quiseres — ex. \"25 mcd\"",
+    "saveExpense": "Guardar despesa",
     "whatDidYouBuy": "O que compraste?",
     "whatDidYouBuyPlaceholder": "ex: Supermercado, Café, Netflix",
     "howMuch": "Quanto custou?",
@@ -1213,7 +1288,8 @@
     "addAnother": "Adicionar outra despesa",
     "skipForNow": "Saltar por agora",
     "saving": "A guardar...",
-    "getStarted": "Começar"
+    "getStarted": "Começar",
+    "perMonth": "por mês"
   },
   "offline": {
     "youreOffline": "Estás Offline",
@@ -1253,7 +1329,12 @@
     "autoAssignAll": "Atribuir automaticamente",
     "autoAssigning": "A atribuir...",
     "autoAssigned": "{count} despesas categorizadas automaticamente",
-    "noRecentlyDone": "Os itens categorizados aparecerão aqui"
+    "noRecentlyDone": "Os itens categorizados aparecerão aqui",
+    "progressCount": "{done} de {total}",
+    "accept": "Aceitar",
+    "pickOther": "Escolher outra",
+    "upNext": "a seguir",
+    "keywordRuleHint": "A criar uma regra de palavra-chave a partir da tua escolha"
   },
   "receiptScanner": {
     "title": "Digitalizar Recibo",
@@ -1511,6 +1592,14 @@
     "pnl": "Lucro/Perda",
     "dcaAverage": "Média DCA",
     "costBasisPending": "Custo de aquisição pendente",
+    "allocationCrypto": "Cripto",
+    "allocationEtfs": "ETFs",
+    "allocationCash": "Numerário",
+    "nExchanges": "{count} corretoras",
+    "staked": "em staking",
+    "costBasisLabel": "custo base",
+    "connectionsSynced": "{count, plural, one {# corretora sincronizada} other {# corretoras sincronizadas}}",
+    "syncNow": "Sincronizar",
     "crypto": "Crypto",
     "etf": "ETF",
     "stock": "Ações",
@@ -1658,6 +1747,14 @@
     "deleteVehicleConfirm": "Eliminar este veículo? As despesas ligadas serão desligadas mas mantidas.",
     "generationPrefix": "Geração",
     "backToNetWorth": "Património",
+    "netWorthChangeCaption": "não realizado",
+    "kindProperty": "Imóvel",
+    "kindVehicle": "Veículo",
+    "valuationPurchase": "preço de compra",
+    "valuationManual": "avaliação manual",
+    "valuationIndex": "avaliação por índice",
+    "valuationMarket": "estimativa de mercado",
+    "linkedToAsset": "associado a {name}",
     "matchHeader": "Ligar despesas antigas?",
     "matchSubheader": "Encontrámos {count} despesas que parecem pertencer ao teu {name}. Liga-as para contarem para o TCO.",
     "matchSelectAll": "Selecionar tudo",

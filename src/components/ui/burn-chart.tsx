@@ -137,42 +137,43 @@ export function BurnChart({
       {/* Summary */}
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="font-semibold text-slate-900">{t("chart.spendingVelocity")}</h3>
-          <p className="text-sm text-slate-500">{t("chart.cumulativeComparison")}</p>
+          <h3 className="font-semibold" style={{ color: "var(--ink)" }}>{t("chart.spendingVelocity")}</h3>
+          <p className="text-sm" style={{ color: "var(--ink-muted)" }}>{t("chart.cumulativeComparison")}</p>
         </div>
         <div className="text-right">
-          <p className={`text-lg font-semibold ${difference > 0 ? "text-red-500" : "text-green-500"}`}>
+          <p className="text-lg font-semibold tabular-nums" style={{ color: difference > 0 ? "var(--negative)" : "var(--positive)" }}>
             {difference > 0 ? "+" : ""}€{difference.toFixed(2)}
           </p>
-          <p className="text-sm text-slate-500">
+          <p className="text-sm" style={{ color: "var(--ink-muted)" }}>
             {t("chart.vsLastMonth", { percent: `${percentChange > 0 ? "+" : ""}${percentChange.toFixed(1)}` })}
           </p>
         </div>
       </div>
 
-      {/* Chart */}
+      {/* Chart — current month solid accent, previous month faded ghost */}
       <div className="h-[280px] w-full">
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--line)" />
             <XAxis
               dataKey="day"
-              tick={{ fontSize: 12, fill: "#64748b" }}
+              tick={{ fontSize: 12, fill: "var(--ink-subtle)" }}
               tickLine={false}
-              axisLine={{ stroke: "#e2e8f0" }}
+              axisLine={{ stroke: "var(--line)" }}
             />
             <YAxis
-              tick={{ fontSize: 12, fill: "#64748b" }}
+              tick={{ fontSize: 12, fill: "var(--ink-subtle)" }}
               tickLine={false}
-              axisLine={{ stroke: "#e2e8f0" }}
+              axisLine={{ stroke: "var(--line)" }}
               tickFormatter={(value) => `€${value}`}
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: "white",
-                border: "1px solid #e2e8f0",
-                borderRadius: "8px",
-                boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                backgroundColor: "var(--surface)",
+                border: "1px solid var(--line)",
+                borderRadius: "12px",
+                boxShadow: "var(--shadow-pop)",
+                color: "var(--ink)",
               }}
               formatter={(value, name) => [
                 value === null ? "—" : `€${Number(value ?? 0).toFixed(2)}`,
@@ -188,7 +189,7 @@ export function BurnChart({
             <Line
               type="monotone"
               dataKey="previous"
-              stroke="#94a3b8"
+              stroke="var(--accent-fainter)"
               strokeWidth={2}
               strokeDasharray="5 5"
               dot={false}
@@ -197,11 +198,11 @@ export function BurnChart({
             <Line
               type="monotone"
               dataKey="current"
-              stroke="#0070f3"
+              stroke="var(--accent)"
               strokeWidth={3}
               dot={false}
               name="current"
-              activeDot={{ r: 6, fill: "#0070f3" }}
+              activeDot={{ r: 6, fill: "var(--accent)" }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -210,12 +211,12 @@ export function BurnChart({
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-2">
         <div className="flex items-center gap-2">
-          <div className="w-4 h-1 bg-[#0070f3] rounded" />
-          <span className="text-sm text-slate-600">{currentMonthLabel}: €{currentTotal.toFixed(2)}</span>
+          <div className="w-4 h-1 rounded" style={{ background: "var(--accent)" }} />
+          <span className="text-sm tabular-nums" style={{ color: "var(--ink-muted)" }}>{currentMonthLabel}: €{currentTotal.toFixed(2)}</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-1 bg-slate-400 rounded" style={{ backgroundImage: "repeating-linear-gradient(90deg, #94a3b8, #94a3b8 4px, transparent 4px, transparent 8px)" }} />
-          <span className="text-sm text-slate-600">{previousMonthLabel}: €{previousTotal.toFixed(2)}</span>
+          <div className="w-4 h-1 rounded" style={{ background: "var(--accent-fainter)" }} />
+          <span className="text-sm tabular-nums" style={{ color: "var(--ink-muted)" }}>{previousMonthLabel}: €{previousTotal.toFixed(2)}</span>
         </div>
       </div>
     </div>

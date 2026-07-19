@@ -26,24 +26,11 @@ const INCOME_TYPE_VALUES = [
 
 type IncomeType = (typeof INCOME_TYPE_VALUES)[number];
 
-function getIncomeTypeButtonClass(type: string, isSelected: boolean): string {
-  if (!isSelected) return "bg-slate-100 text-slate-500 hover:bg-slate-200";
-  switch (type) {
-    case "SALARY":
-      return "bg-green-100 text-green-700 ring-1 ring-green-300";
-    case "FREELANCE":
-      return "bg-blue-100 text-blue-700 ring-1 ring-blue-300";
-    case "INVESTMENT":
-      return "bg-purple-100 text-purple-700 ring-1 ring-purple-300";
-    case "SALE":
-      return "bg-amber-100 text-amber-700 ring-1 ring-amber-300";
-    case "GIFT":
-      return "bg-pink-100 text-pink-700 ring-1 ring-pink-300";
-    case "REFUND":
-      return "bg-cyan-100 text-cyan-700 ring-1 ring-cyan-300";
-    default:
-      return "bg-slate-200 text-slate-700 ring-1 ring-slate-300";
+function getIncomeTypeButtonClass(isSelected: boolean): string {
+  if (isSelected) {
+    return "bg-[var(--ink)] text-white font-semibold";
   }
+  return "bg-[var(--surface)] text-[var(--ink-muted)] border border-[var(--line)]";
 }
 
 export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps) {
@@ -169,27 +156,33 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ background: "rgba(23,22,31,.45)" }}
         onClick={onClose}
       />
 
       {/* Modal */}
-      <form onSubmit={handleSubmit} className="relative w-full md:max-w-md md:mx-4 bg-slate-50 rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <form
+        onSubmit={handleSubmit}
+        className="relative w-full md:max-w-md md:mx-4 rounded-t-[28px] md:rounded-[28px] overflow-hidden max-h-[90vh] flex flex-col"
+        style={{ background: "var(--app-bg)", boxShadow: "var(--shadow-pop)" }}
+      >
         {/* Drag handle (mobile) + Header */}
         <div className="flex-shrink-0">
-          <div className="flex justify-center pt-2 pb-0 md:hidden">
-            <div className="w-10 h-1 rounded-full bg-slate-300" />
+          <div className="flex justify-center pt-2.5 pb-0 md:hidden">
+            <div className="rounded-full" style={{ width: 40, height: 4, background: "rgba(23,22,31,.15)" }} />
           </div>
           <div className="px-4 md:px-5 py-2 md:py-3 flex items-center justify-between">
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">
+            <h2 className="text-[17px] font-bold text-[var(--ink)]">
               {t("addIncome")}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 -mr-2 text-slate-400 active:text-slate-600 md:hover:text-slate-600 tap-none"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--ink-subtle)] active:text-[var(--ink)] md:hover:text-[var(--ink)] tap-none"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -199,13 +192,13 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
         {/* Body - Scrollable cards */}
         <div className="px-3 md:px-4 pb-3 space-y-2.5 overflow-y-auto scroll-touch flex-1">
           {error && (
-            <div className="p-3 rounded-xl bg-red-50 text-red-600 text-sm">
+            <div className="p-3 rounded-[14px] text-sm" style={{ background: "rgba(214,69,80,.1)", color: "var(--negative)" }}>
               {error}
             </div>
           )}
 
           {/* CARD 1: Essentials (Name + Amount + Date) */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm">
+          <div className="rounded-[18px] border border-[var(--line)] p-4 space-y-3" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
             {/* Name */}
             <input
               ref={inputRef}
@@ -214,13 +207,13 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
               onChange={(e) => setName(e.target.value)}
               placeholder={t("whatDidYouReceivePlaceholder")}
               required
-              className="w-full text-[17px] font-medium text-slate-900 placeholder-slate-400 bg-transparent outline-none"
+              className="w-full text-[17px] font-medium text-[var(--ink)] placeholder-[var(--ink-subtle)] bg-transparent outline-none"
             />
 
             {/* Amount + Currency */}
             <div className="flex items-center gap-3">
               <div className="flex-1 flex items-baseline gap-1">
-                <span className="text-green-500 text-2xl font-light">{getCurrencySymbol(currency)}</span>
+                <span className="text-[var(--positive)] text-2xl font-light">{getCurrencySymbol(currency)}</span>
                 <AmountInput
                   value={amount}
                   onChange={setAmount}
@@ -228,13 +221,14 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                   required
                   hideCurrencySymbol
                   className="flex-1"
-                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[28px] font-bold !text-slate-900 !placeholder-slate-300"
+                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[28px] font-bold tabular-nums !text-[var(--ink)] !placeholder-[var(--ink-subtle)]"
                 />
               </div>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="px-3 py-1.5 bg-slate-100 rounded-lg text-sm font-medium text-slate-600 border-0 outline-none cursor-pointer"
+                className="px-3 py-1.5 rounded-[14px] text-sm font-medium text-[var(--ink-muted)] border-0 outline-none cursor-pointer"
+                style={{ background: "var(--surface-2)" }}
               >
                 {CURRENCIES.map((curr) => (
                   <option key={curr} value={curr}>
@@ -246,16 +240,16 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
 
             {/* Date */}
             <div className="flex items-center gap-2 text-sm">
-              <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-[var(--ink-subtle)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-slate-500">
+              <span className="text-[var(--ink-muted)]">
                 {isToday ? t("today") : new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
               </span>
               <button
                 type="button"
                 onClick={() => setShowDatePicker(!showDatePicker)}
-                className="text-[#0070f3] text-xs"
+                className="text-[var(--accent)] text-xs"
               >
                 {t("change")}
               </button>
@@ -266,22 +260,23 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                className="w-full rounded-[14px] border border-[var(--line)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                style={{ background: "var(--surface)" }}
               />
             )}
           </div>
 
           {/* CARD 2: Details (collapsed/expanded) */}
           {showDetails ? (
-            <div className="bg-white rounded-2xl border-2 border-green-200 p-4 space-y-4 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line-strong)] p-4 space-y-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">{tCommon("details")}</span>
+                <span className="text-sm font-semibold text-[var(--ink)]">{tCommon("details")}</span>
                 <button
                   type="button"
                   onClick={() => setShowDetails(false)}
                   className="p-1"
                 >
-                  <svg className="w-4 h-4 text-slate-400 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[var(--ink-subtle)] rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -289,14 +284,14 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
 
               {/* Income Type */}
               <div>
-                <label className="text-xs font-medium text-slate-500 mb-1.5 block">{t("type")}</label>
+                <label className="text-xs font-medium text-[var(--ink-muted)] mb-1.5 block">{t("type")}</label>
                 <div className="flex flex-wrap gap-2">
                   {INCOME_TYPES.map((type) => (
                     <button
                       key={type.value}
                       type="button"
                       onClick={() => setIncomeType(type.value)}
-                      className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${getIncomeTypeButtonClass(type.value, incomeType === type.value)}`}
+                      className={`px-3 py-1.5 text-xs rounded-[14px] font-medium transition-colors ${getIncomeTypeButtonClass(incomeType === type.value)}`}
                     >
                       {type.label}
                     </button>
@@ -307,11 +302,12 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
               {/* Bank Account */}
               {bankAccounts.length > 0 && (
                 <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">{t("bankAccount")}</label>
+                  <label className="text-xs font-medium text-[var(--ink-muted)] mb-1 block">{t("bankAccount")}</label>
                   <select
                     value={bankAccountId}
                     onChange={(e) => setBankAccountId(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                    className="w-full rounded-[14px] border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+                    style={{ background: "var(--surface)" }}
                   >
                     <option value="">{t("none")}</option>
                     {bankAccounts.map((acc) => (
@@ -328,16 +324,17 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
             <button
               type="button"
               onClick={() => setShowDetails(true)}
-              className="w-full bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm text-left"
+              className="w-full rounded-[18px] border border-[var(--line)] px-4 py-3 text-left"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-400">{tCommon("details")}</span>
+                <span className="text-sm text-[var(--ink-subtle)]">{tCommon("details")}</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] px-2 py-0.5 rounded-md bg-green-50 text-green-700 font-medium">{typeLabel}</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "#E7F5EE", color: "var(--positive)" }}>{typeLabel}</span>
                   {bankAccounts.length > 0 && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 font-medium">{accountLabel}</span>
+                    <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--surface-2)", color: "var(--accent)" }}>{accountLabel}</span>
                   )}
-                  <svg className="w-4 h-4 text-slate-300 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[var(--ink-subtle)] ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
@@ -347,18 +344,18 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
 
           {/* CARD 3: Notes */}
           {showNotes ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line)] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[18px] h-[18px] text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  <span className="text-xs font-medium text-slate-500">{t("addNote")}</span>
+                  <span className="text-xs font-medium text-[var(--ink-muted)]">{t("addNote")}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => { setDescription(""); setShowNotes(false); }}
-                  className="p-1 text-slate-400 hover:text-slate-600"
+                  className="p-1 text-[var(--ink-subtle)] hover:text-[var(--ink)]"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -372,23 +369,25 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                 rows={2}
                 maxLength={1000}
                 autoFocus
-                className="w-full text-sm text-slate-900 placeholder-slate-400 bg-slate-50 rounded-lg p-2.5 border border-slate-200 outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent resize-none"
+                className="w-full text-sm text-[var(--ink)] placeholder-[var(--ink-subtle)] rounded-[14px] p-2.5 border border-[var(--line)] outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none"
+                style={{ background: "var(--surface-2)" }}
               />
             </div>
           ) : (
             <button
               type="button"
               onClick={() => setShowNotes(true)}
-              className="w-full bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm text-left"
+              className="w-full rounded-[18px] border border-[var(--line)] px-4 py-3 text-left"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[18px] h-[18px] text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  <span className="text-sm text-slate-400">{t("addNote")}</span>
+                  <span className="text-sm text-[var(--ink-subtle)]">{t("addNote")}</span>
                 </div>
-                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
@@ -397,18 +396,19 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-3 md:px-4 py-3 md:py-4 border-t border-slate-200 pb-safe flex gap-3 bg-white">
+        <div className="flex-shrink-0 px-3 md:px-4 py-3 md:py-4 border-t border-[var(--line)] pb-safe flex gap-3" style={{ background: "var(--surface)" }}>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-slate-300 px-4 py-3 md:py-2.5 text-slate-700 font-medium active:bg-slate-50 md:hover:bg-slate-50 transition-colors tap-none"
+            className="flex-1 rounded-[14px] border border-[var(--line-strong)] px-4 py-3 md:py-2.5 text-[var(--ink-muted)] font-medium active:bg-[var(--surface-2)] md:hover:bg-[var(--surface-2)] transition-colors tap-none"
           >
             {tCommon("cancel")}
           </button>
           <button
             type="submit"
             disabled={isLoading || !name || !amount}
-            className="flex-1 rounded-xl bg-green-600 px-4 py-3 md:py-2.5 text-white font-medium active:bg-green-700 md:hover:bg-green-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed tap-none"
+            className="flex-1 rounded-[18px] px-4 py-3 md:py-2.5 text-white text-[15px] font-semibold transition-colors disabled:opacity-50 disabled:cursor-not-allowed tap-none"
+            style={{ background: "var(--positive)", boxShadow: "0 8px 20px rgba(27,158,99,.30)" }}
           >
             {isLoading ? t("adding") : tCommon("add")}
           </button>

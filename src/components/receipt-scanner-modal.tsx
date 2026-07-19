@@ -240,22 +240,22 @@ export default function ReceiptScannerModal({
       />
 
       {/* Modal */}
-      <div className="relative w-full md:max-w-lg md:mx-4 bg-white rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <div className="relative w-full md:max-w-lg md:mx-4 bg-[var(--surface)] rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
         {/* Header */}
-        <div className="px-4 md:px-6 py-3 md:py-4 border-b border-slate-200 flex items-center justify-between flex-shrink-0">
+        <div className="px-4 md:px-6 py-3 md:py-4 border-b border-[var(--line)] flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-[#0070f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
             </svg>
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">
+            <h2 className="text-base md:text-lg font-semibold text-[var(--ink)]">
               {t("title")}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="p-2 -mr-2 text-slate-400 active:text-slate-600 md:hover:text-slate-600"
+            className="p-2 -mr-2 text-[var(--ink-subtle)] active:text-[var(--ink-muted)] md:hover:text-[var(--ink-muted)]"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -274,7 +274,7 @@ export default function ReceiptScannerModal({
           {/* Step 1: Capture */}
           {step === "capture" && (
             <div
-              className="border-2 border-dashed border-slate-300 rounded-xl p-8 text-center cursor-pointer hover:border-[#0070f3] hover:bg-blue-50/50 transition-colors"
+              className="border-2 border-dashed border-[var(--line-strong)] rounded-xl p-8 text-center cursor-pointer hover:border-[var(--accent)] hover:bg-[var(--accent-tint)] transition-colors"
               onClick={() => fileInputRef.current?.click()}
               onDrop={handleDrop}
               onDragOver={handleDragOver}
@@ -286,16 +286,16 @@ export default function ReceiptScannerModal({
                 onChange={handleFileInputChange}
                 className="hidden"
               />
-              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
-                <svg className="w-8 h-8 text-[#0070f3]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[var(--accent-tint)] flex items-center justify-center">
+                <svg className="w-8 h-8 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                 </svg>
               </div>
-              <p className="text-lg font-medium text-slate-900 mb-1">
+              <p className="text-lg font-medium text-[var(--ink)] mb-1">
                 {t("captureTitle")}
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-[var(--ink-subtle)]">
                 {t("captureDescription")}
               </p>
             </div>
@@ -314,21 +314,21 @@ export default function ReceiptScannerModal({
                 </div>
               )}
               <div className="w-16 h-16 mx-auto mb-4 relative">
-                <svg className="w-16 h-16 animate-spin text-[#0070f3]" fill="none" viewBox="0 0 24 24">
+                <svg className="w-16 h-16 animate-spin text-[var(--accent)]" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
                 </svg>
               </div>
-              <p className="text-lg font-medium text-slate-900 mb-2">
+              <p className="text-lg font-medium text-[var(--ink)] mb-2">
                 {t("processing")}
               </p>
-              <div className="w-48 h-2 mx-auto bg-slate-200 rounded-full overflow-hidden">
+              <div className="w-48 h-2 mx-auto bg-[var(--surface-3)] rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-[#0070f3] transition-all duration-300"
+                  className="h-full bg-[var(--accent)] transition-all duration-300"
                   style={{ width: `${ocrProgress}%` }}
                 />
               </div>
-              <p className="mt-2 text-sm text-slate-500">{ocrProgress}%</p>
+              <p className="mt-2 text-sm text-[var(--ink-subtle)]">{ocrProgress}%</p>
             </div>
           )}
 
@@ -337,16 +337,16 @@ export default function ReceiptScannerModal({
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Confidence indicator */}
               {extractedData && (
-                <div className="flex items-center gap-2 p-3 rounded-lg bg-slate-50">
+                <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--surface-2)]">
                   <div className={`w-2 h-2 rounded-full ${
                     extractedData.confidence > 70 ? "bg-green-500" :
                     extractedData.confidence > 50 ? "bg-yellow-500" : "bg-red-500"
                   }`} />
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-[var(--ink-muted)]">
                     {t("confidence")}: {Math.round(extractedData.confidence)}%
                   </span>
                   {extractedData.confidence < 70 && (
-                    <span className="text-xs text-slate-500">
+                    <span className="text-xs text-[var(--ink-subtle)]">
                       ({t("pleaseVerify")})
                     </span>
                   )}
@@ -364,7 +364,7 @@ export default function ReceiptScannerModal({
                   <button
                     type="button"
                     onClick={handleRetry}
-                    className="text-sm text-[#0070f3] hover:underline"
+                    className="text-sm text-[var(--accent)] hover:underline"
                   >
                     {t("scanAnother")}
                   </button>
@@ -373,7 +373,7 @@ export default function ReceiptScannerModal({
 
               {/* Merchant/Name */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--ink-muted)] mb-1">
                   {tModals("whatDidYouBuy")}
                 </label>
                 <input
@@ -382,13 +382,13 @@ export default function ReceiptScannerModal({
                   onChange={(e) => setName(e.target.value)}
                   placeholder={tModals("whatDidYouBuyPlaceholder")}
                   required
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                  className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-[var(--ink)] placeholder-[var(--ink-subtle)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
 
               {/* Amount + Currency */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--ink-muted)] mb-1">
                   {tModals("howMuch")}
                 </label>
                 <div className="flex gap-2">
@@ -402,7 +402,7 @@ export default function ReceiptScannerModal({
                   <select
                     value={currency}
                     onChange={(e) => setCurrency(e.target.value)}
-                    className="w-24 rounded-lg border border-slate-300 bg-white px-3 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                    className="w-24 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-3 text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                   >
                     {CURRENCIES.map((curr) => (
                       <option key={curr} value={curr}>
@@ -415,26 +415,26 @@ export default function ReceiptScannerModal({
 
               {/* Date */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--ink-muted)] mb-1">
                   {tModals("date")}
                 </label>
                 <input
                   type="date"
                   value={date}
                   onChange={(e) => setDate(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                  className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               </div>
 
               {/* Category */}
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">
+                <label className="block text-sm font-medium text-[var(--ink-muted)] mb-1">
                   {tModals("category")}
                 </label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-300 bg-white px-4 py-3 text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                  className="w-full rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-4 py-3 text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
                 >
                   <option value="">{tModals("auto")}</option>
                   {localCategories.map((cat) => (
@@ -448,20 +448,20 @@ export default function ReceiptScannerModal({
               {/* Extracted line items preview (read-only) */}
               {extractedData && extractedData.items.length > 0 && (
                 <details className="group">
-                  <summary className="text-sm text-slate-500 cursor-pointer hover:text-slate-700">
+                  <summary className="text-sm text-[var(--ink-subtle)] cursor-pointer hover:text-[var(--ink-muted)]">
                     {t("extractedItems")} ({extractedData.items.length})
                   </summary>
-                  <div className="mt-2 p-3 bg-slate-50 rounded-lg text-sm">
+                  <div className="mt-2 p-3 bg-[var(--surface-2)] rounded-lg text-sm">
                     {extractedData.items.slice(0, 5).map((item, i) => (
                       <div key={i} className="flex justify-between py-1">
-                        <span className="text-slate-600 truncate">{item.name}</span>
-                        <span className="text-slate-900 font-medium">
+                        <span className="text-[var(--ink-muted)] truncate">{item.name}</span>
+                        <span className="text-[var(--ink)] font-medium">
                           {getCurrencySymbol(currency)}{item.amount.toFixed(2)}
                         </span>
                       </div>
                     ))}
                     {extractedData.items.length > 5 && (
-                      <p className="text-slate-400 text-xs mt-1">
+                      <p className="text-[var(--ink-subtle)] text-xs mt-1">
                         +{extractedData.items.length - 5} {t("moreItems")}
                       </p>
                     )}
@@ -470,18 +470,18 @@ export default function ReceiptScannerModal({
               )}
 
               {/* Footer */}
-              <div className="flex gap-3 pt-4 border-t border-slate-200">
+              <div className="flex gap-3 pt-4 border-t border-[var(--line)]">
                 <button
                   type="button"
                   onClick={handleRetry}
-                  className="flex-1 rounded-lg border border-slate-300 px-4 py-3 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+                  className="flex-1 rounded-lg border border-[var(--line-strong)] px-4 py-3 text-[var(--ink-muted)] font-medium hover:bg-[var(--surface-2)] transition-colors"
                 >
                   {t("rescan")}
                 </button>
                 <button
                   type="submit"
                   disabled={isLoading || !name || !amount}
-                  className="flex-1 rounded-lg bg-[#0070f3] px-4 py-3 text-white font-medium hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex-1 rounded-lg bg-[var(--accent)] px-4 py-3 text-[var(--accent-fg)] font-medium hover:bg-[var(--accent-strong)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {isLoading ? tModals("adding") : tCommon("add")}
                 </button>
@@ -492,11 +492,11 @@ export default function ReceiptScannerModal({
 
         {/* Footer for capture step */}
         {step === "capture" && (
-          <div className="flex-shrink-0 px-4 md:px-6 py-3 md:py-4 border-t border-slate-200 pb-safe bg-white">
+          <div className="flex-shrink-0 px-4 md:px-6 py-3 md:py-4 border-t border-[var(--line)] pb-safe bg-[var(--surface)]">
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-lg border border-slate-300 px-4 py-3 text-slate-700 font-medium hover:bg-slate-50 transition-colors"
+              className="w-full rounded-lg border border-[var(--line-strong)] px-4 py-3 text-[var(--ink-muted)] font-medium hover:bg-[var(--surface-2)] transition-colors"
             >
               {tCommon("cancel")}
             </button>

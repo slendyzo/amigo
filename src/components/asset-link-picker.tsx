@@ -56,21 +56,21 @@ export default function AssetLinkPicker({ value, onChange, className }: AssetLin
 
   return (
     <div className={className}>
-      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-slate-500">
+      <label className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-[var(--ink-subtle)]">
         {t("linkedAsset")}
       </label>
       {selected ? (
-        <div className="flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 dark:border-blue-900/40 dark:bg-blue-950/20">
+        <div className="flex items-center justify-between rounded-lg border border-[var(--accent-soft)] bg-[var(--accent-tint)] px-3 py-2">
           <div className="flex items-center gap-2">
-            <SelectedIcon className="h-4 w-4 text-blue-600" />
-            <span className="text-sm font-medium text-slate-800 dark:text-slate-200">
+            <SelectedIcon className="h-4 w-4 text-[var(--accent)]" />
+            <span className="text-sm font-medium text-[var(--ink)]">
               {displayName(selected)}
             </span>
           </div>
           <button
             type="button"
             onClick={() => onChange(null)}
-            className="rounded p-1 text-slate-400 hover:bg-blue-100 hover:text-slate-700"
+            className="rounded p-1 text-[var(--ink-subtle)] hover:bg-[var(--accent-soft)] hover:text-[var(--ink-muted)]"
             aria-label={t("unlinkAsset")}
           >
             <X className="h-3.5 w-3.5" />
@@ -80,7 +80,7 @@ export default function AssetLinkPicker({ value, onChange, className }: AssetLin
         <select
           value={value ?? ""}
           onChange={(e) => onChange(e.target.value || null)}
-          className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm dark:border-slate-700 dark:bg-slate-900"
+          className="w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] px-3 py-2 text-sm"
         >
           <option value="">{t("linkedAssetNone")}</option>
           {assets.map((a) => (

@@ -48,8 +48,8 @@ export default function ProjectTagSelector({
           onClick={onClearAll}
           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
             selectedIds.length === 0
-              ? "bg-slate-800 text-white"
-              : "bg-slate-100 text-slate-600 hover:bg-slate-200"
+              ? "bg-[var(--ink)] text-[var(--surface)]"
+              : "bg-[var(--surface-2)] text-[var(--ink-muted)] hover:bg-[var(--surface-3)]"
           }`}
         >
           {t("noTags")}
@@ -65,8 +65,8 @@ export default function ProjectTagSelector({
               onClick={() => onToggle(project.id)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 isSelected
-                  ? "bg-amber-500 text-white"
-                  : "bg-amber-100 text-amber-700 hover:bg-amber-200"
+                  ? "bg-[var(--accent)] text-white"
+                  : "bg-[var(--accent-tint)] text-[var(--accent-strong)] hover:bg-[var(--accent-tint)]"
               }`}
             >
               {project.name}
@@ -79,7 +79,7 @@ export default function ProjectTagSelector({
           <button
             type="button"
             onClick={onShowNewTagInput}
-            className="px-3 py-1.5 rounded-full text-sm font-medium bg-slate-100 text-slate-500 hover:bg-slate-200 flex items-center gap-1"
+            className="px-3 py-1.5 rounded-full text-sm font-medium bg-[var(--surface-2)] text-[var(--ink-subtle)] hover:bg-[var(--surface-3)] flex items-center gap-1"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -97,7 +97,7 @@ export default function ProjectTagSelector({
             value={newTagName}
             onChange={(e) => onNewTagNameChange(e.target.value)}
             placeholder={t("tagPlaceholder")}
-            className="flex-1 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+            className="flex-1 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();
@@ -109,14 +109,14 @@ export default function ProjectTagSelector({
             type="button"
             onClick={onCreateTag}
             disabled={!newTagName.trim() || isCreating}
-            className="px-3 py-2 rounded-lg bg-[#0070f3] text-white text-sm font-medium hover:bg-[#0060df] disabled:opacity-50"
+            className="px-3 py-2 rounded-lg bg-[var(--accent)] text-[var(--accent-fg)] text-sm font-medium hover:bg-[var(--accent-strong)] disabled:opacity-50"
           >
             {tCommon("add")}
           </button>
           <button
             type="button"
             onClick={onCancelNewTag}
-            className="px-3 py-2 rounded-lg text-slate-500 hover:text-slate-700"
+            className="px-3 py-2 rounded-lg text-[var(--ink-subtle)] hover:text-[var(--ink-muted)]"
           >
             {tCommon("cancel")}
           </button>
@@ -124,7 +124,7 @@ export default function ProjectTagSelector({
       )}
 
       {showSelectedCount && selectedIds.length > 0 && (
-        <p className="mt-2 text-xs text-amber-600">
+        <p className="mt-2 text-xs text-[var(--accent)]">
           {t("taggedTo", { count: selectedIds.length })}
         </p>
       )}

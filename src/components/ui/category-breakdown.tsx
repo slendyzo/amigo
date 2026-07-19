@@ -15,7 +15,7 @@ type CategoryBreakdownProps = {
 
 // Predefined colors for categories
 const CATEGORY_COLORS = [
-  "#0070f3", // blue
+  "var(--accent)", // accent (violet)
   "#8b5cf6", // purple
   "#10b981", // green
   "#f59e0b", // amber
@@ -84,12 +84,12 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
   const getColor = () => {
     if (isOverBudget) return "#ef4444"; // red
     if (percentage > 80) return "#f59e0b"; // amber
-    return "#0070f3"; // electric blue
+    return "var(--accent)"; // accent (violet)
   };
 
   if (expenses.length === 0) {
     return (
-      <div className="text-center text-slate-500 py-8">
+      <div className="text-center text-[var(--ink-subtle)] py-8">
         {t("noExpenses")}
       </div>
     );
@@ -117,7 +117,7 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke="#e2e8f0"
+              style={{ stroke: "var(--surface-3)" }}
               strokeWidth={strokeWidth}
             />
             {/* Progress circle */}
@@ -126,7 +126,7 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
               cy={size / 2}
               r={radius}
               fill="none"
-              stroke={getColor()}
+              style={{ stroke: getColor() }}
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               strokeDasharray={circumference}
@@ -137,20 +137,20 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
 
           {/* Center content */}
           <div className="absolute inset-0 flex flex-col items-center justify-center">
-            <span className="text-3xl font-bold text-slate-900">
+            <span className="text-3xl font-bold text-[var(--ink)]">
               {percentage.toFixed(0)}%
             </span>
-            <span className="text-sm text-slate-500">{t("used")}</span>
+            <span className="text-sm text-[var(--ink-subtle)]">{t("used")}</span>
           </div>
         </div>
 
         {/* Legend */}
         <div className="mt-4 text-center">
-          <p className="text-sm font-medium text-slate-700">{t("monthlyBudget")}</p>
+          <p className="text-sm font-medium text-[var(--ink-muted)]">{t("monthlyBudget")}</p>
           <p className="text-lg font-semibold" style={{ color: getColor() }}>
-            €{totalSpent.toFixed(2)} <span className="text-slate-400 font-normal">/ €{safeBudget.toFixed(2)}</span>
+            €{totalSpent.toFixed(2)} <span className="text-[var(--ink-subtle)] font-normal">/ €{safeBudget.toFixed(2)}</span>
           </p>
-          <p className={`text-sm mt-1 ${isOverBudget ? "text-red-500" : "text-slate-500"}`}>
+          <p className={`text-sm mt-1 ${isOverBudget ? "text-red-500" : "text-[var(--ink-subtle)]"}`}>
             {isOverBudget
               ? t("overBudget", { amount: Math.abs(remaining).toFixed(2) })
               : t("remainingBudget", { amount: remaining.toFixed(2) })}
@@ -158,7 +158,7 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
         </div>
 
         {/* Tap hint */}
-        <p className="text-xs text-slate-400 mt-2 group-hover:text-slate-500 transition-colors">
+        <p className="text-xs text-[var(--ink-subtle)] mt-2 group-hover:text-[var(--ink-subtle)] transition-colors">
           {t("tapForDetails")}
         </p>
       </div>
@@ -170,15 +170,15 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
           onClick={() => setIsModalOpen(false)}
         >
           <div
-            className="bg-white rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
+            className="bg-[var(--surface)] rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Modal header */}
-            <div className="flex items-center justify-between p-4 border-b border-slate-200">
-              <h2 className="text-lg font-semibold text-slate-900">{t("categoryBreakdown")}</h2>
+            <div className="flex items-center justify-between p-4 border-b border-[var(--line)]">
+              <h2 className="text-lg font-semibold text-[var(--ink)]">{t("categoryBreakdown")}</h2>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="p-2 text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] hover:bg-[var(--surface-2)] rounded-lg transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -190,12 +190,12 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
             <div className="p-4 space-y-4">
               {/* Total spent header */}
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-500">{t("totalSpent")}</span>
-                <span className="text-lg font-bold text-slate-900">€{totalSpent.toFixed(2)}</span>
+                <span className="text-sm text-[var(--ink-subtle)]">{t("totalSpent")}</span>
+                <span className="text-lg font-bold text-[var(--ink)]">€{totalSpent.toFixed(2)}</span>
               </div>
 
               {/* Stacked bar */}
-              <div className="h-4 rounded-full overflow-hidden bg-slate-100 flex">
+              <div className="h-4 rounded-full overflow-hidden bg-[var(--surface-2)] flex">
                 {categoryData.map((cat, index) => (
                   <div
                     key={cat.name}
@@ -219,13 +219,13 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
                         className="w-4 h-4 rounded-full flex-shrink-0"
                         style={{ backgroundColor: cat.color }}
                       />
-                      <span className="text-sm text-slate-700 truncate">{cat.name}</span>
+                      <span className="text-sm text-[var(--ink-muted)] truncate">{cat.name}</span>
                     </div>
                     <div className="flex items-center gap-3 flex-shrink-0 ml-2">
-                      <span className="text-sm font-medium text-slate-900">
+                      <span className="text-sm font-medium text-[var(--ink)]">
                         €{cat.amount.toFixed(2)}
                       </span>
-                      <span className="text-xs text-slate-400 w-12 text-right">
+                      <span className="text-xs text-[var(--ink-subtle)] w-12 text-right">
                         {cat.percentage.toFixed(1)}%
                       </span>
                     </div>
@@ -235,15 +235,15 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
 
               {/* Budget comparison */}
               {safeBudget > 0 && (
-                <div className="pt-4 mt-4 border-t border-slate-100">
+                <div className="pt-4 mt-4 border-t border-[var(--line)]">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-500">{t("budgetUsed")}</span>
+                    <span className="text-sm text-[var(--ink-subtle)]">{t("budgetUsed")}</span>
                     <span className={`text-lg font-bold ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
                       {((totalSpent / safeBudget) * 100).toFixed(0)}%
                     </span>
                   </div>
                   <div className="flex items-center justify-between mt-2">
-                    <span className="text-sm text-slate-500">{isOverBudget ? t("overBudgetLabel") : t("remainingLabel")}</span>
+                    <span className="text-sm text-[var(--ink-subtle)]">{isOverBudget ? t("overBudgetLabel") : t("remainingLabel")}</span>
                     <span className={`text-sm font-medium ${isOverBudget ? "text-red-500" : "text-green-600"}`}>
                       €{Math.abs(remaining).toFixed(2)}
                     </span>

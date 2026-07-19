@@ -1,4 +1,4 @@
-﻿{
+{
   "shortcuts": {
     "title": "Raccourcis iPhone",
     "description": "Enregistrez vos dépenses automatiquement en payant avec Apple Pay, ou à la voix avec Siri.",
@@ -102,7 +102,13 @@
     "money": "Argent",
     "themeLight": "Clair",
     "themeDark": "Sombre",
-    "themeSystem": "Auto"
+    "themeSystem": "Auto",
+    "wealth": "Patrimoine",
+    "workspace": "Espace",
+    "moreProjectsSub": "Budgets et tags",
+    "moreInsightsSub": "Rapports mensuels",
+    "moreTidyUpSub": "Catégoriser les dépenses",
+    "moreImportSub": "CSV · Excel · OFX"
   },
   "auth": {
     "signIn": "Connexion",
@@ -135,7 +141,7 @@
     "statSpent": "Dépensé",
     "statPortfolio": "Portefeuille",
     "pctOfBudget": "{pct}% du budget",
-    "thisMonth": "ce mois-ci",
+    "thisMonth": "Ce Mois",
     "railExchanges": "{count} plateformes",
     "railRwaEquity": "Valeur nette · Capital RWA",
     "railTopCategories": "Principales catégories",
@@ -151,6 +157,25 @@
     "tidyUpAction": "Ranger",
     "quickAddPlaceholder": "ex. mcd 12",
     "quickAddButton": "Ajouter",
+    "greetingShortMorning": "Bonjour",
+    "greetingShortAfternoon": "Bon après-midi",
+    "greetingShortEvening": "Bonsoir",
+    "searchAction": "Rechercher des dépenses",
+    "whatsNewAction": "Nouveautés",
+    "thisMonthLower": "ce mois-ci",
+    "heroInvested": "Investi",
+    "heroAssets": "Actifs",
+    "heroDebt": "Dette",
+    "monthBudget": "Budget de {month}",
+    "ofBudgetShort": "sur {budget}",
+    "budgetMetaLeft": "{amount} restants · {days, plural, =1 {encore 1 jour} other {encore # jours}}",
+    "budgetMetaOver": "{amount} au-dessus du budget · {days, plural, =1 {encore 1 jour} other {encore # jours}}",
+    "setBudgetCta": "Définir un budget",
+    "upcoming": "À venir",
+    "seeAll": "Tout voir",
+    "recent": "Récent",
+    "inDays": "{days, plural, =0 {aujourd’hui} =1 {dans 1 jour} other {dans # jours}}",
+    "confirmDeleteExpense": "Supprimer cette dépense ?",
     "title": "Tableau de bord",
     "welcome": "Bienvenue, {name} !",
     "financialOverview": "Voici votre aperçu financier",
@@ -163,7 +188,6 @@
     "viewAll": "Voir tout",
     "noExpensesYet": "Pas encore de dépenses",
     "addFirstExpense": "Ajoutez votre première dépense",
-    "thisMonth": "Ce Mois",
     "lastMonth": "Mois Dernier",
     "survivalBudget": "Budget Mensuel",
     "used": "utilisé",
@@ -277,6 +301,18 @@
   },
   "expenses": {
     "title": "Dépenses",
+    "money": "Argent",
+    "tabExpenses": "Dépenses",
+    "tabIncome": "Revenus",
+    "tabRecurring": "Récurrent",
+    "allTime": "Tout",
+    "chips": {
+      "all": "Tout",
+      "fixed": "Fixes",
+      "variable": "Variables",
+      "lifestyle": "Loisirs",
+      "project": "Projet"
+    },
     "addExpense": "Ajouter une Dépense",
     "editExpense": "Modifier la Dépense",
     "deleteExpense": "Supprimer la Dépense",
@@ -366,6 +402,14 @@
   },
   "incomes": {
     "title": "Revenus",
+    "receivedIn": "Reçu en {month}",
+    "expectedMonthly": "Mensuel attendu : {amount}",
+    "extraOverExpected": "+{amount} de plus",
+    "thisMonthLabel": "Ce mois-ci",
+    "monthlyBadge": "mensuel",
+    "oneOff": "Ponctuel",
+    "addIncomeAffordance": "Ajouter un revenu",
+    "addIncomeAffordanceHint": "Salaire, freelance, remboursements…",
     "addIncome": "Ajouter un Revenu",
     "editIncome": "Modifier le Revenu",
     "deleteIncome": "Supprimer le Revenu",
@@ -455,7 +499,10 @@
     "unmatchedTitle": "Certaines catégories n'ont pas pu être reconnues",
     "unmatchedDescription": "Ces catégories ne correspondent à aucun groupe standard. Vous pouvez les attribuer manuellement à un groupe parent via le bouton modifier.",
     "unmatchedHint": "Astuce : Modifiez une catégorie et choisissez un groupe parent pour l'organiser.",
-    "viewExpenses": "Voir les dépenses de cette catégorie"
+    "viewExpenses": "Voir les dépenses de cette catégorie",
+    "tabCategories": "Catégories",
+    "tabRules": "Règles",
+    "expensesCount": "{count} dépenses"
   },
   "accounts": {
     "title": "Comptes Bancaires",
@@ -543,6 +590,15 @@
   },
   "recurring": {
     "title": "Modèles Récurrents",
+    "money": "Argent",
+    "monthlyCommitments": "Engagements mensuels",
+    "activeCountLabel": "{count} modèles actifs",
+    "billsLoans": "Factures et prêts",
+    "subscriptions": "Abonnements",
+    "installmentProgress": "mensualité {current} sur {total}",
+    "paused": "en pause",
+    "varies": "variable",
+    "dayShort": "jour {day}",
     "addTemplate": "Nouveau Modèle",
     "editTemplate": "Modifier le Modèle",
     "deleteTemplate": "Supprimer le Modèle",
@@ -715,7 +771,12 @@
     "failedToImportPdf": "Échec de l'import du PDF",
     "failedToImport": "Échec de l'import du fichier",
     "failedToImportFile": "Échec de l'import du fichier",
-    "failedToPreview": "Échec de la prévisualisation du fichier"
+    "failedToPreview": "Échec de la prévisualisation du fichier",
+    "stepOf": "Étape {current} sur {total}",
+    "stepCaptionUpload": "choisis un fichier à importer",
+    "stepCaptionMapping": "vérifie ce que nous avons trouvé",
+    "stepCaptionImport": "on importe tout",
+    "fileSheetsRows": "{sheets} feuilles · {rows} lignes"
   },
   "mappings": {
     "title": "Mappages de Mots-clés",
@@ -755,7 +816,11 @@
       "variable": "Factures (Variables)",
       "lifestyle": "Dépenses",
       "project": "Projet"
-    }
+    },
+    "tabCategories": "Catégories",
+    "tabRules": "Règles",
+    "rulesPreview": "Aperçu des règles",
+    "moreCount": "+ {count} de plus"
   },
   "settings": {
     "title": "Paramètres",
@@ -834,7 +899,11 @@
     "noDefault": "Aucun (pas de défaut)",
     "restartSetup": "Relancer la Configuration",
     "restartSetupDescription": "Relancez l'assistant de configuration initial pour mettre à jour votre salaire, budget et dépenses fixes",
-    "restartSetupButton": "Relancer l'Assistant de Configuration"
+    "restartSetupButton": "Relancer l'Assistant de Configuration",
+    "groupMoney": "Argent",
+    "groupApp": "Application",
+    "theme": "Thème",
+    "workspaceSuffix": "espace de travail"
   },
   "imports": {
     "title": "Historique des Importations",
@@ -949,7 +1018,10 @@
     "requestNewLink": "Demander un nouveau lien",
     "passwordResetSuccess": "Mot de Passe Réinitialisé !",
     "passwordResetSuccessMessage": "Votre mot de passe a été réinitialisé avec succès. Vous pouvez maintenant vous connecter avec votre nouveau mot de passe.",
-    "loading": "Chargement..."
+    "loading": "Chargement...",
+    "welcomeBack": "Bon retour",
+    "signInTagline": "Votre argent, calmement au même endroit.",
+    "or": "ou"
   },
   "errors": {
     "generic": "Quelque chose s'est mal passé",
@@ -1042,6 +1114,9 @@
   "modals": {
     "addExpense": "Ajouter une Dépense",
     "editExpense": "Modifier la Dépense",
+    "typeAnything": "Écris ce que tu veux",
+    "typeAnythingExample": "Écris ce que tu veux — ex. « 25 mcd »",
+    "saveExpense": "Enregistrer la dépense",
     "whatDidYouBuy": "Qu'avez-vous acheté ?",
     "whatDidYouBuyPlaceholder": "ex : Courses, Café, Netflix",
     "howMuch": "Combien ?",
@@ -1213,7 +1288,8 @@
     "addAnother": "Ajouter une autre dépense",
     "skipForNow": "Passer pour l'instant",
     "saving": "Enregistrement...",
-    "getStarted": "Commencer"
+    "getStarted": "Commencer",
+    "perMonth": "par mois"
   },
   "offline": {
     "youreOffline": "Vous êtes Hors Ligne",
@@ -1253,7 +1329,12 @@
     "autoAssignAll": "Attribuer automatiquement",
     "autoAssigning": "Attribution...",
     "autoAssigned": "{count} dépenses catégorisées automatiquement",
-    "noRecentlyDone": "Les éléments catégorisés apparaîtront ici"
+    "noRecentlyDone": "Les éléments catégorisés apparaîtront ici",
+    "progressCount": "{done} sur {total}",
+    "accept": "Accepter",
+    "pickOther": "Choisir une autre",
+    "upNext": "à suivre",
+    "keywordRuleHint": "Création d'une règle de mot-clé à partir de votre choix"
   },
   "receiptScanner": {
     "title": "Scanner un Reçu",
@@ -1513,6 +1594,14 @@
     "pnl": "Plus/Moins-value",
     "dcaAverage": "Moyenne DCA",
     "costBasisPending": "Coût d'acquisition en attente",
+    "allocationCrypto": "Crypto",
+    "allocationEtfs": "ETF",
+    "allocationCash": "Liquidités",
+    "nExchanges": "{count} plateformes",
+    "staked": "en staking",
+    "costBasisLabel": "coût de base",
+    "connectionsSynced": "{count, plural, one {# plateforme synchronisée} other {# plateformes synchronisées}}",
+    "syncNow": "Synchroniser",
     "crypto": "Crypto",
     "etf": "ETF",
     "stock": "Actions",
@@ -1660,6 +1749,14 @@
     "deleteVehicleConfirm": "Supprimer ce véhicule ? Les dépenses liées seront déliées mais conservées.",
     "generationPrefix": "Gén.",
     "backToNetWorth": "Patrimoine",
+    "netWorthChangeCaption": "latent",
+    "kindProperty": "Bien",
+    "kindVehicle": "Véhicule",
+    "valuationPurchase": "prix d'achat",
+    "valuationManual": "évaluation manuelle",
+    "valuationIndex": "évaluation par indice",
+    "valuationMarket": "estimation de marché",
+    "linkedToAsset": "lié à {name}",
     "matchHeader": "Lier des dépenses passées ?",
     "matchSubheader": "Nous avons trouvé {count} dépenses qui semblent appartenir à votre {name}. Liez-les pour qu'elles comptent dans le coût total.",
     "matchSelectAll": "Tout sélectionner",
