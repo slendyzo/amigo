@@ -10,7 +10,7 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { useModalBodyClass } from "@/hooks/use-modal-body-class";
 import { useProjectTags } from "@/hooks/use-project-tags";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
-import { EXPENSE_TYPE_VALUES, getExpenseTypeButtonClass } from "@/lib/expense-types";
+import { EXPENSE_TYPE_VALUES } from "@/lib/expense-types";
 import { parseAmount, evaluateExpression, getTodayDateString } from "@/lib/utils";
 import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
 import ExpenseImageUpload from "./expense-image-upload";
@@ -284,27 +284,33 @@ export default function EditExpenseModal({
     <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ background: "rgba(23,22,31,.45)" }}
         onClick={onClose}
       />
 
       {/* Modal */}
-      <form onSubmit={handleSubmit} className="relative w-full md:max-w-md md:mx-4 bg-slate-50 rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+      <form
+        onSubmit={handleSubmit}
+        className="relative w-full md:max-w-md md:mx-4 rounded-t-[28px] md:rounded-[28px] overflow-hidden max-h-[90vh] flex flex-col"
+        style={{ background: "var(--app-bg)", boxShadow: "var(--shadow-pop)" }}
+      >
         {/* Drag handle (mobile) + Header */}
         <div className="flex-shrink-0">
-          <div className="flex justify-center pt-2 pb-0 md:hidden">
-            <div className="w-10 h-1 rounded-full bg-slate-300" />
+          <div className="flex justify-center pt-2.5 pb-0 md:hidden">
+            <div className="rounded-full" style={{ width: 40, height: 4, background: "rgba(23,22,31,.15)" }} />
           </div>
           <div className="px-4 md:px-5 py-2 md:py-3 flex items-center justify-between">
-            <h2 className="text-base md:text-lg font-semibold text-slate-900">
+            <h2 className="text-[17px] font-bold text-[var(--ink)]">
               {t("editExpense")}
             </h2>
             <button
               type="button"
               onClick={onClose}
-              className="p-2 -mr-2 text-slate-400 active:text-slate-600 md:hover:text-slate-600 tap-none"
+              className="w-8 h-8 flex items-center justify-center rounded-full text-[var(--ink-subtle)] active:text-[var(--ink)] md:hover:text-[var(--ink)] tap-none"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
@@ -314,13 +320,13 @@ export default function EditExpenseModal({
         {/* Body - Scrollable cards */}
         <div className="px-3 md:px-4 pb-3 space-y-2.5 overflow-y-auto scroll-touch flex-1">
           {(error || tagError) && (
-            <div className="p-3 rounded-xl bg-red-50 text-red-600 text-sm">
+            <div className="p-3 rounded-[14px] text-sm" style={{ background: "rgba(214,69,80,.1)", color: "var(--negative)" }}>
               {error || tagError}
             </div>
           )}
 
           {/* ── CARD 1: Essentials (Name + Amount + Date) ── */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-4 space-y-3 shadow-sm">
+          <div className="rounded-[18px] border border-[var(--line)] p-4 space-y-3" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
             {/* Name */}
             <input
               ref={inputRef}
@@ -328,13 +334,13 @@ export default function EditExpenseModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full text-[17px] font-medium text-slate-900 placeholder-slate-400 bg-transparent outline-none"
+              className="w-full text-[17px] font-medium text-[var(--ink)] placeholder-[var(--ink-subtle)] bg-transparent outline-none"
             />
 
             {/* Amount + Currency */}
             <div className="flex items-center gap-3">
               <div className="flex-1 flex items-baseline gap-1">
-                <span className="text-slate-400 text-2xl font-light">{getCurrencySymbol(currency)}</span>
+                <span className="text-[var(--ink-subtle)] text-2xl font-light">{getCurrencySymbol(currency)}</span>
                 <AmountInput
                   value={amount}
                   onChange={setAmount}
@@ -343,13 +349,14 @@ export default function EditExpenseModal({
                   required
                   hideCurrencySymbol
                   className="flex-1"
-                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[28px] font-bold !text-slate-900 !placeholder-slate-300"
+                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[28px] font-bold tabular-nums !text-[var(--ink)] !placeholder-[var(--ink-subtle)]"
                 />
               </div>
               <select
                 value={currency}
                 onChange={(e) => setCurrency(e.target.value)}
-                className="px-3 py-1.5 bg-slate-100 rounded-lg text-sm font-medium text-slate-600 border-0 outline-none cursor-pointer"
+                className="px-3 py-1.5 rounded-[14px] text-sm font-medium text-[var(--ink-muted)] border-0 outline-none cursor-pointer"
+                style={{ background: "var(--surface-2)" }}
               >
                 {CURRENCIES.map((curr) => (
                   <option key={curr} value={curr}>
@@ -361,16 +368,16 @@ export default function EditExpenseModal({
 
             {/* Date */}
             <div className="flex items-center gap-2 text-sm">
-              <svg className="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 text-[var(--ink-subtle)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
-              <span className="text-slate-500">
+              <span className="text-[var(--ink-muted)]">
                 {isToday ? t("today") : new Date(date).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric", timeZone: "UTC" })}
               </span>
               <button
                 type="button"
                 onClick={() => setShowDatePicker(!showDatePicker)}
-                className="text-[#0070f3] text-xs"
+                className="text-[var(--accent)] text-xs"
               >
                 {t("change")}
               </button>
@@ -381,7 +388,8 @@ export default function EditExpenseModal({
                 type="date"
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3]"
+                className="w-full rounded-[14px] border border-[var(--line)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+                style={{ background: "var(--surface)" }}
               />
             )}
           </div>
@@ -389,18 +397,19 @@ export default function EditExpenseModal({
           {/* ── CARD 2: Split ── */}
           {splitEnabled ? (
             /* Expanded split card */
-            <div className="bg-indigo-50 rounded-2xl border border-indigo-200 p-4 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line-strong)] p-4" style={{ background: "var(--surface-2)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2.5">
-                  <svg className="w-[18px] h-[18px] text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[18px] h-[18px] text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="text-sm font-semibold text-indigo-800">{t("split.splitExpense")}</span>
+                  <span className="text-sm font-semibold text-[var(--ink)]">{t("split.splitExpense")}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSplitEnabled(false)}
-                  className="w-10 h-6 rounded-full bg-indigo-500 relative transition-colors"
+                  className="w-10 h-6 rounded-full relative transition-colors"
+                  style={{ background: "var(--accent)" }}
                 >
                   <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 right-0.5 shadow-sm" />
                 </button>
@@ -419,23 +428,24 @@ export default function EditExpenseModal({
                 />
               )}
               {parsedAmount <= 0 && (
-                <p className="text-xs text-indigo-500">{t("splitAmountHint")}</p>
+                <p className="text-xs text-[var(--accent)]">{t("splitAmountHint")}</p>
               )}
             </div>
           ) : (
             /* Collapsed split card */
-            <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line)] px-4 py-3" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[18px] h-[18px] text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="text-sm text-slate-500">{t("split.splitExpense")}</span>
+                  <span className="text-sm text-[var(--ink-muted)]">{t("split.splitExpense")}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSplitEnabled(true)}
-                  className="w-10 h-6 rounded-full bg-slate-200 relative transition-colors"
+                  className="w-10 h-6 rounded-full relative transition-colors"
+                  style={{ background: "var(--surface-3)" }}
                 >
                   <div className="w-5 h-5 rounded-full bg-white absolute top-0.5 left-0.5 shadow-sm" />
                 </button>
@@ -444,7 +454,7 @@ export default function EditExpenseModal({
           )}
 
           {/* ── CARD 3: Tags ── */}
-          <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm">
+          <div className="rounded-[18px] border border-[var(--line)] px-4 py-3" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
             <ProjectTagSelector
               projects={localProjects}
               selectedIds={selectedProjectIds}
@@ -460,21 +470,21 @@ export default function EditExpenseModal({
             <AssetLinkPicker
               value={linkedRealAssetId}
               onChange={setLinkedRealAssetId}
-              className="mt-3 border-t border-slate-100 pt-3 dark:border-slate-700/50"
+              className="mt-3 border-t border-[var(--line)] pt-3"
             />
           </div>
 
           {/* ── CARD 4: Details (collapsed/expanded) ── */}
           {showDetails ? (
-            <div className="bg-white rounded-2xl border-2 border-blue-200 p-4 space-y-4 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line-strong)] p-4 space-y-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center justify-between">
-                <span className="text-sm font-semibold text-slate-700">{tCommon("details")}</span>
+                <span className="text-sm font-semibold text-[var(--ink)]">{tCommon("details")}</span>
                 <button
                   type="button"
                   onClick={() => setShowDetails(false)}
                   className="p-1"
                 >
-                  <svg className="w-4 h-4 text-slate-400 rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-[var(--ink-subtle)] rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -482,11 +492,12 @@ export default function EditExpenseModal({
 
               {/* Category */}
               <div>
-                <label className="text-xs font-medium text-slate-500 mb-1 block">{t("category")}</label>
+                <label className="text-xs font-medium text-[var(--ink-muted)] mb-1 block">{t("category")}</label>
                 <select
                   value={categoryId}
                   onChange={(e) => setCategoryId(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                  className="w-full rounded-[14px] border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+                  style={{ background: "var(--surface)" }}
                 >
                   <option value="">{t("uncategorized")}</option>
                   {buildCategoryTree(localCategories as FlatCategory[]).map((parent) =>
@@ -510,11 +521,12 @@ export default function EditExpenseModal({
               {/* Bank Account */}
               {bankAccounts.length > 0 && (
                 <div>
-                  <label className="text-xs font-medium text-slate-500 mb-1 block">{t("bankAccount")}</label>
+                  <label className="text-xs font-medium text-[var(--ink-muted)] mb-1 block">{t("bankAccount")}</label>
                   <select
                     value={bankAccountId}
                     onChange={(e) => setBankAccountId(e.target.value)}
-                    className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent"
+                    className="w-full rounded-[14px] border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
+                    style={{ background: "var(--surface)" }}
                   >
                     <option value="">{t("none")}</option>
                     {bankAccounts.map((acc) => (
@@ -528,18 +540,26 @@ export default function EditExpenseModal({
 
               {/* Expense Type */}
               <div>
-                <label className="text-xs font-medium text-slate-500 mb-1.5 block">{t("expenseType")}</label>
+                <label className="text-xs font-medium text-[var(--ink-muted)] mb-1.5 block">{t("expenseType")}</label>
                 <div className="flex flex-wrap gap-2">
-                  {EXPENSE_TYPES.map((type) => (
-                    <button
-                      key={type.value}
-                      type="button"
-                      onClick={() => setExpenseType(type.value)}
-                      className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-colors ${getExpenseTypeButtonClass(type.value, expenseType === type.value)}`}
-                    >
-                      {type.label}
-                    </button>
-                  ))}
+                  {EXPENSE_TYPES.map((type) => {
+                    const active = expenseType === type.value;
+                    return (
+                      <button
+                        key={type.value}
+                        type="button"
+                        onClick={() => setExpenseType(type.value)}
+                        className={`px-3 py-1.5 text-xs rounded-[14px] font-medium transition-colors ${
+                          active
+                            ? "bg-[var(--ink)] text-white font-semibold"
+                            : "bg-[var(--surface)] text-[var(--ink-muted)] border border-[var(--line)]"
+                        }`}
+                        style={active ? undefined : { boxShadow: "var(--shadow-card)" }}
+                      >
+                        {type.label}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </div>
@@ -548,17 +568,18 @@ export default function EditExpenseModal({
             <button
               type="button"
               onClick={() => setShowDetails(true)}
-              className="w-full bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm text-left"
+              className="w-full rounded-[18px] border border-[var(--line)] px-4 py-3 text-left"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
             >
               <div className="flex items-center justify-between">
-                <span className="text-sm text-slate-400">{tCommon("details")}</span>
+                <span className="text-sm text-[var(--ink-subtle)]">{tCommon("details")}</span>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[11px] px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-700 font-medium">{categoryLabel}</span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "#E7F5EE", color: "var(--positive)" }}>{categoryLabel}</span>
                   {bankAccounts.length > 0 && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-md bg-violet-50 text-violet-700 font-medium">{accountLabel}</span>
+                    <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--surface-2)", color: "var(--accent)" }}>{accountLabel}</span>
                   )}
-                  <span className="text-[11px] px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 font-medium">{typeLabel}</span>
-                  <svg className="w-4 h-4 text-slate-300 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--surface-2)", color: "var(--ink-muted)" }}>{typeLabel}</span>
+                  <svg className="w-4 h-4 text-[var(--ink-subtle)] ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>
@@ -568,7 +589,7 @@ export default function EditExpenseModal({
 
           {/* ── CARD 5: Receipt Photos ── */}
           {imageUrls.length > 0 ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line)] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
               <ExpenseImageUpload
                 imageUrls={imageUrls}
                 onChange={setImageUrls}
@@ -582,17 +603,18 @@ export default function EditExpenseModal({
                 const el = document.querySelector<HTMLInputElement>("#edit-expense-file-input");
                 el?.click();
               }}
-              className="w-full bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm text-left"
+              className="w-full rounded-[18px] border border-[var(--line)] px-4 py-3 text-left"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[18px] h-[18px] text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
-                  <span className="text-sm text-slate-400">{t("addPhoto")}</span>
+                  <span className="text-sm text-[var(--ink-subtle)]">{t("addPhoto")}</span>
                 </div>
-                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
@@ -612,18 +634,18 @@ export default function EditExpenseModal({
 
           {/* ── CARD 6: Notes ── */}
           {showNotes ? (
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line)] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[18px] h-[18px] text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  <span className="text-xs font-medium text-slate-500">{t("addNote")}</span>
+                  <span className="text-xs font-medium text-[var(--ink-muted)]">{t("addNote")}</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => { setDescription(""); setShowNotes(false); }}
-                  className="p-1 text-slate-400 hover:text-slate-600"
+                  className="p-1 text-[var(--ink-subtle)] hover:text-[var(--ink)]"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -636,23 +658,25 @@ export default function EditExpenseModal({
                 placeholder={t("notesPlaceholder")}
                 rows={2}
                 maxLength={1000}
-                className="w-full text-sm text-slate-900 placeholder-slate-400 bg-slate-50 rounded-lg p-2.5 border border-slate-200 outline-none focus:ring-2 focus:ring-[#0070f3] focus:border-transparent resize-none"
+                className="w-full text-sm text-[var(--ink)] placeholder-[var(--ink-subtle)] rounded-[14px] p-2.5 border border-[var(--line)] outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent resize-none"
+                style={{ background: "var(--surface-2)" }}
               />
             </div>
           ) : (
             <button
               type="button"
               onClick={() => setShowNotes(true)}
-              className="w-full bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm text-left"
+              className="w-full rounded-[18px] border border-[var(--line)] px-4 py-3 text-left"
+              style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <svg className="w-[18px] h-[18px] text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[18px] h-[18px] text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                   </svg>
-                  <span className="text-sm text-slate-400">{t("addNote")}</span>
+                  <span className="text-sm text-[var(--ink-subtle)]">{t("addNote")}</span>
                 </div>
-                <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                 </svg>
               </div>
@@ -661,19 +685,19 @@ export default function EditExpenseModal({
 
           {/* ── Exclude from budget (shown when project selected) ── */}
           {selectedProjectIds.length > 0 && (
-            <div className="rounded-2xl bg-amber-50 border border-amber-200 px-4 py-3 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line)] px-4 py-3" style={{ background: "var(--surface-2)", boxShadow: "var(--shadow-card)" }}>
               <label className="flex items-center gap-3 cursor-pointer">
                 <input
                   type="checkbox"
                   checked={excludeFromBudget}
                   onChange={(e) => setExcludeFromBudget(e.target.checked)}
-                  className="w-4 h-4 rounded border-slate-300 text-amber-600 focus:ring-amber-500"
+                  className="w-4 h-4 rounded border-[var(--line-strong)] text-[var(--accent)] focus:ring-[var(--accent)]"
                 />
                 <div>
-                  <span className="text-sm font-medium text-amber-800">
+                  <span className="text-sm font-medium text-[var(--ink)]">
                     {t("excludeFromBudget")}
                   </span>
-                  <p className="text-xs text-amber-600 mt-0.5">
+                  <p className="text-xs text-[var(--accent-strong)] mt-0.5">
                     {t("excludeFromBudgetHint")}
                   </p>
                 </div>
@@ -682,19 +706,20 @@ export default function EditExpenseModal({
           )}
 
           {/* ── Expense Status (PAID/PENDING) ── */}
-          <div className="bg-white rounded-2xl border border-slate-200 px-4 py-3 shadow-sm">
-            <label className="text-xs font-medium text-slate-500 mb-2 block">
+          <div className="rounded-[18px] border border-[var(--line)] px-4 py-3" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
+            <label className="text-xs font-medium text-[var(--ink-muted)] mb-2 block">
               {t("expenseStatus")}
             </label>
             <div className="flex gap-2">
               <button
                 type="button"
                 onClick={() => setStatus("PAID")}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-[14px] text-sm font-medium transition-colors"
+                style={
                   status === "PAID"
-                    ? "bg-green-100 text-green-700 border-2 border-green-500"
-                    : "bg-white text-slate-600 border border-slate-300 hover:border-slate-400"
-                }`}
+                    ? { background: "#E7F5EE", color: "var(--positive)", border: "2px solid var(--positive)" }
+                    : { background: "var(--surface)", color: "var(--ink-muted)", border: "1px solid var(--line-strong)" }
+                }
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -704,11 +729,12 @@ export default function EditExpenseModal({
               <button
                 type="button"
                 onClick={() => setStatus("PENDING")}
-                className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                className="flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded-[14px] text-sm font-medium transition-colors"
+                style={
                   status === "PENDING"
-                    ? "bg-blue-100 text-blue-700 border-2 border-blue-500"
-                    : "bg-white text-slate-600 border border-slate-300 hover:border-slate-400"
-                }`}
+                    ? { background: "var(--surface-2)", color: "var(--accent)", border: "2px solid var(--accent)" }
+                    : { background: "var(--surface)", color: "var(--ink-muted)", border: "1px solid var(--line-strong)" }
+                }
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -720,30 +746,31 @@ export default function EditExpenseModal({
 
           {/* ── Installment plan (progress + cancel/settle) ── */}
           {expense.installmentNumber && installmentProgress && (
-            <div className="bg-violet-50 rounded-2xl border border-violet-200 p-4 shadow-sm">
+            <div className="rounded-[18px] border border-[var(--line-strong)] p-4" style={{ background: "var(--surface-2)", boxShadow: "var(--shadow-card)" }}>
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-2">
-                  <svg className="w-[18px] h-[18px] text-violet-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-[18px] h-[18px] text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 7h16M4 12h16M4 17h10" />
                   </svg>
-                  <span className="text-sm font-semibold text-violet-800">{t("installments.planTitle")}</span>
+                  <span className="text-sm font-semibold text-[var(--ink)]">{t("installments.planTitle")}</span>
                 </div>
-                <span className="text-xs font-medium text-violet-600 tabular-nums">
+                <span className="text-xs font-medium text-[var(--accent)] tabular-nums">
                   {installmentProgress.paidCount}/{installmentProgress.months}
                 </span>
               </div>
 
               {/* Progress bar */}
-              <div className="h-2 rounded-full bg-violet-100 overflow-hidden mb-2">
+              <div className="h-2 rounded-full overflow-hidden mb-2" style={{ background: "var(--surface-3)" }}>
                 <div
-                  className="h-full rounded-full bg-violet-500"
+                  className="h-full rounded-full"
                   style={{
                     width: `${Math.min(100, (installmentProgress.paidAmount / installmentProgress.totalAmount) * 100)}%`,
+                    background: "var(--accent)",
                     transition: "width 500ms cubic-bezier(0.16, 1, 0.3, 1)",
                   }}
                 />
               </div>
-              <p className="text-xs text-violet-600 mb-3 tabular-nums">
+              <p className="text-xs text-[var(--accent-strong)] mb-3 tabular-nums">
                 {t("installments.progressLine", {
                   paid: `${getCurrencySymbol(installmentProgress.currency)}${installmentProgress.paidAmount.toFixed(2)}`,
                   total: `${getCurrencySymbol(installmentProgress.currency)}${installmentProgress.totalAmount.toFixed(2)}`,
@@ -753,8 +780,8 @@ export default function EditExpenseModal({
 
               {installmentProgress.isActive && installmentProgress.remainingAmount > 0 && (
                 installmentConfirm ? (
-                  <div className="p-3 rounded-xl bg-white border border-violet-200">
-                    <p className="text-xs text-slate-600 mb-2">
+                  <div className="p-3 rounded-[14px] border border-[var(--line-strong)]" style={{ background: "var(--surface)" }}>
+                    <p className="text-xs text-[var(--ink-muted)] mb-2">
                       {installmentConfirm === "cancel"
                         ? t("installments.cancelConfirm")
                         : t("installments.settleConfirm", {
@@ -765,7 +792,7 @@ export default function EditExpenseModal({
                       <button
                         type="button"
                         onClick={() => setInstallmentConfirm(null)}
-                        className="flex-1 px-3 py-2 rounded-lg text-xs font-medium border border-slate-300 text-slate-600"
+                        className="flex-1 px-3 py-2 rounded-[14px] text-xs font-medium border border-[var(--line-strong)] text-[var(--ink-muted)]"
                       >
                         {tCommon("cancel")}
                       </button>
@@ -773,9 +800,8 @@ export default function EditExpenseModal({
                         type="button"
                         disabled={installmentBusy}
                         onClick={() => handleInstallmentAction(installmentConfirm)}
-                        className={`flex-1 px-3 py-2 rounded-lg text-xs font-semibold text-white disabled:opacity-50 ${
-                          installmentConfirm === "cancel" ? "bg-red-500" : "bg-violet-500"
-                        }`}
+                        className="flex-1 px-3 py-2 rounded-[14px] text-xs font-semibold text-white disabled:opacity-50"
+                        style={{ background: installmentConfirm === "cancel" ? "var(--negative)" : "var(--accent)" }}
                       >
                         {installmentBusy ? "…" : tCommon("confirm")}
                       </button>
@@ -786,14 +812,16 @@ export default function EditExpenseModal({
                     <button
                       type="button"
                       onClick={() => setInstallmentConfirm("cancel")}
-                      className="flex-1 px-3 py-2 rounded-lg text-xs font-medium border border-red-200 text-red-600 bg-white active:bg-red-50 md:hover:bg-red-50 transition-colors"
+                      className="flex-1 px-3 py-2 rounded-[14px] text-xs font-medium border transition-colors"
+                      style={{ background: "var(--surface)", color: "var(--negative)", borderColor: "rgba(214,69,80,.35)" }}
                     >
                       {t("installments.cancelRemaining")}
                     </button>
                     <button
                       type="button"
                       onClick={() => setInstallmentConfirm("settle")}
-                      className="flex-1 px-3 py-2 rounded-lg text-xs font-medium border border-violet-300 text-violet-700 bg-white active:bg-violet-100 md:hover:bg-violet-100 transition-colors"
+                      className="flex-1 px-3 py-2 rounded-[14px] text-xs font-medium border transition-colors"
+                      style={{ background: "var(--surface)", color: "var(--accent)", borderColor: "var(--accent-faint)" }}
                     >
                       {t("installments.settleNow")}
                     </button>
@@ -805,18 +833,23 @@ export default function EditExpenseModal({
         </div>
 
         {/* Footer */}
-        <div className="flex-shrink-0 px-3 md:px-4 py-3 md:py-4 border-t border-slate-200 pb-safe flex gap-3 bg-white">
+        <div className="flex-shrink-0 px-3 md:px-4 py-3 md:py-4 border-t border-[var(--line)] pb-safe flex gap-3" style={{ background: "var(--surface)" }}>
           <button
             type="button"
             onClick={onClose}
-            className="flex-1 rounded-xl border border-slate-300 px-4 py-3 md:py-2.5 text-slate-700 font-medium active:bg-slate-50 md:hover:bg-slate-50 transition-colors tap-none"
+            className="flex-1 rounded-[14px] border border-[var(--line-strong)] px-4 py-3 md:py-2.5 text-[var(--ink-muted)] font-medium active:bg-[var(--surface-2)] md:hover:bg-[var(--surface-2)] transition-colors tap-none"
           >
             {tCommon("cancel")}
           </button>
           <button
             type="submit"
             disabled={isLoading || !name || amount === ""}
-            className="flex-1 rounded-xl bg-[#0070f3] px-4 py-3 md:py-2.5 text-white font-medium active:bg-[#0060df] md:hover:bg-[#0060df] transition-colors disabled:opacity-50 disabled:cursor-not-allowed tap-none"
+            className="flex-1 rounded-[18px] px-4 py-3 md:py-2.5 text-[15px] font-semibold transition-colors disabled:cursor-not-allowed tap-none"
+            style={{
+              background: isLoading || !name || amount === "" ? "var(--accent-faint)" : "var(--accent)",
+              color: "var(--accent-fg)",
+              boxShadow: isLoading || !name || amount === "" ? "none" : "var(--shadow-fab)",
+            }}
           >
             {isLoading ? t("saving") : t("saveChanges")}
           </button>

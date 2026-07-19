@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { useModalBodyClass } from "@/hooks/use-modal-body-class";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
-import { EXPENSE_TYPE_BADGE_CLASSES } from "@/lib/expense-types";
 import { parseSplitData, getUserShare } from "@/lib/split-utils";
 import type { Expense } from "@/types/models";
 
@@ -17,20 +16,12 @@ type ExpenseDetailModalProps = {
   onDelete?: () => void;
 };
 
-// Soft gradient backgrounds per expense type
-const TYPE_HERO_GRADIENTS: Record<string, string> = {
-  LIFESTYLE: "linear-gradient(135deg, #ede9fe 0%, #e0e7ff 40%, #f8fafc 100%)",
-  SURVIVAL_FIXED: "linear-gradient(135deg, #dbeafe 0%, #e0e7ff 40%, #f8fafc 100%)",
-  SURVIVAL_VARIABLE: "linear-gradient(135deg, #cffafe 0%, #e0f2fe 40%, #f8fafc 100%)",
-  PROJECT: "linear-gradient(135deg, #fef3c7 0%, #fef9c3 40%, #f8fafc 100%)",
-};
-
-// Badge classes for status pills (using /80 opacity variants)
-const STATUS_PILL_CLASSES = {
-  paid: "bg-green-100/80 text-green-700",
-  pending: "bg-blue-100/80 text-blue-700",
-  recurring: "bg-sky-100/80 text-sky-700",
-  excluded: "bg-slate-200/80 text-slate-600",
+// Softened status pill styles (Calm Violet tokens)
+const STATUS_PILL_STYLES: Record<string, React.CSSProperties> = {
+  paid: { background: "#E7F5EE", color: "var(--positive)" },
+  pending: { background: "var(--surface-2)", color: "var(--accent)" },
+  recurring: { background: "var(--surface-2)", color: "var(--accent)" },
+  excluded: { background: "var(--surface-3)", color: "var(--ink-muted)" },
 };
 
 export default function ExpenseDetailModal({
@@ -131,32 +122,32 @@ export default function ExpenseDetailModal({
     });
   };
 
-  const heroGradient = TYPE_HERO_GRADIENTS[e.type] || TYPE_HERO_GRADIENTS.LIFESTYLE;
-
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-black/35 backdrop-blur-sm"
+        className="absolute inset-0 backdrop-blur-sm"
+        style={{ background: "rgba(23,22,31,.45)" }}
         onClick={onClose}
       />
 
       {/* Modal Card */}
       <div
-        className="relative w-full max-w-md bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col animate-popup"
-        style={{ maxHeight: "75vh" }}
+        className="relative w-full max-w-md rounded-[28px] overflow-hidden flex flex-col animate-popup"
+        style={{ maxHeight: "75vh", background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
       >
         {/* ==============================
             HERO SECTION
             ============================== */}
         <div
           className="flex-shrink-0 relative px-4 pt-3.5 pb-4 md:px-5 md:pt-4 md:pb-4"
-          style={{ background: heroGradient }}
+          style={{ background: "var(--surface-2)" }}
         >
           {/* Close button */}
           <button
             onClick={onClose}
-            className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full bg-white/60 text-slate-400 hover:bg-white/80 hover:text-slate-600 transition-colors"
+            className="absolute top-3 right-3 w-7 h-7 flex items-center justify-center rounded-full text-[var(--ink-subtle)] hover:text-[var(--ink)] transition-colors"
+            style={{ background: "var(--surface)" }}
           >
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -166,13 +157,13 @@ export default function ExpenseDetailModal({
           {/* Pills row */}
           <div className="flex items-center gap-1.5 mb-2.5 flex-wrap">
             {/* Type badge */}
-            <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold ${EXPENSE_TYPE_BADGE_CLASSES[e.type] || "bg-slate-100 text-slate-700"}`} style={{ opacity: 0.8 }}>
+            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold" style={{ background: "var(--surface)", color: "var(--ink-muted)" }}>
               {typeLabels[e.type]}
             </span>
 
             {/* Paid/Pending */}
             {e.status === "PAID" && (
-              <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_PILL_CLASSES.paid}`}>
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={STATUS_PILL_STYLES.paid}>
                 <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
@@ -180,7 +171,7 @@ export default function ExpenseDetailModal({
               </span>
             )}
             {e.status === "PENDING" && (
-              <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_PILL_CLASSES.pending}`}>
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={STATUS_PILL_STYLES.pending}>
                 <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
@@ -190,7 +181,7 @@ export default function ExpenseDetailModal({
 
             {/* Recurring */}
             {e.isRecurring && (
-              <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_PILL_CLASSES.recurring}`}>
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={STATUS_PILL_STYLES.recurring}>
                 <svg className="w-2.5 h-2.5" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clipRule="evenodd" />
                 </svg>
@@ -200,7 +191,7 @@ export default function ExpenseDetailModal({
 
             {/* Excluded from budget */}
             {e.excludeFromBudget && (
-              <span className={`inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold ${STATUS_PILL_CLASSES.excluded}`}>
+              <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full text-[10px] font-semibold" style={STATUS_PILL_STYLES.excluded}>
                 <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M3 3l18 18" />
                 </svg>
@@ -213,25 +204,25 @@ export default function ExpenseDetailModal({
           <div className="flex flex-col md:flex-row md:items-end md:justify-between md:gap-4">
             <div className="min-w-0 md:flex-1">
               {/* Name */}
-              <p className="text-base font-semibold text-slate-900 pr-8 md:pr-0 mb-1 md:truncate">
+              <p className="text-[17px] font-bold text-[var(--ink)] pr-8 md:pr-0 mb-1 md:truncate">
                 {e.name}
               </p>
               {/* Forex subtitle (mobile: below name, desktop: below name) */}
               {isNonEur && (
-                <p className="text-xs text-slate-500 hidden md:block">
-                  ≈ <span className="font-medium text-slate-600">EUR {Math.abs(amountEur!).toFixed(2)}</span>
-                  <span className="mx-0.5 text-slate-300">&middot;</span>
+                <p className="text-xs text-[var(--ink-muted)] hidden md:block">
+                  ≈ <span className="font-medium text-[var(--ink-muted)] tabular-nums">EUR {Math.abs(amountEur!).toFixed(2)}</span>
+                  <span className="mx-0.5 text-[var(--ink-subtle)]">&middot;</span>
                   1 {e.currency} = {exchangeRate?.toFixed(4) ?? "—"} EUR
                 </p>
               )}
             </div>
             {/* Amount */}
             <div className="flex-shrink-0 text-right mb-1 md:mb-0">
-              <p className={`text-3xl font-extrabold tracking-tight leading-none ${isRefund ? "text-green-600" : "text-slate-900"}`}>
+              <p className="text-3xl font-extrabold tracking-tight leading-none tabular-nums" style={{ color: isRefund ? "var(--positive)" : "var(--ink)" }}>
                 {formatCurrency(displayAmount, e.currency)}
               </p>
               {userShare !== null && (
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-xs text-[var(--ink-subtle)] mt-0.5 tabular-nums">
                   {formatCurrency(amount, e.currency)}
                 </p>
               )}
@@ -240,9 +231,9 @@ export default function ExpenseDetailModal({
 
           {/* Forex subtitle (mobile only, below amount) */}
           {isNonEur && (
-            <p className="text-xs text-slate-500 md:hidden">
-              ≈ <span className="font-medium text-slate-600">EUR {Math.abs(amountEur!).toFixed(2)}</span>
-              <span className="mx-0.5 text-slate-300">&middot;</span>
+            <p className="text-xs text-[var(--ink-muted)] md:hidden">
+              ≈ <span className="font-medium text-[var(--ink-muted)] tabular-nums">EUR {Math.abs(amountEur!).toFixed(2)}</span>
+              <span className="mx-0.5 text-[var(--ink-subtle)]">&middot;</span>
               1 {e.currency} = {exchangeRate?.toFixed(4) ?? "—"} EUR
             </p>
           )}
@@ -255,29 +246,29 @@ export default function ExpenseDetailModal({
 
           {/* Forex strip */}
           {isNonEur && (
-            <div className="px-4 py-2.5 md:px-5 bg-slate-50/80 border-b border-slate-100">
+            <div className="px-4 py-2.5 md:px-5 border-b border-[var(--line)]" style={{ background: "var(--surface-2)" }}>
               <div className="flex items-center gap-2.5">
                 <div className="flex items-center gap-1.5 flex-1">
-                  <span className="w-5 h-5 rounded-full bg-slate-200 flex items-center justify-center text-[9px] font-bold text-slate-600">
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-[var(--ink-muted)]" style={{ background: "var(--surface-3)" }}>
                     {getCurrencySymbol(e.currency!)}
                   </span>
-                  <span className="text-xs font-medium text-slate-600">
+                  <span className="text-xs font-medium text-[var(--ink-muted)] tabular-nums">
                     {Math.abs(amount).toFixed(2)} {e.currency}
                   </span>
                 </div>
-                <svg className="w-3.5 h-3.5 text-slate-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-3.5 h-3.5 text-[var(--ink-subtle)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                 </svg>
                 <div className="flex items-center gap-1.5 flex-1 justify-end">
-                  <span className="text-xs font-semibold text-slate-900">
+                  <span className="text-xs font-semibold text-[var(--ink)] tabular-nums">
                     {Math.abs(amountEur!).toFixed(2)} EUR
                   </span>
-                  <span className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center text-[9px] font-bold text-blue-600">
+                  <span className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-[var(--accent)]" style={{ background: "var(--surface)" }}>
                     &euro;
                   </span>
                 </div>
               </div>
-              <p className="text-[10px] text-slate-400 mt-1.5 text-center">
+              <p className="text-[10px] text-[var(--ink-subtle)] mt-1.5 text-center">
                 {t("rateFrom", { date: formatShortDate(e.date) })}
               </p>
             </div>
@@ -285,19 +276,19 @@ export default function ExpenseDetailModal({
 
           {/* Split info */}
           {e.splitCount && e.splitCount > 1 && (
-            <div className="px-4 py-2.5 md:px-5 bg-indigo-50/60 border-b border-slate-100">
+            <div className="px-4 py-2.5 md:px-5 border-b border-[var(--line)]" style={{ background: "var(--surface-2)" }}>
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <svg className="w-4 h-4 text-[var(--accent)] flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-indigo-800">
+                  <p className="text-sm font-medium text-[var(--ink)]">
                     {t("splitSummary", { count: e.splitCount })}
                   </p>
-                  <p className="text-xs text-indigo-600">
+                  <p className="text-xs text-[var(--accent)] tabular-nums">
                     {t("yourShare")}: {formatCurrency(displayAmount, e.currency || "EUR")}
                     {!isSplitCustomized && (
-                      <span className="text-indigo-400 ml-1">({formatCurrency(Math.abs(amount) / e.splitCount, e.currency || "EUR")}/{t("perPersonUnit")} × {e.splitCount})</span>
+                      <span className="text-[var(--ink-subtle)] ml-1">({formatCurrency(Math.abs(amount) / e.splitCount, e.currency || "EUR")}/{t("perPersonUnit")} × {e.splitCount})</span>
                     )}
                   </p>
                 </div>
@@ -306,8 +297,8 @@ export default function ExpenseDetailModal({
                 <div className="mt-2 space-y-1">
                   {splitPeople.map((p, i) => (
                     <div key={i} className="flex justify-between text-xs">
-                      <span className="text-slate-600">{p.label}</span>
-                      <span className={`font-medium ${p.locked ? "text-indigo-600" : "text-slate-700"}`}>
+                      <span className="text-[var(--ink-muted)]">{p.label}</span>
+                      <span className="font-medium tabular-nums" style={{ color: p.locked ? "var(--accent)" : "var(--ink)" }}>
                         {formatCurrency(p.amount, e.currency || "EUR")}
                         {p.locked && ` (${t("fixed")})`}
                       </span>
@@ -323,15 +314,15 @@ export default function ExpenseDetailModal({
             const images: string[] = e.imageUrls ? JSON.parse(e.imageUrls) : [];
             if (images.length === 0) return null;
             return (
-              <div className="px-4 py-3 md:px-5 border-b border-slate-100">
-                <p className="text-xs font-medium text-slate-500 uppercase tracking-wider mb-2">{t("photos")}</p>
+              <div className="px-4 py-3 md:px-5 border-b border-[var(--line)]">
+                <p className="text-xs font-medium text-[var(--ink-muted)] uppercase tracking-wider mb-2">{t("photos")}</p>
                 <div className="grid grid-cols-3 gap-2">
                   {images.map((url, i) => (
                     <button
                       key={i}
                       type="button"
                       onClick={() => window.open(url, "_blank")}
-                      className="relative aspect-square rounded-lg overflow-hidden border border-slate-200 hover:border-slate-300 transition-colors"
+                      className="relative aspect-square rounded-[14px] overflow-hidden border border-[var(--line)] transition-colors"
                     >
                       <img src={url} alt={`Photo ${i + 1}`} className="w-full h-full object-cover" />
                     </button>
@@ -348,8 +339,8 @@ export default function ExpenseDetailModal({
             <div className="space-y-2.5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-3 md:space-y-0">
               {/* Type */}
               <DetailRow
-                icon={<svg className="w-3.5 h-3.5 text-purple-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>}
-                iconBg="bg-purple-50"
+                icon={<svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A2 2 0 013 12V7a4 4 0 014-4z" /></svg>}
+                iconBg="bg-[var(--surface-2)]"
                 label={t("type")}
                 value={typeLabels[e.type]}
               />
@@ -357,8 +348,8 @@ export default function ExpenseDetailModal({
               {/* Category */}
               {e.category && (
                 <DetailRow
-                  icon={<svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>}
-                  iconBg="bg-slate-50"
+                  icon={<svg className="w-3.5 h-3.5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" /></svg>}
+                  iconBg="bg-[var(--surface-2)]"
                   label={t("category")}
                   value={translateCategory(e.category.name)}
                 />
@@ -367,8 +358,8 @@ export default function ExpenseDetailModal({
               {/* Bank Account */}
               {e.bankAccount && (
                 <DetailRow
-                  icon={<svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
-                  iconBg="bg-slate-50"
+                  icon={<svg className="w-3.5 h-3.5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>}
+                  iconBg="bg-[var(--surface-2)]"
                   label={t("bankAccount")}
                   value={e.bankAccount.name}
                 />
@@ -376,26 +367,26 @@ export default function ExpenseDetailModal({
 
               {/* Date (desktop grid) */}
               <div className="hidden md:flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "var(--surface-2)" }}>
+                  <svg className="w-3.5 h-3.5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("date")}</p>
-                  <p className="text-sm font-medium text-slate-900 mt-0.5">{formatDate(e.date)}</p>
+                  <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide leading-none">{t("date")}</p>
+                  <p className="text-sm font-medium text-[var(--ink)] mt-0.5">{formatDate(e.date)}</p>
                 </div>
               </div>
 
               {/* Projects (full width on desktop) */}
               {e.projects && e.projects.length > 0 && (
                 <div className="flex items-start gap-2.5 md:col-span-2">
-                  <div className="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3.5 h-3.5 text-amber-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /></svg>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "var(--surface-2)" }}>
+                    <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 005.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 009.568 3z" /></svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("projects")}</p>
+                    <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide leading-none">{t("projects")}</p>
                     <div className="flex flex-wrap gap-1 mt-1">
                       {e.projects.map((project) => (
-                        <span key={project.id} className="px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-amber-100 text-amber-700">
+                        <span key={project.id} className="px-1.5 py-0.5 rounded-full text-[10px] font-medium" style={{ background: "var(--surface-2)", color: "var(--accent)" }}>
                           {project.name}
                         </span>
                       ))}
@@ -406,30 +397,30 @@ export default function ExpenseDetailModal({
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-slate-100" />
+            <div className="h-px" style={{ background: "var(--line)" }} />
 
             {/* ---- Timeline ---- */}
             <div className="space-y-2.5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-3 md:space-y-0">
               {/* Date (mobile only) */}
               <div className="flex items-center gap-2.5 md:hidden">
-                <div className="w-7 h-7 rounded-lg bg-slate-50 flex items-center justify-center flex-shrink-0">
-                  <svg className="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "var(--surface-2)" }}>
+                  <svg className="w-3.5 h-3.5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("date")}</p>
-                  <p className="text-sm font-medium text-slate-900 mt-0.5">{formatDate(e.date)}</p>
+                  <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide leading-none">{t("date")}</p>
+                  <p className="text-sm font-medium text-[var(--ink)] mt-0.5">{formatDate(e.date)}</p>
                 </div>
               </div>
 
               {/* Due Date */}
               {e.dueDate && (
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3.5 h-3.5 text-blue-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "var(--surface-2)" }}>
+                    <svg className="w-3.5 h-3.5 text-[var(--accent)]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("dueDate")}</p>
-                    <p className="text-sm font-medium text-slate-900 mt-0.5">{formatDate(e.dueDate)}</p>
+                    <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide leading-none">{t("dueDate")}</p>
+                    <p className="text-sm font-medium text-[var(--ink)] mt-0.5">{formatDate(e.dueDate)}</p>
                   </div>
                 </div>
               )}
@@ -437,12 +428,12 @@ export default function ExpenseDetailModal({
               {/* Paid At */}
               {e.paidAt && (
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
-                    <svg className="w-3.5 h-3.5 text-green-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                  <div className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: "#E7F5EE" }}>
+                    <svg className="w-3.5 h-3.5 text-[var(--positive)]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{t("paidAt")}</p>
-                    <p className="text-sm font-medium text-slate-900 mt-0.5">{formatDate(e.paidAt, true)}</p>
+                    <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide leading-none">{t("paidAt")}</p>
+                    <p className="text-sm font-medium text-[var(--ink)] mt-0.5">{formatDate(e.paidAt, true)}</p>
                   </div>
                 </div>
               )}
@@ -451,10 +442,10 @@ export default function ExpenseDetailModal({
             {/* Notes */}
             {e.description && (
               <>
-                <div className="h-px bg-slate-100" />
+                <div className="h-px" style={{ background: "var(--line)" }} />
                 <div>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wide mb-1.5">{t("notes")}</p>
-                  <div className="text-sm text-slate-600 leading-relaxed bg-slate-50 rounded-lg p-2.5 border-l-[3px] border-slate-200">
+                  <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide mb-1.5">{t("notes")}</p>
+                  <div className="text-sm text-[var(--ink-muted)] leading-relaxed rounded-[14px] p-2.5 border-l-[3px]" style={{ background: "var(--surface-2)", borderColor: "var(--accent-faint)" }}>
                     {e.description}
                   </div>
                 </div>
@@ -466,7 +457,7 @@ export default function ExpenseDetailModal({
               <>
                 <button
                   onClick={() => setShowMetadata(!showMetadata)}
-                  className="flex items-center gap-1.5 text-[11px] font-medium text-slate-400 hover:text-slate-600 transition-colors"
+                  className="flex items-center gap-1.5 text-[11px] font-medium text-[var(--ink-subtle)] hover:text-[var(--ink)] transition-colors"
                 >
                   <svg
                     className={`w-3.5 h-3.5 transition-transform duration-200 ${showMetadata ? "rotate-180" : ""}`}
@@ -484,29 +475,29 @@ export default function ExpenseDetailModal({
                     showMetadata ? "max-h-96 opacity-100" : "max-h-0 opacity-0"
                   }`}
                 >
-                  <div className="space-y-1.5 pl-4 border-l-2 border-slate-100 ml-0.5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-1.5 md:space-y-0">
+                  <div className="space-y-1.5 pl-4 border-l-2 ml-0.5 md:grid md:grid-cols-2 md:gap-x-6 md:gap-y-1.5 md:space-y-0" style={{ borderColor: "var(--line)" }}>
                     {e.rawInput && (
                       <div>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wide">{t("rawInput")}</p>
-                        <p className="text-xs font-mono text-slate-500 mt-0.5">{e.rawInput}</p>
+                        <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide">{t("rawInput")}</p>
+                        <p className="text-xs font-mono text-[var(--ink-muted)] mt-0.5">{e.rawInput}</p>
                       </div>
                     )}
                     {e.merchant && (
                       <div>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wide">{t("merchant")}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{e.merchant}</p>
+                        <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide">{t("merchant")}</p>
+                        <p className="text-xs text-[var(--ink-muted)] mt-0.5">{e.merchant}</p>
                       </div>
                     )}
                     {e.createdAt && (
                       <div>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wide">{t("createdAt")}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{formatTimestamp(e.createdAt)}</p>
+                        <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide">{t("createdAt")}</p>
+                        <p className="text-xs text-[var(--ink-muted)] mt-0.5 tabular-nums">{formatTimestamp(e.createdAt)}</p>
                       </div>
                     )}
                     {e.updatedAt && (
                       <div>
-                        <p className="text-[10px] text-slate-400 uppercase tracking-wide">{t("updatedAt")}</p>
-                        <p className="text-xs text-slate-500 mt-0.5">{formatTimestamp(e.updatedAt)}</p>
+                        <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide">{t("updatedAt")}</p>
+                        <p className="text-xs text-[var(--ink-muted)] mt-0.5 tabular-nums">{formatTimestamp(e.updatedAt)}</p>
                       </div>
                     )}
                   </div>
@@ -522,14 +513,15 @@ export default function ExpenseDetailModal({
             FOOTER ACTIONS
             ============================== */}
         {(onEdit || onDelete) && (
-          <div className="flex-shrink-0 px-4 py-2.5 md:px-5 border-t border-slate-100 flex gap-2.5 bg-white pb-safe">
+          <div className="flex-shrink-0 px-4 py-2.5 md:px-5 border-t border-[var(--line)] flex gap-2.5 pb-safe" style={{ background: "var(--surface)" }}>
             {onEdit && (
               <button
                 onClick={() => {
                   onEdit();
                   onClose();
                 }}
-                className="flex-1 py-2 rounded-lg bg-[#0070f3] text-white text-sm font-semibold hover:bg-[#0060df] transition-colors"
+                className="flex-1 py-2 rounded-[18px] text-sm font-semibold transition-colors"
+                style={{ background: "var(--accent)", color: "var(--accent-fg)", boxShadow: "var(--shadow-fab)" }}
               >
                 {tCommon("edit")}
               </button>
@@ -540,7 +532,8 @@ export default function ExpenseDetailModal({
                   onDelete();
                   onClose();
                 }}
-                className="py-2 px-4 rounded-lg border border-red-200 text-red-500 text-sm font-semibold hover:bg-red-50 transition-colors"
+                className="py-2 px-4 rounded-[14px] border text-sm font-semibold transition-colors"
+                style={{ color: "var(--negative)", borderColor: "rgba(214,69,80,.35)" }}
               >
                 {tCommon("delete")}
               </button>
@@ -572,8 +565,8 @@ function DetailRow({
         {icon}
       </div>
       <div className="flex-1 min-w-0">
-        <p className="text-[10px] text-slate-400 uppercase tracking-wide leading-none">{label}</p>
-        <p className="text-sm font-medium text-slate-900 mt-0.5">{value}</p>
+        <p className="text-[10px] text-[var(--ink-subtle)] uppercase tracking-wide leading-none">{label}</p>
+        <p className="text-sm font-medium text-[var(--ink)] mt-0.5">{value}</p>
       </div>
     </div>
   );
