@@ -72,26 +72,32 @@ function CustomTooltip({ active, payload, label, range, formatAmount }: CustomTo
       : date.toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" });
 
   return (
-    <div className="bg-slate-900 text-white text-xs rounded-xl px-3 py-2.5 shadow-xl border border-slate-700/50 min-w-[160px]">
-      <p className="text-slate-400 mb-2">{dateLabel}</p>
+    <div
+      className="text-xs rounded-[14px] px-3 py-2.5 min-w-[160px] border"
+      style={{ background: "var(--surface)", color: "var(--ink)", borderColor: "var(--line)", boxShadow: "var(--shadow-pop)" }}
+    >
+      <p className="mb-2" style={{ color: "var(--ink-muted)" }}>{dateLabel}</p>
       <div className="space-y-1.5">
         <div className="flex items-center justify-between gap-4">
-          <span className="flex items-center gap-1.5 text-slate-300">
-            <span className="w-2 h-2 rounded-full bg-[#0070f3]" />
+          <span className="flex items-center gap-1.5" style={{ color: "var(--ink-muted)" }}>
+            <span className="w-2 h-2 rounded-full" style={{ background: "var(--accent)" }} />
             Value
           </span>
-          <span className="font-semibold">{formatAmount(portfolioValue)}</span>
+          <span className="font-semibold" style={{ color: "var(--ink)" }}>{formatAmount(portfolioValue)}</span>
         </div>
         <div className="flex items-center justify-between gap-4">
-          <span className="flex items-center gap-1.5 text-slate-300">
-            <span className="w-2 h-0.5 rounded bg-slate-400" />
+          <span className="flex items-center gap-1.5" style={{ color: "var(--ink-muted)" }}>
+            <span className="w-2 h-0.5 rounded" style={{ background: "var(--accent-soft)" }} />
             Cost
           </span>
-          <span className="text-slate-300">{formatAmount(costValue)}</span>
+          <span style={{ color: "var(--ink-muted)" }}>{formatAmount(costValue)}</span>
         </div>
-        <div className="flex items-center justify-between gap-4 pt-1 mt-1 border-t border-slate-700">
-          <span className="text-slate-300">P&amp;L</span>
-          <span className={`font-semibold ${pnl >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+        <div
+          className="flex items-center justify-between gap-4 pt-1 mt-1 border-t"
+          style={{ borderColor: "var(--line)" }}
+        >
+          <span style={{ color: "var(--ink-muted)" }}>P&amp;L</span>
+          <span className="font-semibold" style={{ color: pnl >= 0 ? "var(--positive)" : "var(--negative)" }}>
             {pnl >= 0 ? "+" : ""}{formatAmount(pnl)}
           </span>
         </div>
@@ -134,10 +140,13 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
   };
 
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5">
+    <div
+      className="rounded-[20px] p-5"
+      style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+    >
       {/* Header */}
       <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-        <h3 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+        <h3 className="text-sm font-semibold" style={{ color: "var(--ink)" }}>
           {t("performance")}
         </h3>
         {/* Range selector pills */}
@@ -146,11 +155,12 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
             <button
               key={r}
               onClick={() => handleRangeChange(r)}
-              className={`px-3 py-1 text-xs rounded-full font-medium transition-all duration-200 ${
+              className="px-3 py-1 text-xs rounded-full font-medium transition-all duration-200"
+              style={
                 range === r
-                  ? "bg-[#0070f3] text-white shadow-sm"
-                  : "text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
-              }`}
+                  ? { background: "var(--accent)", color: "var(--accent-fg)" }
+                  : { color: "var(--ink-muted)" }
+              }
             >
               {t(RANGE_LABEL_KEYS[r])}
             </button>
@@ -162,10 +172,10 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
       {loading ? (
         <div className="h-[280px] w-full">
           {/* Skeleton */}
-          <div className="h-full w-full rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+          <div className="h-full w-full rounded-[16px] animate-pulse" style={{ background: "var(--surface-2)" }} />
         </div>
       ) : snapshots.length < 2 ? (
-        <div className="h-[280px] flex flex-col items-center justify-center text-slate-400 dark:text-slate-500 gap-2">
+        <div className="h-[280px] flex flex-col items-center justify-center gap-2" style={{ color: "var(--ink-subtle)" }}>
           <svg className="w-8 h-8 opacity-40" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
@@ -181,26 +191,25 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
               >
                 <defs>
                   <linearGradient id="gradPortfolio" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#0070f3" stopOpacity={0.25} />
-                    <stop offset="100%" stopColor="#0070f3" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="var(--accent)" stopOpacity={0.25} />
+                    <stop offset="100%" stopColor="var(--accent)" stopOpacity={0.02} />
                   </linearGradient>
                   <linearGradient id="gradCost" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#94a3b8" stopOpacity={0.15} />
-                    <stop offset="100%" stopColor="#94a3b8" stopOpacity={0.02} />
+                    <stop offset="0%" stopColor="var(--accent-soft)" stopOpacity={0.15} />
+                    <stop offset="100%" stopColor="var(--accent-soft)" stopOpacity={0.02} />
                   </linearGradient>
                 </defs>
 
                 <CartesianGrid
                   strokeDasharray="3 3"
-                  stroke="#e2e8f0"
-                  className="dark:[stroke:#334155]"
+                  stroke="var(--line)"
                   vertical={false}
                 />
 
                 <XAxis
                   dataKey="date"
                   tickFormatter={(d) => formatDateLabel(d, range)}
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  tick={{ fontSize: 11, fill: "var(--ink-subtle)" }}
                   tickLine={false}
                   axisLine={false}
                   interval="preserveStartEnd"
@@ -208,7 +217,7 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
 
                 <YAxis
                   tickFormatter={(v) => formatAxis(v)}
-                  tick={{ fontSize: 11, fill: "#94a3b8" }}
+                  tick={{ fontSize: 11, fill: "var(--ink-subtle)" }}
                   tickLine={false}
                   axisLine={false}
                   width={58}
@@ -216,14 +225,14 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
 
                 <Tooltip
                   content={<CustomTooltip range={range} formatAmount={formatAmount} />}
-                  cursor={{ stroke: "#0070f3", strokeWidth: 1, strokeDasharray: "4 4" }}
+                  cursor={{ stroke: "var(--accent)", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
 
                 {/* Cost basis — dashed line drawn as an area with no fill */}
                 <Area
                   type="monotone"
                   dataKey="totalCostEur"
-                  stroke="#94a3b8"
+                  stroke="var(--accent-soft)"
                   strokeWidth={1.5}
                   strokeDasharray="5 4"
                   fill="url(#gradCost)"
@@ -236,11 +245,11 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
                 <Area
                   type="monotone"
                   dataKey="totalValueEur"
-                  stroke="#0070f3"
+                  stroke="var(--accent)"
                   strokeWidth={2.5}
                   fill="url(#gradPortfolio)"
                   dot={false}
-                  activeDot={{ r: 5, fill: "#0070f3", strokeWidth: 2, stroke: "#fff" }}
+                  activeDot={{ r: 5, fill: "var(--accent)", strokeWidth: 2, stroke: "var(--surface)" }}
                   name="totalValueEur"
                 />
               </AreaChart>
@@ -249,16 +258,16 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
 
           {/* Chart legend */}
           <div className="flex items-center justify-center gap-5 mt-3">
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
-              <span className="block w-4 h-[2px] bg-[#0070f3] rounded" />
+            <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--ink-muted)" }}>
+              <span className="block w-4 h-[2px] rounded" style={{ background: "var(--accent)" }} />
               {t("totalValue")}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-1.5 text-xs" style={{ color: "var(--ink-muted)" }}>
               <span
-                className="block w-4 h-[2px] bg-slate-400 rounded"
+                className="block w-4 h-[2px] rounded"
                 style={{
                   backgroundImage:
-                    "repeating-linear-gradient(90deg, #94a3b8, #94a3b8 4px, transparent 4px, transparent 8px)",
+                    "repeating-linear-gradient(90deg, var(--accent-soft), var(--accent-soft) 4px, transparent 4px, transparent 8px)",
                 }}
               />
               {t("totalCost")}

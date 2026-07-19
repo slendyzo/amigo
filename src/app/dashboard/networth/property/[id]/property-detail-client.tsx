@@ -269,13 +269,20 @@ export default function PropertyDetailClient({
         <button
           type="button"
           onClick={() => setShowEdit(true)}
-          className="flex w-full items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 px-4 py-3 text-left text-sm transition-colors hover:bg-amber-500/10"
+          className="flex w-full items-center gap-3 rounded-[20px] border px-4 py-3 text-left text-sm transition-colors"
+          style={{ background: "rgba(199,90,58,0.08)", borderColor: "var(--line-strong)" }}
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-500/15 text-amber-500">
+          <span
+            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full"
+            style={{ background: "rgba(199,90,58,0.15)", color: "var(--warning)" }}
+          >
             <MapPin className="h-4 w-4" />
           </span>
-          <span className="min-w-0 flex-1 text-amber-100/90">{t("missingAddressBanner")}</span>
-          <span className="shrink-0 rounded-md bg-amber-500/15 px-2.5 py-1 text-xs font-medium text-amber-400">
+          <span className="min-w-0 flex-1" style={{ color: "var(--ink)" }}>{t("missingAddressBanner")}</span>
+          <span
+            className="shrink-0 rounded-md px-2.5 py-1 text-xs font-medium"
+            style={{ background: "rgba(199,90,58,0.15)", color: "var(--warning)" }}
+          >
             {t("missingAddressCta")}
           </span>
         </button>
