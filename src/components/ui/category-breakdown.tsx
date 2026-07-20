@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
 
 type CategoryBreakdownProps = {
   expenses: Array<{
@@ -164,30 +165,33 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
       </div>
 
       {/* Modal with full category breakdown */}
-      {isModalOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
-          onClick={() => setIsModalOpen(false)}
-        >
-          <div
-            className="bg-[var(--surface)] rounded-2xl shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Modal header */}
-            <div className="flex items-center justify-between p-4 border-b border-[var(--line)]">
-              <h2 className="text-lg font-semibold text-[var(--ink)]">{t("categoryBreakdown")}</h2>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-2 text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] hover:bg-[var(--surface-2)] rounded-lg transition-colors"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        variant="dialog"
+        size="md"
+        zIndexClassName="z-50"
+        className="rounded-2xl"
+        style={{ background: "var(--surface)" }}
+      >
+        {/* Modal header */}
+        <ModalHeader showClose={false}>
+          <div className="flex items-center justify-between p-4 border-b border-[var(--line)]">
+            <h2 className="text-lg font-semibold text-[var(--ink)]">{t("categoryBreakdown")}</h2>
+            <button
+              onClick={() => setIsModalOpen(false)}
+              className="p-2 text-[var(--ink-subtle)] hover:text-[var(--ink-muted)] hover:bg-[var(--surface-2)] rounded-lg transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </ModalHeader>
 
-            {/* Modal content */}
-            <div className="p-4 space-y-4">
+        {/* Modal content */}
+        <ModalBody className="p-4">
+          <div className="space-y-4">
               {/* Total spent header */}
               <div className="flex items-center justify-between">
                 <span className="text-sm text-[var(--ink-subtle)]">{t("totalSpent")}</span>
@@ -250,10 +254,9 @@ export function CategoryBreakdown({ expenses, budget }: CategoryBreakdownProps) 
                   </div>
                 </div>
               )}
-            </div>
           </div>
-        </div>
-      )}
+        </ModalBody>
+      </Modal>
     </>
   );
 }

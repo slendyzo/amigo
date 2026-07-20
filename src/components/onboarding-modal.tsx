@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { AnimatePresence, motion } from "framer-motion";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type OnboardingModalProps = {
   isOpen: boolean;
@@ -275,8 +276,6 @@ export default function OnboardingModal({
     setStep(step + 1);
   };
 
-  if (!isOpen) return null;
-
   const stepTitles: Record<number, { title: string; helper: string }> = {
     1: { title: t("salaryTitle"), helper: t("salaryDescription") },
     2: { title: t("budgetTitle"), helper: t("budgetDescription") },
@@ -284,15 +283,16 @@ export default function OnboardingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{ background: "rgba(23, 22, 31, 0.45)" }}
-      />
-
-      {/* Modal */}
-      <div className="relative flex max-h-[92dvh] w-full max-w-md flex-col overflow-y-auto rounded-[24px] bg-[var(--app-bg)] p-6 text-[var(--ink)] shadow-[var(--shadow-pop)]">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="dialog"
+      size="md"
+      dismissable={false}
+      zIndexClassName="z-50"
+      style={{ background: "var(--app-bg)" }}
+    >
+      <ModalHeader showClose={false} className="px-6 pt-6">
         {/* 3-bar stepper */}
         <div className="flex items-center gap-2">
           {[1, 2, 3].map((s) => (
@@ -313,7 +313,9 @@ export default function OnboardingModal({
         <p className="mt-2 text-[11px] font-medium text-[var(--ink-subtle)]">
           {t("step", { current: step, total: 3 })}
         </p>
+      </ModalHeader>
 
+      <ModalBody className="px-6 pb-0">
         {/* Step content */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
@@ -508,9 +510,11 @@ export default function OnboardingModal({
             {error}
           </div>
         )}
+      </ModalBody>
 
-        {/* Footer: CTA + back/skip */}
-        <div className="mt-6 flex flex-col gap-2.5">
+      {/* Footer: CTA + back/skip */}
+      <ModalFooter className="flex-col gap-2.5 px-6 pb-6 pt-6 md:px-6 md:pb-6">
+        <div className="flex w-full flex-col gap-2.5">
           {step < 3 ? (
             <button
               type="button"
@@ -551,7 +555,7 @@ export default function OnboardingModal({
             </button>
           </div>
         </div>
-      </div>
-    </div>
+      </ModalFooter>
+    </Modal>
   );
 }

@@ -8,6 +8,7 @@ import { Car, Sparkles, ChevronLeft, ChevronRight, X, Loader2, Check } from "luc
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { cn } from "@/lib/utils";
 import { CascadingVehiclePicker } from "@/components/cascading-vehicle-picker";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -161,14 +162,6 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   const [termMonths, setTermMonths] = useState<string>("");
   const [interestRate, setInterestRate] = useState<string>("");
   const [loanStart, setLoanStart] = useState<string>(() => new Date().toISOString().slice(0, 10));
-
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -456,25 +449,17 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
     });
   };
 
-  if (!isOpen) return null;
+  const busy = submitting || matchSubmitting || templateSubmitting;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal="true">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.25 }}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={submitting ? undefined : onClose}
-      />
-      <motion.div
-        initial={{ y: "100%", opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: "100%", opacity: 0 }}
-        transition={{ duration: 0.45, ease: EASE }}
-        className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-card shadow-2xl md:max-h-[84vh] max-w-md md:rounded-2xl"
-      >
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="sheet"
+      size="md"
+      dismissable={!busy}
+    >
+      <ModalHeader showClose={false}>
         <header className="flex items-center justify-between border-b border-border/50 px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10">
@@ -509,7 +494,7 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           </div>
           <button
             onClick={onClose}
-            disabled={submitting || matchSubmitting || templateSubmitting}
+            disabled={busy}
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-50"
           >
             <X className="h-4 w-4" />
@@ -521,9 +506,10 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
             <StepDots step={step as 1 | 2 | 3} />
           </div>
         )}
+      </ModalHeader>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {phase === "templates" ? (
+      <ModalBody className="px-5 py-4">
+        {phase === "templates" ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 {t("templateSubheader", { count: templateCandidates.length })}
@@ -1010,13 +996,14 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
           </AnimatePresence>
           )}
 
-          {error && phase === "form" && (
-            <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-500">{error}</p>
-          )}
-        </div>
+        {error && phase === "form" && (
+          <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-500">{error}</p>
+        )}
+      </ModalBody>
 
+      <ModalFooter className="items-center justify-between">
         {phase === "templates" ? (
-          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
+          <>
             <button
               type="button"
               onClick={() => finishTemplates(false)}
@@ -1034,9 +1021,9 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
               {templateSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {templateSubmitting ? t("matchLinking") : t("templateLink")}
             </button>
-          </footer>
+          </>
         ) : phase === "matching" ? (
-          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
+          <>
             <button
               type="button"
               onClick={() => finishMatching(false)}
@@ -1056,9 +1043,9 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                 ? t("matchLinking")
                 : t("matchLink", { count: matchSelected.size })}
             </button>
-          </footer>
+          </>
         ) : (
-          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
+          <>
             <button
               type="button"
               onClick={() => {
@@ -1101,10 +1088,10 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                 {submitting ? t("saving") : isMoto ? t("addMotorcycle") : isBike ? t("addBicycle") : t("addVehicle")}
               </button>
             )}
-          </footer>
+          </>
         )}
-      </motion.div>
-    </div>
+      </ModalFooter>
+    </Modal>
   );
 }
 

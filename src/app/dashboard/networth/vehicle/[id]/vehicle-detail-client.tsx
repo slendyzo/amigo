@@ -28,6 +28,7 @@ import { AddValuationModal } from "@/components/add-valuation-modal";
 import { AssetHero, type HeroStat } from "@/components/ui/asset-hero";
 import { ComparablesModal } from "@/components/ui/comparables-modal";
 import { ValueSourceHint } from "@/components/ui/value-source-hint";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -569,22 +570,8 @@ function SellModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal="true">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={busy ? undefined : onClose}
-      />
-      <motion.div
-        initial={{ y: "100%", opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: "100%", opacity: 0 }}
-        transition={{ duration: 0.4, ease: EASE }}
-        className="relative z-10 w-full max-w-md rounded-t-3xl bg-card p-6 shadow-2xl md:rounded-2xl"
-      >
+    <Modal isOpen onClose={onClose} variant="sheet" size="md" dismissable={!busy}>
+      <ModalHeader showClose={false} className="px-6 pt-4">
         <header className="mb-4 flex items-start justify-between">
           <div>
             <h2 className="text-lg font-semibold">{t("markAsSold")}</h2>
@@ -594,7 +581,9 @@ function SellModal({
             <X className="h-4 w-4" />
           </button>
         </header>
+      </ModalHeader>
 
+      <ModalBody className="px-6 pb-4">
         <div className="space-y-3">
           <label className="block">
             <span className="mb-1.5 block text-xs font-medium uppercase tracking-wide text-muted-foreground">
@@ -635,21 +624,21 @@ function SellModal({
             <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-500">{error}</p>
           )}
         </div>
+      </ModalBody>
 
-        <footer className="mt-5 flex items-center justify-end gap-2">
-          <button onClick={onClose} disabled={busy} className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
-            {tCommon("cancel")}
-          </button>
-          <button
-            onClick={submit}
-            disabled={busy || !salePrice || parseFloat(salePrice) < 0}
-            className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
-          >
-            {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-            {t("markAsSold")}
-          </button>
-        </footer>
-      </motion.div>
-    </div>
+      <ModalFooter className="items-center justify-end gap-2 px-6 md:px-6">
+        <button onClick={onClose} disabled={busy} className="rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground">
+          {tCommon("cancel")}
+        </button>
+        <button
+          onClick={submit}
+          disabled={busy || !salePrice || parseFloat(salePrice) < 0}
+          className="flex items-center gap-1 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
+        >
+          {busy && <Loader2 className="h-4 w-4 animate-spin" />}
+          {t("markAsSold")}
+        </button>
+      </ModalFooter>
+    </Modal>
   );
 }

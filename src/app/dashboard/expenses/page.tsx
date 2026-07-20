@@ -16,6 +16,7 @@ import { effectiveEur, getUserShare } from "@/lib/split-utils";
 import ExportModal from "@/components/export-modal";
 import NudgeCategorizeCard from "@/components/nudge-categorize-card";
 import NudgeCategorizeModal from "@/components/nudge-categorize-modal";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type Expense = {
   id: string;
@@ -683,65 +684,74 @@ export default function ExpensesPage() {
       )}
 
       {/* Delete Confirmation */}
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
-          <div className="relative mx-4 max-w-sm rounded-[20px] p-6" style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}>
-            <h3 className="mb-2 text-[17px] font-bold">{t("deleteExpenseQuestion")}</h3>
-            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("deleteWarning")}</p>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteId(null)} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold" style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}>
-                {tCommon("cancel")}
-              </button>
-              <button onClick={() => handleDelete(deleteId)} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white" style={{ background: "var(--negative)" }}>
-                {tCommon("delete")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        variant="dialog"
+        size="sm"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h3 className="mb-2 text-[17px] font-bold">{t("deleteExpenseQuestion")}</h3>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("deleteWarning")}</p>
+        </ModalBody>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button onClick={() => setDeleteId(null)} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold" style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}>
+            {tCommon("cancel")}
+          </button>
+          <button onClick={() => { if (deleteId) handleDelete(deleteId); }} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white" style={{ background: "var(--negative)" }}>
+            {tCommon("delete")}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Bulk Asset Link */}
-      {showBulkLinkModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => !bulkLinkBusy && setShowBulkLinkModal(false)} />
-          <div className="relative mx-4 w-full max-w-sm rounded-[20px] p-6" style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}>
-            <h3 className="mb-1 text-[17px] font-bold">{tRwa("bulkLinkTitle")}</h3>
-            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{tRwa("bulkLinkSubtitle", { count: selectedIds.size })}</p>
-            <AssetLinkPicker value={bulkLinkAssetId} onChange={setBulkLinkAssetId} />
-            <div className="mt-5 flex flex-col gap-2">
-              <button onClick={() => handleBulkLink(true)} disabled={bulkLinkBusy || !bulkLinkAssetId} className="w-full rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--accent)" }}>
-                {bulkLinkBusy ? tRwa("matchLinking") : tRwa("bulkLinkConfirm", { count: selectedIds.size })}
-              </button>
-              <button onClick={() => handleBulkLink(false)} disabled={bulkLinkBusy} className="w-full rounded-[14px] px-4 py-2.5 text-[13.5px] disabled:opacity-50" style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}>
-                {tRwa("bulkUnlink")}
-              </button>
-              <button onClick={() => { setShowBulkLinkModal(false); setBulkLinkAssetId(null); }} disabled={bulkLinkBusy} className="w-full px-4 py-2 text-[13px] disabled:opacity-50" style={{ color: "var(--ink-subtle)" }}>
-                {tCommon("cancel")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showBulkLinkModal}
+        onClose={() => { if (!bulkLinkBusy) setShowBulkLinkModal(false); }}
+        variant="dialog"
+        size="sm"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h3 className="mb-1 text-[17px] font-bold">{tRwa("bulkLinkTitle")}</h3>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{tRwa("bulkLinkSubtitle", { count: selectedIds.size })}</p>
+          <AssetLinkPicker value={bulkLinkAssetId} onChange={setBulkLinkAssetId} />
+        </ModalBody>
+        <ModalFooter className="flex-col gap-2 px-6 pb-6 pt-5 md:px-6 md:pb-6">
+          <button onClick={() => handleBulkLink(true)} disabled={bulkLinkBusy || !bulkLinkAssetId} className="w-full rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--accent)" }}>
+            {bulkLinkBusy ? tRwa("matchLinking") : tRwa("bulkLinkConfirm", { count: selectedIds.size })}
+          </button>
+          <button onClick={() => handleBulkLink(false)} disabled={bulkLinkBusy} className="w-full rounded-[14px] px-4 py-2.5 text-[13.5px] disabled:opacity-50" style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}>
+            {tRwa("bulkUnlink")}
+          </button>
+          <button onClick={() => { setShowBulkLinkModal(false); setBulkLinkAssetId(null); }} disabled={bulkLinkBusy} className="w-full px-4 py-2 text-[13px] disabled:opacity-50" style={{ color: "var(--ink-subtle)" }}>
+            {tCommon("cancel")}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Bulk Delete Confirmation */}
-      {showBulkDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setShowBulkDeleteConfirm(false)} />
-          <div className="relative mx-4 max-w-sm rounded-[20px] p-6" style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}>
-            <h3 className="mb-2 text-[17px] font-bold">{t("deleteSelectedQuestion", { count: selectedIds.size })}</h3>
-            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("deleteWarning")}</p>
-            <div className="flex gap-3">
-              <button onClick={() => setShowBulkDeleteConfirm(false)} disabled={isDeleting} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold disabled:opacity-50" style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}>
-                {tCommon("cancel")}
-              </button>
-              <button onClick={handleBulkDelete} disabled={isDeleting} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--negative)" }}>
-                {isDeleting ? t("deleting") : t("deleteSelected", { count: selectedIds.size })}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={showBulkDeleteConfirm}
+        onClose={() => setShowBulkDeleteConfirm(false)}
+        variant="dialog"
+        size="sm"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h3 className="mb-2 text-[17px] font-bold">{t("deleteSelectedQuestion", { count: selectedIds.size })}</h3>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("deleteWarning")}</p>
+        </ModalBody>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button onClick={() => setShowBulkDeleteConfirm(false)} disabled={isDeleting} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold disabled:opacity-50" style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}>
+            {tCommon("cancel")}
+          </button>
+          <button onClick={handleBulkDelete} disabled={isDeleting} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--negative)" }}>
+            {isDeleting ? t("deleting") : t("deleteSelected", { count: selectedIds.size })}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Modals */}
       <AddExpenseModal

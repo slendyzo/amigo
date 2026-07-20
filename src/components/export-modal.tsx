@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type ExportModalProps = {
   isOpen: boolean;
@@ -81,27 +82,6 @@ export default function ExportModal({
   const [format, setFormat] = useState<ExportFormat>("csv");
   const [timeRange, setTimeRange] = useState<TimeRange>("current");
   const [isExporting, setIsExporting] = useState(false);
-
-  // Close on Escape
-  const handleKeyDown = useCallback(
-    (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !isExporting) {
-        onClose();
-      }
-    },
-    [isExporting, onClose]
-  );
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "hidden";
-    }
-    return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.body.style.overflow = "";
-    };
-  }, [isOpen, handleKeyDown]);
 
   // Reset state when modal opens
   useEffect(() => {
@@ -228,25 +208,19 @@ export default function ExportModal({
     }
   };
 
-  const handleBackdropClick = () => {
-    if (!isExporting) onClose();
-  };
-
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-start justify-center"
-      onClick={handleBackdropClick}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="dialog"
+      size="md"
+      dismissable={!isExporting}
+      zIndexClassName="z-50"
+      className="rounded-2xl"
+      style={{ background: "var(--surface)" }}
     >
-      {/* Backdrop */}
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm transition-opacity duration-300" />
-
-      {/* Modal Card */}
-      <div
-        className="relative mt-[15vh] mx-4 w-full max-w-md rounded-2xl bg-[var(--surface)] shadow-xl p-6 transition-all duration-300 ease-out"
-        style={{ animation: "exportModalSlideIn 0.3s ease-out" }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
+      {/* Header */}
+      <ModalHeader showClose={false} className="px-6 pt-6">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-semibold text-[var(--ink)]">{t("title")}</h2>
           <button
@@ -267,7 +241,9 @@ export default function ExportModal({
             </svg>
           </button>
         </div>
+      </ModalHeader>
 
+      <ModalBody className="px-6 pb-0">
         {/* Format Section */}
         <div className="mt-5">
           <label className="text-sm font-medium text-[var(--ink-muted)]">
@@ -389,9 +365,10 @@ export default function ExportModal({
             })}
           </div>
         </div>
+      </ModalBody>
 
-        {/* Footer */}
-        <div className="mt-6 flex justify-end gap-3">
+      {/* Footer */}
+      <ModalFooter className="justify-end px-6 pb-6 pt-6 md:px-6 md:pb-6">
           <button
             type="button"
             onClick={() => !isExporting && onClose()}
@@ -429,22 +406,7 @@ export default function ExportModal({
             )}
             {isExporting ? t("exporting") : t("exportBtn")}
           </button>
-        </div>
-      </div>
-
-      {/* Slide-in animation */}
-      <style jsx>{`
-        @keyframes exportModalSlideIn {
-          from {
-            opacity: 0;
-            transform: translateY(-12px) scale(0.97);
-          }
-          to {
-            opacity: 1;
-            transform: translateY(0) scale(1);
-          }
-        }
-      `}</style>
-    </div>
+      </ModalFooter>
+    </Modal>
   );
 }

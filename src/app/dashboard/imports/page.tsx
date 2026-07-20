@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { UploadCloud, FileSpreadsheet, FileText, Trash2, Loader2, AlertTriangle, Info } from "lucide-react";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -257,26 +258,16 @@ export default function ImportsPage() {
       </div>
 
       {/* Delete Confirmation Modal */}
-      <AnimatePresence>
-        {deleteConfirmation && (
-          <motion.div
-            className="fixed inset-0 flex items-center justify-center z-50 p-4"
-            style={{ background: "rgba(23,22,31,0.5)" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2, ease: EASE }}
-            onClick={() => setDeleteConfirmation(null)}
-          >
-            <motion.div
-              className="rounded-[24px] max-w-md w-full p-6"
-              style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
-              initial={{ opacity: 0, scale: 0.96, y: 8 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.96, y: 8 }}
-              transition={{ duration: 0.25, ease: EASE }}
-              onClick={(e) => e.stopPropagation()}
-            >
+      <Modal
+        isOpen={!!deleteConfirmation}
+        onClose={() => setDeleteConfirmation(null)}
+        variant="dialog"
+        size="md"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          {deleteConfirmation && (
+            <>
               <div className="flex items-center gap-3 mb-4">
                 <div
                   className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
@@ -330,32 +321,33 @@ export default function ImportsPage() {
                   </label>
                 </div>
               )}
+            </>
+          )}
+        </ModalBody>
 
-              <div className="flex gap-3">
-                <button
-                  onClick={() => setDeleteConfirmation(null)}
-                  className="flex-1 px-4 py-3 rounded-[14px] text-[14px] font-semibold transition-colors active:scale-[0.99]"
-                  style={{ background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line-strong)" }}
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  onClick={() =>
-                    executeDelete(
-                      deleteConfirmation.log.id,
-                      deleteConfirmation.deleteEmptyProjects
-                    )
-                  }
-                  className="flex-1 px-4 py-3 rounded-[14px] text-[14px] font-semibold text-white transition-transform active:scale-[0.99]"
-                  style={{ background: "var(--negative)" }}
-                >
-                  {tCommon("delete")}
-                </button>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button
+            onClick={() => setDeleteConfirmation(null)}
+            className="flex-1 px-4 py-3 rounded-[14px] text-[14px] font-semibold transition-colors active:scale-[0.99]"
+            style={{ background: "var(--surface)", color: "var(--ink)", border: "1px solid var(--line-strong)" }}
+          >
+            {tCommon("cancel")}
+          </button>
+          <button
+            onClick={() => {
+              if (!deleteConfirmation) return;
+              executeDelete(
+                deleteConfirmation.log.id,
+                deleteConfirmation.deleteEmptyProjects
+              );
+            }}
+            className="flex-1 px-4 py-3 rounded-[14px] text-[14px] font-semibold text-white transition-transform active:scale-[0.99]"
+            style={{ background: "var(--negative)" }}
+          >
+            {tCommon("delete")}
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

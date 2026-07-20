@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type WrappedData = {
   projectName: string;
@@ -130,9 +131,8 @@ export default function ProjectWrappedModal({
       } else if (e.key === "ArrowLeft") {
         e.preventDefault();
         prevSlide();
-      } else if (e.key === "Escape") {
-        onClose();
       }
+      // Escape is handled by the shared Modal primitive.
     };
 
     window.addEventListener("keydown", handleKeyDown);
@@ -155,19 +155,17 @@ export default function ProjectWrappedModal({
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div
-        className="relative w-full max-w-lg mx-4 overflow-hidden rounded-[24px] shadow-2xl"
-        style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-soft))" }}
-      >
-        {/* Close button */}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="dialog"
+      size="lg"
+      zIndexClassName="z-50"
+      className="rounded-[24px]"
+      style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-soft))" }}
+    >
+      {/* Close button */}
+      <ModalHeader showClose={false}>
         <button
           onClick={onClose}
           className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
@@ -176,9 +174,11 @@ export default function ProjectWrappedModal({
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
+      </ModalHeader>
 
-        {/* Content */}
-        <div className="relative min-h-[480px] p-8">
+      {/* Content */}
+      <ModalBody className="p-8">
+        <div className="relative min-h-[480px]">
           {isLoading ? (
             <div className="flex items-center justify-center h-full min-h-[400px]">
               <div className="animate-spin w-10 h-10 border-4 border-white/30 border-t-white rounded-full" />
@@ -377,10 +377,12 @@ export default function ProjectWrappedModal({
             </div>
           )}
         </div>
+      </ModalBody>
 
-        {/* Navigation */}
-        {!isLoading && data && data.expenseCount > 0 && (
-          <div className="absolute bottom-0 left-0 right-0 p-6 bg-gradient-to-t from-black/30 to-transparent">
+      {/* Navigation */}
+      {!isLoading && data && data.expenseCount > 0 && (
+        <ModalFooter className="bg-transparent! p-0 md:p-0">
+          <div className="w-full p-6 bg-gradient-to-t from-black/30 to-transparent">
             {/* Progress dots */}
             <div className="flex justify-center gap-2 mb-4">
               {Array.from({ length: totalSlides }).map((_, index) => (
@@ -421,22 +423,22 @@ export default function ProjectWrappedModal({
               </button>
             </div>
           </div>
-        )}
+        </ModalFooter>
+      )}
 
-        {/* Animation keyframes */}
-        <style jsx>{`
-          @keyframes slideIn {
-            from {
-              opacity: 0;
-              transform: translateX(20px);
-            }
-            to {
-              opacity: 1;
-              transform: translateX(0);
-            }
+      {/* Animation keyframes */}
+      <style jsx>{`
+        @keyframes slideIn {
+          from {
+            opacity: 0;
+            transform: translateX(20px);
           }
-        `}</style>
-      </div>
-    </div>
+          to {
+            opacity: 1;
+            transform: translateX(0);
+          }
+        }
+      `}</style>
+    </Modal>
   );
 }

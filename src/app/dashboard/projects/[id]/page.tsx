@@ -9,6 +9,7 @@ import EditExpenseModal from "@/components/edit-expense-modal";
 import AddExpenseModal from "@/components/add-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
 import ProjectWrappedModal from "@/components/project-wrapped-modal";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { effectiveEur, getUserShare } from "@/lib/split-utils";
 import { formatCurrency } from "@/lib/currencies";
@@ -547,37 +548,34 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       />
 
       {/* Delete Confirmation */}
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="relative mx-4 max-w-sm rounded-[20px] p-6"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+      <Modal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        variant="dialog"
+        size="sm"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h3 className="mb-2 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>{tExpenses("deleteExpenseQuestion")}</h3>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{tExpenses("deleteWarning")}</p>
+        </ModalBody>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button
+            onClick={() => setDeleteId(null)}
+            className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-medium"
+            style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}
           >
-            <h3 className="mb-2 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>{tExpenses("deleteExpenseQuestion")}</h3>
-            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{tExpenses("deleteWarning")}</p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-medium"
-                style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}
-              >
-                {tCommon("cancel")}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteId)}
-                className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold text-white"
-                style={{ background: "var(--negative)" }}
-              >
-                {tCommon("delete")}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            {tCommon("cancel")}
+          </button>
+          <button
+            onClick={() => { if (deleteId) handleDelete(deleteId); }}
+            className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold text-white"
+            style={{ background: "var(--negative)" }}
+          >
+            {tCommon("delete")}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Project Wrapped Modal */}
       <ProjectWrappedModal

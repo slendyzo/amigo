@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { extractReceiptData, type ExtractedReceiptData } from "@/lib/receipt-ocr";
 import { AmountInput } from "./ui/amount-input";
-import { useModalBodyClass } from "@/hooks/use-modal-body-class";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { parseAmount, getTodayDateString } from "@/lib/utils";
 import type { Category } from "@/types/models";
@@ -28,9 +28,6 @@ export default function ReceiptScannerModal({
   const t = useTranslations("receiptScanner");
   const tCommon = useTranslations("common");
   const tModals = useTranslations("modals");
-
-  // Use shared hook
-  useModalBodyClass(isOpen);
 
   // Step state
   const [step, setStep] = useState<ScanStep>("capture");
@@ -232,39 +229,34 @@ export default function ReceiptScannerModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end md:items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-lg mx-4 bg-[var(--surface)] rounded-t-2xl md:rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="sheet"
+      size="lg"
+      as="form"
+      onSubmit={handleSubmit}
+      className="rounded-t-2xl md:rounded-2xl"
+      style={{ background: "var(--surface)" }}
+    >
         {/* Header */}
-        <div className="px-4 md:px-6 py-3 md:py-4 border-b border-[var(--line)] flex items-center justify-between flex-shrink-0">
-          <div className="flex items-center gap-2">
-            <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <h2 className="text-base md:text-lg font-semibold text-[var(--ink)]">
-              {t("title")}
-            </h2>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="p-2 -mr-2 text-[var(--ink-subtle)] active:text-[var(--ink-muted)] md:hover:text-[var(--ink-muted)]"
-          >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-            </svg>
-          </button>
-        </div>
+        <ModalHeader
+          className="border-b border-[var(--line)]"
+          title={
+            <div className="flex items-center gap-2">
+              <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+              <h2 className="text-base md:text-lg font-semibold text-[var(--ink)]">
+                {t("title")}
+              </h2>
+            </div>
+          }
+        />
 
         {/* Body */}
-        <div className="p-4 md:p-6 overflow-y-auto flex-1">
+        <ModalBody className="p-4 md:p-6">
           {error && (
             <div className="mb-4 p-3 rounded-lg bg-red-50 text-red-600 text-sm">
               {error}
@@ -334,7 +326,7 @@ export default function ReceiptScannerModal({
 
           {/* Step 3: Review */}
           {step === "review" && (
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-4">
               {/* Confidence indicator */}
               {extractedData && (
                 <div className="flex items-center gap-2 p-3 rounded-lg bg-[var(--surface-2)]">
@@ -468,9 +460,24 @@ export default function ReceiptScannerModal({
                   </div>
                 </details>
               )}
+            </div>
+          )}
+        </ModalBody>
 
-              {/* Footer */}
-              <div className="flex gap-3 pt-4 border-t border-[var(--line)]">
+        {/* Single pinned action row — contents switch on scan stage.
+            Processing has no actions, so no footer at all. */}
+        {step !== "processing" && (
+          <ModalFooter className="px-4 md:px-6 md:pt-4">
+            {step === "capture" ? (
+              <button
+                type="button"
+                onClick={onClose}
+                className="w-full rounded-lg border border-[var(--line-strong)] px-4 py-3 text-[var(--ink-muted)] font-medium hover:bg-[var(--surface-2)] transition-colors"
+              >
+                {tCommon("cancel")}
+              </button>
+            ) : (
+              <>
                 <button
                   type="button"
                   onClick={handleRetry}
@@ -485,24 +492,10 @@ export default function ReceiptScannerModal({
                 >
                   {isLoading ? tModals("adding") : tCommon("add")}
                 </button>
-              </div>
-            </form>
-          )}
-        </div>
-
-        {/* Footer for capture step */}
-        {step === "capture" && (
-          <div className="flex-shrink-0 px-4 md:px-6 py-3 md:py-4 border-t border-[var(--line)] pb-safe bg-[var(--surface)]">
-            <button
-              type="button"
-              onClick={onClose}
-              className="w-full rounded-lg border border-[var(--line-strong)] px-4 py-3 text-[var(--ink-muted)] font-medium hover:bg-[var(--surface-2)] transition-colors"
-            >
-              {tCommon("cancel")}
-            </button>
-          </div>
+              </>
+            )}
+          </ModalFooter>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

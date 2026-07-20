@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { ChevronLeft, Plus, ChevronRight } from "lucide-react";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type BankAccount = {
   id: string;
@@ -272,24 +273,23 @@ export default function BankAccountsPage() {
       )}
 
       {/* Add / Edit modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0"
-            style={{ background: "rgba(23,22,31,.45)" }}
-            onClick={() => setIsModalOpen(false)}
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="relative mx-4 w-full max-w-md rounded-[24px] p-6"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
-          >
-            <h2 className="mb-4 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
-              {editingAccount ? t("editAccount") : t("newAccount")}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        variant="dialog"
+        size="md"
+        as="form"
+        onSubmit={handleSubmit}
+        zIndexClassName="z-50"
+      >
+        <ModalHeader showClose={false} className="px-6 pt-6">
+          <h2 className="mb-4 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+            {editingAccount ? t("editAccount") : t("newAccount")}
+          </h2>
+        </ModalHeader>
+
+        <ModalBody className="px-6 pb-0">
+            <div className="space-y-4">
               {error && (
                 <div
                   className="rounded-[14px] p-3 text-[13px]"
@@ -327,69 +327,62 @@ export default function BankAccountsPage() {
                   <option value="GBP">GBP</option>
                 </select>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-medium transition-opacity active:opacity-70"
-                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !name}
-                  className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
-                  style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-                >
-                  {isSubmitting ? t("saving") : tCommon("save")}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+            </div>
+        </ModalBody>
+
+        <ModalFooter className="gap-3 px-6 pb-6 pt-6 md:px-6 md:pb-6">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(false)}
+            className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-medium transition-opacity active:opacity-70"
+            style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
+          >
+            {tCommon("cancel")}
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || !name}
+            className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-semibold transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+          >
+            {isSubmitting ? t("saving") : tCommon("save")}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Delete confirmation */}
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div
-            className="absolute inset-0"
-            style={{ background: "rgba(23,22,31,.45)" }}
+      <Modal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        variant="dialog"
+        size="sm"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h3 className="mb-2 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+            {t("deleteAccountQuestion")}
+          </h3>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>
+            {t("expensesWillUnlink")}
+          </p>
+        </ModalBody>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button
             onClick={() => setDeleteId(null)}
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="relative mx-4 w-full max-w-sm rounded-[24px] p-6"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+            className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-medium transition-opacity active:opacity-70"
+            style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
           >
-            <h3 className="mb-2 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
-              {t("deleteAccountQuestion")}
-            </h3>
-            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>
-              {t("expensesWillUnlink")}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-medium transition-opacity active:opacity-70"
-                style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
-              >
-                {tCommon("cancel")}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteId)}
-                className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
-                style={{ background: "var(--negative)" }}
-              >
-                {tCommon("delete")}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            {tCommon("cancel")}
+          </button>
+          <button
+            onClick={() => { if (deleteId) handleDelete(deleteId); }}
+            className="flex-1 rounded-[18px] px-4 py-2.5 text-[14px] font-semibold text-white transition-opacity hover:opacity-90"
+            style={{ background: "var(--negative)" }}
+          >
+            {tCommon("delete")}
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

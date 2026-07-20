@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -113,18 +114,6 @@ export default function ExchangeConnectionModal({
     setError("");
   }, [editConnection, isOpen]);
 
-  // Lock body scroll while open
-  useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
-
   if (!isOpen) return null;
 
   const selectedProviderMeta = PROVIDERS.find((p) => p.id === provider)!;
@@ -200,22 +189,25 @@ export default function ExchangeConnectionModal({
   // ─── Render ───────────────────────────────────────────────────────────────
 
   return (
-    <div
-      className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
-      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="dialog"
+      size="lg"
+      zIndexClassName="z-50"
+      style={{ background: "var(--surface)" }}
     >
-      <div
-        className="rounded-[24px] w-full max-w-lg overflow-hidden"
-        style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
-      >
-        {/* Header */}
+      {/* Header */}
+      <ModalHeader showClose={false}>
         <div className="px-6 pt-6 pb-4 border-b" style={{ borderColor: "var(--line)" }}>
           <h2 className="text-lg font-semibold" style={{ color: "var(--ink)" }}>
             {isEditing ? t("editConnection") : t("addExchange")}
           </h2>
         </div>
+      </ModalHeader>
 
-        <div className="px-6 py-5 space-y-5 max-h-[70vh] overflow-y-auto">
+      <ModalBody className="px-6 py-5">
+        <div className="space-y-5">
           {/* Provider selector */}
           <div className="space-y-2">
             <label className="text-sm font-medium" style={{ color: "var(--ink-muted)" }}>
@@ -406,9 +398,10 @@ export default function ExchangeConnectionModal({
             </div>
           )}
         </div>
+      </ModalBody>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t flex flex-col-reverse sm:flex-row sm:justify-between gap-3" style={{ borderColor: "var(--line)" }}>
+      {/* Footer */}
+      <ModalFooter className="flex-col-reverse sm:flex-row sm:justify-between gap-3 px-6 pt-4 pb-4 md:px-6 md:pb-4">
           {/* Test button (only when creating) */}
           <div className="flex gap-2">
             {!isEditing && (
@@ -457,8 +450,7 @@ export default function ExchangeConnectionModal({
               {isEditing ? t("editConnection") : t("saveConnection")}
             </button>
           </div>
-        </div>
-      </div>
-    </div>
+      </ModalFooter>
+    </Modal>
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 interface Category {
   id: string;
@@ -97,29 +97,31 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
     new Date(iso).toLocaleDateString("en-GB", { day: "numeric", month: "short", timeZone: "UTC" });
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end md:items-center justify-center md:p-4">
-          <motion.div
-            initial={{ opacity: 0, y: 16, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 16, scale: 0.98 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full max-w-2xl bg-[var(--surface)] rounded-t-xl md:rounded-xl shadow-xl overflow-hidden"
-          >
-            {/* Header */}
-            <div className="px-5 py-4 border-b border-[var(--line)]">
-              <p className="text-sm font-semibold text-[var(--ink)]">
-                {t("nudges.categorize.modalTitle")}
-              </p>
-              <p className="text-xs text-[var(--ink-subtle)] mt-0.5">
-                {t("nudges.categorize.modalSubtitle")}
-              </p>
-            </div>
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="sheet"
+      size="xl"
+      zIndexClassName="z-50"
+      className="mx-0 rounded-t-xl md:mx-4 md:rounded-xl"
+      style={{ background: "var(--surface)" }}
+    >
+      {/* Header */}
+      <ModalHeader showClose={false}>
+        <div className="px-5 py-4 border-b border-[var(--line)]">
+          <p className="text-sm font-semibold text-[var(--ink)]">
+            {t("nudges.categorize.modalTitle")}
+          </p>
+          <p className="text-xs text-[var(--ink-subtle)] mt-0.5">
+            {t("nudges.categorize.modalSubtitle")}
+          </p>
+        </div>
+      </ModalHeader>
 
-            {/* Body */}
-            <div className="overflow-y-auto max-h-[60vh] divide-y divide-[var(--line)]">
-              {loading ? (
+      {/* Body */}
+      <ModalBody className="px-0 pb-0">
+        <div className="divide-y divide-[var(--line)]">
+        {loading ? (
                 <div className="px-5 py-8 text-center text-sm text-[var(--ink-subtle)]">
                   Loading...
                 </div>
@@ -205,27 +207,25 @@ export default function NudgeCategorizeModal({ isOpen, onClose }: NudgeCategoriz
                   );
                 })
               )}
-            </div>
-
-            {/* Footer */}
-            <div className="px-5 py-4 border-t border-[var(--line)] flex gap-3">
-              <button
-                onClick={onClose}
-                className="flex-1 px-4 py-2 rounded-lg border border-[var(--line)] text-sm text-[var(--ink-muted)] hover:bg-[var(--surface-2)] transition-colors"
-              >
-                {t("nudges.categorize.noChanges")}
-              </button>
-              <button
-                onClick={handleApply}
-                disabled={acceptedRows.length === 0 || submitting}
-                className="flex-1 px-4 py-2 rounded-lg bg-[var(--ink)] text-[var(--surface)] text-sm font-medium hover:bg-[var(--ink-muted)] disabled:opacity-40 transition-colors"
-              >
-                {t("nudges.categorize.applyButton", { count: acceptedRows.length })}
-              </button>
-            </div>
-          </motion.div>
         </div>
-      )}
-    </AnimatePresence>
+      </ModalBody>
+
+      {/* Footer */}
+      <ModalFooter className="px-5 pt-4 md:px-5">
+        <button
+          onClick={onClose}
+          className="flex-1 px-4 py-2 rounded-lg border border-[var(--line)] text-sm text-[var(--ink-muted)] hover:bg-[var(--surface-2)] transition-colors"
+        >
+          {t("nudges.categorize.noChanges")}
+        </button>
+        <button
+          onClick={handleApply}
+          disabled={acceptedRows.length === 0 || submitting}
+          className="flex-1 px-4 py-2 rounded-lg bg-[var(--ink)] text-[var(--surface)] text-sm font-medium hover:bg-[var(--ink-muted)] disabled:opacity-40 transition-colors"
+        >
+          {t("nudges.categorize.applyButton", { count: acceptedRows.length })}
+        </button>
+      </ModalFooter>
+    </Modal>
   );
 }

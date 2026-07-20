@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { buildCategoryTree, getParentExpenseCount, type CategoryNode, type FlatCategory } from "@/lib/category-utils";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -485,20 +486,23 @@ export default function CategoriesPage() {
       </motion.div>
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="relative w-full max-w-sm mx-4"
-            style={{ background: "var(--surface)", borderRadius: 20, padding: 24, boxShadow: "var(--shadow-pop)" }}
-          >
-            <h2 className="mb-4" style={{ fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>
-              {editingCategory ? t("editCategory") : t("newCategory")}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        variant="dialog"
+        size="sm"
+        as="form"
+        onSubmit={handleSubmit}
+        zIndexClassName="z-50"
+      >
+        <ModalHeader showClose={false} className="px-6 pt-6">
+          <h2 className="mb-4" style={{ fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>
+            {editingCategory ? t("editCategory") : t("newCategory")}
+          </h2>
+        </ModalHeader>
+
+        <ModalBody className="px-6 pb-0">
+            <div className="space-y-4">
               {error && (
                 <div className="text-sm" style={{ borderRadius: 14, padding: 12, background: "var(--surface-2)", color: "var(--negative)" }}>{error}</div>
               )}
@@ -527,53 +531,50 @@ export default function CategoriesPage() {
                   ))}
                 </select>
               </div>
-              <div className="flex gap-3 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1"
-                  style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 0", color: "var(--ink)", fontWeight: 600 }}
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !name}
-                  className="flex-1 disabled:opacity-50"
-                  style={{ borderRadius: 14, padding: "11px 0", background: "var(--accent)", color: "var(--accent-fg)", fontWeight: 600 }}
-                >
-                  {isSubmitting ? t("saving") : tCommon("save")}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+            </div>
+        </ModalBody>
+
+        <ModalFooter className="gap-3 px-6 pb-6 pt-5 md:px-6 md:pb-6">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(false)}
+            className="flex-1"
+            style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 0", color: "var(--ink)", fontWeight: 600 }}
+          >
+            {tCommon("cancel")}
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || !name}
+            className="flex-1 disabled:opacity-50"
+            style={{ borderRadius: 14, padding: "11px 0", background: "var(--accent)", color: "var(--accent-fg)", fontWeight: 600 }}
+          >
+            {isSubmitting ? t("saving") : tCommon("save")}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Delete Confirmation */}
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="relative w-full max-w-sm mx-4"
-            style={{ background: "var(--surface)", borderRadius: 20, padding: 24, boxShadow: "var(--shadow-pop)" }}
-          >
-            <h3 className="mb-2" style={{ fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>{t("deleteCategoryQuestion")}</h3>
-            <p className="text-sm mb-4" style={{ color: "var(--ink-muted)" }}>{t("moveToCategorized")}</p>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteId(null)} className="flex-1" style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 0", color: "var(--ink)", fontWeight: 600 }}>
-                {tCommon("cancel")}
-              </button>
-              <button onClick={() => handleDelete(deleteId)} className="flex-1" style={{ borderRadius: 14, padding: "11px 0", background: "var(--negative)", color: "#fff", fontWeight: 600 }}>
-                {tCommon("delete")}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      <Modal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        variant="dialog"
+        size="sm"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h3 className="mb-2" style={{ fontSize: 17, fontWeight: 600, color: "var(--ink)" }}>{t("deleteCategoryQuestion")}</h3>
+          <p className="text-sm mb-4" style={{ color: "var(--ink-muted)" }}>{t("moveToCategorized")}</p>
+        </ModalBody>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button onClick={() => setDeleteId(null)} className="flex-1" style={{ borderRadius: 14, border: "1px solid var(--line-strong)", padding: "11px 0", color: "var(--ink)", fontWeight: 600 }}>
+            {tCommon("cancel")}
+          </button>
+          <button onClick={() => { if (deleteId) handleDelete(deleteId); }} className="flex-1" style={{ borderRadius: 14, padding: "11px 0", background: "var(--negative)", color: "#fff", fontWeight: 600 }}>
+            {tCommon("delete")}
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

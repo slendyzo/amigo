@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { X, Sparkles, Bug, Zap, ChevronLeft, ChevronRight } from "lucide-react";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 // Changelog entries - add new entries at the top
 const CHANGELOG_ENTRIES = [
@@ -199,16 +200,17 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-        onClick={handleClose}
-      />
-
-      {/* Modal */}
-      <div className="relative w-full max-w-md bg-[var(--surface)] rounded-2xl shadow-2xl overflow-hidden">
-        {/* Header */}
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      variant="dialog"
+      size="md"
+      zIndexClassName="z-[70]"
+      className="rounded-2xl"
+      style={{ background: "var(--surface)" }}
+    >
+      {/* Header */}
+      <ModalHeader showClose={false}>
         <div className="relative bg-gradient-to-r from-[var(--accent-strong)] to-[var(--accent)] px-6 py-8 text-white">
           <button
             onClick={handleClose}
@@ -250,10 +252,11 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
             )}
           </div>
         </div>
+      </ModalHeader>
 
-        {/* Content */}
-        <div className="px-6 py-4 max-h-80 overflow-y-auto">
-          <div className="space-y-4">
+      {/* Content */}
+      <ModalBody className="px-6 py-4">
+        <div className="space-y-4">
             {currentChangelog.entries.map((entry, index) => (
               <div key={index} className="flex gap-3">
                 <div className="flex-shrink-0 mt-0.5">
@@ -282,19 +285,18 @@ export function ChangelogModal({ forceOpen, onClose }: ChangelogModalProps) {
                 </div>
               </div>
             ))}
-          </div>
         </div>
+      </ModalBody>
 
-        {/* Footer */}
-        <div className="px-6 py-4 border-t border-[var(--line)]">
-          <button
-            onClick={handleClose}
-            className="w-full py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg hover:bg-[var(--accent-strong)] transition-colors"
-          >
-            {t("close")}
-          </button>
-        </div>
-      </div>
-    </div>
+      {/* Footer */}
+      <ModalFooter className="px-6 pt-4 pb-4 md:px-6 md:pb-4">
+        <button
+          onClick={handleClose}
+          className="w-full py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] font-medium rounded-lg hover:bg-[var(--accent-strong)] transition-colors"
+        >
+          {t("close")}
+        </button>
+      </ModalFooter>
+    </Modal>
   );
 }

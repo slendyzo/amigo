@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
-import { useModalBodyClass } from "@/hooks/use-modal-body-class";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
 import { parseSplitData, getUserShare } from "@/lib/split-utils";
 import type { Expense } from "@/types/models";
@@ -37,8 +37,6 @@ export default function ExpenseDetailModal({
   const [showMetadata, setShowMetadata] = useState(false);
   const [fullExpense, setFullExpense] = useState<Expense | null>(null);
   const [isLoadingFull, setIsLoadingFull] = useState(false);
-
-  useModalBodyClass(isOpen);
 
   // Fetch full expense data when modal opens (for fields not in list endpoint)
   useEffect(() => {
@@ -123,19 +121,13 @@ export default function ExpenseDetailModal({
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 backdrop-blur-sm"
-        style={{ background: "rgba(23,22,31,.45)" }}
-        onClick={onClose}
-      />
-
-      {/* Modal Card */}
-      <div
-        className="relative w-full max-w-md rounded-[28px] overflow-hidden flex flex-col animate-popup"
-        style={{ maxHeight: "75vh", background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
-      >
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="dialog"
+      size="md"
+      style={{ background: "var(--surface)" }}
+    >
         {/* ==============================
             HERO SECTION
             ============================== */}
@@ -242,7 +234,7 @@ export default function ExpenseDetailModal({
         {/* ==============================
             SCROLLABLE BODY
             ============================== */}
-        <div className="flex-1 overflow-y-auto scroll-touch">
+        <ModalBody className="px-0 pb-0">
 
           {/* Forex strip */}
           {isNonEur && (
@@ -507,13 +499,13 @@ export default function ExpenseDetailModal({
 
             <div className="h-1" />
           </div>
-        </div>
+        </ModalBody>
 
         {/* ==============================
             FOOTER ACTIONS
             ============================== */}
         {(onEdit || onDelete) && (
-          <div className="flex-shrink-0 px-4 py-2.5 md:px-5 border-t border-[var(--line)] flex gap-2.5 pb-safe" style={{ background: "var(--surface)" }}>
+          <ModalFooter className="gap-2.5 pt-2.5 pb-2.5 md:pb-2.5">
             {onEdit && (
               <button
                 onClick={() => {
@@ -538,10 +530,9 @@ export default function ExpenseDetailModal({
                 {tCommon("delete")}
               </button>
             )}
-          </div>
+          </ModalFooter>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }
 

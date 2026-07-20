@@ -15,6 +15,7 @@ import {
   RotateCcw,
 } from "lucide-react";
 import ShortcutsTokensCard from "@/components/shortcuts-tokens-card";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { useTheme, type Theme } from "@/components/theme-controls";
 
 type Stats = {
@@ -1002,27 +1003,24 @@ export default function SettingsPage() {
       </div>
 
       {/* Salary Modal */}
-      {showSalaryModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 backdrop-blur-sm"
-            style={{ background: "rgba(23,22,31,0.5)" }}
-            onClick={() => setShowSalaryModal(false)}
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.3, ease: EASE }}
-            className="relative w-full max-w-md overflow-hidden rounded-[20px]"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
-          >
-            <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--line)" }}>
-              <h2 className="text-[16px] font-bold" style={{ color: "var(--ink)" }}>
-                {editingSalaryId ? t("editRecurringIncome") : t("addRecurringIncome")}
-              </h2>
-            </div>
+      <Modal
+        isOpen={showSalaryModal}
+        onClose={() => setShowSalaryModal(false)}
+        variant="dialog"
+        size="md"
+        zIndexClassName="z-50"
+      >
+        <ModalHeader
+          showClose={false}
+          className="border-b border-[var(--line)] px-6 py-4"
+        >
+          <h2 className="text-[16px] font-bold" style={{ color: "var(--ink)" }}>
+            {editingSalaryId ? t("editRecurringIncome") : t("addRecurringIncome")}
+          </h2>
+        </ModalHeader>
 
-            <div className="space-y-4 p-6">
+        <ModalBody className="px-6 pb-0 pt-6">
+          <div className="space-y-4">
               <div>
                 <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
                   {t("name")}
@@ -1091,55 +1089,51 @@ export default function SettingsPage() {
                   {t("dayOfMonthHint")}
                 </p>
               </div>
+          </div>
+        </ModalBody>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  onClick={() => setShowSalaryModal(false)}
-                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
-                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  onClick={handleSaveSalary}
-                  disabled={isSaving || !salaryAmount}
-                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98] disabled:opacity-50"
-                  style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-                >
-                  {isSaving ? tCommon("loading") : editingSalaryId ? tCommon("save") : t("addSalary")}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+        <ModalFooter className="gap-3 px-6 pb-6 pt-6 md:px-6 md:pb-6">
+          <button
+            onClick={() => setShowSalaryModal(false)}
+            className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
+            style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
+          >
+            {tCommon("cancel")}
+          </button>
+          <button
+            onClick={handleSaveSalary}
+            disabled={isSaving || !salaryAmount}
+            className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98] disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+          >
+            {isSaving ? tCommon("loading") : editingSalaryId ? tCommon("save") : t("addSalary")}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Delete Confirmation Modal */}
-      {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 backdrop-blur-sm"
-            style={{ background: "rgba(23,22,31,0.5)" }}
-            onClick={() => {
-              setShowDeleteConfirm(false);
-              setDeleteConfirmText("");
-              setDeleteError("");
-            }}
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.3, ease: EASE }}
-            className="relative w-full max-w-md overflow-hidden rounded-[20px]"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
-          >
-            <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--line)" }}>
-              <h2 className="text-[16px] font-bold" style={{ color: "var(--negative)" }}>
-                {t("deleteAllExpensesTitle")}
-              </h2>
-            </div>
+      <Modal
+        isOpen={showDeleteConfirm}
+        onClose={() => {
+          setShowDeleteConfirm(false);
+          setDeleteConfirmText("");
+          setDeleteError("");
+        }}
+        variant="dialog"
+        size="md"
+        zIndexClassName="z-50"
+      >
+        <ModalHeader
+          showClose={false}
+          className="border-b border-[var(--line)] px-6 py-4"
+        >
+          <h2 className="text-[16px] font-bold" style={{ color: "var(--negative)" }}>
+            {t("deleteAllExpensesTitle")}
+          </h2>
+        </ModalHeader>
 
-            <div className="space-y-4 p-6">
+        <ModalBody className="px-6 pb-0 pt-6">
+          <div className="space-y-4">
               <div className="text-[14px]" style={{ color: "var(--ink-muted)" }}>
                 {t("deleteAllExpensesWarning", { count: stats?.totalExpenses || 0 })}
               </div>
@@ -1166,60 +1160,56 @@ export default function SettingsPage() {
                   style={ctrlStyle}
                 />
               </div>
+          </div>
+        </ModalBody>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDeleteConfirm(false);
-                    setDeleteConfirmText("");
-                    setDeleteError("");
-                  }}
-                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
-                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  onClick={handleDeleteAllExpenses}
-                  disabled={isDeleting || deleteConfirmText !== "DELETE ALL"}
-                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: "var(--negative)" }}
-                >
-                  {isDeleting ? tCommon("loading") : t("deleteAllExpenses")}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+        <ModalFooter className="gap-3 px-6 pb-6 pt-4 md:px-6 md:pb-6">
+          <button
+            type="button"
+            onClick={() => {
+              setShowDeleteConfirm(false);
+              setDeleteConfirmText("");
+              setDeleteError("");
+            }}
+            className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
+            style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
+          >
+            {tCommon("cancel")}
+          </button>
+          <button
+            onClick={handleDeleteAllExpenses}
+            disabled={isDeleting || deleteConfirmText !== "DELETE ALL"}
+            className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: "var(--negative)" }}
+          >
+            {isDeleting ? tCommon("loading") : t("deleteAllExpenses")}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Delete Account Confirmation Modal */}
-      {showDeleteAccountConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 backdrop-blur-sm"
-            style={{ background: "rgba(23,22,31,0.5)" }}
-            onClick={() => {
-              setShowDeleteAccountConfirm(false);
-              setDeleteAccountConfirmText("");
-              setDeleteAccountError("");
-            }}
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.3, ease: EASE }}
-            className="relative w-full max-w-md overflow-hidden rounded-[20px]"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
-          >
-            <div className="px-6 py-4" style={{ borderBottom: "1px solid var(--line)" }}>
-              <h2 className="text-[16px] font-bold" style={{ color: "var(--negative)" }}>
-                {t("deleteAccountTitle")}
-              </h2>
-            </div>
+      <Modal
+        isOpen={showDeleteAccountConfirm}
+        onClose={() => {
+          setShowDeleteAccountConfirm(false);
+          setDeleteAccountConfirmText("");
+          setDeleteAccountError("");
+        }}
+        variant="dialog"
+        size="md"
+        zIndexClassName="z-50"
+      >
+        <ModalHeader
+          showClose={false}
+          className="border-b border-[var(--line)] px-6 py-4"
+        >
+          <h2 className="text-[16px] font-bold" style={{ color: "var(--negative)" }}>
+            {t("deleteAccountTitle")}
+          </h2>
+        </ModalHeader>
 
-            <div className="space-y-4 p-6">
+        <ModalBody className="px-6 pb-0 pt-6">
+          <div className="space-y-4">
               <div className="text-[14px]" style={{ color: "var(--ink-muted)" }}>
                 {t("deleteAccountWarning")}
               </div>
@@ -1253,33 +1243,32 @@ export default function SettingsPage() {
                   style={ctrlStyle}
                 />
               </div>
+          </div>
+        </ModalBody>
 
-              <div className="flex gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowDeleteAccountConfirm(false);
-                    setDeleteAccountConfirmText("");
-                    setDeleteAccountError("");
-                  }}
-                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
-                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  onClick={handleDeleteAccount}
-                  disabled={isDeletingAccount || deleteAccountConfirmText !== "DELETE MY ACCOUNT"}
-                  className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed"
-                  style={{ background: "var(--negative)" }}
-                >
-                  {isDeletingAccount ? tCommon("loading") : t("deleteAccount")}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+        <ModalFooter className="gap-3 px-6 pb-6 pt-4 md:px-6 md:pb-6">
+          <button
+            type="button"
+            onClick={() => {
+              setShowDeleteAccountConfirm(false);
+              setDeleteAccountConfirmText("");
+              setDeleteAccountError("");
+            }}
+            className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98]"
+            style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}
+          >
+            {tCommon("cancel")}
+          </button>
+          <button
+            onClick={handleDeleteAccount}
+            disabled={isDeletingAccount || deleteAccountConfirmText !== "DELETE MY ACCOUNT"}
+            className="flex-1 rounded-[18px] py-2.5 text-[14px] font-semibold text-white transition-transform active:scale-[.98] disabled:opacity-50 disabled:cursor-not-allowed"
+            style={{ background: "var(--negative)" }}
+          >
+            {isDeletingAccount ? tCommon("loading") : t("deleteAccount")}
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

@@ -8,6 +8,7 @@ import { Home, ChevronLeft, ChevronRight, X, Loader2, Check, AlertCircle } from 
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { detectSuspiciousAmount, formatEuro } from "@/lib/parse-amount";
 import { cn } from "@/lib/utils";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 const EASE = [0.16, 1, 0.3, 1] as const;
 
@@ -101,14 +102,6 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
   const [templateCandidates, setTemplateCandidates] = useState<TemplateCandidate[]>([]);
   const [selectedTemplateId, setSelectedTemplateId] = useState<string | null>(null);
   const [templateSubmitting, setTemplateSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (!isOpen) return;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -329,25 +322,17 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
     });
   };
 
-  if (!isOpen) return null;
+  const busy = submitting || matchSubmitting || templateSubmitting;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center md:items-center" role="dialog" aria-modal="true">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.25 }}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={submitting ? undefined : onClose}
-      />
-      <motion.div
-        initial={{ y: "100%", opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: "100%", opacity: 0 }}
-        transition={{ duration: 0.45, ease: EASE }}
-        className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-card shadow-2xl md:max-h-[84vh] max-w-md md:rounded-2xl"
-      >
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="sheet"
+      size="md"
+      dismissable={!busy}
+    >
+      <ModalHeader showClose={false}>
         <header className="flex items-center justify-between border-b border-border/50 px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10">
@@ -370,7 +355,7 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
           </div>
           <button
             onClick={onClose}
-            disabled={submitting || matchSubmitting || templateSubmitting}
+            disabled={busy}
             className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted disabled:opacity-50"
           >
             <X className="h-4 w-4" />
@@ -382,9 +367,10 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
             <StepDots step={step} />
           </div>
         )}
+      </ModalHeader>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          {phase === "templates" ? (
+      <ModalBody className="px-5 py-4">
+        {phase === "templates" ? (
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
                 {t("templateSubheader", { count: templateCandidates.length })}
@@ -752,13 +738,14 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
             </AnimatePresence>
           )}
 
-          {error && phase === "form" && (
-            <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-500">{error}</p>
-          )}
-        </div>
+        {error && phase === "form" && (
+          <p className="mt-4 rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-500">{error}</p>
+        )}
+      </ModalBody>
 
+      <ModalFooter className="items-center justify-between">
         {phase === "templates" ? (
-          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
+          <>
             <button
               type="button"
               onClick={() => finishTemplates(false)}
@@ -776,9 +763,9 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
               {templateSubmitting && <Loader2 className="h-4 w-4 animate-spin" />}
               {templateSubmitting ? t("matchLinking") : t("templateLink")}
             </button>
-          </footer>
+          </>
         ) : phase === "matching" ? (
-          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
+          <>
             <button
               type="button"
               onClick={() => finishMatching(false)}
@@ -798,9 +785,9 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
                 ? t("matchLinking")
                 : t("matchLink", { count: matchSelected.size })}
             </button>
-          </footer>
+          </>
         ) : (
-          <footer className="flex items-center justify-between gap-3 border-t border-border/50 bg-card px-5 py-3">
+          <>
             <button
               type="button"
               onClick={() => (step === 1 ? onClose() : setStep((s) => (s === 3 ? 2 : 1)))}
@@ -833,10 +820,10 @@ export default function AddPropertyModal({ isOpen, onClose, onSuccess }: AddProp
                 {submitting ? t("saving") : t("addProperty")}
               </button>
             )}
-          </footer>
+          </>
         )}
-      </motion.div>
-    </div>
+      </ModalFooter>
+    </Modal>
   );
 }
 

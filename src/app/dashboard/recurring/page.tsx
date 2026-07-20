@@ -9,6 +9,7 @@ import MerchantAvatar from "@/components/ui/merchant-avatar";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import NudgeRecurringCard from "@/components/nudge-recurring-card";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type Category = { id: string; name: string };
 type BankAccount = { id: string; name: string };
@@ -553,56 +554,69 @@ export default function RecurringTemplatesPage() {
       )}
 
       {/* Delete row confirm (per template) */}
-      {confirmDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmDeleteId(null)} />
-          <div className="relative mx-4 max-w-sm rounded-[20px] p-6" style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}>
-            <h3 className="mb-2 text-[17px] font-bold">{t("deleteTemplate")}</h3>
-            <div className="flex gap-3">
-              <button onClick={() => setConfirmDeleteId(null)} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold" style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}>{tCommon("cancel")}</button>
-              <button onClick={() => { handleDelete(confirmDeleteId); setEditingId(null); setIsCreating(false); }} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white" style={{ background: "var(--negative)" }}>{tCommon("delete")}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        variant="dialog"
+        size="sm"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h3 className="mb-2 text-[17px] font-bold">{t("deleteTemplate")}</h3>
+        </ModalBody>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button onClick={() => setConfirmDeleteId(null)} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold" style={{ border: "1px solid var(--line-strong)", color: "var(--ink)" }}>{tCommon("cancel")}</button>
+          <button onClick={() => { if (!confirmDeleteId) return; handleDelete(confirmDeleteId); setEditingId(null); setIsCreating(false); }} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white" style={{ background: "var(--negative)" }}>{tCommon("delete")}</button>
+        </ModalFooter>
+      </Modal>
 
       {/* Bulk Delete Confirmation */}
-      {confirmBulkDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setConfirmBulkDelete(false)} />
-          <div className="relative mx-4 w-full max-w-md rounded-[20px] p-6" style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}>
-            <h2 className="mb-2 text-[17px] font-bold">{t("deleteTemplates")}</h2>
-            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("deleteTemplatesConfirm", { count: selectedIds.size })}</p>
-            <div className="flex gap-3">
-              <button onClick={handleBulkDelete} disabled={isDeleting} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--negative)" }}>
-                {isDeleting ? t("deleting") : t("deleteCount", { count: selectedIds.size })}
-              </button>
-              <button onClick={() => setConfirmBulkDelete(false)} className="px-4 py-2.5 text-[13.5px]" style={{ color: "var(--ink-muted)" }}>{tCommon("cancel")}</button>
-            </div>
-          </div>
-        </div>
-      )}
+      <Modal
+        isOpen={confirmBulkDelete}
+        onClose={() => setConfirmBulkDelete(false)}
+        variant="dialog"
+        size="md"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h2 className="mb-2 text-[17px] font-bold">{t("deleteTemplates")}</h2>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("deleteTemplatesConfirm", { count: selectedIds.size })}</p>
+        </ModalBody>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button onClick={handleBulkDelete} disabled={isDeleting} className="flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--negative)" }}>
+            {isDeleting ? t("deleting") : t("deleteCount", { count: selectedIds.size })}
+          </button>
+          <button onClick={() => setConfirmBulkDelete(false)} className="px-4 py-2.5 text-[13.5px]" style={{ color: "var(--ink-muted)" }}>{tCommon("cancel")}</button>
+        </ModalFooter>
+      </Modal>
 
       {/* Generate Modal */}
-      {showGenerateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => { setShowGenerateModal(false); setGenerateResult(null); }} />
-          <div className="relative mx-4 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-[20px] p-6" style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}>
-            <h2 className="mb-2 text-[17px] font-bold">{t("generateExpenses")}</h2>
-            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("generateDescription")}</p>
-            <div className="mb-4 grid grid-cols-2 gap-3">
-              <div>
-                <label className={labelCls} style={{ color: "var(--ink-muted)" }}>{tTime("thisMonth").split(" ")[0]}</label>
-                <select value={generateMonth} onChange={(e) => setGenerateMonth(parseInt(e.target.value))} className={inputCls} style={inputStyle}>
-                  {MONTHS.map((month, index) => <option key={index} value={index}>{month}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className={labelCls} style={{ color: "var(--ink-muted)" }}>{tTime("thisYear").split(" ")[0]}</label>
-                <input type="number" value={generateYear} onChange={(e) => setGenerateYear(parseInt(e.target.value))} className={inputCls} style={inputStyle} />
-              </div>
+      <Modal
+        isOpen={showGenerateModal}
+        onClose={() => { setShowGenerateModal(false); setGenerateResult(null); }}
+        variant="dialog"
+        size="xl"
+        zIndexClassName="z-50"
+      >
+        <ModalHeader showClose={false} className="px-6 pt-6">
+          <h2 className="mb-2 text-[17px] font-bold">{t("generateExpenses")}</h2>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("generateDescription")}</p>
+          <div className="mb-4 grid grid-cols-2 gap-3">
+            <div>
+              <label className={labelCls} style={{ color: "var(--ink-muted)" }}>{tTime("thisMonth").split(" ")[0]}</label>
+              <select value={generateMonth} onChange={(e) => setGenerateMonth(parseInt(e.target.value))} className={inputCls} style={inputStyle}>
+                {MONTHS.map((month, index) => <option key={index} value={index}>{month}</option>)}
+              </select>
             </div>
-            <div className="mb-4 flex-1 overflow-y-auto rounded-[12px]" style={{ border: "1px solid var(--line)" }}>
+            <div>
+              <label className={labelCls} style={{ color: "var(--ink-muted)" }}>{tTime("thisYear").split(" ")[0]}</label>
+              <input type="number" value={generateYear} onChange={(e) => setGenerateYear(parseInt(e.target.value))} className={inputCls} style={inputStyle} />
+            </div>
+          </div>
+        </ModalHeader>
+
+        <ModalBody className="px-6 pb-0">
+            <div className="overflow-hidden rounded-[12px]" style={{ border: "1px solid var(--line)" }}>
               <div className="flex items-center justify-between px-4 py-2" style={{ background: "var(--app-bg)", borderBottom: "1px solid var(--line)" }}>
                 <span className="text-[13px] font-medium">{t("templates")} ({Object.values(templateOverrides).filter((o) => o.selected).length} {t("selected")})</span>
                 <div className="flex gap-3">
@@ -635,20 +649,22 @@ export default function RecurringTemplatesPage() {
                 )}
               </div>
             </div>
-            {generateResult && (
-              <div className="mb-4 rounded-[12px] p-3 text-[13px]" style={generateResult.includes("Failed") ? { background: "color-mix(in srgb, var(--negative) 12%, transparent)", color: "var(--negative)" } : { background: "color-mix(in srgb, var(--positive) 14%, transparent)", color: "var(--positive)" }}>
-                {generateResult}
-              </div>
-            )}
-            <div className="flex gap-3">
-              <button onClick={handleGenerate} disabled={isGenerating || Object.values(templateOverrides).filter((o) => o.selected).length === 0} className="tap-none flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--accent)", boxShadow: "var(--shadow-fab)" }}>
-                {isGenerating ? t("generating") : t("generateCount", { count: Object.values(templateOverrides).filter((o) => o.selected).length })}
-              </button>
-              <button onClick={() => { setShowGenerateModal(false); setGenerateResult(null); }} className="px-4 py-2.5 text-[13.5px]" style={{ color: "var(--ink-muted)" }}>{tCommon("close")}</button>
+        </ModalBody>
+
+        <ModalFooter className="flex-col gap-0 px-6 pb-6 pt-4 md:px-6 md:pb-6">
+          {generateResult && (
+            <div className="mb-4 w-full rounded-[12px] p-3 text-[13px]" style={generateResult.includes("Failed") ? { background: "color-mix(in srgb, var(--negative) 12%, transparent)", color: "var(--negative)" } : { background: "color-mix(in srgb, var(--positive) 14%, transparent)", color: "var(--positive)" }}>
+              {generateResult}
             </div>
+          )}
+          <div className="flex w-full gap-3">
+            <button onClick={handleGenerate} disabled={isGenerating || Object.values(templateOverrides).filter((o) => o.selected).length === 0} className="tap-none flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--accent)", boxShadow: "var(--shadow-fab)" }}>
+              {isGenerating ? t("generating") : t("generateCount", { count: Object.values(templateOverrides).filter((o) => o.selected).length })}
+            </button>
+            <button onClick={() => { setShowGenerateModal(false); setGenerateResult(null); }} className="px-4 py-2.5 text-[13.5px]" style={{ color: "var(--ink-muted)" }}>{tCommon("close")}</button>
           </div>
-        </div>
-      )}
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

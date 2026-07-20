@@ -8,7 +8,7 @@ import ProjectTagSelector from "./project-tag-selector";
 import AssetLinkPicker from "./asset-link-picker";
 import { savePendingExpense, isOfflineStorageAvailable } from "@/lib/offline-storage";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
-import { useModalBodyClass } from "@/hooks/use-modal-body-class";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { useModalData } from "@/hooks/use-modal-data";
 import { useProjectTags } from "@/hooks/use-project-tags";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
@@ -92,7 +92,6 @@ export default function AddExpenseModal({
   const tCommon = useTranslations("common");
   const { translateCategory } = useCategoryTranslation();
 
-  useModalBodyClass(isOpen);
 
   const {
     categories: localCategories,
@@ -364,31 +363,17 @@ export default function AddExpenseModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center md:items-center">
-      {/* Scrim */}
-      <div className="absolute inset-0" style={{ background: "rgba(23,22,31,.45)" }} onClick={onClose} />
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="sheet"
+      size="md"
+      as="form"
+      onSubmit={handleSubmit}
+    >
+      <ModalHeader title={t("addExpense")} />
 
-      {/* Sheet */}
-      <motion.form
-        onSubmit={handleSubmit}
-        initial={{ y: "100%" }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.33, ease: EASE }}
-        className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[28px] mx-4 max-w-md md:rounded-[28px]"
-        style={{ background: "var(--app-bg)", color: "var(--ink)" }}
-      >
-        <div className="flex flex-col gap-4 overflow-y-auto scroll-touch px-5 pb-6 pt-3.5" style={{ paddingBottom: "max(1.5rem, env(safe-area-inset-bottom))" }}>
-          {/* Grab handle */}
-          <div className="mx-auto h-1 w-10 rounded-full md:hidden" style={{ background: "rgba(23,22,31,.15)" }} />
-
-          {/* Title */}
-          <div className="flex items-center justify-between">
-            <h2 className="text-[17px] font-bold">{t("addExpense")}</h2>
-            <button type="button" onClick={onClose} className="tap-none flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--surface)", ...{ boxShadow: "var(--shadow-card)" } }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" strokeWidth="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
-            </button>
-          </div>
-
+      <ModalBody className="flex flex-col gap-4 px-5 pb-4 pt-1">
           {(error || tagError) && (
             <div className="rounded-[14px] p-3 text-[13px]" style={{ background: "color-mix(in srgb, var(--negative) 12%, transparent)", color: "var(--negative)" }}>
               {error || tagError}
@@ -668,24 +653,24 @@ export default function AddExpenseModal({
             </div>
           )}
 
-          {/* Save */}
-          <div className="flex flex-col gap-2">
-            <button
-              type="submit"
-              disabled={isLoading || !canSubmit}
-              className="tap-none w-full rounded-[18px] py-[15px] text-center text-[15px] font-semibold text-white transition-opacity"
-              style={{ background: canSubmit && !isLoading ? "var(--accent)" : "var(--accent-faint)", boxShadow: canSubmit ? "var(--shadow-fab)" : "none" }}
-            >
-              {isLoading ? t("adding") : t("saveExpense")}
-            </button>
-            {blockedReason && (
-              <p className="text-center text-[12px]" style={{ color: splitError ? "var(--danger, #ef4444)" : "var(--ink-subtle)" }}>
-                {blockedReason}
-              </p>
-            )}
-          </div>
-        </div>
-      </motion.form>
-    </div>
+      </ModalBody>
+
+      {/* Save — pinned, never scrolls out of reach */}
+      <ModalFooter className="flex-col gap-2">
+        <button
+          type="submit"
+          disabled={isLoading || !canSubmit}
+          className="tap-none w-full rounded-[18px] py-[15px] text-center text-[15px] font-semibold text-white transition-opacity"
+          style={{ background: canSubmit && !isLoading ? "var(--accent)" : "var(--accent-faint)", boxShadow: canSubmit ? "var(--shadow-fab)" : "none" }}
+        >
+          {isLoading ? t("adding") : t("saveExpense")}
+        </button>
+        {blockedReason && (
+          <p className="text-center text-[12px]" style={{ color: splitError ? "var(--danger, #ef4444)" : "var(--ink-subtle)" }}>
+            {blockedReason}
+          </p>
+        )}
+      </ModalFooter>
+    </Modal>
   );
 }

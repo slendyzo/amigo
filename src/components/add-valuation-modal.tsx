@@ -5,10 +5,8 @@
 // as a manual ValuationHistory row → diamond dot on the chart.
 
 import { useState } from "react";
-import { motion } from "framer-motion";
 import { Loader2, X } from "lucide-react";
-
-const EASE = [0.16, 1, 0.3, 1] as const;
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 export type AddValuationModalProps = {
   assetId: string;
@@ -83,26 +81,8 @@ export function AddValuationModal({
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
-      role="dialog"
-      aria-modal="true"
-    >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.2 }}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={busy ? undefined : onClose}
-      />
-      <motion.div
-        initial={{ y: "100%", opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: "100%", opacity: 0 }}
-        transition={{ duration: 0.4, ease: EASE }}
-        className="relative z-10 w-full max-w-md rounded-t-3xl bg-card p-6 shadow-2xl md:rounded-2xl"
-      >
+    <Modal isOpen onClose={onClose} variant="sheet" size="md" dismissable={!busy}>
+      <ModalHeader showClose={false} className="px-6 pt-4">
         <header className="mb-4 flex items-start justify-between gap-3">
           <div>
             <h2 className="text-lg font-semibold">{copy.title}</h2>
@@ -117,7 +97,9 @@ export function AddValuationModal({
             <X className="h-4 w-4" />
           </button>
         </header>
+      </ModalHeader>
 
+      <ModalBody className="px-6 pb-4">
         <div className="space-y-3">
           <div className="grid grid-cols-[1fr_auto] gap-2">
             <label className="block">
@@ -184,8 +166,9 @@ export function AddValuationModal({
             <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-500">{error}</p>
           )}
         </div>
+      </ModalBody>
 
-        <footer className="mt-5 flex items-center justify-end gap-2">
+      <ModalFooter className="items-center justify-end gap-2 px-6 md:px-6">
           <button
             onClick={onClose}
             disabled={busy}
@@ -201,8 +184,7 @@ export function AddValuationModal({
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
             {copy.save}
           </button>
-        </footer>
-      </motion.div>
-    </div>
+      </ModalFooter>
+    </Modal>
   );
 }

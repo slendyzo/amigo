@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 interface AiConsentModalProps {
   isOpen: boolean;
@@ -35,9 +36,18 @@ export default function AiConsentModal({ isOpen, onClose }: AiConsentModalProps)
   };
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-[var(--surface)] rounded-xl shadow-xl animate-in fade-in zoom-in-95 duration-300">
-        <div className="p-6 space-y-5">
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      variant="dialog"
+      size="md"
+      dismissable={false}
+      zIndexClassName="z-50"
+      className="rounded-xl"
+      style={{ background: "var(--surface)" }}
+    >
+      <ModalBody className="px-6 pt-6 pb-0">
+        <div className="space-y-5">
           {/* Title */}
           <h2 className="text-2xl font-semibold text-[var(--ink)]">
             {t("consent.title")}
@@ -60,26 +70,26 @@ export default function AiConsentModal({ isOpen, onClose }: AiConsentModalProps)
               {t("consent.viewTerms")}
             </Link>
           </div>
-
-          {/* Buttons */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-1">
-            <button
-              onClick={() => handleChoice("decline")}
-              disabled={isLoading}
-              className="flex-1 rounded-lg border border-[var(--line-strong)] px-4 py-2.5 text-sm font-medium text-[var(--ink-muted)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t("consent.decline")}
-            </button>
-            <button
-              onClick={() => handleChoice("enable")}
-              disabled={isLoading}
-              className="flex-1 rounded-lg bg-[var(--ink)] px-4 py-2.5 text-sm font-medium text-[var(--surface)] hover:bg-[var(--ink-muted)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {t("consent.enable")}
-            </button>
-          </div>
         </div>
-      </div>
-    </div>
+      </ModalBody>
+
+      {/* Buttons */}
+      <ModalFooter className="flex-col sm:flex-row gap-3 px-6 pt-6 pb-6 md:px-6 md:pb-6">
+        <button
+          onClick={() => handleChoice("decline")}
+          disabled={isLoading}
+          className="flex-1 rounded-lg border border-[var(--line-strong)] px-4 py-2.5 text-sm font-medium text-[var(--ink-muted)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {t("consent.decline")}
+        </button>
+        <button
+          onClick={() => handleChoice("enable")}
+          disabled={isLoading}
+          className="flex-1 rounded-lg bg-[var(--ink)] px-4 py-2.5 text-sm font-medium text-[var(--surface)] hover:bg-[var(--ink-muted)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {t("consent.enable")}
+        </button>
+      </ModalFooter>
+    </Modal>
   );
 }

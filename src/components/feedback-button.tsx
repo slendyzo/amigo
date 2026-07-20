@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useTranslations } from "next-intl";
 import { usePathname } from "next/navigation";
 import Image from "next/image";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type FeedbackType = "BUG" | "FEATURE" | null;
 
@@ -217,34 +218,35 @@ export default function FeedbackButton() {
       </button>
 
       {/* Modal */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          {/* Backdrop */}
-          <div
-            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
-            onClick={handleClose}
-          />
+      <Modal
+        isOpen={isOpen}
+        onClose={handleClose}
+        variant="dialog"
+        size="md"
+        zIndexClassName="z-50"
+        className="rounded-2xl"
+        style={{ background: "var(--surface)" }}
+      >
+        {/* Header */}
+        <ModalHeader showClose={false}>
+          <div className="px-6 py-4 border-b border-[var(--line)] bg-[var(--surface-2)] flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[var(--ink)]">
+              {t("title")}
+            </h2>
+            <button
+              onClick={handleClose}
+              className="p-1 rounded-full hover:bg-[var(--surface-3)] transition-colors"
+            >
+              <svg className="w-5 h-5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+        </ModalHeader>
 
-          {/* Modal Content */}
-          <div className="relative w-full max-w-md mx-4 bg-[var(--surface)] rounded-2xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
-            {/* Header */}
-            <div className="px-6 py-4 border-b border-[var(--line)] bg-[var(--surface-2)] flex items-center justify-between flex-shrink-0">
-              <h2 className="text-lg font-semibold text-[var(--ink)]">
-                {t("title")}
-              </h2>
-              <button
-                onClick={handleClose}
-                className="p-1 rounded-full hover:bg-[var(--surface-3)] transition-colors"
-              >
-                <svg className="w-5 h-5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            {/* Body */}
-            <div className="p-6 overflow-y-auto">
-              {submitted ? (
+        {/* Body */}
+        <ModalBody className="p-6">
+          {submitted ? (
                 /* Success State */
                 <div className="text-center py-8">
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-green-100 flex items-center justify-center">
@@ -408,20 +410,23 @@ export default function FeedbackButton() {
                     </div>
                   )}
 
-                  {/* Submit Button */}
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!message.trim() || isSubmitting || isUploading}
-                    className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-[var(--accent-fg)] font-medium hover:bg-[var(--accent-strong)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {isUploading ? t("uploading") : isSubmitting ? t("submitting") : t("submit")}
-                  </button>
                 </div>
               )}
-            </div>
-          </div>
-        </div>
-      )}
+        </ModalBody>
+
+        {/* Submit Button — pinned so it can never scroll out of reach */}
+        {!submitted && step === "form" && (
+          <ModalFooter className="px-6 pb-6 pt-4 md:px-6 md:pb-6">
+            <button
+              onClick={handleSubmit}
+              disabled={!message.trim() || isSubmitting || isUploading}
+              className="w-full rounded-xl bg-[var(--accent)] px-4 py-3 text-[var(--accent-fg)] font-medium hover:bg-[var(--accent-strong)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isUploading ? t("uploading") : isSubmitting ? t("submitting") : t("submit")}
+            </button>
+          </ModalFooter>
+        )}
+      </Modal>
     </>
   );
 }

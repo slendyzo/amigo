@@ -6,6 +6,7 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { ArrowLeft, Plus, Lock, Unlock, Pencil, Trash2 } from "lucide-react";
 import NudgeProjectCard from "@/components/nudge-project-card";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type Project = {
   id: string;
@@ -396,20 +397,23 @@ export default function ProjectsPage() {
       )}
 
       {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setIsModalOpen(false)} />
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="relative mx-4 w-full max-w-md rounded-[20px] p-6"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
-          >
-            <h2 className="mb-4 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
-              {editingProject ? t("editProject") : t("newProject")}
-            </h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
+      <Modal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        variant="dialog"
+        size="md"
+        as="form"
+        onSubmit={handleSubmit}
+        zIndexClassName="z-50"
+      >
+        <ModalHeader showClose={false} className="px-6 pt-6">
+          <h2 className="mb-4 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>
+            {editingProject ? t("editProject") : t("newProject")}
+          </h2>
+        </ModalHeader>
+
+        <ModalBody className="px-6 pb-0">
+            <div className="space-y-4">
               <div>
                 <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("name")}</label>
                 <input
@@ -465,63 +469,60 @@ export default function ProjectsPage() {
                   />
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-medium"
-                  style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting || !name}
-                  className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold disabled:opacity-50"
-                  style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-                >
-                  {isSubmitting ? t("saving") : tCommon("save")}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+            </div>
+        </ModalBody>
+
+        <ModalFooter className="gap-3 px-6 pb-6 pt-6 md:px-6 md:pb-6">
+          <button
+            type="button"
+            onClick={() => setIsModalOpen(false)}
+            className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-medium"
+            style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}
+          >
+            {tCommon("cancel")}
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting || !name}
+            className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+          >
+            {isSubmitting ? t("saving") : tCommon("save")}
+          </button>
+        </ModalFooter>
+      </Modal>
 
       {/* Delete Confirmation */}
-      {deleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setDeleteId(null)} />
-          <motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.35, ease: EASE }}
-            className="relative mx-4 max-w-sm rounded-[20px] p-6"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+      <Modal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        variant="dialog"
+        size="sm"
+        zIndexClassName="z-50"
+      >
+        <ModalBody className="px-6 pb-0 pt-6">
+          <h3 className="mb-2 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>{t("deleteProjectQuestion")}</h3>
+          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>
+            {t("expensesWillUnlink")}
+          </p>
+        </ModalBody>
+        <ModalFooter className="gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button
+            onClick={() => setDeleteId(null)}
+            className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-medium"
+            style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}
           >
-            <h3 className="mb-2 text-[17px] font-semibold" style={{ color: "var(--ink)" }}>{t("deleteProjectQuestion")}</h3>
-            <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>
-              {t("expensesWillUnlink")}
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={() => setDeleteId(null)}
-                className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-medium"
-                style={{ border: "1px solid var(--line-strong)", color: "var(--ink-muted)" }}
-              >
-                {tCommon("cancel")}
-              </button>
-              <button
-                onClick={() => handleDelete(deleteId)}
-                className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold text-white"
-                style={{ background: "var(--negative)" }}
-              >
-                {tCommon("delete")}
-              </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            {tCommon("cancel")}
+          </button>
+          <button
+            onClick={() => { if (deleteId) handleDelete(deleteId); }}
+            className="flex-1 rounded-[14px] px-4 py-2.5 text-[14px] font-semibold text-white"
+            style={{ background: "var(--negative)" }}
+          >
+            {tCommon("delete")}
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

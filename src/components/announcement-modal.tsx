@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 type AnnouncementModalProps = {
   isOpen: boolean;
@@ -101,9 +102,18 @@ export default function AnnouncementModal({
   // Render workspaces announcement
   if (announcementId === "workspaces-v1") {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
-          {/* Header with gradient */}
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        variant="dialog"
+        size="lg"
+        dismissable={false}
+        zIndexClassName="z-50"
+        className="rounded-2xl"
+        style={{ background: "var(--surface)" }}
+      >
+        {/* Header with gradient */}
+        <ModalHeader showClose={false}>
           <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -113,9 +123,11 @@ export default function AnnouncementModal({
             <h2 className="text-2xl font-bold mb-2">{t("workspaces.title")}</h2>
             <p className="text-white/80">{t("workspaces.subtitle")}</p>
           </div>
+        </ModalHeader>
 
-          {/* Features */}
-          <div className="px-6 py-6 space-y-4">
+        {/* Features */}
+        <ModalBody className="px-6 py-6">
+          <div className="space-y-4">
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-[var(--accent-tint)] rounded-lg flex items-center justify-center flex-shrink-0">
                 <svg className="w-5 h-5 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -161,35 +173,44 @@ export default function AnnouncementModal({
               </div>
             </div>
           </div>
+        </ModalBody>
 
-          {/* Actions */}
-          <div className="px-6 pb-6 flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={handleDismiss}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2.5 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] font-medium disabled:opacity-50 transition-colors"
-            >
-              {t("workspaces.dismiss")}
-            </button>
-            <button
-              onClick={handleExplore}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] font-medium disabled:opacity-50 transition-colors"
-            >
-              {t("workspaces.explore")}
-            </button>
-          </div>
-        </div>
-      </div>
+        {/* Actions */}
+        <ModalFooter className="flex-col sm:flex-row gap-3 px-6 pt-0 pb-6 md:px-6 md:pb-6">
+          <button
+            onClick={handleDismiss}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2.5 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] font-medium disabled:opacity-50 transition-colors"
+          >
+            {t("workspaces.dismiss")}
+          </button>
+          <button
+            onClick={handleExplore}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] font-medium disabled:opacity-50 transition-colors"
+          >
+            {t("workspaces.explore")}
+          </button>
+        </ModalFooter>
+      </Modal>
     );
   }
 
   // Render unified transactions announcement
   if (announcementId === "unified-transactions-v1") {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
-          {/* Header with gradient */}
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        variant="dialog"
+        size="lg"
+        dismissable={false}
+        zIndexClassName="z-50"
+        className="rounded-2xl"
+        style={{ background: "var(--surface)" }}
+      >
+        {/* Header with gradient */}
+        <ModalHeader showClose={false}>
           <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,9 +220,11 @@ export default function AnnouncementModal({
             <h2 className="text-2xl font-bold mb-2">{t("unified_transactions.title")}</h2>
             <p className="text-white/80">{t("unified_transactions.subtitle")}</p>
           </div>
+        </ModalHeader>
 
-          {/* Features */}
-          <div className="px-6 py-6 space-y-4">
+        {/* Features */}
+        <ModalBody className="px-6 py-6">
+          <div className="space-y-4">
             {/* Feature 1: Unified Timeline */}
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -254,28 +277,37 @@ export default function AnnouncementModal({
               </div>
             </div>
           </div>
+        </ModalBody>
 
-          {/* Actions */}
-          <div className="px-6 pb-6">
-            <button
-              onClick={handleDismiss}
-              disabled={isLoading}
-              className="w-full px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium disabled:opacity-50 transition-colors"
-            >
-              {t("unified_transactions.dismiss")}
-            </button>
-          </div>
-        </div>
-      </div>
+        {/* Actions */}
+        <ModalFooter className="px-6 pt-0 pb-6 md:px-6 md:pb-6">
+          <button
+            onClick={handleDismiss}
+            disabled={isLoading}
+            className="w-full px-4 py-2.5 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 font-medium disabled:opacity-50 transition-colors"
+          >
+            {t("unified_transactions.dismiss")}
+          </button>
+        </ModalFooter>
+      </Modal>
     );
   }
 
   // Render scheduled expenses announcement
   if (announcementId === "scheduled-expenses-v1") {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
-          {/* Header with gradient */}
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        variant="dialog"
+        size="lg"
+        dismissable={false}
+        zIndexClassName="z-50"
+        className="rounded-2xl"
+        style={{ background: "var(--surface)" }}
+      >
+        {/* Header with gradient */}
+        <ModalHeader showClose={false}>
           <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,9 +317,11 @@ export default function AnnouncementModal({
             <h2 className="text-2xl font-bold mb-2">{t("scheduled_expenses.title")}</h2>
             <p className="text-white/80">{t("scheduled_expenses.subtitle")}</p>
           </div>
+        </ModalHeader>
 
-          {/* Features */}
-          <div className="px-6 py-6 space-y-4">
+        {/* Features */}
+        <ModalBody className="px-6 py-6">
+          <div className="space-y-4">
             {/* Feature 1: Plan Ahead */}
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-[var(--accent-tint)] rounded-lg flex items-center justify-center flex-shrink-0">
@@ -327,28 +361,37 @@ export default function AnnouncementModal({
               </div>
             </div>
           </div>
+        </ModalBody>
 
-          {/* Actions */}
-          <div className="px-6 pb-6">
-            <button
-              onClick={handleDismiss}
-              disabled={isLoading}
-              className="w-full px-4 py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] font-medium disabled:opacity-50 transition-colors"
-            >
-              {t("scheduled_expenses.dismiss")}
-            </button>
-          </div>
-        </div>
-      </div>
+        {/* Actions */}
+        <ModalFooter className="px-6 pt-0 pb-6 md:px-6 md:pb-6">
+          <button
+            onClick={handleDismiss}
+            disabled={isLoading}
+            className="w-full px-4 py-2.5 bg-[var(--accent)] text-[var(--accent-fg)] rounded-lg hover:bg-[var(--accent-strong)] font-medium disabled:opacity-50 transition-colors"
+          >
+            {t("scheduled_expenses.dismiss")}
+          </button>
+        </ModalFooter>
+      </Modal>
     );
   }
 
   // Render category groups announcement
   if (announcementId === "category-groups-v1") {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-        <div className="bg-[var(--surface)] rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in duration-300">
-          {/* Header with gradient */}
+      <Modal
+        isOpen={isOpen}
+        onClose={onClose}
+        variant="dialog"
+        size="lg"
+        dismissable={false}
+        zIndexClassName="z-50"
+        className="rounded-2xl"
+        style={{ background: "var(--surface)" }}
+      >
+        {/* Header with gradient */}
+        <ModalHeader showClose={false}>
           <div className={`bg-gradient-to-r ${config.gradient} px-6 py-8 text-white text-center`}>
             <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
               <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -358,9 +401,11 @@ export default function AnnouncementModal({
             <h2 className="text-2xl font-bold mb-2">{t("category_groups.title")}</h2>
             <p className="text-white/80">{t("category_groups.subtitle")}</p>
           </div>
+        </ModalHeader>
 
-          {/* Features */}
-          <div className="px-6 py-6 space-y-4">
+        {/* Features */}
+        <ModalBody className="px-6 py-6">
+          <div className="space-y-4">
             {/* Feature 1: Organized Groups */}
             <div className="flex items-start gap-4">
               <div className="w-10 h-10 bg-violet-100 rounded-lg flex items-center justify-center flex-shrink-0">
@@ -400,26 +445,26 @@ export default function AnnouncementModal({
               </div>
             </div>
           </div>
+        </ModalBody>
 
-          {/* Actions */}
-          <div className="px-6 pb-6 flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={handleDismiss}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2.5 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] font-medium disabled:opacity-50 transition-colors"
-            >
-              {t("category_groups.dismiss")}
-            </button>
-            <button
-              onClick={handleExplore}
-              disabled={isLoading}
-              className="flex-1 px-4 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 font-medium disabled:opacity-50 transition-colors"
-            >
-              {t("category_groups.explore")}
-            </button>
-          </div>
-        </div>
-      </div>
+        {/* Actions */}
+        <ModalFooter className="flex-col sm:flex-row gap-3 px-6 pt-0 pb-6 md:px-6 md:pb-6">
+          <button
+            onClick={handleDismiss}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2.5 border border-[var(--line-strong)] text-[var(--ink-muted)] rounded-lg hover:bg-[var(--surface-2)] font-medium disabled:opacity-50 transition-colors"
+          >
+            {t("category_groups.dismiss")}
+          </button>
+          <button
+            onClick={handleExplore}
+            disabled={isLoading}
+            className="flex-1 px-4 py-2.5 bg-violet-600 text-white rounded-lg hover:bg-violet-700 font-medium disabled:opacity-50 transition-colors"
+          >
+            {t("category_groups.explore")}
+          </button>
+        </ModalFooter>
+      </Modal>
     );
   }
 

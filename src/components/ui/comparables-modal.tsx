@@ -8,13 +8,12 @@
 // Layout: bottom sheet on mobile, centered modal on desktop.
 
 import { useEffect, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { ExternalLink, Loader2, X } from "lucide-react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
 import { formatCurrency } from "@/lib/currencies";
 import { cn } from "@/lib/utils";
+import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
 
-const EASE = [0.16, 1, 0.3, 1] as const;
 const MAX_VISIBLE = 50;
 
 type Listing = {
@@ -126,125 +125,83 @@ export function ComparablesModal({
     };
   }, [isOpen, assetId]);
 
-  // ESC to close
-  useEffect(() => {
-    if (!isOpen) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, onClose]);
-
-  // Lock body scroll while open
-  useEffect(() => {
-    if (!isOpen) return;
-    const original = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = original;
-    };
-  }, [isOpen]);
-
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
-          role="dialog"
-          aria-modal="true"
-        >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="absolute inset-0 bg-black/40 backdrop-blur-sm"
+    <Modal isOpen={isOpen} onClose={onClose} variant="sheet" size="xl">
+      <ModalHeader showClose={false}>
+        <header className="flex items-start justify-between gap-3 border-b border-border/40 px-5 py-4">
+          <div className="min-w-0">
+            <h2 className="truncate text-base font-semibold">
+              {t("title", { value: formatCurrency(currentValueEur, "EUR") })}
+            </h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">{t("subtitle")}</p>
+          </div>
+          <button
             onClick={onClose}
-          />
-          <motion.div
-            initial={{ y: "100%", opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: "100%", opacity: 0 }}
-            transition={{ duration: 0.4, ease: EASE }}
-            className="relative z-10 flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-t-3xl bg-card shadow-2xl md:max-h-[80vh] md:rounded-2xl"
+            className="-mr-1 rounded-lg p-1 text-muted-foreground hover:bg-muted"
+            aria-label={t("closeButton")}
           >
-            <header className="flex items-start justify-between gap-3 border-b border-border/40 px-5 py-4">
-              <div className="min-w-0">
-                <h2 className="truncate text-base font-semibold">
-                  {t("title", { value: formatCurrency(currentValueEur, "EUR") })}
-                </h2>
-                <p className="mt-0.5 text-xs text-muted-foreground">{t("subtitle")}</p>
-              </div>
-              <button
-                onClick={onClose}
-                className="-mr-1 rounded-lg p-1 text-muted-foreground hover:bg-muted"
-                aria-label={t("closeButton")}
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </header>
+            <X className="h-4 w-4" />
+          </button>
+        </header>
+      </ModalHeader>
 
-            <div className="flex-1 overflow-y-auto px-5 py-4">
-              {data == null && error == null && (
-                <div className="flex items-center justify-center py-12">
-                  <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                </div>
-              )}
+      <ModalBody className="px-5 py-4">
+        {data == null && error == null && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+          </div>
+        )}
 
-              {error && (
-                <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-sm text-rose-500">
-                  {t("loadError")}
-                </div>
-              )}
+        {error && (
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-3 text-sm text-rose-500">
+            {t("loadError")}
+          </div>
+        )}
 
-              {data?.available === false && (
-                <div className="rounded-xl bg-muted/40 px-4 py-6 text-center text-sm text-muted-foreground">
-                  {t("empty")}
-                </div>
-              )}
+        {data?.available === false && (
+          <div className="rounded-xl bg-muted/40 px-4 py-6 text-center text-sm text-muted-foreground">
+            {t("empty")}
+          </div>
+        )}
 
-              {data?.available === true && (
-                <>
-                  <SummaryBar
-                    summary={data.summary}
-                    locale={locale}
-                    formatter={formatter}
+        {data?.available === true && (
+          <>
+            <SummaryBar
+              summary={data.summary}
+              locale={locale}
+              formatter={formatter}
+              t={t}
+            />
+            <UserReference summary={data.summary} t={t} tRwa={tRwa} />
+
+            <ul className="mt-3 divide-y divide-border/40 rounded-xl border border-border/40 bg-card/80">
+              {(showAll ? data.listings : data.listings.slice(0, MAX_VISIBLE)).map(
+                (l, i) => (
+                  <ListingRow
+                    key={i}
+                    listing={l}
+                    isVehicle={data.summary.userAsset.assetType === "vehicle"}
                     t={t}
+                    tRwa={tRwa}
                   />
-                  <UserReference summary={data.summary} t={t} tRwa={tRwa} />
-
-                  <ul className="mt-3 divide-y divide-border/40 rounded-xl border border-border/40 bg-card/80">
-                    {(showAll ? data.listings : data.listings.slice(0, MAX_VISIBLE)).map(
-                      (l, i) => (
-                        <ListingRow
-                          key={i}
-                          listing={l}
-                          isVehicle={data.summary.userAsset.assetType === "vehicle"}
-                          t={t}
-                          tRwa={tRwa}
-                        />
-                      ),
-                    )}
-                  </ul>
-
-                  {data.listings.length > MAX_VISIBLE && (
-                    <button
-                      onClick={() => setShowAll((v) => !v)}
-                      className="mt-3 w-full rounded-lg border border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground"
-                    >
-                      {showAll
-                        ? t("showLess")
-                        : t("showAll", { n: data.listings.length })}
-                    </button>
-                  )}
-                </>
+                ),
               )}
-            </div>
-          </motion.div>
-        </div>
-      )}
-    </AnimatePresence>
+            </ul>
+
+            {data.listings.length > MAX_VISIBLE && (
+              <button
+                onClick={() => setShowAll((v) => !v)}
+                className="mt-3 w-full rounded-lg border border-border/60 px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/50 hover:text-foreground"
+              >
+                {showAll
+                  ? t("showLess")
+                  : t("showAll", { n: data.listings.length })}
+              </button>
+            )}
+          </>
+        )}
+      </ModalBody>
+    </Modal>
   );
 }
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Home, Loader2, X, AlertCircle } from "lucide-react";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
@@ -9,8 +8,7 @@ import { detectSuspiciousAmount, formatEuro } from "@/lib/parse-amount";
 import { buildStaticMap } from "@/lib/static-map";
 import { StaticMapView } from "@/components/ui/static-map-view";
 import { cn } from "@/lib/utils";
-
-const EASE = [0.16, 1, 0.3, 1] as const;
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 const PROPERTY_TYPES = ["APARTMENT", "HOUSE", "LAND", "COMMERCIAL", "OTHER"] as const;
 const ENERGY_RATINGS = ["A_PLUS", "A", "B", "B_MINUS", "C", "D", "E", "F"] as const;
@@ -92,14 +90,6 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
   const [priceConfirmed, setPriceConfirmed] = useState<number | null>(null);
   const priceCheck = useMemo(() => detectSuspiciousAmount(purchasePrice), [purchasePrice]);
 
-  // Lock scroll while modal open.
-  useEffect(() => {
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = "";
-    };
-  }, []);
-
   // If the user edits the postal code, clear any prior geocode error so the
   // next save attempt isn't shown the stale message.
   useEffect(() => {
@@ -178,26 +168,14 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
   };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center md:items-center"
-      role="dialog"
-      aria-modal="true"
+    <Modal
+      isOpen
+      onClose={onClose}
+      variant="sheet"
+      size="md"
+      dismissable={!submitting}
     >
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        transition={{ duration: 0.25 }}
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={submitting ? undefined : onClose}
-      />
-      <motion.div
-        initial={{ y: "100%", opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: "100%", opacity: 0 }}
-        transition={{ duration: 0.45, ease: EASE }}
-        className="relative z-10 flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-3xl bg-card shadow-2xl md:max-h-[88vh] max-w-md md:rounded-2xl"
-      >
+      <ModalHeader showClose={false}>
         <header className="flex items-center justify-between border-b border-border/50 px-5 py-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-violet-500/10">
@@ -216,9 +194,10 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
             <X className="h-4 w-4" />
           </button>
         </header>
+      </ModalHeader>
 
-        <div className="flex-1 overflow-y-auto px-5 py-4">
-          <div className="space-y-6">
+      <ModalBody className="px-5 py-4">
+        <div className="space-y-6">
             {/* Location */}
             <Section title={t("editSectionLocation")}>
               <Field label={t("propertyType")}>
@@ -425,10 +404,10 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
             {error && (
               <p className="rounded-lg bg-rose-500/10 px-3 py-2 text-sm text-rose-500">{error}</p>
             )}
-          </div>
         </div>
+      </ModalBody>
 
-        <footer className="flex items-center justify-end gap-2 border-t border-border/50 bg-card px-5 py-3">
+      <ModalFooter className="items-center justify-end gap-2">
           <button
             type="button"
             onClick={onClose}
@@ -446,9 +425,8 @@ export default function EditPropertyModal({ asset, property, onClose, onSaved }:
             {submitting && <Loader2 className="h-4 w-4 animate-spin" />}
             {submitting ? t("saving") : t("editSave")}
           </button>
-        </footer>
-      </motion.div>
-    </div>
+      </ModalFooter>
+    </Modal>
   );
 }
 

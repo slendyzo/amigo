@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import MoneyHubTabs from "@/components/money-hub-tabs";
 import MerchantAvatar from "@/components/ui/merchant-avatar";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { formatCurrency, getCurrencySymbol as currencySymbol } from "@/lib/currencies";
 
 type BankAccount = { id: string; name: string };
@@ -302,27 +303,10 @@ export default function IncomesPage() {
       </motion.button>
 
       {/* Add/Edit Modal — bottom sheet */}
-      {showModal && (
-        <div className="fixed inset-0 z-[60] flex items-end justify-center md:items-center">
-          <div className="absolute inset-0" style={{ background: "rgba(23,22,31,.45)" }} onClick={closeModal} />
-          <motion.div
-            initial={{ y: "100%" }}
-            animate={{ y: 0 }}
-            transition={{ duration: 0.32, ease: EASE }}
-            className="relative flex max-h-[92vh] w-full flex-col overflow-hidden rounded-t-[28px] md:mx-4 md:max-w-lg md:rounded-[28px]"
-            style={{ background: "var(--app-bg)" }}
-          >
-            <div className="flex-none px-5 pt-3">
-              <div className="mx-auto mb-3 h-1 w-10 rounded-full md:hidden" style={{ background: "rgba(23,22,31,.15)" }} />
-              <div className="flex items-center justify-between pb-1">
-                <h2 className="text-[17px] font-bold">{editingId ? t("editIncome") : t("addIncome")}</h2>
-                <button type="button" onClick={closeModal} className="tap-none flex h-8 w-8 items-center justify-center rounded-full" style={{ background: "var(--surface)", ...cardShadow }}>
-                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-muted)" strokeWidth="2"><path d="M6 6l12 12M18 6L6 18" /></svg>
-                </button>
-              </div>
-            </div>
+      <Modal isOpen={showModal} onClose={closeModal} variant="sheet" size="lg" flush>
+            <ModalHeader title={editingId ? t("editIncome") : t("addIncome")} />
 
-            <div className="flex-1 space-y-3 overflow-y-auto scroll-touch px-5 pb-6 pt-2">
+            <ModalBody className="space-y-3 pb-6 pt-2">
               {/* Name + amount card */}
               <div className="space-y-3 rounded-[18px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
                 <input
@@ -434,10 +418,10 @@ export default function IncomesPage() {
                   {t("deleteIncome")}
                 </button>
               )}
-            </div>
+            </ModalBody>
 
             {/* Footer */}
-            <div className="flex-none px-5 pb-safe pt-3" style={{ borderTop: "1px solid var(--line)", background: "var(--surface)" }}>
+            <ModalFooter className="px-5">
               <button
                 onClick={handleSubmit}
                 disabled={isSaving || !formData.name || !formData.amount}
@@ -446,10 +430,8 @@ export default function IncomesPage() {
               >
                 {isSaving ? t("saving") : editingId ? t("update") : t("addIncome")}
               </button>
-            </div>
-          </motion.div>
-        </div>
-      )}
+            </ModalFooter>
+      </Modal>
     </div>
   );
 }

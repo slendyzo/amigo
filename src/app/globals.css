@@ -271,6 +271,50 @@ body.modal-open .mobile-nav-bar {
   padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
 }
 
+/* ---------------------------------------------------------------------------
+   Modal system (see src/components/ui/modal.tsx)
+   --------------------------------------------------------------------------- */
+
+/* Modals are sized against the *visual* viewport, not the layout viewport.
+   dvh accounts for browser chrome but not for the on-screen keyboard, so a
+   92dvh panel keeps its footer behind the keyboard. --vvh/--vvo are published
+   by useVisualViewport and track the keyboard; dvh is the first-paint fallback. */
+.modal-viewport {
+  top: var(--vvo, 0px);
+  height: var(--vvh, 100dvh);
+}
+
+@supports not (height: 100dvh) {
+  .modal-viewport {
+    height: var(--vvh, 100vh);
+  }
+}
+
+/* Never taller than what's visible, with a little breathing room at the edge. */
+.modal-panel {
+  max-height: calc(100% - 1.5rem);
+}
+
+/* The divider is transparent until the body actually overflows, so short
+   dialogs pick up no new hairline. */
+.modal-footer {
+  border-top: 1px solid transparent;
+  transition:
+    border-color 300ms cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-footer.is-scrollable {
+  border-top-color: var(--line);
+  box-shadow: 0 -8px 20px -12px rgba(23, 22, 31, 0.25);
+}
+
+/* Bottom sheets sit flush against the screen edge, so their footer must clear
+   the home indicator. Centered dialogs float and don't need it. */
+.modal-footer--safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 0px), 0.875rem);
+}
+
 /* Install prompt animation */
 @keyframes slide-up {
   from {

@@ -4,7 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 import {
   BarChart,
   Bar,
@@ -112,29 +113,32 @@ export default function RetrospectiveModal({
   const indices = ["01", "02", "03"] as const;
 
   return (
-    <AnimatePresence>
-      {isOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <motion.div
-            initial={{ opacity: 0, y: 8, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 8, scale: 0.98 }}
-            transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-            className="w-full max-w-lg bg-[var(--surface)] rounded-xl shadow-xl overflow-hidden"
-          >
-            {/* Header strip */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.35, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-              className="px-6 py-3 border-b border-[var(--line)]"
-            >
-              <span className="text-xs font-medium uppercase tracking-wider text-[var(--ink-subtle)]">
-                {periodLabel}
-              </span>
-            </motion.div>
+    <Modal
+      isOpen={isOpen}
+      onClose={handleClose}
+      variant="dialog"
+      size="lg"
+      dismissable={false}
+      zIndexClassName="z-50"
+      className="rounded-xl"
+      style={{ background: "var(--surface)" }}
+    >
+      {/* Header strip */}
+      <ModalHeader showClose={false}>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.35, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+          className="px-6 py-3 border-b border-[var(--line)]"
+        >
+          <span className="text-xs font-medium uppercase tracking-wider text-[var(--ink-subtle)]">
+            {periodLabel}
+          </span>
+        </motion.div>
+      </ModalHeader>
 
-            <div className="px-6 pt-5 pb-6 space-y-5">
+      <ModalBody className="px-6 pt-5 pb-0">
+        <div className="space-y-5">
               {/* Headline */}
               <motion.h2
                 initial={{ opacity: 0, y: 6 }}
@@ -206,33 +210,33 @@ export default function RetrospectiveModal({
                   </BarChart>
                 </ResponsiveContainer>
               </motion.div>
-
-              {/* Footer */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-1 border-t border-[var(--line)]"
-              >
-                <Link
-                  href="/dashboard/insights"
-                  onClick={handleClose}
-                  className="text-xs text-[var(--ink-subtle)] hover:text-[var(--ink)] transition-colors underline underline-offset-2"
-                >
-                  {t("retrospective.viewArchive")}
-                </Link>
-                <button
-                  onClick={handleClose}
-                  disabled={isClosing}
-                  className="sm:ml-auto rounded-lg border border-[var(--line-strong)] px-5 py-2 text-sm font-medium text-[var(--ink-muted)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {tCommon("close")}
-                </button>
-              </motion.div>
-            </div>
-          </motion.div>
         </div>
-      )}
-    </AnimatePresence>
+      </ModalBody>
+
+      {/* Footer */}
+      <ModalFooter className="px-6 pt-5 pb-6 md:px-6 md:pb-6">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3, delay: 0.28, ease: [0.16, 1, 0.3, 1] }}
+          className="flex w-full flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+        >
+          <Link
+            href="/dashboard/insights"
+            onClick={handleClose}
+            className="text-xs text-[var(--ink-subtle)] hover:text-[var(--ink)] transition-colors underline underline-offset-2"
+          >
+            {t("retrospective.viewArchive")}
+          </Link>
+          <button
+            onClick={handleClose}
+            disabled={isClosing}
+            className="sm:ml-auto rounded-lg border border-[var(--line-strong)] px-5 py-2 text-sm font-medium text-[var(--ink-muted)] hover:bg-[var(--surface-2)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {tCommon("close")}
+          </button>
+        </motion.div>
+      </ModalFooter>
+    </Modal>
   );
 }

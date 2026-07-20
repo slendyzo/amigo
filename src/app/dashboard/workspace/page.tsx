@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import { ChevronLeft, ChevronDown, Pencil, Trash2, Users, User } from "lucide-react";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
 
 interface Member {
   id: string;
@@ -690,61 +691,58 @@ export default function WorkspacePage() {
       </div>
 
       {/* Create workspace modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 backdrop-blur-sm"
-            style={{ background: "rgba(23,22,31,0.5)" }}
+      <Modal
+        isOpen={showCreateModal}
+        onClose={() => {
+          setShowCreateModal(false);
+          router.replace("/dashboard/workspace");
+        }}
+        variant="dialog"
+        size="md"
+        as="form"
+        onSubmit={handleCreateWorkspace}
+        zIndexClassName="z-50"
+      >
+        <ModalHeader showClose={false} className="px-6 pt-6">
+          <h2 className="mb-4 text-[18px] font-bold" style={{ color: "var(--ink)" }}>
+            {t("createWorkspace")}
+          </h2>
+        </ModalHeader>
+
+        <ModalBody className="px-6 pb-0">
+          <input
+            type="text"
+            value={newWorkspaceName}
+            onChange={(e) => setNewWorkspaceName(e.target.value)}
+            placeholder={t("workspaceNamePlaceholder")}
+            className={`${inputCls} mb-4`}
+            style={ctrlStyle}
+            autoFocus
+          />
+        </ModalBody>
+
+        <ModalFooter className="justify-end gap-3 px-6 pb-6 pt-0 md:px-6 md:pb-6">
+          <button
+            type="button"
             onClick={() => {
               setShowCreateModal(false);
               router.replace("/dashboard/workspace");
             }}
-          />
-          <motion.div
-            initial={{ opacity: 0, y: 12, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.3, ease: EASE }}
-            className="relative w-full max-w-md rounded-[20px] p-6"
-            style={{ background: "var(--surface)", boxShadow: "var(--shadow-pop)" }}
+            className="rounded-[18px] px-4 py-2.5 text-[14px] font-semibold"
+            style={{ color: "var(--ink-muted)" }}
           >
-            <h2 className="mb-4 text-[18px] font-bold" style={{ color: "var(--ink)" }}>
-              {t("createWorkspace")}
-            </h2>
-            <form onSubmit={handleCreateWorkspace}>
-              <input
-                type="text"
-                value={newWorkspaceName}
-                onChange={(e) => setNewWorkspaceName(e.target.value)}
-                placeholder={t("workspaceNamePlaceholder")}
-                className={`${inputCls} mb-4`}
-                style={ctrlStyle}
-                autoFocus
-              />
-              <div className="flex justify-end gap-3">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowCreateModal(false);
-                    router.replace("/dashboard/workspace");
-                  }}
-                  className="rounded-[18px] px-4 py-2.5 text-[14px] font-semibold"
-                  style={{ color: "var(--ink-muted)" }}
-                >
-                  {tCommon("cancel")}
-                </button>
-                <button
-                  type="submit"
-                  disabled={isCreating || !newWorkspaceName.trim()}
-                  className="rounded-[18px] px-4 py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98] disabled:opacity-50"
-                  style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
-                >
-                  {isCreating ? t("creating") : tCommon("create")}
-                </button>
-              </div>
-            </form>
-          </motion.div>
-        </div>
-      )}
+            {tCommon("cancel")}
+          </button>
+          <button
+            type="submit"
+            disabled={isCreating || !newWorkspaceName.trim()}
+            className="rounded-[18px] px-4 py-2.5 text-[14px] font-semibold transition-transform active:scale-[.98] disabled:opacity-50"
+            style={{ background: "var(--accent)", color: "var(--accent-fg)" }}
+          >
+            {isCreating ? t("creating") : tCommon("create")}
+          </button>
+        </ModalFooter>
+      </Modal>
     </div>
   );
 }

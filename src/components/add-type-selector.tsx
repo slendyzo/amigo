@@ -3,6 +3,7 @@
 import { useState, lazy, Suspense } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
 
 // Lazy-load all modals to avoid pulling tesseract.js (~300KB) and other heavy deps into initial bundle
 const AddExpenseModal = lazy(() => import("./add-expense-modal"));
@@ -88,40 +89,36 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
   return (
     <>
       {/* Selector UI - only show when selector is active and no modal is open */}
-      {showSelector && (
-        <>
-          {/* Backdrop */}
-          <div
-            className="fixed inset-0 z-50 transition-opacity"
-            style={{ background: "rgba(23,22,31,.45)" }}
-            onClick={onClose}
-          />
+      <Modal
+        isOpen={showSelector}
+        onClose={onClose}
+        variant="sheet"
+        size="md"
+        zIndexClassName="z-50"
+        className="mx-0 md:mx-4"
+      >
+        {/* Header */}
+        <ModalHeader showClose={false}>
+          <div className="px-6 py-4 border-b border-[var(--line)]">
+            <div className="flex items-center justify-between">
+              <h3 className="text-[17px] font-bold text-[var(--ink)]">{t("add")}</h3>
+              <button
+                onClick={onClose}
+                className="w-8 h-8 flex items-center justify-center rounded-full transition-colors text-[var(--ink-subtle)] hover:text-[var(--ink)]"
+                style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <p className="text-sm text-[var(--ink-muted)] mt-1">{t("selectType")}</p>
+          </div>
+        </ModalHeader>
 
-          {/* Selector Menu - appears from bottom on mobile, centered on desktop */}
-          <div className="fixed inset-0 z-50 flex items-end justify-center">
-            <div
-              className="rounded-t-[28px] max-w-md w-full animate-slide-up"
-              style={{ background: "var(--app-bg)", boxShadow: "var(--shadow-pop)" }}
-            >
-              {/* Header */}
-              <div className="px-6 py-4 border-b border-[var(--line)]">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[17px] font-bold text-[var(--ink)]">{t("add")}</h3>
-                  <button
-                    onClick={onClose}
-                    className="w-8 h-8 flex items-center justify-center rounded-full transition-colors text-[var(--ink-subtle)] hover:text-[var(--ink)]"
-                    style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
-                  >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                  </button>
-                </div>
-                <p className="text-sm text-[var(--ink-muted)] mt-1">{t("selectType")}</p>
-              </div>
-
-              {/* Options */}
-              <div className="p-4 space-y-3">
+        {/* Options — these are the content, so there is no footer row */}
+        <ModalBody className="p-4 pb-safe">
+          <div className="space-y-3">
                 {/* Expense Option */}
                 <button
                   onClick={handleExpenseClick}
@@ -243,14 +240,9 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </button>
-              </div>
-
-              {/* Safe area padding for mobile */}
-              <div className="pb-safe" />
-            </div>
           </div>
-        </>
-      )}
+        </ModalBody>
+      </Modal>
 
       {/* Modals - lazy loaded, only rendered when their state is true */}
       {showExpenseModal && (
