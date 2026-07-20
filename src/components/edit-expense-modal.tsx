@@ -16,6 +16,7 @@ import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
 import ExpenseImageUpload from "./expense-image-upload";
 import ExpenseSplitSection from "./expense-split-section";
 import { type SplitPerson, parseSplitData } from "@/lib/split-utils";
+import { useSplitSync } from "@/hooks/use-split-sync";
 import type { Category, BankAccount, Project, Expense, ExpenseType } from "@/types/models";
 
 type EditExpenseModalProps = {
@@ -209,6 +210,10 @@ export default function EditExpenseModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!expense) return;
+    if (splitError) {
+      setError(splitError);
+      return;
+    }
 
     setIsLoading(true);
     setError("");
@@ -270,6 +275,17 @@ export default function EditExpenseModal({
 
   const isToday = date === getTodayDateString();
   const parsedAmount = parseAmount(amount);
+
+  // Owns split recalculation — see useSplitSync for why it can't live in the section.
+  const { splitError, setSplitError } = useSplitSync({
+    amount: isNaN(parsedAmount) ? 0 : parsedAmount,
+    splitEnabled,
+    splitCount,
+    splitPeople,
+    onSplitPeopleChange: setSplitPeople,
+    meLabel: t("split.meLabel"),
+    lockedExceedsMessage: t("split.lockedExceedsTotal"),
+  });
 
   // Derive display values for collapsed details card
   const selectedCategory = localCategories.find((c) => c.id === categoryId);
@@ -425,6 +441,8 @@ export default function EditExpenseModal({
                   splitPeople={splitPeople}
                   onSplitPeopleChange={setSplitPeople}
                   hideToggle
+                  error={splitError}
+                  onErrorChange={setSplitError}
                 />
               )}
               {parsedAmount <= 0 && (

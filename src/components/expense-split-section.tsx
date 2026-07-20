@@ -69,6 +69,10 @@ type ExpenseSplitSectionProps = {
   splitPeople: SplitPerson[] | null;
   onSplitPeopleChange: (people: SplitPerson[] | null) => void;
   hideToggle?: boolean;
+  /** Owned by the parent's useSplitSync — this section only renders while
+   *  "More options" is open, so it can't be the source of truth. */
+  error: string;
+  onErrorChange: (error: string) => void;
 };
 
 export default function ExpenseSplitSection({
@@ -81,44 +85,19 @@ export default function ExpenseSplitSection({
   splitPeople,
   onSplitPeopleChange,
   hideToggle = false,
+  error,
+  onErrorChange,
 }: ExpenseSplitSectionProps) {
   const t = useTranslations("modals.split");
   const meLabel = t("meLabel");
   const [showCustomize, setShowCustomize] = useState(false);
-  const [error, setError] = useState("");
 
-  // Recalculate when amount or count changes
-  useEffect(() => {
-    if (!splitEnabled || amount <= 0) return;
-
-    if (splitPeople && splitPeople.some((p) => p.locked)) {
-      // Recalculate keeping locked amounts
-      const adjusted =
-        splitPeople.length === splitCount
-          ? recalculateSplit(amount, splitPeople)
-          : null;
-      if (adjusted) {
-        setError("");
-        onSplitPeopleChange(adjusted);
-      } else if (splitPeople.length !== splitCount) {
-        // Count changed — reinitialize
-        onSplitPeopleChange(initializeSplit(amount, splitCount, meLabel));
-        setError("");
-      } else {
-        setError(t("lockedExceedsTotal"));
-      }
-    } else {
-      // No locked amounts — equal split
-      onSplitPeopleChange(initializeSplit(amount, splitCount, meLabel));
-      setError("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [amount, splitCount, splitEnabled]);
+  const setError = onErrorChange;
 
   const handleToggle = (enabled: boolean) => {
     onSplitEnabledChange(enabled);
     if (enabled && amount > 0) {
-      onSplitPeopleChange(initializeSplit(amount, splitCount, meLabel));
+      onSplitPeopleChange(initializeSplit(amount, splitCount, meLabel, splitPeople));
       setError("");
     } else if (!enabled) {
       onSplitPeopleChange(null);
@@ -323,13 +302,12 @@ export default function ExpenseSplitSection({
               </button>
             </div>
           ))}
-
-          {/* Error */}
-          {error && (
-            <p className="text-xs text-red-500 font-medium">{error}</p>
-          )}
         </div>
       )}
+
+      {/* Error — outside the customize panel so an invalid split is visible
+          even when the per-person rows are collapsed. */}
+      {error && <p className="text-xs text-red-500 font-medium">{error}</p>}
     </div>
   ) : null;
 

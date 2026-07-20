@@ -19,11 +19,20 @@ export function calculateEqualSplit(total: number, count: number): number[] {
 /**
  * Initialize a people array from count and total with equal split.
  * First person is always "Me" (the current user).
+ *
+ * `previous` carries custom labels across a re-initialization. Renaming a
+ * person doesn't lock their row, so without this any later amount/count
+ * change would reset the names back to "Person N".
  */
-export function initializeSplit(total: number, count: number, meLabel: string = "Me"): SplitPerson[] {
+export function initializeSplit(
+  total: number,
+  count: number,
+  meLabel: string = "Me",
+  previous?: SplitPerson[] | null
+): SplitPerson[] {
   const amounts = calculateEqualSplit(total, count);
   return amounts.map((amt, i) => ({
-    label: i === 0 ? meLabel : `Person ${i + 1}`,
+    label: previous?.[i]?.label || (i === 0 ? meLabel : `Person ${i + 1}`),
     amount: amt,
     locked: false,
   }));

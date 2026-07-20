@@ -17,6 +17,7 @@ import { parseQuickAdd, CATEGORY_VARIANTS } from "@/lib/parser";
 import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
 import ExpenseImageUpload from "./expense-image-upload";
 import ExpenseSplitSection from "./expense-split-section";
+import { useSplitSync } from "@/hooks/use-split-sync";
 import { type SplitPerson } from "@/lib/split-utils";
 import type { Category, BankAccount, Project, ExpenseType } from "@/types/models";
 
@@ -158,6 +159,32 @@ export default function AddExpenseModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
+  // Split recalculation lives here, not in ExpenseSplitSection — that section
+  // unmounts when "More options" is collapsed, which used to freeze the shares.
+  const { splitError, setSplitError } = useSplitSync({
+    amount: amountValue,
+    splitEnabled,
+    splitCount,
+    splitPeople,
+    onSplitPeopleChange: setSplitPeople,
+    meLabel: t("split.meLabel"),
+    lockedExceedsMessage: t("split.lockedExceedsTotal"),
+  });
+
+  // Why the Save button is disabled — surfaced instead of failing silently.
+  const noAmount = amountValue <= 0;
+  const noName = !rawInput.trim();
+  const blockedReason = splitError
+    ? splitError
+    : noAmount && noName
+      ? t("needBoth")
+      : noAmount
+        ? t("needAmount")
+        : noName
+          ? t("needName")
+          : "";
+  const canSubmit = !blockedReason;
+
   const isFutureDate = new Date(date) > new Date(getTodayDateString());
   const isToday = date === getTodayDateString();
 
@@ -225,7 +252,10 @@ export default function AddExpenseModal({
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (!hasParse) return;
+    if (!canSubmit) {
+      setError(blockedReason);
+      return;
+    }
     setIsLoading(true);
     setError("");
 
@@ -589,7 +619,7 @@ export default function AddExpenseModal({
                   </div>
                   {splitEnabled && amountValue > 0 && (
                     <div className="mt-3">
-                      <ExpenseSplitSection amount={amountValue} currency={currency} splitEnabled={splitEnabled} onSplitEnabledChange={setSplitEnabled} splitCount={splitCount} onSplitCountChange={setSplitCount} splitPeople={splitPeople} onSplitPeopleChange={setSplitPeople} hideToggle />
+                      <ExpenseSplitSection amount={amountValue} currency={currency} splitEnabled={splitEnabled} onSplitEnabledChange={setSplitEnabled} splitCount={splitCount} onSplitCountChange={setSplitCount} splitPeople={splitPeople} onSplitPeopleChange={setSplitPeople} hideToggle error={splitError} onErrorChange={setSplitError} />
                     </div>
                   )}
                   {splitEnabled && amountValue <= 0 && <p className="mt-2 text-[11px]" style={{ color: "var(--ink-subtle)" }}>{t("splitAmountHint")}</p>}
@@ -639,14 +669,21 @@ export default function AddExpenseModal({
           )}
 
           {/* Save */}
-          <button
-            type="submit"
-            disabled={isLoading || !hasParse}
-            className="tap-none w-full rounded-[18px] py-[15px] text-center text-[15px] font-semibold text-white transition-opacity"
-            style={{ background: hasParse && !isLoading ? "var(--accent)" : "var(--accent-faint)", boxShadow: hasParse ? "var(--shadow-fab)" : "none" }}
-          >
-            {isLoading ? t("adding") : t("saveExpense")}
-          </button>
+          <div className="flex flex-col gap-2">
+            <button
+              type="submit"
+              disabled={isLoading || !canSubmit}
+              className="tap-none w-full rounded-[18px] py-[15px] text-center text-[15px] font-semibold text-white transition-opacity"
+              style={{ background: canSubmit && !isLoading ? "var(--accent)" : "var(--accent-faint)", boxShadow: canSubmit ? "var(--shadow-fab)" : "none" }}
+            >
+              {isLoading ? t("adding") : t("saveExpense")}
+            </button>
+            {blockedReason && (
+              <p className="text-center text-[12px]" style={{ color: splitError ? "var(--danger, #ef4444)" : "var(--ink-subtle)" }}>
+                {blockedReason}
+              </p>
+            )}
+          </div>
         </div>
       </motion.form>
     </div>
