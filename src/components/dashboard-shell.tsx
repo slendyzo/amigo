@@ -178,7 +178,7 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
 
       {/* Main */}
       {/* The mobile app, centered in a phone-width column at every screen size */}
-      <div className="flex flex-col min-w-0 w-full max-w-[660px]">
+      <div className="flex flex-col min-w-0 w-full max-w-[792px]">
         {/* Mobile header */}
         <header className="md:hidden flex h-14 items-center justify-center px-4 sticky top-0 z-40 border-b"
           style={{ background: "var(--surface)", borderColor: "var(--line)" }}>

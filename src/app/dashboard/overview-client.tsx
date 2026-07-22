@@ -417,14 +417,18 @@ export default function DashboardOverview({
   // Budget value: workspace budget, falling back to expected recurring income
   // (existing behavior). Null → "Set a budget" CTA.
   const effectiveBudget = monthlyBudget ?? (expectedMonthlyIncome > 0 ? expectedMonthlyIncome : null);
-  const budgetPct = effectiveBudget && effectiveBudget > 0
-    ? Math.min((budgetSpent / effectiveBudget) * 100, 100)
-    : 0;
   const budgetLeft = (effectiveBudget ?? 0) - budgetSpent;
 
   const now = new Date();
   const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const daysToGo = daysInMonth - now.getDate();
+  const dayOfMonth = now.getDate();
+  // Today still counts as a spending day, so the allowance divides by the
+  // remaining days *including* today — never zero, even on the 31st.
+  const daysLeftInclusive = Math.max(daysInMonth - dayOfMonth + 1, 1);
+  const dailyAllowance = Math.max(Math.floor(budgetLeft / daysLeftInclusive), 0);
+  // Pace = where an evenly-spread budget would have you by end of today.
+  // Positive delta → under pace (good), negative → over pace.
+  const paceDelta = (effectiveBudget ?? 0) * (dayOfMonth / daysInMonth) - budgetSpent;
   const monthName = tTime(`months.${MONTH_KEYS[initialMonth]}`);
 
   // Whole-euro currency formatting for hero/budget numbers (locale-aware)
@@ -706,40 +710,98 @@ export default function DashboardOverview({
 
           {/* 3 — Budget card */}
           <motion.section {...sectionMotion(2)}>
-            <div className="rounded-[20px] px-[18px] py-4" style={{ background: "var(--surface)", ...cardShadow }}>
-              <div className="flex items-baseline justify-between">
-                <span className="text-[13px] font-semibold">{t("monthBudget", { month: monthName })}</span>
-                {effectiveBudget !== null && (
-                  <span className="text-[12px] tabular-nums" style={{ color: "var(--ink-muted)" }}>
-                    <b style={{ color: "var(--ink)" }}>{fmtEur0(budgetSpent)}</b> {t("ofBudgetShort", { budget: fmtEur0(effectiveBudget) })}
-                  </span>
-                )}
-              </div>
+            <div className="rounded-[20px] px-[18px] py-[18px]" style={{ background: "var(--surface)", ...cardShadow }}>
               {effectiveBudget !== null ? (
                 <>
-                  <div className="mt-2.5 h-2 overflow-hidden rounded-[4px]" style={{ background: "var(--surface-2)" }}>
-                    <motion.div
-                      className="h-full rounded-[4px]"
-                      style={{ background: "var(--bar-gradient)" }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${budgetPct}%` }}
-                      transition={{ duration: 0.5, ease: EASE }}
-                    />
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[13px] font-semibold">
+                      {budgetLeft < 0 ? t("budgetOverLabel") : t("safeToSpendToday")}
+                    </span>
+                    <span className="text-[12px]" style={{ color: "var(--ink-muted)" }}>{monthName}</span>
                   </div>
-                  <div className="mt-2 text-[11px]" style={{ color: "var(--ink-subtle)" }}>
-                    {budgetLeft >= 0
-                      ? t("budgetMetaLeft", { amount: fmtEur0(budgetLeft), days: daysToGo })
-                      : t("budgetMetaOver", { amount: fmtEur0(Math.abs(budgetLeft)), days: daysToGo })}
+
+                  <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
+                    <span
+                      className="text-[34px] font-bold leading-[1.05] tracking-[-0.03em] tabular-nums"
+                      style={budgetLeft < 0 ? { color: "var(--negative)" } : undefined}
+                    >
+                      {fmtEur0(budgetLeft < 0 ? Math.abs(budgetLeft) : dailyAllowance)}
+                    </span>
+                    <span className="text-[12px]" style={{ color: "var(--ink-muted)" }}>
+                      {budgetLeft < 0
+                        ? t("budgetOverSuffix", { month: monthName })
+                        : t("perDayFor", { days: daysLeftInclusive })}
+                    </span>
+                  </div>
+
+                  {/* Day strip — one bar per day, today accented and taller */}
+                  {/* max-w keeps the bars slim ticks on the wide desktop column
+                      instead of inflating into squares; the gaps absorb the space. */}
+                  <div className="mt-4 flex items-end justify-between gap-[3px]">
+                    {Array.from({ length: daysInMonth }, (_, i) => {
+                      const day = i + 1;
+                      const isToday = day === dayOfMonth;
+                      return (
+                        <motion.span
+                          key={day}
+                          className={`max-w-[16px] flex-1 rounded-[3px] ${
+                            isToday ? "h-[26px] md:h-[36px]" : "h-[20px] md:h-[28px]"
+                          }`}
+                          style={{
+                            transformOrigin: "bottom",
+                            background: isToday
+                              ? "var(--accent)"
+                              : day < dayOfMonth
+                                ? "var(--accent-faint)"
+                                : "var(--surface-2)",
+                          }}
+                          initial={{ scaleY: 0, opacity: 0 }}
+                          animate={{ scaleY: 1, opacity: 1 }}
+                          transition={{ duration: 0.45, ease: EASE, delay: 0.12 + i * 0.012 }}
+                        />
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-2.5 flex items-baseline justify-between gap-3">
+                    <span className="text-[11px] tabular-nums" style={{ color: "var(--ink-subtle)" }}>
+                      {t("budgetLeftOf", {
+                        left: fmtEur0(Math.max(budgetLeft, 0)),
+                        budget: fmtEur0(effectiveBudget),
+                      })}
+                    </span>
+                    <span
+                      className="whitespace-nowrap text-[11px] font-semibold tabular-nums"
+                      style={{
+                        color:
+                          Math.abs(paceDelta) < 1
+                            ? "var(--ink-subtle)"
+                            : paceDelta > 0
+                              ? "var(--positive)"
+                              : "var(--warning)",
+                      }}
+                    >
+                      {Math.abs(paceDelta) < 1
+                        ? t("budgetOnPace")
+                        : paceDelta > 0
+                          ? t("budgetUnderPace", { amount: fmtEur0(paceDelta) })
+                          : t("budgetOverPace", { amount: fmtEur0(-paceDelta) })}
+                    </span>
                   </div>
                 </>
               ) : (
-                <Link
-                  href="/dashboard/settings"
-                  className="mt-2.5 block text-[13px] font-semibold"
-                  style={{ color: "var(--accent)" }}
-                >
-                  {t("setBudgetCta")} →
-                </Link>
+                <>
+                  <div className="flex items-baseline justify-between gap-3">
+                    <span className="text-[13px] font-semibold">{t("monthBudget", { month: monthName })}</span>
+                  </div>
+                  <Link
+                    href="/dashboard/settings"
+                    className="mt-2.5 block text-[13px] font-semibold"
+                    style={{ color: "var(--accent)" }}
+                  >
+                    {t("setBudgetCta")} →
+                  </Link>
+                </>
               )}
             </div>
           </motion.section>
