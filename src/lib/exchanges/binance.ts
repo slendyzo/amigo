@@ -6,6 +6,7 @@ import {
   ExchangeDepositRecord,
   ExchangeTrade,
 } from "./types";
+import { makeCashPosition } from "@/lib/portfolio/cash";
 
 const BASE_URL = "https://api.binance.com";
 
@@ -294,13 +295,23 @@ export class BinanceClient implements ExchangeClient {
       20
     );
 
-    // 2. Filter non-dust, non-cash balances
+    // 2a. Cash (stablecoins + fiat) → surfaced as CASH holdings rather than
+    //     hidden in a single freeCash scalar.
+    const cashPositions: ExchangePosition[] = [];
+    for (const b of account.balances) {
+      const total = Number(b.free) + Number(b.locked);
+      if (total > DUST_THRESHOLD && CASH_CODES.has(b.asset)) {
+        cashPositions.push(makeCashPosition(b.asset, total, Number(b.locked)));
+      }
+    }
+
+    // 2b. Filter non-dust, non-cash balances (the crypto holdings)
     const holdings = account.balances.filter((b) => {
       const total = Number(b.free) + Number(b.locked);
       return total > DUST_THRESHOLD && !CASH_CODES.has(b.asset);
     });
 
-    if (holdings.length === 0) return [];
+    if (holdings.length === 0) return cashPositions;
 
     // 3. Fetch all prices once (weight: 2)
     const priceMap = await this.fetchPrices();
@@ -365,71 +376,23 @@ export class BinanceClient implements ExchangeClient {
       }
     }
 
-    return positions;
+    return [...positions, ...cashPositions];
   }
 
   // -------------------------------------------------------------------------
   // getAccountSummary
   // -------------------------------------------------------------------------
+  // Cash (stablecoins + fiat) is now surfaced as CASH positions by
+  // getPositions, so there's no separate freeCash to report here — returning it
+  // would double-count it in the portfolio total.
   async getAccountSummary(): Promise<ExchangeAccountSummary> {
-    const account = await this.privateGet<BinanceAccountResponse>(
-      "/api/v3/account",
-      {},
-      20
-    );
-
-    const priceMap = await this.fetchPrices();
-
-    // Approximate stablecoin/fiat rates to USDT (1:1 for stables, rough for EUR/GBP)
-    const toUSDT: Record<string, number> = {
-      USDT: 1,
-      USDC: 1,
-      BUSD: 1,
-      DAI: 1,
-      USD: 1,
-      EUR: 1.08,
-      GBP: 1.27,
-    };
-
-    let freeCash = 0;
-    let totalValue = 0;
-    let totalCost = 0;
-
-    for (const balance of account.balances) {
-      const total = Number(balance.free) + Number(balance.locked);
-      if (total <= DUST_THRESHOLD) continue;
-
-      if (CASH_CODES.has(balance.asset)) {
-        const rate = toUSDT[balance.asset] ?? 1;
-        freeCash += total * rate;
-        totalValue += total * rate;
-        continue;
-      }
-
-      // Crypto — value in USDT
-      const usdtPrice =
-        priceMap.get(`${balance.asset}USDT`) ??
-        priceMap.get(`${balance.asset}BUSD`) ??
-        0;
-
-      totalValue += total * usdtPrice;
-
-      // We'd need per-asset cost basis here — approximation only
-      // (same limitation as Kraken's TradeBalance approach)
-      totalCost += 0;
-    }
-
-    // Realized P&L is not directly available from Binance's Spot API
-    // without iterating all trade history — leave as 0 (same as Trading212)
-    const unrealizedPnl = totalValue - totalCost;
-
     return {
-      totalValue,
-      totalCost,
-      unrealizedPnl,
+      totalValue: 0, // computed by sync.ts from positions; not used by sync flow
+      totalCost: 0,
+      unrealizedPnl: 0,
       realizedPnl: 0,
-      freeCash,
-      currency: "USDT",
+      freeCash: 0,
+      currency: "EUR",
     };
   }
 

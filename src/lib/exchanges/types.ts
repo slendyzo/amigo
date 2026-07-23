@@ -14,7 +14,7 @@ export type PriceStatus = "OK" | "UNAVAILABLE" | "STALE";
 export type ExchangePosition = {
   symbol: string;
   name: string;
-  assetType: "CRYPTO" | "ETF" | "STOCK";
+  assetType: "CRYPTO" | "ETF" | "STOCK" | "CASH";
   quantity: number;
   averageBuyPrice: number;
   currentPrice: number;

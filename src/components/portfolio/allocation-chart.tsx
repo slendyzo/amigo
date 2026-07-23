@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useTranslations } from "next-intl";
+import { isCashSymbol } from "@/lib/portfolio/cash";
 
 interface Asset {
   symbol: string;
@@ -13,24 +14,24 @@ interface Asset {
 
 interface AllocationChartProps {
   assets: Asset[];
-  freeCashEur?: number;
 }
 
-// Segmented allocation bar (ref 2d): maps the app's asset-type grouping onto
-// three buckets — Crypto (CRYPTO), ETFs (ETF + STOCK securities) and Cash
-// (aggregated free cash across connections).
-export function AllocationChart({ assets, freeCashEur = 0 }: AllocationChartProps) {
+// Segmented allocation bar (ref 2d): maps holdings onto three buckets —
+// Crypto (CRYPTO that isn't a stablecoin), ETFs (ETF + STOCK securities) and
+// Cash (stablecoins + fiat, detected by symbol so wallet stables count too).
+export function AllocationChart({ assets }: AllocationChartProps) {
   const t = useTranslations("portfolio");
 
   const segments = useMemo(() => {
     let crypto = 0;
     let etfs = 0;
+    let cash = 0;
     for (const a of assets) {
       if (a.currentValueEur <= 0) continue;
-      if (a.assetType === "CRYPTO") crypto += a.currentValueEur;
+      if (a.assetType === "CASH" || isCashSymbol(a.symbol)) cash += a.currentValueEur;
+      else if (a.assetType === "CRYPTO") crypto += a.currentValueEur;
       else etfs += a.currentValueEur; // ETF, STOCK, and any other security
     }
-    const cash = Math.max(0, freeCashEur);
     const total = crypto + etfs + cash;
     return [
       { key: "crypto", label: t("allocationCrypto"), value: crypto, color: "var(--accent)" },
@@ -39,7 +40,7 @@ export function AllocationChart({ assets, freeCashEur = 0 }: AllocationChartProp
     ]
       .map((s) => ({ ...s, pct: total > 0 ? (s.value / total) * 100 : 0 }))
       .filter((s) => s.value > 0);
-  }, [assets, freeCashEur, t]);
+  }, [assets, t]);
 
   if (segments.length === 0) return null;
 

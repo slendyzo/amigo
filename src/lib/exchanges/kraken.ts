@@ -6,7 +6,7 @@ import {
   ExchangeDepositRecord,
   ExchangeTrade,
 } from "./types";
-import { convertToEur } from "@/lib/currency";
+import { makeCashPosition } from "@/lib/portfolio/cash";
 
 const BASE_URL = "https://api.kraken.com";
 
@@ -362,6 +362,7 @@ export class KrakenClient implements ExchangeClient {
     // 2. Merge balances by canonical symbol, splitting liquid vs locked
     type MergedRow = { canonical: string; liquid: number; locked: number };
     const mergedBySymbol = new Map<string, MergedRow>();
+    const cashBySymbol = new Map<string, MergedRow>();
 
     for (const [rawCode, qtyStr] of Object.entries(balances)) {
       const qty = Number(qtyStr);
@@ -369,21 +370,28 @@ export class KrakenClient implements ExchangeClient {
 
       const { canonical, isLocked } = this.normaliseAsset(rawCode, metadata);
 
-      // Skip cash / stablecoin balances — those are freeCash, not positions
-      if (CASH_CODES.has(canonical)) continue;
-
-      const existing = mergedBySymbol.get(canonical) ?? {
+      // Cash (stablecoins + fiat) → surfaced as CASH holdings rather than
+      // hidden in a single freeCash scalar. Tracked in its own map.
+      const bucket = CASH_CODES.has(canonical) ? cashBySymbol : mergedBySymbol;
+      const existing = bucket.get(canonical) ?? {
         canonical,
         liquid: 0,
         locked: 0,
       };
       if (isLocked) existing.locked += qty;
       else existing.liquid += qty;
-      mergedBySymbol.set(canonical, existing);
+      bucket.set(canonical, existing);
+    }
+
+    // CASH holdings, built once so they survive even a crypto-empty account.
+    const cashPositions: ExchangePosition[] = [];
+    for (const c of cashBySymbol.values()) {
+      const q = c.liquid + c.locked;
+      if (q > 0) cashPositions.push(makeCashPosition(c.canonical, q, c.locked));
     }
 
     const merged = Array.from(mergedBySymbol.values());
-    if (merged.length === 0) return [];
+    if (merged.length === 0) return cashPositions;
 
     // 3. Compute average buy prices from full paginated trade history
     const avgBuyPrices = await this.calcAverageBuyPrices(metadata);
@@ -510,7 +518,7 @@ export class KrakenClient implements ExchangeClient {
       });
     }
 
-    return positions;
+    return [...positions, ...cashPositions];
   }
 
   // ─── Helper: weighted average buy price per symbol from FULL trade history ─────
@@ -613,38 +621,16 @@ export class KrakenClient implements ExchangeClient {
   }
 
   // ─── getAccountSummary ────────────────────────────────────────────────────────
+  // Cash (stablecoins + fiat) is now surfaced as CASH positions by
+  // getPositions, so there's no separate freeCash to report here — returning it
+  // would double-count it in the portfolio total.
   async getAccountSummary(): Promise<ExchangeAccountSummary> {
-    const [metadata, tradeBalance, balances] = await Promise.all([
-      this.loadMetadata(),
-      this.privatePost("/0/private/TradeBalance", { asset: "ZEUR" }),
-      this.privatePost("/0/private/Balance"),
-    ]);
-
-    const totalValue = Number(tradeBalance.eb ?? 0);
-    const totalCost = Number(tradeBalance.c ?? 0);
-    const unrealizedPnl = Number(tradeBalance.n ?? 0);
-    const realizedPnl = Number(tradeBalance.rp ?? 0);
-
-    // Sum cash/stablecoin balances, converting each to EUR via convertToEur
-    // (which now handles USDT/USDC/DAI normalisation correctly).
-    let freeCashEur = 0;
-    for (const [rawCode, qtyStr] of Object.entries(balances)) {
-      const qty = Number(qtyStr);
-      if (qty <= 0) continue;
-
-      const { canonical } = this.normaliseAsset(rawCode, metadata);
-      if (!CASH_CODES.has(canonical)) continue;
-
-      const { amountEur } = await convertToEur(qty, canonical);
-      freeCashEur += amountEur;
-    }
-
     return {
-      totalValue,
-      totalCost,
-      unrealizedPnl,
-      realizedPnl,
-      freeCash: freeCashEur,
+      totalValue: 0, // computed by sync.ts from positions; not used by sync flow
+      totalCost: 0,
+      unrealizedPnl: 0,
+      realizedPnl: 0,
+      freeCash: 0,
       currency: "EUR",
     };
   }

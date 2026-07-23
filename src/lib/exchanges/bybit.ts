@@ -7,7 +7,7 @@ import {
   ExchangeTrade,
   PriceStatus,
 } from "./types";
-import { convertToEur } from "@/lib/currency";
+import { makeCashPosition } from "@/lib/portfolio/cash";
 
 const DEFAULT_BASE_URL = "https://api.bybit.com";
 const RECV_WINDOW = 5000;
@@ -418,13 +418,17 @@ export class BybitClient implements ExchangeClient {
     }
     for (const [coin, qty] of earn) addLocked(coin, qty);
 
-    // 3. Drop cash (stablecoins + fiat) — those are freeCash, not positions
+    // 3. Build positions. Cash (stablecoins + fiat) surfaces as CASH holdings
+    //    rather than being hidden in a single freeCash scalar.
     const positions: ExchangePosition[] = [];
     for (const row of merged.values()) {
-      if (CASH_CODES.has(row.coin)) continue;
-
       const totalQty = row.liquid + row.locked;
       if (totalQty <= 0) continue;
+
+      if (CASH_CODES.has(row.coin)) {
+        positions.push(makeCashPosition(row.coin, totalQty, row.locked));
+        continue;
+      }
 
       // Pick the best pair to price this asset
       const pair = this.pickBestPair(row.coin, instruments, tickers);
@@ -478,37 +482,16 @@ export class BybitClient implements ExchangeClient {
   }
 
   // ─── getAccountSummary ────────────────────────────────────────────────────────
-  // Sums all stablecoin/fiat balances across wallets, converts each to EUR
-  // via the shared convertToEur (which now normalises USDT/USDC → USD).
+  // Cash (stablecoins + fiat) is now surfaced as CASH positions by
+  // getPositions, so there's no separate freeCash to report here — returning it
+  // would double-count it in the portfolio total.
   async getAccountSummary(): Promise<ExchangeAccountSummary> {
-    const [spot, unified, funding] = await Promise.all([
-      this.fetchWalletBalances("SPOT"),
-      this.fetchWalletBalances("UNIFIED"),
-      this.fetchFundingBalances(),
-    ]);
-
-    // Sum cash by coin across wallets
-    const cashByCoin = new Map<string, number>();
-    for (const wallet of [spot, unified, funding]) {
-      for (const [coin, qty] of wallet) {
-        if (!CASH_CODES.has(coin)) continue;
-        cashByCoin.set(coin, (cashByCoin.get(coin) ?? 0) + qty);
-      }
-    }
-
-    // Convert each to EUR
-    let freeCashEur = 0;
-    for (const [coin, qty] of cashByCoin) {
-      const { amountEur } = await convertToEur(qty, coin);
-      freeCashEur += amountEur;
-    }
-
     return {
       totalValue: 0, // computed by sync.ts from positions; not used by sync flow
       totalCost: 0,
       unrealizedPnl: 0,
       realizedPnl: 0,
-      freeCash: freeCashEur,
+      freeCash: 0,
       currency: "EUR",
     };
   }

@@ -1655,6 +1655,7 @@
     "allocationCrypto": "Crypto",
     "allocationEtfs": "ETFs",
     "allocationCash": "Cash",
+    "filterAll": "All",
     "nExchanges": "{count} exchanges",
     "staked": "staked",
     "costBasisLabel": "cost basis",

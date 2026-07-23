@@ -58,6 +58,7 @@ enum AssetType {
   CRYPTO
   ETF
   STOCK
+  CASH
 }
 
 enum SyncStatus {

@@ -1624,6 +1624,7 @@
     "allocationCrypto": "Cripto",
     "allocationEtfs": "ETFs",
     "allocationCash": "Numerário",
+    "filterAll": "Todas",
     "nExchanges": "{count} corretoras",
     "staked": "em staking",
     "costBasisLabel": "custo base",

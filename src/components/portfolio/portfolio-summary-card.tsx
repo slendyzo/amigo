@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { usePortfolioCurrency } from "./portfolio-currency-context";
+import { isCashSymbol } from "@/lib/portfolio/cash";
 
 interface Connection {
   id: string;
@@ -49,7 +50,7 @@ function formatPct(value: number): string {
 
 // ─── Component — lavender hero card (ref 2d) ──────────────────────────────────
 
-export default function PortfolioSummaryCard({ connections, assets, t }: Props) {
+export default function PortfolioSummaryCard({ assets, t }: Props) {
   const { formatAmount } = usePortfolioCurrency();
 
   // A position with real value but zero cost basis hasn't had its trades
@@ -57,14 +58,19 @@ export default function PortfolioSummaryCard({ connections, assets, t }: Props) 
   // inflate the total. Exclude it from P&L while still counting its value.
   const isPending = (a: Asset) => a.totalCostEur === 0 && a.currentValueEur > 0;
 
+  // The grand total counts everything held (including cash). P&L and cost basis
+  // are investment metrics only — cash is excluded so a big stablecoin balance
+  // doesn't dilute the return %.
+  const isCash = (a: Asset) => a.assetType === "CASH" || isCashSymbol(a.symbol);
+  const investable = assets.filter((a) => !isCash(a));
+
   const totalValueEur = assets.reduce((sum, a) => sum + a.currentValueEur, 0);
-  const totalCostEur = assets.reduce((sum, a) => sum + a.totalCostEur, 0);
-  const totalPnlEur = assets.reduce((sum, a) => sum + (isPending(a) ? 0 : a.unrealizedPnlEur), 0);
+  const totalCostEur = investable.reduce((sum, a) => sum + a.totalCostEur, 0);
+  const totalPnlEur = investable.reduce((sum, a) => sum + (isPending(a) ? 0 : a.unrealizedPnlEur), 0);
   const totalPnlPct = totalCostEur > 0 ? (totalPnlEur / totalCostEur) * 100 : 0;
-  const totalFreeCashEur = connections.reduce((sum, c) => sum + (c.freeCashEur ?? 0), 0);
 
   const isPnlPositive = totalPnlEur >= 0;
-  const grandTotal = totalValueEur + totalFreeCashEur;
+  const grandTotal = totalValueEur;
 
   return (
     <div className="rounded-[24px] px-[22px] py-5" style={{ background: "var(--hero-gradient)" }}>

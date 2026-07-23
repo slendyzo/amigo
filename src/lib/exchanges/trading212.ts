@@ -6,6 +6,7 @@ import type {
   ExchangeDepositRecord,
   ExchangeTrade,
 } from "./types";
+import { makeCashPosition } from "@/lib/portfolio/cash";
 
 const BASE_URL = "https://live.trading212.com/api/v0";
 
@@ -303,9 +304,12 @@ export class Trading212Client implements ExchangeClient {
 
   async getPositions(): Promise<ExchangePosition[]> {
     try {
-      const raw = await this.request<T212Position[]>("/equity/positions");
+      const [raw, summary] = await Promise.all([
+        this.request<T212Position[]>("/equity/positions"),
+        this.getCachedAccountSummary(),
+      ]);
 
-      return raw
+      const positions: ExchangePosition[] = raw
         .filter((pos) => pos.instrument?.ticker && pos.quantity > 0)
         .map((pos) => {
           const ticker = pos.instrument.ticker;
@@ -330,12 +334,22 @@ export class Trading212Client implements ExchangeClient {
             currentValue: pos.walletImpact?.currentValue ?? 0,
           } satisfies ExchangePosition;
         });
+
+      // Uninvested fiat cash → surfaced as a CASH holding rather than hidden in
+      // a single freeCash scalar.
+      const cash = summary.cash?.availableToTrade ?? 0;
+      const cashCurrency = summary.currency || "EUR";
+      if (cash > 0) positions.push(makeCashPosition(cashCurrency, cash));
+
+      return positions;
     } catch (err) {
       console.error("[Trading212] getPositions failed:", err);
       throw err;
     }
   }
 
+  // Cash is now surfaced as a CASH position by getPositions, so there's no
+  // separate freeCash to report here — returning it would double-count it.
   async getAccountSummary(): Promise<ExchangeAccountSummary> {
     try {
       const summary = await this.getCachedAccountSummary();
@@ -345,7 +359,7 @@ export class Trading212Client implements ExchangeClient {
         totalCost: summary.investments.totalCost,
         unrealizedPnl: summary.investments.unrealizedProfitLoss,
         realizedPnl: summary.investments.realizedProfitLoss,
-        freeCash: summary.cash.availableToTrade,
+        freeCash: 0,
         currency: summary.currency || "EUR",
       } satisfies ExchangeAccountSummary;
     } catch (err) {

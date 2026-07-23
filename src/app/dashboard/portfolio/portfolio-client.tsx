@@ -13,6 +13,7 @@ import { PerformanceChart } from "@/components/portfolio/performance-chart";
 import { usePortfolioCurrency } from "@/components/portfolio/portfolio-currency-context";
 import DisplayCurrencyToggle from "@/components/portfolio/display-currency-toggle";
 import { aggregateAssetsBySymbol } from "@/lib/portfolio/aggregate-assets";
+import { isCashSymbol } from "@/lib/portfolio/cash";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -125,21 +126,41 @@ export default function PortfolioClient({
   );
   const [dismissedDeposits, setDismissedDeposits] = useState<Set<string>>(new Set());
 
+  // View controls: filter by a single exchange (or "all"), and show/hide cash.
+  const [selectedExchange, setSelectedExchange] = useState<string>("all");
+  const [showCash, setShowCash] = useState(true);
+
+  const isCashAsset = (a: Asset) => a.assetType === "CASH" || isCashSymbol(a.symbol);
+
   const { pricedAssetsRaw, pricedAggregated, unpricedAggregated } = useMemo(() => {
-    const visible = assets.filter((a) => !a.isDust);
-    const priced = visible.filter((a) => (a.priceStatus ?? "OK") === "OK");
-    const unpriced = visible.filter((a) => (a.priceStatus ?? "OK") !== "OK");
+    let scoped = assets.filter((a) => !a.isDust);
+    if (selectedExchange !== "all") {
+      scoped = scoped.filter((a) => a.exchange.id === selectedExchange);
+    }
+    if (!showCash) {
+      scoped = scoped.filter(
+        (a) => !(a.assetType === "CASH" || isCashSymbol(a.symbol))
+      );
+    }
+    const priced = scoped.filter((a) => (a.priceStatus ?? "OK") === "OK");
+    const unpriced = scoped.filter((a) => (a.priceStatus ?? "OK") !== "OK");
     return {
       pricedAssetsRaw: priced,
       pricedAggregated: aggregateAssetsBySymbol(priced),
       unpricedAggregated: aggregateAssetsBySymbol(unpriced),
     };
-  }, [assets]);
+  }, [assets, selectedExchange, showCash]);
 
-  const totalFreeCashEur = useMemo(
-    () => connections.reduce((s, c) => s + (c.freeCashEur ?? 0), 0),
-    [connections]
-  );
+  // Whether any cash exists at all (in the current exchange scope) — drives
+  // showing the cash toggle. No point offering it if there's nothing to hide.
+  const hasCash = useMemo(() => {
+    const scoped =
+      selectedExchange === "all"
+        ? assets
+        : assets.filter((a) => a.exchange.id === selectedExchange);
+    return scoped.some((a) => !a.isDust && isCashAsset(a));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [assets, selectedExchange]);
 
   const pollUntilSynced = useCallback(async () => {
     const POLL_INTERVAL_MS = 2000;
@@ -308,11 +329,22 @@ export default function PortfolioClient({
         </div>
       )}
 
+      {/* Exchange filter + cash toggle */}
+      <PortfolioControls
+        connections={connections}
+        selected={selectedExchange}
+        onSelect={setSelectedExchange}
+        showCash={showCash}
+        onToggleCash={() => setShowCash((v) => !v)}
+        hasCash={hasCash}
+        t={t}
+      />
+
       {/* Hero */}
-      <PortfolioSummaryCard connections={connections} assets={assets} fxMeta={fxMeta} t={t} />
+      <PortfolioSummaryCard connections={connections} assets={pricedAssetsRaw} fxMeta={fxMeta} t={t} />
 
       {/* Allocation bar */}
-      <AllocationChart assets={pricedAssetsRaw} freeCashEur={totalFreeCashEur} />
+      <AllocationChart assets={pricedAssetsRaw} />
 
       {/* Performance chart */}
       <PerformanceChart />
@@ -389,6 +421,104 @@ function GroupLabel({ children }: { children: React.ReactNode }) {
       style={{ color: "var(--ink-subtle)", letterSpacing: "0.06em" }}
     >
       {children}
+    </div>
+  );
+}
+
+// Brand dot colours per provider — matches the exchanges page swatches.
+const PROVIDER_DOT: Record<string, string> = {
+  KRAKEN: "#f59e0b",
+  TRADING212: "#3b82f6",
+  BINANCE: "#facc15",
+  BYBIT: "#f97316",
+  BYBIT_EU: "#f97316",
+  WALLET_ETH: "#6b7280",
+  WALLET_SOL: "#14b8a6",
+};
+
+function PortfolioControls({
+  connections,
+  selected,
+  onSelect,
+  showCash,
+  onToggleCash,
+  hasCash,
+  t,
+}: {
+  connections: Connection[];
+  selected: string;
+  onSelect: (id: string) => void;
+  showCash: boolean;
+  onToggleCash: () => void;
+  hasCash: boolean;
+  t: ReturnType<typeof useTranslations<"portfolio">>;
+}) {
+  // Only worth showing the exchange filter when there's more than one to pick.
+  const showChips = connections.length > 1;
+  if (!showChips && !hasCash) return null;
+
+  const chips: { id: string; label: string; dot?: string }[] = [
+    { id: "all", label: t("filterAll") },
+    ...connections.map((c) => ({
+      id: c.id,
+      label: c.label || c.provider,
+      dot: PROVIDER_DOT[c.provider] ?? "var(--ink-subtle)",
+    })),
+  ];
+
+  return (
+    <div className="flex items-center gap-2">
+      {showChips && (
+        <div className="-mx-1 flex flex-1 gap-1.5 overflow-x-auto px-1 pb-0.5 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          {chips.map((chip) => {
+            const active = selected === chip.id;
+            return (
+              <button
+                key={chip.id}
+                type="button"
+                onClick={() => onSelect(chip.id)}
+                className="flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5 text-[12px] font-semibold transition-transform active:scale-[0.97]"
+                style={
+                  active
+                    ? { background: "var(--accent)", color: "var(--accent-fg)" }
+                    : { background: "var(--surface)", color: "var(--ink-muted)", boxShadow: "var(--shadow-card)" }
+                }
+              >
+                {chip.dot && (
+                  <span
+                    className="inline-block h-1.5 w-1.5 rounded-full"
+                    style={{ background: active ? "var(--accent-fg)" : chip.dot }}
+                  />
+                )}
+                {chip.label}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
+      {hasCash && (
+        <button
+          type="button"
+          role="switch"
+          aria-checked={showCash}
+          onClick={onToggleCash}
+          className={`flex shrink-0 items-center gap-2 rounded-full py-1.5 pl-3 pr-2 text-[12px] font-semibold transition-transform active:scale-[0.97] ${showChips ? "" : "ml-auto"}`}
+          style={{ background: "var(--surface)", color: "var(--ink-muted)", boxShadow: "var(--shadow-card)" }}
+        >
+          {t("allocationCash")}
+          <span
+            className="relative inline-flex h-[16px] w-[28px] items-center rounded-full transition-colors"
+            style={{ background: showCash ? "var(--accent)" : "var(--line-strong)" }}
+          >
+            <motion.span
+              className="absolute h-[12px] w-[12px] rounded-full bg-white"
+              animate={{ x: showCash ? 14 : 2 }}
+              transition={{ type: "spring", stiffness: 500, damping: 30 }}
+            />
+          </span>
+        </button>
+      )}
     </div>
   );
 }
