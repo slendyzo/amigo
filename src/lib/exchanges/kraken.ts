@@ -351,18 +351,69 @@ export class KrakenClient implements ExchangeClient {
     }
   }
 
+  // ─── Earn allocations ─────────────────────────────────────────────────────────
+  // Funds allocated to Kraken Earn/staking. Some strategies also surface in
+  // /Balance (suffixed) and some don't — this endpoint is the authoritative
+  // list. Non-fatal: the key may lack the Earn permission, or there may be no
+  // Earn at all.
+  private async getEarnAllocations(): Promise<
+    { nativeAsset: string; amount: number }[]
+  > {
+    try {
+      const res = (await this.privatePost("/0/private/Earn/Allocations", {
+        hide_zero_allocations: "true",
+      })) as {
+        items?: Array<{
+          native_asset?: string;
+          amount_allocated?: { total?: { native?: string } };
+        }>;
+      };
+
+      const out: { nativeAsset: string; amount: number }[] = [];
+      for (const it of res?.items ?? []) {
+        const asset = it.native_asset;
+        const native = it.amount_allocated?.total?.native;
+        if (!asset || native == null) continue;
+        const amount = Number(native);
+        if (amount > 0) out.push({ nativeAsset: asset, amount });
+      }
+      return out;
+    } catch (err) {
+      console.warn(
+        "[Kraken] Earn/Allocations fetch failed (non-fatal):",
+        err instanceof Error ? err.message : err
+      );
+      return [];
+    }
+  }
+
   // ─── getPositions ─────────────────────────────────────────────────────────────
   async getPositions(): Promise<ExchangePosition[]> {
-    // 1. Load AssetPairs/Assets metadata + balances in parallel
-    const [metadata, balances] = await Promise.all([
+    // 1. Load AssetPairs/Assets metadata + balances + Earn allocations
+    const [metadata, balances, earnAllocations] = await Promise.all([
       this.loadMetadata(),
       this.privatePost("/0/private/Balance"),
+      this.getEarnAllocations(),
     ]);
 
     // 2. Merge balances by canonical symbol, splitting liquid vs locked
     type MergedRow = { canonical: string; liquid: number; locked: number };
     const mergedBySymbol = new Map<string, MergedRow>();
     const cashBySymbol = new Map<string, MergedRow>();
+    // Per-canonical list of individual /Balance amounts — used to dedup Earn
+    // allocations that Kraken ALSO reports in /Balance (the .S/.B/.M suffixed
+    // ones), so they aren't counted twice.
+    const balanceAmounts = new Map<string, number[]>();
+
+    const bucketFor = (canonical: string) =>
+      CASH_CODES.has(canonical) ? cashBySymbol : mergedBySymbol;
+    const addQty = (canonical: string, qty: number, locked: boolean) => {
+      const bucket = bucketFor(canonical);
+      const existing = bucket.get(canonical) ?? { canonical, liquid: 0, locked: 0 };
+      if (locked) existing.locked += qty;
+      else existing.liquid += qty;
+      bucket.set(canonical, existing);
+    };
 
     for (const [rawCode, qtyStr] of Object.entries(balances)) {
       const qty = Number(qtyStr);
@@ -370,17 +421,37 @@ export class KrakenClient implements ExchangeClient {
 
       const { canonical, isLocked } = this.normaliseAsset(rawCode, metadata);
 
+      const list = balanceAmounts.get(canonical) ?? [];
+      list.push(qty);
+      balanceAmounts.set(canonical, list);
+
       // Cash (stablecoins + fiat) → surfaced as CASH holdings rather than
-      // hidden in a single freeCash scalar. Tracked in its own map.
-      const bucket = CASH_CODES.has(canonical) ? cashBySymbol : mergedBySymbol;
-      const existing = bucket.get(canonical) ?? {
-        canonical,
-        liquid: 0,
-        locked: 0,
-      };
-      if (isLocked) existing.locked += qty;
-      else existing.liquid += qty;
-      bucket.set(canonical, existing);
+      // hidden in a single freeCash scalar.
+      addQty(canonical, qty, isLocked);
+    }
+
+    // 2b. Merge Earn allocations that /Balance doesn't already report. Kraken
+    // surfaces some Earn (on-chain staking / bonded) in /Balance with .S/.B/.M
+    // suffixes, but other strategies appear ONLY here — that's how a large BTC
+    // allocation can go completely missing. Each allocation is matched against
+    // a /Balance line of the same amount; unmatched ones are real, currently-
+    // hidden holdings and get added as locked (staked) quantity.
+    for (const alloc of earnAllocations) {
+      if (alloc.amount <= 0) continue;
+      const { canonical } = this.normaliseAsset(alloc.nativeAsset, metadata);
+
+      const list = balanceAmounts.get(canonical);
+      const tol = Math.max(1e-8, alloc.amount * 1e-6);
+      const matchIdx = list
+        ? list.findIndex((b) => Math.abs(b - alloc.amount) <= tol)
+        : -1;
+      if (matchIdx !== -1) {
+        // Already counted via /Balance — consume the match so a second
+        // identical allocation can't be swallowed by the same line.
+        list!.splice(matchIdx, 1);
+        continue;
+      }
+      addQty(canonical, alloc.amount, true);
     }
 
     // CASH holdings, built once so they survive even a crypto-empty account.

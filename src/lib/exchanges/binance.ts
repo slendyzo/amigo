@@ -288,44 +288,64 @@ export class BinanceClient implements ExchangeClient {
   // getPositions
   // -------------------------------------------------------------------------
   async getPositions(): Promise<ExchangePosition[]> {
-    // 1. Fetch account balances
-    const account = await this.privateGet<BinanceAccountResponse>(
-      "/api/v3/account",
-      {},
-      20
-    );
+    // 1. Fetch spot balances + Simple Earn positions in parallel. Earn funds
+    //    do NOT appear in /api/v3/account, so without this they're invisible.
+    const [account, earnByAsset] = await Promise.all([
+      this.privateGet<BinanceAccountResponse>("/api/v3/account", {}, 20),
+      this.fetchSimpleEarnBalances(),
+    ]);
 
-    // 2a. Cash (stablecoins + fiat) → surfaced as CASH holdings rather than
+    // 2. Combine spot (free/locked) with Earn (counted as locked) per asset.
+    const combined = new Map<string, { free: number; locked: number }>();
+    const addQty = (asset: string, free: number, locked: number) => {
+      const e = combined.get(asset) ?? { free: 0, locked: 0 };
+      e.free += free;
+      e.locked += locked;
+      combined.set(asset, e);
+    };
+    for (const b of account.balances) {
+      const free = Number(b.free);
+      const locked = Number(b.locked);
+      if (free + locked > 0) addQty(b.asset, free, locked);
+    }
+    for (const [asset, amount] of earnByAsset) {
+      if (amount > 0) addQty(asset, 0, amount); // Earn is staked → locked
+    }
+
+    // 3a. Cash (stablecoins + fiat) → surfaced as CASH holdings rather than
     //     hidden in a single freeCash scalar.
     const cashPositions: ExchangePosition[] = [];
-    for (const b of account.balances) {
-      const total = Number(b.free) + Number(b.locked);
-      if (total > DUST_THRESHOLD && CASH_CODES.has(b.asset)) {
-        cashPositions.push(makeCashPosition(b.asset, total, Number(b.locked)));
+    for (const [asset, { free, locked }] of combined) {
+      const total = free + locked;
+      if (total > DUST_THRESHOLD && CASH_CODES.has(asset)) {
+        cashPositions.push(makeCashPosition(asset, total, locked));
       }
     }
 
-    // 2b. Filter non-dust, non-cash balances (the crypto holdings)
-    const holdings = account.balances.filter((b) => {
-      const total = Number(b.free) + Number(b.locked);
-      return total > DUST_THRESHOLD && !CASH_CODES.has(b.asset);
-    });
+    // 3b. Crypto holdings (non-dust, non-cash)
+    const holdings = Array.from(combined.entries())
+      .map(([asset, q]) => ({
+        asset,
+        quantity: q.free + q.locked,
+        locked: q.locked,
+      }))
+      .filter((h) => h.quantity > DUST_THRESHOLD && !CASH_CODES.has(h.asset));
 
     if (holdings.length === 0) return cashPositions;
 
-    // 3. Fetch all prices once (weight: 2)
+    // 4. Fetch all prices once (weight: 2)
     const priceMap = await this.fetchPrices();
 
-    // 4. Calculate average buy prices per asset
+    // 5. Calculate average buy prices per asset
     const assetSymbols = holdings.map((h) => h.asset);
     const avgBuyPrices = await this.calcAverageBuyPrices(assetSymbols, priceMap);
 
-    // 5. Build position objects
+    // 6. Build position objects
     const positions: ExchangePosition[] = [];
 
     for (const holding of holdings) {
       try {
-        const quantity = Number(holding.free) + Number(holding.locked);
+        const quantity = holding.quantity;
         const buyInfo = avgBuyPrices[holding.asset] ?? { avgPrice: 0, currency: "USDT" };
 
         // Resolve current price using the same quote currency as buy trades
@@ -366,6 +386,7 @@ export class BinanceClient implements ExchangeClient {
           unrealizedPnlPct,
           totalCost,
           currentValue,
+          lockedQuantity: holding.locked > 0 ? holding.locked : undefined,
         });
       } catch (err) {
         console.error(
@@ -377,6 +398,55 @@ export class BinanceClient implements ExchangeClient {
     }
 
     return [...positions, ...cashPositions];
+  }
+
+  // -------------------------------------------------------------------------
+  // fetchSimpleEarnBalances — Simple Earn (Flexible + Locked) principal per
+  // asset. These balances are NOT part of /api/v3/account, so without this,
+  // staked/earning funds silently vanish from the portfolio. Non-fatal: the
+  // key may lack permission, or the user may not use Earn.
+  // -------------------------------------------------------------------------
+  private async fetchSimpleEarnBalances(): Promise<Map<string, number>> {
+    const map = new Map<string, number>();
+    const bump = (asset: string, qty: number) => {
+      if (qty > 0) map.set(asset, (map.get(asset) ?? 0) + qty);
+    };
+
+    // Flexible — /sapi/v1/simple-earn/flexible/position (weight 150, paginated)
+    try {
+      for (let current = 1; ; current++) {
+        const res = await this.privateGet<{
+          rows?: Array<{ asset: string; totalAmount?: string }>;
+        }>("/sapi/v1/simple-earn/flexible/position", { current, size: 100 }, 150);
+        const rows = res.rows ?? [];
+        for (const r of rows) bump(r.asset, Number(r.totalAmount ?? 0));
+        if (rows.length < 100) break;
+      }
+    } catch (err) {
+      console.warn(
+        "[Binance] Flexible Earn fetch failed (non-fatal):",
+        err instanceof Error ? err.message : err
+      );
+    }
+
+    // Locked — /sapi/v1/simple-earn/locked/position (weight 150, paginated)
+    try {
+      for (let current = 1; ; current++) {
+        const res = await this.privateGet<{
+          rows?: Array<{ asset: string; amount?: string }>;
+        }>("/sapi/v1/simple-earn/locked/position", { current, size: 100 }, 150);
+        const rows = res.rows ?? [];
+        for (const r of rows) bump(r.asset, Number(r.amount ?? 0));
+        if (rows.length < 100) break;
+      }
+    } catch (err) {
+      console.warn(
+        "[Binance] Locked Earn fetch failed (non-fatal):",
+        err instanceof Error ? err.message : err
+      );
+    }
+
+    return map;
   }
 
   // -------------------------------------------------------------------------
