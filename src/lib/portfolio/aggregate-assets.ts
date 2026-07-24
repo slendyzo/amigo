@@ -16,6 +16,12 @@
  *
  * isDust: only true if EVERY constituent is dust — one non-dust position is
  * enough to make the rollup non-dust.
+ *
+ * MANUAL positions (user-entered staked/locked/vesting holdings) count toward
+ * quantity, value and allocation but are excluded from every P&L calculation.
+ * They have no cost basis by design, so folding them in would either report
+ * their whole value as profit or — via costBasisPending — blank the P&L on a
+ * symbol the user has tracked properly for months.
  */
 
 export type AggPriceStatus = "OK" | "UNAVAILABLE" | "STALE";
@@ -62,6 +68,18 @@ export interface AggregatedAsset {
   isDust: boolean;
   priceStatus: AggPriceStatus;
   priceUnavailableReason: string | null;
+
+  // Set when the same symbol is held BOTH manually and by a synced source.
+  // Usually means the user unstaked (or moved funds) and the real source has
+  // caught up, while the manual row is still counting the same coins — so the
+  // total reads high. We surface it and let the user decide; we never edit or
+  // delete their number for them.
+  duplicateRisk: {
+    syncedQuantity: number;
+    manualQuantity: number;
+    manualPositionIds: string[];
+    syncedSourceLabels: string[];
+  } | null;
 
   // Per-exchange constituents — drives the symbol-detail page
   positions: PerExchangePosition[];
@@ -134,16 +152,24 @@ export function aggregateAssetsBySymbol(assets: AssetInput[]): AggregatedAsset[]
       0
     );
     const currentValueEur = list.reduce((s, a) => s + a.currentValueEur, 0);
-    const totalCostEur = list.reduce((s, a) => s + a.totalCostEur, 0);
+
+    // Manual positions are value-only — they never contribute to cost or P&L.
+    const isManual = (a: AssetInput) => a.exchange.provider === "MANUAL";
+    const costed = list.filter((a) => !isManual(a));
+    const totalCostEur = costed.reduce((s, a) => s + a.totalCostEur, 0);
 
     // A position with real value but zero cost basis hasn't had its trades
     // backfilled yet (Bybit reports 0 cost until sync.ts persists trade history).
     // Counting its whole value as profit inflates P&L — exclude it from the P&L
     // math while still counting its value in currentValueEur. P&L fills in once
     // backfill completes.
+    //
+    // Manual positions are exempt: they're *expected* to have zero cost, so
+    // they must not trip this flag. Without the exemption, adding one staked
+    // holding would blank the return on everything else you own of that symbol.
     const isPending = (a: AssetInput) => a.totalCostEur === 0 && a.currentValueEur > 0;
-    const costBasisPending = list.some(isPending);
-    const knownForPnl = list.filter((a) => !isPending(a));
+    const costBasisPending = costed.some(isPending);
+    const knownForPnl = costed.filter((a) => !isPending(a));
     const knownValueEur = knownForPnl.reduce((s, a) => s + a.currentValueEur, 0);
     const knownCostEur = knownForPnl.reduce((s, a) => s + a.totalCostEur, 0);
     const unrealizedPnlEur = knownValueEur - knownCostEur;
@@ -158,10 +184,29 @@ export function aggregateAssetsBySymbol(assets: AssetInput[]): AggregatedAsset[]
 
     const currentPriceEur =
       totalQuantity > 0 ? currentValueEur / totalQuantity : 0;
+
+    // Averaged over the costed quantity only. Dividing by totalQuantity would
+    // let a zero-cost manual position drag the average buy price toward zero.
+    const costedQuantity = costed.reduce((s, a) => s + a.quantity, 0);
     const averageBuyPriceEur =
-      totalQuantity > 0 ? totalCostEur / totalQuantity : 0;
+      costedQuantity > 0 ? totalCostEur / costedQuantity : 0;
 
     const isDust = list.every((a) => a.isDust ?? false);
+
+    // Both kinds of source holding the same symbol = probable double count.
+    // Two *real* exchanges holding the same coin is normal and not flagged.
+    const manualPositions = list.filter(isManual);
+    const duplicateRisk =
+      manualPositions.length > 0 && costed.length > 0
+        ? {
+            syncedQuantity: costed.reduce((s, a) => s + a.quantity, 0),
+            manualQuantity: manualPositions.reduce((s, a) => s + a.quantity, 0),
+            manualPositionIds: manualPositions.map((a) => a.id),
+            syncedSourceLabels: Array.from(
+              new Set(costed.map((a) => a.exchange.label))
+            ),
+          }
+        : null;
 
     let priceStatus: AggPriceStatus = "OK";
     let priceUnavailableReason: string | null = null;
@@ -191,6 +236,7 @@ export function aggregateAssetsBySymbol(assets: AssetInput[]): AggregatedAsset[]
       isDust,
       priceStatus,
       priceUnavailableReason,
+      duplicateRisk,
       positions,
     });
   }

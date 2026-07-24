@@ -8,6 +8,7 @@ import Link from "next/link";
 import { RefreshCw, Settings2, Plus, TrendingUp, AlertTriangle, ChevronDown } from "lucide-react";
 import PortfolioSummaryCard from "@/components/portfolio/portfolio-summary-card";
 import AssetCard from "@/components/portfolio/asset-card";
+import AddHoldingModal from "@/components/portfolio/add-holding-modal";
 import { AllocationChart } from "@/components/portfolio/allocation-chart";
 import { PerformanceChart } from "@/components/portfolio/performance-chart";
 import { usePortfolioCurrency } from "@/components/portfolio/portfolio-currency-context";
@@ -125,6 +126,24 @@ export default function PortfolioClient({
     connections.some((c) => c.syncStatus === "SYNCING")
   );
   const [dismissedDeposits, setDismissedDeposits] = useState<Set<string>>(new Set());
+  const [showAddHolding, setShowAddHolding] = useState(false);
+
+  // Removes the manual position(s) behind a double-count warning. We only ever
+  // delete what the user explicitly asked us to — the warning itself changes
+  // nothing on its own.
+  const removeManualPositions = useCallback(
+    async (positionIds: string[]) => {
+      await Promise.all(
+        positionIds.map((id) =>
+          fetch(`/api/portfolio/manual-holdings/${id}`, { method: "DELETE" }).catch(
+            () => null
+          )
+        )
+      );
+      router.refresh();
+    },
+    [router]
+  );
 
   // View controls: filter by a single exchange (or "all"), and show/hide cash.
   const [selectedExchange, setSelectedExchange] = useState<string>("all");
@@ -266,7 +285,16 @@ export default function PortfolioClient({
   if (assets.length === 0) {
     return (
       <div className="space-y-5">
-        <PortfolioHeader t={t} isSyncing={isSyncing} onSync={triggerSync} />
+        <PortfolioHeader
+          t={t}
+          isSyncing={isSyncing}
+          onSync={triggerSync}
+          onAddHolding={() => setShowAddHolding(true)}
+        />
+        <AddHoldingModal
+          isOpen={showAddHolding}
+          onClose={() => setShowAddHolding(false)}
+        />
         <div className="flex flex-col items-center justify-center py-20 text-center">
           {isSyncing ? (
             <>
@@ -302,7 +330,17 @@ export default function PortfolioClient({
   // ── Full portfolio view ───────────────────────────────────────────────────
   return (
     <div className="space-y-4">
-      <PortfolioHeader t={t} isSyncing={isSyncing} onSync={triggerSync} />
+      <PortfolioHeader
+        t={t}
+        isSyncing={isSyncing}
+        onSync={triggerSync}
+        onAddHolding={() => setShowAddHolding(true)}
+      />
+
+      <AddHoldingModal
+        isOpen={showAddHolding}
+        onClose={() => setShowAddHolding(false)}
+      />
 
       {isSyncing && (
         <div className="flex items-center gap-2 text-[12px]" style={{ color: "var(--ink-muted)" }}>
@@ -398,6 +436,7 @@ export default function PortfolioClient({
               asset={asset}
               t={t}
               divider={i < pricedAggregated.length - 1}
+              onRemoveManual={removeManualPositions}
             />
           ))}
         </div>
@@ -647,11 +686,13 @@ function PortfolioHeader({
   t,
   isSyncing,
   onSync,
+  onAddHolding,
   showActions = true,
 }: {
   t: ReturnType<typeof useTranslations<"portfolio">>;
   isSyncing: boolean;
   onSync: () => void;
+  onAddHolding?: () => void;
   showActions?: boolean;
 }) {
   return (
@@ -663,6 +704,18 @@ function PortfolioHeader({
         <DisplayCurrencyToggle />
         {showActions && (
           <>
+            {onAddHolding && (
+              <button
+                type="button"
+                onClick={onAddHolding}
+                aria-label={t("addHolding")}
+                className="flex h-9 items-center gap-1.5 rounded-[18px] px-3 text-[12px] font-semibold transition-transform active:scale-[0.97]"
+                style={{ background: "var(--surface)", color: "var(--ink-muted)", ...cardShadow }}
+              >
+                <Plus className="h-4 w-4" strokeWidth={2} />
+                <span className="hidden sm:inline">{t("addHolding")}</span>
+              </button>
+            )}
             <Link
               href="/dashboard/portfolio/exchanges"
               aria-label={t("manageExchanges")}

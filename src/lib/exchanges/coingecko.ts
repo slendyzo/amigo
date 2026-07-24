@@ -147,3 +147,83 @@ export async function getTokenPriceByContract(
     return {};
   }
 }
+
+// ---------------------------------------------------------------------------
+// Search coins by name or ticker — powers the manual-holding asset picker.
+//
+// Tickers collide badly across chains (Oobit alone has an old Ethereum OBT and
+// a new Solana OOB), so results carry a live price and we let the user confirm
+// the match visually before they commit. Ranked by market cap so the coin you
+// meant is normally first.
+// ---------------------------------------------------------------------------
+
+export interface CoinSearchResult {
+  id: string; // CoinGecko coin id — what we persist
+  symbol: string;
+  name: string;
+  thumb: string | null;
+  marketCapRank: number | null;
+  priceUsd: number | null;
+  priceEur: number | null;
+}
+
+const SEARCH_RESULT_LIMIT = 8;
+
+export async function searchCoins(query: string): Promise<CoinSearchResult[]> {
+  const q = query.trim();
+  if (q.length < 2) return [];
+
+  const cacheKey = `search:${q.toLowerCase()}`;
+  const cached = getCached<CoinSearchResult[]>(cacheKey);
+  if (cached) return cached;
+
+  try {
+    const res = await rateLimitedFetch(
+      `${BASE_URL}/search?query=${encodeURIComponent(q)}`
+    );
+
+    if (!res.ok) {
+      console.error(`[CoinGecko] Search failed: HTTP ${res.status}`);
+      return [];
+    }
+
+    const data = (await res.json()) as {
+      coins?: Array<{
+        id: string;
+        symbol: string;
+        name: string;
+        thumb?: string;
+        market_cap_rank?: number | null;
+      }>;
+    };
+
+    const coins = (data.coins ?? []).slice(0, SEARCH_RESULT_LIMIT);
+    if (coins.length === 0) return [];
+
+    // Enrich with live prices so the picker can show what it matched. A price
+    // failure must not sink the search — the user can still pick, they just
+    // lose the confirmation cue.
+    let prices: PriceMap = {};
+    try {
+      prices = await getTokenPrices(coins.map((c) => c.id));
+    } catch {
+      // Non-fatal
+    }
+
+    const results: CoinSearchResult[] = coins.map((c) => ({
+      id: c.id,
+      symbol: c.symbol.toUpperCase(),
+      name: c.name,
+      thumb: c.thumb ?? null,
+      marketCapRank: c.market_cap_rank ?? null,
+      priceUsd: prices[c.id]?.usd ?? null,
+      priceEur: prices[c.id]?.eur ?? null,
+    }));
+
+    setCache(cacheKey, results);
+    return results;
+  } catch (error) {
+    console.error("[CoinGecko] searchCoins error:", error);
+    return [];
+  }
+}

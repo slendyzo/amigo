@@ -1,9 +1,19 @@
 import { prisma } from "@/lib/db";
-import type { PriceStatus as DbPriceStatus, TradeSide } from "@prisma/client";
+import type {
+  PriceStatus as DbPriceStatus,
+  TradeSide,
+  PortfolioAsset,
+} from "@prisma/client";
 import { decrypt } from "@/lib/encryption";
 import { convertToEur } from "@/lib/currency";
-import { createExchangeClient, createWalletClient, isWalletProvider } from "./factory";
+import {
+  createExchangeClient,
+  createWalletClient,
+  isWalletProvider,
+  isManualProvider,
+} from "./factory";
 import { computeCostBasisFromTrades, realizedPnlToEur } from "./cost-basis";
+import { getTokenPrices } from "./coingecko";
 import type { ExchangeClient, ExchangePosition } from "./types";
 
 // EUR threshold below which a position is considered dust (and hidden by
@@ -138,6 +148,138 @@ type ComputedAssetRow = {
   isDust: boolean;
 };
 
+// ─── syncManualConnection ────────────────────────────────────────────────────
+
+/**
+ * Refresh a MANUAL source.
+ *
+ * Quantities belong to the user and are never touched — only the price moves.
+ * Critically, this path never reaches the reconcile step that deletes assets
+ * an exchange stopped reporting: a manual source reports nothing by nature,
+ * so that logic would wipe every holding on the first sync.
+ */
+async function syncManualConnection(
+  connectionId: string,
+  label: string,
+  ctx: {
+    dryRun: boolean;
+    existingAssets: PortfolioAsset[];
+    totalValueEurBefore: number;
+    totalCostEurBefore: number;
+    freeCashBefore: number | null;
+  }
+): Promise<SyncDiff> {
+  const { dryRun, existingAssets, totalValueEurBefore, totalCostEurBefore, freeCashBefore } = ctx;
+  const tag = dryRun ? "[Sync:dryRun]" : "[Sync]";
+
+  const coinIds = Array.from(
+    new Set(
+      existingAssets
+        .map((a) => a.coingeckoId)
+        .filter((id): id is string => Boolean(id))
+    )
+  );
+
+  let prices: Record<string, { usd: number; eur: number }> = {};
+  if (coinIds.length > 0) {
+    try {
+      prices = await getTokenPrices(coinIds);
+    } catch (err) {
+      // Non-fatal — we keep the last known price rather than zeroing the holding.
+      console.warn(`${tag} Manual price refresh failed (non-fatal):`, err);
+    }
+  }
+
+  const assetDiffs: AssetDiff[] = [];
+  let totalValueEurAfter = 0;
+
+  for (const asset of existingAssets) {
+    const quantity = Number(asset.quantity);
+    const valueEurBefore = Number(asset.currentValueEur);
+
+    const fresh = asset.coingeckoId ? (prices[asset.coingeckoId]?.eur ?? 0) : 0;
+    // Fall back to the last known price — a CoinGecko blip must not zero
+    // someone's position.
+    const priceEur = fresh > 0 ? fresh : Number(asset.currentPriceEur);
+    const valueEur = quantity * priceEur;
+
+    totalValueEurAfter += valueEur;
+
+    const changed = Math.abs(valueEur - valueEurBefore) > 0.005;
+
+    assetDiffs.push({
+      symbol: asset.symbol,
+      action: changed ? "update" : "unchanged",
+      before: {
+        quantity,
+        currentValueEur: valueEurBefore,
+        totalCostEur: 0,
+        unrealizedPnlEur: 0,
+      },
+      after: {
+        quantity, // unchanged, always — this is the whole point
+        currency: asset.currency,
+        currentPrice: priceEur,
+        currentValueEur: valueEur,
+        totalCostEur: 0,
+        unrealizedPnlEur: 0,
+      },
+    });
+
+    if (!dryRun && changed) {
+      await prisma.portfolioAsset.update({
+        where: { id: asset.id },
+        data: {
+          currentPrice: priceEur,
+          currentPriceEur: priceEur,
+          currentValue: valueEur,
+          currentValueEur: valueEur,
+          priceStatus: priceEur > 0 ? "OK" : "UNAVAILABLE",
+          priceUnavailableReason:
+            priceEur > 0 ? null : "No price available for this coin",
+          lastUpdatedAt: new Date(),
+        },
+      });
+    }
+  }
+
+  if (!dryRun) {
+    await prisma.exchangeConnection.update({
+      where: { id: connectionId },
+      data: {
+        syncStatus: "SUCCESS",
+        lastSyncAt: new Date(),
+        lastSyncError: null,
+        syncStartedAt: null,
+      },
+    });
+  }
+
+  console.log(
+    `${tag} Manual source "${label}" — repriced ${existingAssets.length} holding(s), quantities untouched`
+  );
+
+  return {
+    connectionId,
+    provider: "MANUAL",
+    label,
+    dryRun,
+    assets: assetDiffs,
+    deposits: { fetched: 0, newOnExchange: 0 },
+    freeCash: { before: freeCashBefore, after: freeCashBefore, currency: null },
+    summary: {
+      totalValueEurBefore,
+      totalValueEurAfter,
+      totalCostEurBefore,
+      totalCostEurAfter: totalCostEurBefore,
+      // Manual holdings carry no cost basis, so P&L is reported as zero rather
+      // than "value minus nothing", which would read as pure profit.
+      unrealizedPnlEurBefore: 0,
+      unrealizedPnlEurAfter: 0,
+    },
+  };
+}
+
 // ─── syncExchange ────────────────────────────────────────────────────────────
 
 export async function syncExchange(
@@ -179,6 +321,22 @@ export async function syncExchange(
   const unrealizedPnlEurBefore = totalValueEurBefore - totalCostEurBefore;
 
   const freeCashBefore = connection.freeCash ? Number(connection.freeCash) : null;
+
+  // 3. MANUAL connections short-circuit here.
+  //
+  // There is no API behind them — quantities are user-owned. Falling through
+  // would build a client (throwing on missing credentials), then reconcile
+  // against an empty position list and DELETE every manual holding. Refresh
+  // the price, leave the quantity alone, return.
+  if (isManualProvider(connection.provider)) {
+    return await syncManualConnection(connection.id, connection.label, {
+      dryRun,
+      existingAssets,
+      totalValueEurBefore,
+      totalCostEurBefore,
+      freeCashBefore,
+    });
+  }
 
   try {
     // 4. Create client — wallet providers use address, exchanges use encrypted keys

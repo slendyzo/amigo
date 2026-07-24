@@ -1,6 +1,8 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import Link from "next/link";
+import { AnimatePresence, motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { usePortfolioCurrency } from "./portfolio-currency-context";
 import type { AggregatedAsset } from "@/lib/portfolio/aggregate-assets";
@@ -9,6 +11,8 @@ interface Props {
   asset: AggregatedAsset;
   t: ReturnType<typeof useTranslations<"portfolio">>;
   divider?: boolean;
+  /** Removes the manual position(s) behind a double-count warning. */
+  onRemoveManual?: (positionIds: string[]) => void;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -30,10 +34,39 @@ function symbolTile(symbol: string): { bg: string; fg: string } {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function AssetCard({ asset, t, divider }: Props) {
+/**
+ * Dismissals are keyed to the exact quantities that triggered the warning, so
+ * "Keep" silences this situation but a later change (more staked, a partial
+ * unstake) surfaces it again rather than staying quiet forever.
+ */
+function dismissKey(asset: AggregatedAsset): string | null {
+  const risk = asset.duplicateRisk;
+  if (!risk) return null;
+  return `amigo:dupdismiss:${asset.symbol}:${risk.syncedQuantity}:${risk.manualQuantity}`;
+}
+
+export default function AssetCard({ asset, t, divider, onRemoveManual }: Props) {
   const { formatAmount } = usePortfolioCurrency();
   const isPnlPositive = asset.unrealizedPnlEur >= 0;
   const tile = symbolTile(asset.symbol);
+
+  const [dismissed, setDismissed] = useState(true);
+
+  // Read the dismissal after mount — localStorage isn't available during SSR,
+  // and starting dismissed avoids the warning flashing in then vanishing.
+  useEffect(() => {
+    const key = dismissKey(asset);
+    if (!key) return;
+    setDismissed(window.localStorage.getItem(key) === "1");
+  }, [asset]);
+
+  const showDuplicateWarning = Boolean(asset.duplicateRisk) && !dismissed;
+
+  const handleKeep = () => {
+    const key = dismissKey(asset);
+    if (key) window.localStorage.setItem(key, "1");
+    setDismissed(true);
+  };
 
   const exchangeLabel =
     asset.positions.length === 1
@@ -49,10 +82,10 @@ export default function AssetCard({ asset, t, divider }: Props) {
   const symFontPx = symLen >= 5 ? 10 : symLen === 4 ? 11 : 12;
 
   return (
+    <div style={divider ? { borderBottom: "1px solid var(--line)" } : undefined}>
     <Link
       href={detailHref}
       className="flex items-center gap-3 py-[11px] transition-transform active:scale-[0.99]"
-      style={divider ? { borderBottom: "1px solid var(--line)" } : undefined}
     >
       {/* Symbol tile */}
       <div
@@ -93,5 +126,69 @@ export default function AssetCard({ asset, t, divider }: Props) {
         )}
       </div>
     </Link>
+
+      {/* Possible double count — warn, never touch the user's number */}
+      <AnimatePresence initial={false}>
+        {showDuplicateWarning && asset.duplicateRisk && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
+            style={{ overflow: "hidden" }}
+          >
+            <div
+              className="mb-[11px] rounded-[12px] px-3 py-2.5"
+              style={{
+                background: "var(--surface-2)",
+                border: "1px solid var(--line)",
+              }}
+            >
+              <div
+                className="text-[11.5px] font-semibold"
+                style={{ color: "var(--warning)" }}
+              >
+                {t("duplicateTitle")}
+              </div>
+              <div
+                className="mt-0.5 text-[11.5px] leading-[1.5]"
+                style={{ color: "var(--ink-subtle)" }}
+              >
+                {t("duplicateBody", {
+                  sources: asset.duplicateRisk.syncedSourceLabels.join(", "),
+                  syncedQty: formatQuantity(asset.duplicateRisk.syncedQuantity),
+                  manualQty: formatQuantity(asset.duplicateRisk.manualQuantity),
+                  symbol: asset.symbol,
+                })}
+              </div>
+              <div className="mt-2 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleKeep}
+                  className="rounded-[9px] px-2.5 py-1 text-[11.5px] font-semibold transition-opacity active:opacity-70"
+                  style={{
+                    background: "var(--surface)",
+                    color: "var(--ink)",
+                    border: "1px solid var(--line)",
+                  }}
+                >
+                  {t("duplicateKeep")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onRemoveManual?.(asset.duplicateRisk!.manualPositionIds)
+                  }
+                  className="rounded-[9px] px-2.5 py-1 text-[11.5px] font-semibold transition-opacity active:opacity-70"
+                  style={{ background: "var(--warning)", color: "#fff" }}
+                >
+                  {t("duplicateRemove")}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   );
 }

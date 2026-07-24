@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import {
   AreaChart,
@@ -9,6 +9,7 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
+  ReferenceDot,
   ResponsiveContainer,
 } from "recharts";
 import { usePortfolioCurrency } from "./portfolio-currency-context";
@@ -17,6 +18,13 @@ interface Snapshot {
   date: string;
   totalValueEur: number;
   totalCostEur: number;
+}
+
+/** The day a manual holding started counting toward the portfolio. */
+interface TrackingMarker {
+  date: string;
+  symbols: string[];
+  sources: string[];
 }
 
 interface PerformanceChartProps {
@@ -54,9 +62,19 @@ interface CustomTooltipProps {
   label?: string;
   range: RangeKey;
   formatAmount: (eurAmount: number) => string;
+  markersByDate?: Map<string, TrackingMarker>;
+  trackingNote?: (sources: string) => string;
 }
 
-function CustomTooltip({ active, payload, label, range, formatAmount }: CustomTooltipProps) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+  range,
+  formatAmount,
+  markersByDate,
+  trackingNote,
+}: CustomTooltipProps) {
   if (!active || !payload?.length || !label) return null;
 
   const portfolioEntry = payload.find((p) => p.name === "totalValueEur");
@@ -102,6 +120,16 @@ function CustomTooltip({ active, payload, label, range, formatAmount }: CustomTo
           </span>
         </div>
       </div>
+
+      {/* Why the line stepped here — a bookkeeping change, not performance */}
+      {markersByDate?.has(label) && trackingNote && (
+        <p
+          className="mt-2 border-t pt-2 text-[11px] leading-[1.45]"
+          style={{ borderColor: "var(--line)", color: "var(--ink-subtle)" }}
+        >
+          {trackingNote(markersByDate.get(label)!.sources.join(", "))}
+        </p>
+      )}
     </div>
   );
 }
@@ -111,6 +139,7 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
   const { formatAmount, formatAxis } = usePortfolioCurrency();
   const [range, setRange] = useState<RangeKey>(initialRange as RangeKey);
   const [snapshots, setSnapshots] = useState<Snapshot[]>([]);
+  const [markers, setMarkers] = useState<TrackingMarker[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchSnapshots = useCallback(async (r: RangeKey) => {
@@ -119,17 +148,41 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
       const res = await fetch(`/api/portfolio/snapshots?range=${r}`);
       if (!res.ok) {
         setSnapshots([]);
+        setMarkers([]);
         return;
       }
       const json = await res.json();
       const data: Snapshot[] = json.snapshots ?? json;
       setSnapshots(Array.isArray(data) ? data : []);
+      setMarkers(Array.isArray(json.trackingMarkers) ? json.trackingMarkers : []);
     } catch {
       setSnapshots([]);
+      setMarkers([]);
     } finally {
       setLoading(false);
     }
   }, []);
+
+  // A tracking date rarely lands exactly on a snapshot date, so each marker is
+  // snapped forward to the first snapshot at or after it — the point where the
+  // step actually shows up on the line. Markers past the last snapshot are
+  // dropped; there's no step to explain yet.
+  const plottedMarkers = useMemo(() => {
+    if (snapshots.length === 0 || markers.length === 0) return [];
+
+    return markers
+      .map((marker) => {
+        const snap = snapshots.find((s) => s.date >= marker.date);
+        if (!snap) return null;
+        return { ...marker, x: snap.date, y: snap.totalValueEur };
+      })
+      .filter((m): m is TrackingMarker & { x: string; y: number } => m !== null);
+  }, [snapshots, markers]);
+
+  const markersByDate = useMemo(
+    () => new Map(plottedMarkers.map((m) => [m.x, m])),
+    [plottedMarkers]
+  );
 
   useEffect(() => {
     fetchSnapshots(range);
@@ -224,7 +277,14 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
                 />
 
                 <Tooltip
-                  content={<CustomTooltip range={range} formatAmount={formatAmount} />}
+                  content={
+                    <CustomTooltip
+                      range={range}
+                      formatAmount={formatAmount}
+                      markersByDate={markersByDate}
+                      trackingNote={(sources) => t("trackingStarted", { sources })}
+                    />
+                  }
                   cursor={{ stroke: "var(--accent)", strokeWidth: 1, strokeDasharray: "4 4" }}
                 />
 
@@ -252,6 +312,20 @@ export function PerformanceChart({ initialRange = "1m" }: PerformanceChartProps)
                   activeDot={{ r: 5, fill: "var(--accent)", strokeWidth: 2, stroke: "var(--surface)" }}
                   name="totalValueEur"
                 />
+
+                {/* Tracking-start markers — annotate the step, don't compete
+                    with the line. Hover reveals what began counting. */}
+                {plottedMarkers.map((m) => (
+                  <ReferenceDot
+                    key={m.x}
+                    x={m.x}
+                    y={m.y}
+                    r={4}
+                    fill="var(--surface)"
+                    stroke="var(--ink-subtle)"
+                    strokeWidth={2}
+                  />
+                ))}
               </AreaChart>
             </ResponsiveContainer>
           </div>

@@ -13,6 +13,14 @@ export function isWalletProvider(provider: ExchangeProvider): boolean {
   return WALLET_PROVIDERS.has(provider);
 }
 
+/**
+ * MANUAL connections hold user-entered positions. There is no API behind them,
+ * so they never get a client — sync refreshes their price and nothing else.
+ */
+export function isManualProvider(provider: ExchangeProvider): boolean {
+  return provider === "MANUAL";
+}
+
 export function createExchangeClient(
   provider: ExchangeProvider,
   apiKey: string,

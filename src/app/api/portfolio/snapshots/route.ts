@@ -148,7 +148,51 @@ export async function GET(request: Request) {
       return { date: dateKey, totalValueEur, totalCostEur, unrealizedPnlEur, freeCashEur };
     });
 
-    return NextResponse.json({ snapshots: aggregated });
+    // Tracking-start markers.
+    //
+    // A manual holding entering the portfolio steps the line up on the day it
+    // was added. That's a real change in tracked net worth, but it is NOT a
+    // gain — so we mark the day rather than backfilling history (which would
+    // invent value the user never recorded) or hiding the step.
+    //
+    // No euro figure: we don't persist what the position was worth on the day
+    // it started, and quoting today's value against an old date would be wrong.
+    const manualAssets = await prisma.portfolioAsset.findMany({
+      where: {
+        exchangeConnectionId: { in: connectionIds },
+        trackingStartedAt: startDate ? { gte: startDate } : { not: null },
+        exchangeConnection: { provider: "MANUAL" },
+      },
+      select: {
+        symbol: true,
+        trackingStartedAt: true,
+        exchangeConnection: { select: { label: true } },
+      },
+    });
+
+    // Several holdings added the same day collapse into one marker.
+    const markersByDate = new Map<string, { symbols: Set<string>; sources: Set<string> }>();
+    for (const asset of manualAssets) {
+      if (!asset.trackingStartedAt) continue;
+      const dateKey = asset.trackingStartedAt.toISOString().slice(0, 10);
+      const entry = markersByDate.get(dateKey) ?? {
+        symbols: new Set<string>(),
+        sources: new Set<string>(),
+      };
+      entry.symbols.add(asset.symbol);
+      entry.sources.add(asset.exchangeConnection.label);
+      markersByDate.set(dateKey, entry);
+    }
+
+    const trackingMarkers = Array.from(markersByDate.entries())
+      .map(([date, e]) => ({
+        date,
+        symbols: Array.from(e.symbols),
+        sources: Array.from(e.sources),
+      }))
+      .sort((a, b) => a.date.localeCompare(b.date));
+
+    return NextResponse.json({ snapshots: aggregated, trackingMarkers });
   } catch (error) {
     console.error("Get portfolio snapshots error:", error);
     return NextResponse.json(

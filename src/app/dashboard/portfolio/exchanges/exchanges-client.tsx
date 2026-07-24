@@ -35,6 +35,7 @@ const PROVIDER_META: Record<string, { name: string; badgeBg: string; badgeLetter
   BINANCE: { name: "Binance", badgeBg: "bg-yellow-400", badgeLetter: "B" },
   BYBIT: { name: "Bybit", badgeBg: "bg-orange-500", badgeLetter: "B" },
   BYBIT_EU: { name: "Bybit.EU", badgeBg: "bg-orange-500", badgeLetter: "EU", badgeLetterClass: "text-xs tracking-tight" },
+  MANUAL: { name: "Manual", badgeBg: "bg-teal-500", badgeLetter: "M" },
 };
 
 const STATUS_DOT: Record<string, string> = {
@@ -252,6 +253,9 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
           };
           const isConfirmingDelete = confirmDeleteId === conn.id;
           const isSyncingThis = syncingId === conn.id;
+          // Manual sources have no API behind them: nothing to sync, no
+          // credentials to edit, and a sync timestamp would be meaningless.
+          const isManual = conn.provider === "MANUAL";
 
           return (
             <div key={conn.id} className="rounded-[20px] p-5" style={{ background: "var(--surface)", ...cardShadow }}>
@@ -279,11 +283,17 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
 
                     <div className="flex items-center gap-2 text-[11.5px]">
                       <span
-                        className={`h-2 w-2 shrink-0 rounded-full ${conn.syncStatus === "SYNCING" ? "animate-pulse" : ""}`}
-                        style={{ background: STATUS_DOT[conn.syncStatus] ?? STATUS_DOT.IDLE }}
+                        className={`h-2 w-2 shrink-0 rounded-full ${conn.syncStatus === "SYNCING" && !isManual ? "animate-pulse" : ""}`}
+                        style={{
+                          background: isManual
+                            ? "var(--ink-subtle)"
+                            : (STATUS_DOT[conn.syncStatus] ?? STATUS_DOT.IDLE),
+                        }}
                       />
-                      <span style={{ color: STATUS_TEXT_COLOR[conn.syncStatus] ?? STATUS_TEXT_COLOR.IDLE }}>
-                        {conn.syncStatus === "SUCCESS" && conn.lastSyncAt
+                      <span style={{ color: isManual ? "var(--ink-subtle)" : (STATUS_TEXT_COLOR[conn.syncStatus] ?? STATUS_TEXT_COLOR.IDLE) }}>
+                        {isManual
+                          ? t("manualHoldingsCount", { count: conn.assetCount })
+                          : conn.syncStatus === "SUCCESS" && conn.lastSyncAt
                           ? `${t("syncSuccess")} · ${formatRelativeTime(conn.lastSyncAt)}`
                           : conn.syncStatus === "PARTIAL" && conn.lastSyncAt
                           ? `${STATUS_LABEL.PARTIAL} · ${formatRelativeTime(conn.lastSyncAt)}`
@@ -340,26 +350,34 @@ export default function ExchangesClient({ connections }: ExchangesClientProps) {
 
               {/* Actions */}
               <div className="mt-4 flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleSync(conn.id)}
-                  disabled={isSyncingThis || conn.syncStatus === "SYNCING"}
-                  className={pillBtn + " disabled:opacity-40"}
-                  style={{ background: "var(--surface-2)", color: "var(--accent-strong)" }}
-                >
-                  <RefreshCw className={`h-3.5 w-3.5 ${isSyncingThis ? "animate-spin" : ""}`} strokeWidth={2} />
-                  {t("syncAll")}
-                </button>
+                {isManual ? (
+                  <span className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
+                    {t("manualSourceHint")}
+                  </span>
+                ) : (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleSync(conn.id)}
+                      disabled={isSyncingThis || conn.syncStatus === "SYNCING"}
+                      className={pillBtn + " disabled:opacity-40"}
+                      style={{ background: "var(--surface-2)", color: "var(--accent-strong)" }}
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${isSyncingThis ? "animate-spin" : ""}`} strokeWidth={2} />
+                      {t("syncAll")}
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => openEdit(conn)}
-                  className={pillBtn}
-                  style={{ background: "var(--app-bg)", color: "var(--ink-muted)" }}
-                >
-                  <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
-                  {tCommon("edit")}
-                </button>
+                    <button
+                      type="button"
+                      onClick={() => openEdit(conn)}
+                      className={pillBtn}
+                      style={{ background: "var(--app-bg)", color: "var(--ink-muted)" }}
+                    >
+                      <Pencil className="h-3.5 w-3.5" strokeWidth={2} />
+                      {tCommon("edit")}
+                    </button>
+                  </>
+                )}
 
                 {isConfirmingDelete ? (
                   <div className="ml-auto flex items-center gap-2">

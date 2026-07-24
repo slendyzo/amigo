@@ -52,6 +52,7 @@ enum ExchangeProvider {
   BYBIT_EU
   WALLET_ETH
   WALLET_SOL
+  MANUAL // User-entered holdings that no API reports (staked, locked, vesting)
 }
 
 enum AssetType {
@@ -707,6 +708,14 @@ model PortfolioAsset {
 
   // Marked dust (value < threshold and no trade history) — hidden from UI by default
   isDust Boolean @default(false)
+
+  // Resolved CoinGecko coin id — set for MANUAL holdings so price refresh is exact
+  // rather than guessed from the ticker (many symbols collide across chains).
+  coingeckoId String? @db.VarChar(100)
+
+  // When a MANUAL holding started counting toward the portfolio. The performance
+  // chart marks this day so the step isn't misread as a gain.
+  trackingStartedAt DateTime?
 
   lastUpdatedAt DateTime @default(now())
 
