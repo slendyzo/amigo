@@ -92,7 +92,10 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
   };
 
   const handleSignOut = () => signOut({ callbackUrl: "/" });
-  const handleAddClick = () => window.dispatchEvent(new CustomEvent("openQuickAdd"));
+  // Cancelable so a page with its own add-modal can claim the event via
+  // preventDefault(), leaving GlobalAddButton to stand down.
+  const handleAddClick = () =>
+    window.dispatchEvent(new CustomEvent("openQuickAdd", { cancelable: true }));
 
   const isActive = (item: NavItem) => {
     if (item.href === "/dashboard") return pathname === "/dashboard";

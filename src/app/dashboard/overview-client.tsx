@@ -316,11 +316,15 @@ export default function DashboardOverview({
     setIncomes(initialIncomes);
   }, [initialExpenses, initialIncomes]);
 
-  // Listen for quick-add event from bottom nav
-  // This page handles its own modal, so stop propagation to prevent GlobalAddButton from also opening
+  // Listen for quick-add event from bottom nav.
+  // This page handles its own modal, so claim the event — GlobalAddButton
+  // checks defaultPrevented and stands down. preventDefault rather than
+  // stopImmediatePropagation because the latter only silences listeners
+  // registered after ours, and GlobalAddButton is lazy-loaded so the order
+  // isn't guaranteed (AMIGO-331: that race opened two stacked modals).
   useEffect(() => {
     const handleQuickAdd = (e: Event) => {
-      e.stopImmediatePropagation();
+      e.preventDefault();
       setIsSelectorOpen(true);
     };
     window.addEventListener("openQuickAdd", handleQuickAdd);

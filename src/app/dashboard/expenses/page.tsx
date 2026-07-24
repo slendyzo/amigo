@@ -153,10 +153,12 @@ export default function ExpensesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [typeFilter, selectedMonthFilter]);
 
-  // Listen for quick-add event from bottom nav
+  // Listen for quick-add event from bottom nav.
+  // Claim it so GlobalAddButton stands down — see AMIGO-331 for why
+  // preventDefault beats stopImmediatePropagation here.
   useEffect(() => {
     const handleQuickAdd = (e: Event) => {
-      e.stopImmediatePropagation();
+      e.preventDefault();
       setIsModalOpen(true);
     };
     window.addEventListener("openQuickAdd", handleQuickAdd);

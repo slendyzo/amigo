@@ -33,9 +33,24 @@ export default function GlobalAddButton() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, []);
 
-  // Listen for openQuickAdd event (from mobile nav)
+  // Listen for openQuickAdd event (from mobile nav).
+  //
+  // Some pages (Dashboard, Expenses) run their own add-modal off this same
+  // event and claim it with preventDefault(). We must not open on top of them
+  // — that's two stacked modals and two backdrops to dismiss.
+  //
+  // The check is deferred to a microtask rather than read inline: this
+  // component is lazy-loaded, so whether our listener registers before or
+  // after the page's is a race, and reading defaultPrevented inline would be
+  // wrong whenever we happen to run first. dispatchEvent is synchronous, so by
+  // the time the microtask runs every listener has had its say.
   useEffect(() => {
-    const handleQuickAdd = () => setIsSelectorOpen(true);
+    const handleQuickAdd = (e: Event) => {
+      queueMicrotask(() => {
+        if (e.defaultPrevented) return;
+        setIsSelectorOpen(true);
+      });
+    };
     window.addEventListener("openQuickAdd", handleQuickAdd);
     return () => window.removeEventListener("openQuickAdd", handleQuickAdd);
   }, []);
