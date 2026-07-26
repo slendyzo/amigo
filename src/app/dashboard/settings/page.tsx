@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
@@ -447,6 +448,26 @@ export default function SettingsPage() {
   const rowCls =
     "flex items-center justify-between gap-3 py-3 min-h-[44px] border-b last:border-b-0";
 
+  // Row that navigates to a management page (bank accounts, categories & rules).
+  // These pages have no nav entry of their own — Settings is their only door in.
+  const manageRow = (href: string, label: string, description: string) => (
+    <Link
+      href={href}
+      className={`${rowCls} transition-transform active:scale-[.99]`}
+      style={{ borderColor: "var(--line)" }}
+    >
+      <span className="min-w-0">
+        <span className="block text-[13px] font-medium" style={{ color: "var(--ink)" }}>
+          {label}
+        </span>
+        <span className="block text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
+          {description}
+        </span>
+      </span>
+      <ChevronRight size={16} strokeWidth={1.8} className="shrink-0" style={{ color: "var(--ink-subtle)" }} />
+    </Link>
+  );
+
   const groupLabel = (text: string) => (
     <div
       className="px-1 mb-2 text-[11.5px] font-semibold uppercase tracking-[0.06em]"
@@ -657,8 +678,17 @@ export default function SettingsPage() {
           </div>
         </motion.section>
 
-        {/* APP group */}
+        {/* MANAGE group */}
         <motion.section {...sectionMotion(3)}>
+          {groupLabel(t("groupManage"))}
+          <div className="rounded-[20px] px-4 py-1.5" style={{ background: "var(--surface)", ...cardShadow }}>
+            {manageRow("/dashboard/accounts", tNav("accounts"), t("manageAccountsDescription"))}
+            {manageRow("/dashboard/categories", t("manageCategories"), t("manageCategoriesDescription"))}
+          </div>
+        </motion.section>
+
+        {/* APP group */}
+        <motion.section {...sectionMotion(4)}>
           {groupLabel(t("groupApp"))}
           <div className="rounded-[20px] px-4 py-1.5" style={{ background: "var(--surface)", ...cardShadow }}>
             {/* Theme segment */}
@@ -779,7 +809,7 @@ export default function SettingsPage() {
         </motion.section>
 
         {/* Recurring income (salary) */}
-        <motion.section {...sectionMotion(4)}>
+        <motion.section {...sectionMotion(5)}>
           <div className="rounded-[20px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
@@ -868,7 +898,7 @@ export default function SettingsPage() {
         </motion.section>
 
         {/* Extra incomes link */}
-        <motion.section {...sectionMotion(5)}>
+        <motion.section {...sectionMotion(6)}>
           <a
             href="/dashboard/incomes"
             className="flex items-center justify-between gap-3 rounded-[20px] p-4 transition-transform active:scale-[.99]"
@@ -890,7 +920,7 @@ export default function SettingsPage() {
         </motion.section>
 
         {/* Restart setup */}
-        <motion.section {...sectionMotion(6)}>
+        <motion.section {...sectionMotion(7)}>
           <div
             className="flex items-center justify-between gap-3 rounded-[20px] p-4"
             style={{ background: "var(--surface)", ...cardShadow }}
@@ -920,12 +950,12 @@ export default function SettingsPage() {
         </motion.section>
 
         {/* iPhone Shortcuts (API tokens) — shared component, left wired */}
-        <motion.section {...sectionMotion(7)}>
+        <motion.section {...sectionMotion(8)}>
           <ShortcutsTokensCard />
         </motion.section>
 
         {/* DANGER group */}
-        <motion.section {...sectionMotion(8)}>
+        <motion.section {...sectionMotion(9)}>
           {groupLabel(t("dangerZone"))}
           <div
             className="rounded-[20px] p-4"
@@ -989,7 +1019,7 @@ export default function SettingsPage() {
 
         {/* Sign out */}
         <motion.button
-          {...sectionMotion(9)}
+          {...sectionMotion(10)}
           type="button"
           onClick={() => signOut({ callbackUrl: "/" })}
           className="w-full rounded-[18px] py-[13px] text-center text-[13.5px] font-semibold transition-transform active:scale-[.99]"

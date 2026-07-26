@@ -923,7 +923,11 @@
     "restartSetupDescription": "Volta a executar o assistente de configuração inicial para atualizar o teu salário, orçamento e despesas fixas",
     "restartSetupButton": "Reiniciar Assistente de Configuração",
     "groupMoney": "Dinheiro",
+    "groupManage": "Gerir",
     "groupApp": "Aplicação",
+    "manageAccountsDescription": "Contas bancárias para associares aos gastos",
+    "manageCategories": "Categorias e Regras",
+    "manageCategoriesDescription": "Categorias e regras de categorização automática",
     "theme": "Tema",
     "workspaceSuffix": "workspace"
   },

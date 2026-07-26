@@ -923,7 +923,11 @@
     "restartSetupDescription": "Re-run the initial setup wizard to update your salary, budget, and fixed expenses",
     "restartSetupButton": "Restart Setup Wizard",
     "groupMoney": "Money",
+    "groupManage": "Manage",
     "groupApp": "App",
+    "manageAccountsDescription": "Bank accounts to tag your expenses with",
+    "manageCategories": "Categories & Rules",
+    "manageCategoriesDescription": "Categories and auto-categorization rules",
     "theme": "Theme",
     "workspaceSuffix": "workspace"
   },
