@@ -54,18 +54,28 @@ jobs:
             echo "=== Pre-build cleanup ==="
             docker container prune -f
 
-            # Reap orphaned builds from a previous run. If the SSH session dies
-            # mid-build the `next build` tree is left parented to init, still
-            # holding ~3.5 GB. The memory cgroup then throttles on memory.high
-            # rather than OOM-killing, so those orphans never die on their own —
-            # they just pin the container at its ceiling and starve the running
-            # app until someone kills them by hand (outage, 2026-07-26).
-            # Safe to match on: the runtime container runs `node server.js`.
-            if pgrep -f "next build" > /dev/null 2>&1; then
-              echo "WARNING: orphaned 'next build' from a previous run — reaping"
-              pkill -9 -f "next build" || true
-              pkill -9 -f "jest-worker/processChild" || true
+            # Reap orphaned build processes from a previous run. If the SSH
+            # session dies mid-build the build tree is left parented to init,
+            # still holding ~3.5 GB. The memory cgroup then throttles on
+            # memory.high rather than OOM-killing, so those orphans never die on
+            # their own — they pin the container at its ceiling and starve the
+            # running app until killed by hand (outage, 2026-07-26).
+            #
+            # The patterns below bracket their first character on purpose. This
+            # whole script is visible in the remote shell's own command line, so
+            # an unbracketed pattern matches THIS process and pkill SIGKILLs the
+            # deploy itself (which is exactly what happened on run 30222204417).
+            # `[n]ode_...` matches a real build process but not the literal text
+            # here. $$ / $PPID are filtered too, in case a future edit
+            # reintroduces a self-matching string in a comment.
+            ORPHANS=$(pgrep -f "[n]ode_modules/.bin/next" 2>/dev/null | grep -vwE "$$|$PPID" || true)
+            if [ -n "$ORPHANS" ]; then
+              echo "WARNING: orphaned build processes from a previous run — reaping: $(echo $ORPHANS | tr '\n' ' ')"
+              kill -9 $ORPHANS 2>/dev/null || true
+              pkill -9 -f "[j]est-worker/processChild" 2>/dev/null || true
               sleep 3
+            else
+              echo "No orphaned build processes."
             fi
 
             echo "Disk before build: $(df -h / | tail -1 | awk '{print $5}')"
