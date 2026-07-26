@@ -3,6 +3,9 @@ services:
     image: postgres:17-alpine
     container_name: amigo-db
     restart: always
+    # Soft memory floor (cgroup v2 memory.low). Under host pressure the kernel
+    # reclaims from the build instead of from the live database.
+    mem_reservation: 384m
     environment:
       POSTGRES_USER: amigo
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
@@ -25,6 +28,10 @@ services:
         NEXT_PUBLIC_BUILD_DATE: ${NEXT_PUBLIC_BUILD_DATE:-unknown}
     container_name: amigo
     restart: always
+    # Soft memory floor (cgroup v2 memory.low) so a concurrent `docker compose
+    # build` can't reclaim the running app into swap. Not a hard limit — the app
+    # can still burst above this; it just won't be the first thing evicted.
+    mem_reservation: 768m
     ports:
       - "3000:3000"
     depends_on:

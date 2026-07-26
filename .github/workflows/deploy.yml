@@ -53,7 +53,34 @@ jobs:
             # Image cleanup happens AFTER the build instead (dangling-only).
             echo "=== Pre-build cleanup ==="
             docker container prune -f
+
+            # Reap orphaned builds from a previous run. If the SSH session dies
+            # mid-build the `next build` tree is left parented to init, still
+            # holding ~3.5 GB. The memory cgroup then throttles on memory.high
+            # rather than OOM-killing, so those orphans never die on their own —
+            # they just pin the container at its ceiling and starve the running
+            # app until someone kills them by hand (outage, 2026-07-26).
+            # Safe to match on: the runtime container runs `node server.js`.
+            if pgrep -f "next build" > /dev/null 2>&1; then
+              echo "WARNING: orphaned 'next build' from a previous run — reaping"
+              pkill -9 -f "next build" || true
+              pkill -9 -f "jest-worker/processChild" || true
+              sleep 3
+            fi
+
             echo "Disk before build: $(df -h / | tail -1 | awk '{print $5}')"
+            echo "Mem before build: $(free -m | awk '/^Mem:/{print $7" MB available"}')"
+
+            # Hard-fail if there isn't enough RAM headroom for the build. The
+            # type-check phase peaks around 3.5 GB; refusing early gives a clear
+            # error instead of a 20-minute stall that takes prod down with it.
+            AVAIL_MB=$(free -m | awk '/^Mem:/{print $7}')
+            if [ "$AVAIL_MB" -lt 3000 ]; then
+              echo "ERROR: only ${AVAIL_MB} MB RAM available, need ~3000 MB."
+              echo "Refusing to build — a starved build stalls instead of failing."
+              free -m
+              exit 1
+            fi
 
             # Hard-fail if the disk is too tight for a clean build (~3 GB free
             # is the empirical floor — full Next.js + node_modules + Prisma).
@@ -83,6 +110,26 @@ jobs:
             # is read back, which shows up as a false-red "exit 255" in Actions.
             echo "=== Starting container ==="
             docker compose up -d
+
+            # Verify the app actually serves traffic. `up -d` returning 0 only
+            # means the container started, not that it works — a green deploy
+            # with a dead app is the failure mode this catches.
+            echo "=== Health check ==="
+            HEALTHY=0
+            for i in $(seq 1 20); do
+              if curl -fsS --max-time 5 http://localhost:3000/api/health > /dev/null 2>&1; then
+                HEALTHY=1
+                echo "Healthy after ${i} attempt(s)"
+                break
+              fi
+              sleep 3
+            done
+            if [ "$HEALTHY" -ne 1 ]; then
+              echo "ERROR: app did not become healthy within 60s."
+              docker compose ps
+              docker compose logs --tail=50 amigo
+              exit 1
+            fi
 
             # Post-deploy: drop now-orphaned previous image (dangling only —
             # cache layers stay).

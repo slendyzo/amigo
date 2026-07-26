@@ -32,6 +32,13 @@ COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
 
+# Bound each build process's V8 heap. Without this, `next build`'s type-check
+# workers grow until they exhaust the LXC's memory cgroup, which throttles on
+# memory.high instead of OOM-killing — so the build stalls forever rather than
+# failing, and takes the running container down with it (outage, 2026-07-26).
+# A hard heap cap turns that silent stall into a loud, non-zero exit.
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 ARG NEXT_PUBLIC_BUILD_ID=dev
 ARG NEXT_PUBLIC_BUILD_DATE=unknown
 ENV NEXT_PUBLIC_BUILD_ID=$NEXT_PUBLIC_BUILD_ID
