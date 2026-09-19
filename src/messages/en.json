@@ -110,7 +110,13 @@
     "moreProjectsSub": "Budgets & tags",
     "moreInsightsSub": "Monthly reports",
     "moreTidyUpSub": "Categorize expenses",
-    "moreImportSub": "CSV · Excel · OFX"
+    "moreImportSub": "CSV · Excel · OFX",
+    "assetsAndDebts": "Assets & debts",
+    "assetsDescription": "Bicycles, vehicles, properties and payment plans",
+    "investments": "Investments",
+    "investmentsDescription": "Stocks, funds and crypto",
+    "categorizationRules": "Categorization rules",
+    "add": "Add"
   },
   "auth": {
     "signIn": "Sign In",

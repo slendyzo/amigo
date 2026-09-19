@@ -415,3 +415,9 @@ input[type="date"]:focus::-webkit-datetime-edit {
   .finance-recurring-selected { grid-template-columns: 20px 38px minmax(0, 1fr); }
   .finance-recurring-selected .finance-recurring-amount { grid-column: 3; }
 }
+
+/* The complete menu follows its available panel width, including on laptops. */
+.app-menu-groups { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1.25rem; }
+@container (min-width: 36rem) {
+  .app-menu-groups { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+}

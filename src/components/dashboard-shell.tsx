@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import MobileNav from "./mobile-nav";
+import WealthHubNav from "./wealth-hub-nav";
 import ProfileMenu from "./profile-menu";
 import type { ReactNode } from "react";
 
@@ -33,7 +34,7 @@ type NavItem = {
 const primaryNav: NavItem[] = [
   { key: "dashboard", href: "/dashboard", icon: "layout" },
   { key: "money", href: "/dashboard/expenses", icon: "dollar", match: ["/dashboard/incomes", "/dashboard/recurring", "/dashboard/import"] },
-  { key: "portfolio", href: "/dashboard/portfolio", icon: "trending-up", match: ["/dashboard/networth", "/dashboard/exchanges"] },
+  { key: "wealth", href: "/dashboard/networth", icon: "trending-up", match: ["/dashboard/portfolio"] },
   { key: "projects", href: "/dashboard/projects", icon: "folder" },
   { key: "settings", href: "/dashboard/settings", icon: "settings", match: ["/dashboard/categories", "/dashboard/mappings", "/dashboard/accounts", "/dashboard/tidy-up"] },
 ];
@@ -189,6 +190,7 @@ export default function DashboardShell({ children, userEmail, workspaceName, wor
         </header>
 
         <main className="flex-1 px-5 py-4 pb-36 overflow-x-hidden min-h-[calc(100vh-3.5rem)]">
+          <WealthHubNav />
           {children}
         </main>
       </div>
