@@ -462,7 +462,10 @@
     "change": "(alterar)",
     "addNote": "Adicionar nota",
     "adding": "A adicionar...",
-    "none": "Nenhuma"
+    "none": "Nenhuma",
+    "monthlyPaycheck": "Salário mensal",
+    "monthlyPaycheckHint": "Regista o salário real deste mês sem o repetir. Substitui a previsão de salário recorrente da mesma conta bancária neste mês.",
+    "regularIncome": "Salário e receitas recorrentes: {amount}"
   },
   "categories": {
     "title": "Categorias",
@@ -546,7 +549,10 @@
     },
     "defaultBadge": "predefinida",
     "expensesCount": "{count} despesas",
-    "expensesLinked": "{count} despesas associadas"
+    "expensesLinked": "{count} despesas associadas",
+    "openingBalance": "Saldo inicial",
+    "openingBalanceHint": "Valor nesta conta antes da primeira transação registada. Não é uma receita. O saldo calculado soma as receitas registadas e subtrai as despesas pagas; não é o saldo bancário em tempo real.",
+    "trackedBalance": "Saldo calculado"
   },
   "projects": {
     "title": "Projetos",
@@ -882,8 +888,8 @@
     "salaryNamePlaceholder": "ex: Salário Principal, Trabalho Extra",
     "dayOfMonthLabel": "Dia do Mês",
     "dayOfMonthHint": "Quando recebes esta receita todos os meses?",
-    "extraIncomes": "Receitas Extra",
-    "extraIncomesDescription": "Receitas pontuais ou irregulares como bónus, trabalho freelance, etc.",
+    "extraIncomes": "Receitas",
+    "extraIncomesDescription": "Gere os salários mensais e outras receitas.",
     "manageIncomes": "Gerir Receitas",
     "dangerZone": "Zona de Perigo",
     "deleteAllExpenses": "Eliminar Todas as Despesas",
@@ -2075,5 +2081,29 @@
       "uncategorized": "Sem categoria",
       "vsMonth": "vs mês passado"
     }
+  },
+  "debt": {
+    "title": "Pagamentos da dívida",
+    "back": "Voltar ao património",
+    "recorded": "Prestações pagas registadas",
+    "projectedBalance": "Saldo previsto",
+    "schedule": "Plano de pagamentos",
+    "name": "Nome",
+    "firstPayment": "Data da primeira prestação",
+    "loanStart": "Data de início do empréstimo",
+    "monthlyPayment": "Prestação mensal ({currency})",
+    "term": "Número de meses",
+    "scheduleHint": "Ao guardar, o calendário futuro é atualizado e são criados os registos em falta até este mês. Os pagamentos existentes mantêm as datas e os valores; podes editá-los abaixo.",
+    "noTemplate": "Esta dívida não tem um plano recorrente associado. Guardar atualiza apenas o saldo previsto.",
+    "history": "Histórico de pagamentos",
+    "historyHint": "Os pagamentos registados e o saldo previsto são apresentados separadamente. Edita um registo para corrigir a data, o valor ou o estado de pagamento.",
+    "empty": "Ainda não há pagamentos registados.",
+    "paid": "Pago",
+    "pending": "Pendente",
+    "editPayment": "Editar pagamento de {date}",
+    "saveError": "Não foi possível guardar o plano.",
+    "loadError": "Não foi possível carregar este pagamento.",
+    "saved": "Plano de pagamentos guardado.",
+    "saving": "A guardar…"
   }
 }

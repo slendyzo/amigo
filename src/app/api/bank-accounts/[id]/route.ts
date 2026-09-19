@@ -16,7 +16,10 @@ export async function PUT(
 
     const { id } = await params;
     const body = await request.json();
-    const { name, currency } = body;
+    const { name, currency, balance } = body;
+    if (balance !== undefined && (typeof balance !== "number" || !Number.isFinite(balance) || Math.abs(balance) >= 1e10)) {
+      return NextResponse.json({ error: "Invalid opening balance" }, { status: 400 });
+    }
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -35,6 +38,7 @@ export async function PUT(
       where: { id },
       data: {
         name,
+        ...(balance !== undefined ? { balance } : {}),
         currency: currency || existing.currency,
       },
     });

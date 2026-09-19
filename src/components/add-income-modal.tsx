@@ -169,6 +169,13 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
             </div>
           )}
 
+          <label className="flex items-start gap-3 rounded-[18px] border border-border bg-card p-4">
+            <input type="checkbox" className="mt-1 accent-primary" checked={incomeType === "SALARY"}
+              onChange={e => setIncomeType(e.target.checked ? "SALARY" : "OTHER")} />
+            <span><span className="block text-sm font-medium">{t("monthlyPaycheck")}</span>
+              <span className="block text-xs text-muted-foreground">{t("monthlyPaycheckHint")}</span></span>
+          </label>
+
           {/* CARD 1: Essentials (Name + Amount + Date) */}
           <div className="rounded-[18px] border border-[var(--line)] p-4 space-y-3" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
             {/* Name */}
@@ -183,8 +190,8 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
             />
 
             {/* Amount + Currency */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 flex items-baseline gap-1">
+            <div className="money-entry-row">
+              <div className="money-entry-value flex min-w-0 items-baseline gap-1">
                 <span className="text-[var(--positive)] text-2xl font-light">{getCurrencySymbol(currency)}</span>
                 <AmountInput
                   value={amount}
@@ -192,8 +199,8 @@ export default function AddIncomeModal({ isOpen, onClose }: AddIncomeModalProps)
                   currency={currency}
                   required
                   hideCurrencySymbol
-                  className="flex-1"
-                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[28px] font-bold tabular-nums !text-[var(--ink)] !placeholder-[var(--ink-subtle)]"
+                  className="min-w-0 flex-1"
+                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[24px] font-bold tabular-nums !text-[var(--ink)] !placeholder-[var(--ink-subtle)]"
                 />
               </div>
               <select

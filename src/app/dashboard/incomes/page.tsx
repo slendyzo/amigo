@@ -1,5 +1,6 @@
 "use client";
 
+import { isRegularIncome } from "@/lib/income-classification";
 import { useState, useEffect, useMemo } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
@@ -16,6 +17,7 @@ type Income = {
   description: string | null;
   type: string;
   amount: number;
+  amountEur: number;
   currency: string;
   date: string;
   isRecurring: boolean;
@@ -179,13 +181,13 @@ export default function IncomesPage() {
     new Date(dateString).toLocaleDateString(undefined, { month: "short", day: "numeric", timeZone: "UTC" });
 
   const expectedMonthly = useMemo(
-    () => incomes.filter((i) => i.isRecurring).reduce((s, i) => s + Number(i.amount), 0),
+    () => incomes.filter(isRegularIncome).reduce((s, i) => s + Number(i.amountEur), 0),
     [incomes]
   );
   const extra = total - expectedMonthly;
 
   return (
-    <div className="flex flex-col gap-4 md:max-w-[640px]" style={{ color: "var(--ink)" }}>
+    <div className="finance-list-page flex flex-col gap-4 md:max-w-[640px]" style={{ color: "var(--ink)" }}>
       <MoneyHubTabs active="income" />
 
       {/* Green hero card */}
@@ -201,7 +203,7 @@ export default function IncomesPage() {
             {formatCurrency(total, "EUR")}
           </div>
           <div className="mt-1.5 text-[11.5px] tabular-nums text-[#2A6A4C] dark:text-[#9ad9b6]">
-            {t("expectedMonthly", { amount: formatCurrency(expectedMonthly, "EUR") })}
+            {t("regularIncome", { amount: formatCurrency(expectedMonthly, "EUR") })}
             {extra > 0.005 ? ` · ${t("extraOverExpected", { amount: formatCurrency(extra, "EUR") })}` : ""}
           </div>
         </div>
@@ -256,7 +258,7 @@ export default function IncomesPage() {
             {incomes.map((income, idx) => (
               <div
                 key={income.id}
-                className="tap-none flex items-center gap-3 py-[11px]"
+                className="finance-list-row tap-none flex items-center gap-3 py-[11px]"
                 style={{ borderBottom: idx < incomes.length - 1 ? "1px solid var(--line)" : "none" }}
                 onClick={() => openEditModal(income)}
               >
@@ -265,7 +267,7 @@ export default function IncomesPage() {
                   <div className="truncate text-[13.5px] font-semibold">{income.name}</div>
                   <div className="flex items-center truncate text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
                     <span className="truncate">
-                      {income.isRecurring ? tExpenses("recurring") : t("oneOff")} · {formatDate(income.date)}
+                      {income.type === "SALARY" ? t("monthlyPaycheck") : income.isRecurring ? tExpenses("recurring") : t("oneOff")} · {formatDate(income.date)}
                       {income.type !== "OTHER" ? ` · ${getTypeLabel(income.type)}` : ""}
                     </span>
                     {income.isRecurring && (
@@ -275,7 +277,7 @@ export default function IncomesPage() {
                     )}
                   </div>
                 </div>
-                <div className="text-[13.5px] font-semibold tabular-nums" style={{ color: "var(--positive)" }}>
+                <div className="finance-list-amount text-[13.5px] font-semibold tabular-nums" style={{ color: "var(--positive)" }}>
                   +{currencySymbol(income.currency)}{Number(income.amount).toFixed(2)}
                 </div>
               </div>
@@ -361,6 +363,13 @@ export default function IncomesPage() {
                   })}
                 </div>
               </div>
+
+              {!incomes.find(income => income.id === editingId)?.isRecurring && <label className="flex items-start gap-3 rounded-[18px] bg-card p-4">
+                <input type="checkbox" className="mt-1 accent-primary" checked={formData.type === "SALARY"}
+                  onChange={e => setFormData({ ...formData, type: e.target.checked ? "SALARY" : "OTHER" })} />
+                <span><span className="block text-sm font-medium">{t("monthlyPaycheck")}</span>
+                  <span className="block text-xs text-muted-foreground">{t("monthlyPaycheckHint")}</span></span>
+              </label>}
 
               {/* Date + account */}
               <div className="space-y-3 rounded-[18px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>

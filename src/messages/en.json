@@ -462,7 +462,10 @@
     "change": "(change)",
     "addNote": "Add a note",
     "adding": "Adding...",
-    "none": "None"
+    "none": "None",
+    "monthlyPaycheck": "Monthly paycheck",
+    "monthlyPaycheckHint": "Record this month’s actual salary without repeating it. It replaces the recurring salary estimate for the same bank account this month.",
+    "regularIncome": "Salary & recurring income: {amount}"
   },
   "categories": {
     "title": "Categories",
@@ -546,7 +549,10 @@
     },
     "defaultBadge": "default",
     "expensesCount": "{count} expenses",
-    "expensesLinked": "{count} expenses linked"
+    "expensesLinked": "{count} expenses linked",
+    "openingBalance": "Opening balance",
+    "openingBalanceHint": "Amount in this account before your first recorded transaction. This is not income. The tracked balance adds recorded income and subtracts paid expenses; it is not a live bank balance.",
+    "trackedBalance": "Tracked balance"
   },
   "projects": {
     "title": "Projects",
@@ -882,8 +888,8 @@
     "salaryNamePlaceholder": "e.g., Main Salary, Side Job",
     "dayOfMonthLabel": "Day of Month",
     "dayOfMonthHint": "When do you receive this income each month?",
-    "extraIncomes": "Extra Incomes",
-    "extraIncomesDescription": "One-time or irregular incomes like bonuses, freelance work, etc.",
+    "extraIncomes": "Income",
+    "extraIncomesDescription": "Manage monthly paychecks and other income.",
     "manageIncomes": "Manage Incomes",
     "dangerZone": "Danger Zone",
     "deleteAllExpenses": "Delete All Expenses",
@@ -2106,5 +2112,29 @@
       "uncategorized": "Uncategorized",
       "vsMonth": "vs last month"
     }
+  },
+  "debt": {
+    "title": "Debt payments",
+    "back": "Back to net worth",
+    "recorded": "Recorded paid payments",
+    "projectedBalance": "Projected balance",
+    "schedule": "Payment schedule",
+    "name": "Name",
+    "firstPayment": "First payment date",
+    "loanStart": "Loan start date",
+    "monthlyPayment": "Monthly payment ({currency})",
+    "term": "Number of months",
+    "scheduleHint": "Saving updates the future schedule and adds missing entries through this month. Existing payments keep their dates and amounts; edit them below.",
+    "noTemplate": "This debt has no linked recurring schedule. Saving updates its projected balance only.",
+    "history": "Payment history",
+    "historyHint": "Recorded payments and the projected balance are shown separately. Edit an entry to correct its date, amount or paid status.",
+    "empty": "No payments recorded yet.",
+    "paid": "Paid",
+    "pending": "Pending",
+    "editPayment": "Edit payment dated {date}",
+    "saveError": "Could not save the payment schedule.",
+    "loadError": "Could not load this payment.",
+    "saved": "Payment schedule saved.",
+    "saving": "Saving…"
   }
 }

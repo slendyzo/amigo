@@ -16,6 +16,7 @@ export type AmortizationInput = {
   monthlyPayment?: number | null;
   startDate: Date;
   asOf?: Date;
+  firstPaymentAtStart?: boolean; // Installments are recorded in their first month.
 };
 
 export type AmortizationResult = {
@@ -37,7 +38,12 @@ export function computeLoanBalance(input: AmortizationInput): AmortizationResult
     return { currentBalance: 0, monthsElapsed: 0, totalMonths: termMonths, monthlyPayment, totalInterestPaid: 0 };
   }
 
-  const monthsElapsed = Math.max(0, monthsBetween(startDate, asOf));
+  // Installment generation includes the current calendar month, even before
+  // its scheduled day. Keep the projected balance on that same basis.
+  const monthsElapsed = Math.max(0, input.firstPaymentAtStart
+    ? (asOf.getUTCFullYear() - startDate.getUTCFullYear()) * 12
+      + asOf.getUTCMonth() - startDate.getUTCMonth() + 1
+    : monthsBetween(startDate, asOf));
 
   // Loan hasn't started yet — full principal still owed.
   if (monthsElapsed === 0) {

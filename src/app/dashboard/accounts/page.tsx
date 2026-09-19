@@ -1,5 +1,6 @@
 "use client";
 
+import { formatCurrency } from "@/lib/currencies";
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
@@ -11,6 +12,8 @@ type BankAccount = {
   id: string;
   name: string;
   currency: string;
+  balance: number;
+  trackedBalance: number;
   _count?: { expenses: number };
 };
 
@@ -23,12 +26,6 @@ const sectionMotion = (i: number) => ({
 });
 
 const cardShadow = { boxShadow: "var(--shadow-card)" };
-
-// Decorative masked number from the account id (there is no card-number field)
-const maskedNumber = (id: string) => {
-  const last4 = id.length >= 4 ? id.slice(-4).toUpperCase() : "••••";
-  return `•••• •••• •••• ${last4}`;
-};
 
 export default function BankAccountsPage() {
   const t = useTranslations("accounts");
@@ -44,6 +41,7 @@ export default function BankAccountsPage() {
   // Form state
   const [name, setName] = useState("");
   const [currency, setCurrency] = useState("EUR");
+  const [balance, setBalance] = useState("0");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -69,6 +67,7 @@ export default function BankAccountsPage() {
   const resetForm = () => {
     setName("");
     setCurrency("EUR");
+    setBalance("0");
     setEditingAccount(null);
     setError("");
   };
@@ -78,6 +77,7 @@ export default function BankAccountsPage() {
       setEditingAccount(account);
       setName(account.name);
       setCurrency(account.currency);
+      setBalance(String(account.balance ?? 0));
     } else {
       resetForm();
     }
@@ -93,6 +93,7 @@ export default function BankAccountsPage() {
       const body = {
         name,
         currency,
+        balance: Number(balance),
       };
 
       const url = editingAccount ? `/api/bank-accounts/${editingAccount.id}` : "/api/bank-accounts";
@@ -138,7 +139,7 @@ export default function BankAccountsPage() {
   const others = accounts.slice(1);
 
   return (
-    <div className="mx-auto flex max-w-md flex-col gap-4">
+    <div className="finance-list-page mx-auto flex min-w-0 w-full max-w-md flex-col gap-4">
       {/* Pushed-page header */}
       <motion.div {...sectionMotion(0)} className="flex items-center justify-between">
         <button
@@ -200,31 +201,34 @@ export default function BankAccountsPage() {
       ) : (
         <>
           {/* Featured (default) account — accent-gradient card */}
-          <motion.div
+          <motion.button
             {...sectionMotion(1)}
+            type="button"
+            aria-label={`${t("editAccount")}: ${featured.name}`}
             onClick={() => openModal(featured)}
-            className="cursor-pointer rounded-[24px] px-[22px] py-5 text-white transition-transform active:scale-[.98]"
+            className="w-full cursor-pointer text-left rounded-[24px] px-[22px] py-5 text-white transition-transform active:scale-[.98]"
             style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-soft))", boxShadow: "var(--shadow-fab)" }}
           >
             <div className="flex items-center justify-between">
-              <span className="text-[13px]" style={{ opacity: 0.8 }}>
+              <span className="min-w-0 break-words pr-3 text-[13px]" style={{ opacity: 0.8 }}>
                 {featured.name}
               </span>
               <span
-                className="rounded-[12px] px-[9px] py-[3px] text-[10.5px] font-semibold"
+                className="shrink-0 rounded-[12px] px-[9px] py-[3px] text-[10.5px] font-semibold"
                 style={{ background: "rgba(255,255,255,.2)" }}
               >
                 {t("defaultBadge")}
               </span>
             </div>
-            <div className="mt-[18px] text-[16px] font-semibold tabular-nums" style={{ letterSpacing: "0.12em" }}>
-              {maskedNumber(featured.id)}
+            <p className="mt-4 text-xs">{t("trackedBalance")}</p>
+            <div className="mt-2 text-[28px] font-semibold tabular-nums">
+              {formatCurrency(featured.trackedBalance ?? Number(featured.balance), featured.currency)}
             </div>
-            <div className="mt-4 flex items-center justify-between text-[11.5px]" style={{ opacity: 0.8 }}>
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-[11.5px]" style={{ opacity: 0.8 }}>
               <span>{t("types.checking")} · {featured.currency}</span>
               <span>{t("expensesLinked", { count: featured._count?.expenses ?? 0 })}</span>
             </div>
-          </motion.div>
+          </motion.button>
 
           {/* Other accounts — rows inside a surface card */}
           {others.length > 0 && (
@@ -237,7 +241,7 @@ export default function BankAccountsPage() {
                 <button
                   key={account.id}
                   onClick={() => openModal(account)}
-                  className="flex w-full items-center gap-3 py-3 text-left transition-opacity active:opacity-70"
+                  className="finance-list-row flex w-full items-center gap-3 py-3 text-left transition-opacity active:opacity-70"
                   style={idx > 0 ? { borderTop: "1px solid var(--line)" } : undefined}
                 >
                   <span
@@ -254,6 +258,7 @@ export default function BankAccountsPage() {
                       {account.currency} · {t("expensesCount", { count: account._count?.expenses ?? 0 })}
                     </span>
                   </span>
+                  <span className="finance-list-amount text-sm font-semibold tabular-nums">{formatCurrency(account.trackedBalance ?? Number(account.balance), account.currency)}</span>
                   <ChevronRight size={18} strokeWidth={1.8} style={{ color: "var(--ink-subtle)" }} />
                 </button>
               ))}
@@ -312,6 +317,12 @@ export default function BankAccountsPage() {
                   style={{ background: "var(--surface)", border: "1px solid var(--line-strong)", color: "var(--ink)", ["--tw-ring-color" as string]: "var(--accent)" }}
                 />
               </div>
+              <label className="block text-sm font-medium">
+                {t("openingBalance")}
+                <input type="number" step="0.01" required value={balance} onChange={e => setBalance(e.target.value)}
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-4 py-2.5" />
+                <span className="mt-2 block text-xs font-normal text-muted-foreground">{t("openingBalanceHint")}</span>
+              </label>
               <div>
                 <label className="mb-1 block text-[13px] font-medium" style={{ color: "var(--ink-muted)" }}>
                   {t("currency")}

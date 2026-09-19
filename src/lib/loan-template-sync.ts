@@ -8,6 +8,7 @@
 // We do this by surfacing candidate matches from the workspace, with light fuzzy
 // matching on amount + keyword. The actual link decision happens in the UI.
 
+import { debtSchedule } from "./debt-schedule";
 import type { Prisma, PrismaClient, RecurringTemplate } from "@prisma/client";
 
 const AMOUNT_TOLERANCE_EUR = 5;
@@ -82,7 +83,7 @@ export async function createMonthlyTemplateForLoan(
   }
 ): Promise<RecurringTemplate> {
   const dayOfMonth = args.startDate.getUTCDate();
-  const nextDue = nextMonthlyDue(args.startDate);
+  const nextDue = debtSchedule(args.startDate, null).nextDue;
 
   const data: Prisma.RecurringTemplateUncheckedCreateInput = {
     workspaceId: args.workspaceId,
@@ -92,6 +93,7 @@ export async function createMonthlyTemplateForLoan(
     currency: args.currency,
     interval: "MONTHLY",
     dayOfMonth,
+    startDate: args.startDate,
     bankAccountId: args.bankAccountId ?? null,
     autoGenerate: true,
     isActive: true,
@@ -136,14 +138,4 @@ function scoreCandidate(
   }
 
   return score;
-}
-
-function nextMonthlyDue(startDate: Date): Date {
-  const now = new Date();
-  const day = startDate.getUTCDate();
-  let next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), day));
-  if (next <= now) {
-    next = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() + 1, day));
-  }
-  return next;
 }

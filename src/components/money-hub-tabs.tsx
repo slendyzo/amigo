@@ -9,6 +9,7 @@
  * The active pill animates between segments with a framer-motion `layoutId`.
  */
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
@@ -26,6 +27,7 @@ const EASE = [0.16, 1, 0.3, 1] as const;
 export default function MoneyHubTabs({ active }: { active: MoneyTab }) {
   const router = useRouter();
   const t = useTranslations("expenses");
+  const nav = useTranslations("nav");
 
   const segments: { key: MoneyTab; label: string }[] = [
     { key: "expenses", label: t("tabExpenses") },
@@ -40,8 +42,9 @@ export default function MoneyHubTabs({ active }: { active: MoneyTab }) {
       transition={{ duration: 0.35, ease: EASE }}
       className="flex flex-col gap-4"
     >
-      <div className="text-[20px] font-bold tracking-[-0.02em]" style={{ color: "var(--ink)" }}>
-        {t("money")}
+      <div className="flex items-center justify-between gap-3">
+        <div className="text-[20px] font-bold tracking-[-0.02em]" style={{ color: "var(--ink)" }}>{t("money")}</div>
+        <Link href="/dashboard/accounts" className="rounded-xl px-3 py-2 text-sm font-medium text-primary">{nav("accounts")}</Link>
       </div>
       <div
         className="flex rounded-[16px] p-1"

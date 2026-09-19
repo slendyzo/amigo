@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
+import { debtSchedule } from "@/lib/debt-schedule";
+import { generateDueForTemplate } from "@/lib/recurring-generate";
 import { computeLoanBalance } from "@/lib/loan-amortization";
 import {
   requireActiveWorkspace,
@@ -53,6 +55,24 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     const body = (await request.json()) as Record<string, unknown>;
 
+    for (const field of ["principal", "monthlyPayment", "interestRate", "termMonths"] as const) {
+      const value = body[field];
+      if (value !== undefined && (typeof value !== "number" || !Number.isFinite(value)
+        || (field === "interestRate" ? value < 0 : value <= 0)
+        || (field === "termMonths" && (!Number.isInteger(value) || value > 1200)))) {
+        return NextResponse.json({ error: `Invalid ${field}` }, { status: 400 });
+      }
+    }
+    if (body.name !== undefined && (typeof body.name !== "string" || !body.name.trim())) {
+      return NextResponse.json({ error: "Name is required" }, { status: 400 });
+    }
+    if (body.startDate !== undefined && (typeof body.startDate !== "string"
+      || !/^\d{4}-\d{2}-\d{2}$/.test(body.startDate)
+      || !Number.isFinite(new Date(body.startDate).getTime())
+      || new Date(body.startDate).toISOString().slice(0, 10) !== body.startDate)) {
+      return NextResponse.json({ error: "Invalid startDate" }, { status: 400 });
+    }
+
     const data: Prisma.LiabilityUpdateInput = {};
 
     if (typeof body.name === "string") data.name = body.name.trim();
@@ -98,6 +118,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
     // Recompute current balance with whatever ends up being effective.
     const merged = {
+      firstPaymentAtStart: existing.type === "INSTALLMENT",
       principal: typeof body.principal === "number" ? body.principal : Number(existing.principal),
       interestRate:
         typeof body.interestRate === "number" ? body.interestRate : existing.interestRate ? Number(existing.interestRate) : null,
@@ -117,38 +138,35 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     data.currentBalance = new Prisma.Decimal(balance.currentBalance);
     data.currentBalanceEur = new Prisma.Decimal(balanceEur);
 
-    const liability = await prisma.liability.update({
-      where: { id },
-      data,
-      include: {
-        realAsset: { select: { id: true, name: true, type: true } },
-        recurringTemplate: { select: { id: true, name: true, amount: true } },
-      },
-    });
+    // Commit the debt, its future schedule and any missing payments together.
+    // Existing payment dates and amounts remain available for individual edits.
+    const result = await prisma.$transaction(async (tx) => {
+      const liability = await tx.liability.update({
+        where: { id }, data,
+        include: {
+          realAsset: { select: { id: true, name: true, type: true } },
+          recurringTemplate: { select: { id: true, name: true, amount: true } },
+        },
+      });
+      let generatedExpenses = 0;
+      if (liability.recurringTemplateId) {
+        const scheduleChanged = body.startDate !== undefined || body.termMonths !== undefined;
+        const updates: Prisma.RecurringTemplateUpdateInput = {};
+        if (typeof body.name === "string") updates.name = body.name.trim();
+        if (typeof body.monthlyPayment === "number") updates.amount = body.monthlyPayment;
+        if (scheduleChanged) Object.assign(updates, debtSchedule(liability.startDate, liability.termMonths));
+        if (Object.keys(updates).length) {
+          await tx.recurringTemplate.update({ where: { id: liability.recurringTemplateId }, data: updates });
+        }
+        if (scheduleChanged && liability.status === "ACTIVE") {
+          generatedExpenses = await generateDueForTemplate(liability.recurringTemplateId,
+            { startDate: liability.startDate }, tx);
+        }
+      }
+      return { liability, generatedExpenses };
+    }, { timeout: 30000 });
 
-    // Bidirectional sync: propagate name/monthlyPayment changes to a linked template.
-    if (liability.recurringTemplateId) {
-      const updates: { name?: string; amount?: Prisma.Decimal } = {};
-      const tmpl = liability.recurringTemplate;
-      if (typeof body.name === "string" && tmpl && body.name.trim() !== tmpl.name) {
-        updates.name = body.name.trim();
-      }
-      if (
-        typeof body.monthlyPayment === "number" &&
-        tmpl &&
-        Number(tmpl.amount) !== body.monthlyPayment
-      ) {
-        updates.amount = new Prisma.Decimal(body.monthlyPayment);
-      }
-      if (Object.keys(updates).length > 0) {
-        await prisma.recurringTemplate.update({
-          where: { id: liability.recurringTemplateId },
-          data: updates,
-        });
-      }
-    }
-
-    return NextResponse.json({ liability });
+    return NextResponse.json(result);
   } catch (error) {
     return errorResponse(error);
   }

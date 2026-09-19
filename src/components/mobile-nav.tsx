@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect, type ReactNode } from "react";
 import { useTranslations } from "next-intl";
+import { Modal, ModalHeader, ModalBody, ModalFooter } from "./ui/modal";
 import { ThemeToggle } from "./theme-controls";
 
 // 22px stroke icons at 1.8 weight, per the Calm Violet handoff tab bar
@@ -43,25 +44,11 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
   const pathname = usePathname();
   const router = useRouter();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sheetIn, setSheetIn] = useState(false);
   const t = useTranslations("nav");
 
   useEffect(() => { setMenuOpen(false); }, [pathname]);
 
-  useEffect(() => {
-    document.body.classList.toggle("modal-open", menuOpen);
-    if (menuOpen) {
-      const raf = requestAnimationFrame(() => setSheetIn(true));
-      return () => { cancelAnimationFrame(raf); document.body.classList.remove("modal-open"); };
-    }
-    setSheetIn(false);
-    return () => document.body.classList.remove("modal-open");
-  }, [menuOpen]);
-
-  const closeSheet = () => {
-    setSheetIn(false);
-    setTimeout(() => setMenuOpen(false), 300);
-  };
+  const closeSheet = () => setMenuOpen(false);
 
   const go = (href: string) => { closeSheet(); router.push(href); };
 
@@ -70,7 +57,7 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
   const dashActive = pathname === "/dashboard";
 
   const tab = (active: boolean, href: string, icon: string, label: string) => (
-    <Link href={href} className="flex flex-col items-center justify-center gap-[3px] w-16 h-full tap-none transition-colors"
+    <Link href={href} className="flex flex-col items-center justify-center gap-[3px] min-w-0 w-full min-h-12 tap-none transition-colors"
       style={{ color: active ? "var(--accent)" : "var(--ink-subtle)" }}>
       <Icon name={icon} />
       <span className="text-[10px]" style={{ fontWeight: active ? 600 : 500 }}>{label}</span>
@@ -78,7 +65,7 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
   );
 
   const shortcut = (href: string, icon: string, tint: string, iconColor: string, label: string, sub: string) => (
-    <button onClick={() => go(href)} className="text-left rounded-[18px] p-[15px] tap-none active:scale-[.98] transition-transform"
+    <button onClick={() => go(href)} className="min-w-0 break-words text-left rounded-[18px] p-[15px] tap-none active:scale-[.98] transition-transform"
       style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
       <div className="w-[38px] h-[38px] rounded-xl flex items-center justify-center mb-2.5" style={{ background: tint, color: iconColor }}>
         <Icon name={icon} size={16} />
@@ -91,7 +78,7 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
   const listRow = (label: string, onClick: () => void, opts?: { dot?: boolean; last?: boolean }) => (
     <button onClick={onClick} className="w-full flex items-center justify-between py-3 tap-none"
       style={{ borderBottom: opts?.last ? "none" : "1px solid var(--line)", color: "var(--ink)" }}>
-      <span className="text-[13px] font-medium">{label}</span>
+      <span className="min-w-0 break-words pr-3 text-left text-[13px] font-medium">{label}</span>
       {opts?.dot
         ? <span className="w-2 h-2 rounded-full" style={{ background: "var(--accent)" }} />
         : <span style={{ color: "var(--ink-subtle)" }}><Icon name="chevron" size={14} sw={2} /></span>}
@@ -101,15 +88,15 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
   return (
     <>
       {/* Bottom tab bar — Home / Money / FAB / Wealth / More */}
-      <nav className="mobile-nav-bar fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[660px] z-40 pb-safe-bottom border-t"
+      <nav className="mobile-nav-bar app-bottom-nav fixed bottom-0 left-1/2 -translate-x-1/2 z-40 pb-safe-bottom border-t"
         style={{ background: "var(--surface)", borderColor: "var(--line)" }}>
-        <div className="flex items-center justify-around pt-2.5 pb-1.5">
+        <div className="grid grid-cols-5 items-center px-3 pt-2.5 pb-1.5">
           {tab(dashActive, "/dashboard", "home", t("home"))}
           {tab(moneyActive, "/dashboard/expenses", "money", t("money"))}
 
           {/* Center FAB */}
           <button onClick={onAddClick} aria-label="Add"
-            className="flex items-center justify-center w-[52px] h-[52px] rounded-full -mt-6 tap-none active:scale-[.94] transition-transform"
+            className="justify-self-center flex items-center justify-center w-[52px] h-[52px] rounded-full -mt-6 tap-none active:scale-[.94] transition-transform"
             style={{ background: "var(--accent)", color: "var(--accent-fg)", boxShadow: "var(--shadow-fab)" }}>
             <Icon name="plus" size={24} sw={2} />
           </button>
@@ -117,7 +104,7 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
           {tab(wealthActive, "/dashboard/portfolio", "wealth", t("wealth"))}
 
           <button onClick={() => setMenuOpen(true)}
-            className="flex flex-col items-center justify-center gap-[3px] w-16 h-full tap-none transition-colors"
+            className="flex flex-col items-center justify-center gap-[3px] min-w-0 w-full min-h-12 tap-none transition-colors"
             style={{ color: menuOpen ? "var(--accent)" : "var(--ink-subtle)" }}>
             <Icon name="more" />
             <span className="text-[10px] font-medium">{t("more")}</span>
@@ -125,25 +112,10 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
         </div>
       </nav>
 
-      {/* More sheet (replaces the drawer) */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-end">
-          <div className="absolute inset-0 transition-opacity duration-300"
-            style={{ background: "rgba(23,22,31,.45)", opacity: sheetIn ? 1 : 0 }}
-            onClick={closeSheet} />
-          <div className="relative w-full max-w-[660px] flex flex-col gap-4 rounded-t-[28px] px-5 pt-3.5 transition-transform duration-300"
-            style={{ background: "var(--app-bg)", paddingBottom: "max(env(safe-area-inset-bottom, 0px), 28px)", transform: sheetIn ? "translateY(0)" : "translateY(100%)", transitionTimingFunction: "var(--ease)" }}>
-            <div className="w-10 h-1 rounded-sm mx-auto" style={{ background: "color-mix(in srgb, var(--ink) 15%, transparent)" }} />
-
-            <div className="flex items-center justify-between">
-              <div className="text-[17px] font-bold" style={{ color: "var(--ink)" }}>{t("more")}</div>
-              <button onClick={closeSheet} aria-label="Close"
-                className="w-8 h-8 rounded-full flex items-center justify-center tap-none"
-                style={{ background: "var(--surface)", color: "var(--ink-muted)", boxShadow: "var(--shadow-card)" }}>
-                <Icon name="close" size={14} sw={2} />
-              </button>
-            </div>
-
+      {/* Same viewport-safe overlay as the other app dialogs. */}
+      <Modal isOpen={menuOpen} onClose={closeSheet} variant="sheet" size="xl" flush className="app-more-sheet">
+        <ModalHeader title={t("more")} />
+        <ModalBody className="space-y-4 px-5 pt-2">
             {/* 2×2 shortcut grid */}
             <div className="grid grid-cols-2 gap-2.5">
               {shortcut("/dashboard/projects", "folder", "var(--surface-2)", "var(--accent)", t("projects"), t("moreProjectsSub"))}
@@ -160,7 +132,11 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
               {listRow(t("whatsNew"), () => { closeSheet(); onWhatsNew?.(); }, { dot: true, last: true })}
             </div>
 
-            <div className="flex items-center justify-between gap-3">
+            {userEmail && (
+              <p className="break-words text-[11px] text-center" style={{ color: "var(--ink-subtle)" }}>{userEmail}</p>
+            )}
+        </ModalBody>
+        <ModalFooter className="flex-wrap items-center justify-between gap-3">
               <ThemeToggle />
               {onSignOut && (
                 <button onClick={onSignOut}
@@ -169,13 +145,8 @@ export default function MobileNav({ onAddClick, userEmail, workspaceName, onSign
                   <Icon name="signout" size={16} />{t("signOut")}
                 </button>
               )}
-            </div>
-            {userEmail && (
-              <p className="text-[11px] text-center -mt-1 truncate" style={{ color: "var(--ink-subtle)" }}>{userEmail}</p>
-            )}
-          </div>
-        </div>
-      )}
+        </ModalFooter>
+      </Modal>
     </>
   );
 }

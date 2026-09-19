@@ -4,6 +4,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --app-column-width: 792px;
+  --app-gutter: 20px;
   --electric-blue: #0070f3;
   --radius: 0.75rem;
   --background: oklch(1 0 0);
@@ -368,4 +370,48 @@ input[type="date"]:not(:valid)::-webkit-datetime-edit {
 
 input[type="date"]:focus::-webkit-datetime-edit {
   color: inherit;
+}
+
+/* Finance detail layouts respond to their column, not the intentionally
+   disabled global desktop breakpoints. Keep monetary values whole and legible. */
+.finance-detail { container-type: inline-size; }
+.finance-summary-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 0.75rem; }
+.finance-summary-value { font-size: 1.375rem; line-height: 1.3; overflow-wrap: anywhere; }
+.finance-form-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+.finance-form-grid > * { min-width: 0; }
+.finance-payment-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.25rem 0.5rem; }
+.finance-payment-amount { grid-row: 2; overflow-wrap: anywhere; }
+.finance-payment-row > button { grid-column: 2; grid-row: 1 / span 2; }
+@container (min-width: 30rem) {
+  .finance-summary-grid, .finance-form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .finance-form-wide { grid-column: 1 / -1; }
+  .finance-payment-row { grid-template-columns: minmax(0, 1fr) auto auto; gap: 0.75rem; }
+  .finance-payment-amount { grid-row: 1; }
+  .finance-payment-row > button { grid-column: 3; grid-row: 1; }
+}
+
+.modal-body { container-type: inline-size; overflow-wrap: anywhere; }
+.modal-body :where(input, select, textarea, fieldset) { min-width: 0; max-width: 100%; }
+.money-entry-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0.75rem; }
+@container (max-width: 22rem) {
+  .money-entry-row { grid-template-columns: minmax(0, 1fr); gap: 0.5rem; }
+  .money-entry-row > select { justify-self: end; }
+}
+
+/* One width for header/content, bottom navigation and its floating controls. */
+.app-column, .app-bottom-nav { width: 100%; max-width: var(--app-column-width); }
+.app-more-sheet { max-width: var(--app-column-width); }
+.app-feedback-button { left: max(var(--app-gutter), calc((100vw - var(--app-column-width)) / 2 + var(--app-gutter))); }
+
+.finance-list-page { container-type: inline-size; }
+@container (max-width: 24rem) {
+  .finance-list-row { display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 0.25rem 0.75rem; }
+  .finance-list-row > :first-child { grid-column: 1; grid-row: 1 / span 2; }
+  .finance-list-row > :nth-child(2) { grid-column: 2; grid-row: 1; }
+  .finance-list-row > .finance-list-amount { grid-column: 2; grid-row: 2; overflow-wrap: anywhere; }
+  .finance-list-row > svg:last-child { grid-column: 3; grid-row: 1 / span 2; }
+  .finance-recurring-row { display: grid; grid-template-columns: 38px minmax(0, 1fr); gap: 0.375rem 0.75rem; }
+  .finance-recurring-amount { grid-column: 2; justify-content: space-between; min-width: 0; }
+  .finance-recurring-selected { grid-template-columns: 20px 38px minmax(0, 1fr); }
+  .finance-recurring-selected .finance-recurring-amount { grid-column: 3; }
 }

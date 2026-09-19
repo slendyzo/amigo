@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { getActiveWorkspace } from "@/lib/workspace";
+import { hasRecordedSalary } from "@/lib/income-classification";
 import { prisma } from "@/lib/db";
 import { IncomeType, RecurrenceInterval } from "@prisma/client";
 import { convertToEur } from "@/lib/currency";
@@ -7,9 +8,9 @@ import { convertToEur } from "@/lib/currency";
 // GET /api/incomes - List all incomes
 export async function GET(request: NextRequest) {
   try {
-    const session = await auth();
+    const context = await getActiveWorkspace();
 
-    if (!session?.user?.id) {
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,17 +19,7 @@ export async function GET(request: NextRequest) {
     const year = searchParams.get("year");
     const type = searchParams.get("type");
 
-    // Get the user's workspace
-    const membership = await prisma.workspaceMember.findFirst({
-      where: { userId: session.user.id },
-      include: { workspace: true },
-    });
-
-    if (!membership) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 404 });
-    }
-
-    const workspaceId = membership.workspaceId;
+    const workspaceId = context.workspace.id;
 
     // Build where clause
     const where: {
@@ -68,7 +59,7 @@ export async function GET(request: NextRequest) {
     // Late-month threshold: if paid on day >= 25, that salary funds NEXT month's budget
     const LATE_MONTH_THRESHOLD = 25;
 
-    if (month && year) {
+    if (month !== null && year !== null) {
       const requestedMonth = parseInt(month);
       const requestedYear = parseInt(year);
       const requestedDate = new Date(requestedYear, requestedMonth, 1);
@@ -80,6 +71,7 @@ export async function GET(request: NextRequest) {
         where: {
           workspaceId,
           isRecurring: true,
+          ...(type && type !== "all" ? { type: type as IncomeType } : {}),
           date: { lt: requestedDate }, // Created before the requested month
         },
         include: {
@@ -89,7 +81,7 @@ export async function GET(request: NextRequest) {
 
       // Create "virtual" entries for recurring incomes that apply to the requested month
       for (const recurring of recurringIncomes) {
-        if (!existingIds.has(recurring.id)) {
+        if (!existingIds.has(recurring.id) && !hasRecordedSalary(recurring, incomes)) {
           const dayOfMonth = recurring.dayOfMonth || 1;
 
           // For late-month pay (day >= 25), the income from PREVIOUS month funds THIS month
@@ -123,7 +115,10 @@ export async function GET(request: NextRequest) {
     }
 
     // Combine actual incomes with virtual recurring entries
-    const allIncomes = [...incomes, ...virtualRecurringIncomes];
+    const visibleIncomes = month !== null && year !== null
+      ? incomes.filter(i => !i.isRecurring || !hasRecordedSalary(i, incomes))
+      : incomes;
+    const allIncomes = [...visibleIncomes, ...virtualRecurringIncomes];
 
     // Sort by date descending
     allIncomes.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -152,9 +147,9 @@ export async function GET(request: NextRequest) {
 // POST /api/incomes - Create new income
 export async function POST(request: NextRequest) {
   try {
-    const session = await auth();
+    const context = await getActiveWorkspace();
 
-    if (!session?.user?.id) {
+    if (!context) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -179,16 +174,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get the user's workspace
-    const membership = await prisma.workspaceMember.findFirst({
-      where: { userId: session.user.id },
-      include: { workspace: true },
-    });
-
-    if (!membership) {
-      return NextResponse.json({ error: "No workspace found" }, { status: 404 });
-    }
-
     const parsedAmount = parseFloat(amount);
     const incomeDate = date ? new Date(date) : new Date();
     const incomeCurrency = currency || "EUR";
@@ -198,7 +183,7 @@ export async function POST(request: NextRequest) {
 
     const income = await prisma.income.create({
       data: {
-        workspaceId: membership.workspaceId,
+        workspaceId: context.workspace.id,
         name: name.slice(0, 255), // Enforce max length
         description: description ? description.slice(0, 1000) : null,
         type: (type as IncomeType) || IncomeType.OTHER,

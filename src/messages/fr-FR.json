@@ -462,7 +462,10 @@
     "change": "(modifier)",
     "addNote": "Ajouter une note",
     "adding": "Ajout...",
-    "none": "Aucun"
+    "none": "Aucun",
+    "monthlyPaycheck": "Salaire mensuel",
+    "monthlyPaycheckHint": "Enregistrez le salaire réel de ce mois sans le répéter. Il remplace la prévision de salaire récurrent du même compte bancaire pour ce mois.",
+    "regularIncome": "Salaire et revenus récurrents : {amount}"
   },
   "categories": {
     "title": "Catégories",
@@ -546,7 +549,10 @@
     },
     "defaultBadge": "par défaut",
     "expensesCount": "{count} dépenses",
-    "expensesLinked": "{count} dépenses liées"
+    "expensesLinked": "{count} dépenses liées",
+    "openingBalance": "Solde initial",
+    "openingBalanceHint": "Montant du compte avant la première transaction enregistrée. Ce n’est pas un revenu. Le solde calculé ajoute les revenus enregistrés et déduit les dépenses payées ; ce n’est pas le solde bancaire en temps réel.",
+    "trackedBalance": "Solde calculé"
   },
   "projects": {
     "title": "Projets",
@@ -882,8 +888,8 @@
     "salaryNamePlaceholder": "ex: Salaire Principal, Travail Secondaire",
     "dayOfMonthLabel": "Jour du Mois",
     "dayOfMonthHint": "Quand recevez-vous ce revenu chaque mois ?",
-    "extraIncomes": "Revenus Supplémentaires",
-    "extraIncomesDescription": "Revenus ponctuels ou irréguliers comme les bonus, le travail freelance, etc.",
+    "extraIncomes": "Revenus",
+    "extraIncomesDescription": "Gérez les salaires mensuels et les autres revenus.",
     "manageIncomes": "Gérer les Revenus",
     "dangerZone": "Zone de Danger",
     "deleteAllExpenses": "Supprimer Toutes les Dépenses",
@@ -2077,5 +2083,29 @@
       "uncategorized": "Non catégorisé",
       "vsMonth": "vs mois dernier"
     }
+  },
+  "debt": {
+    "title": "Paiements de la dette",
+    "back": "Retour au patrimoine",
+    "recorded": "Mensualités payées enregistrées",
+    "projectedBalance": "Solde prévisionnel",
+    "schedule": "Échéancier",
+    "name": "Nom",
+    "firstPayment": "Date du premier paiement",
+    "loanStart": "Date de début du prêt",
+    "monthlyPayment": "Mensualité ({currency})",
+    "term": "Nombre de mois",
+    "scheduleHint": "L’enregistrement actualise les prochaines échéances et ajoute les écritures manquantes jusqu’à ce mois. Les paiements existants conservent leurs dates et montants ; modifiez-les ci-dessous.",
+    "noTemplate": "Cette dette n’a pas d’échéancier récurrent associé. Seul le solde prévisionnel sera actualisé.",
+    "history": "Historique des paiements",
+    "historyHint": "Les paiements enregistrés et le solde prévisionnel sont présentés séparément. Modifiez une écriture pour corriger sa date, son montant ou son statut.",
+    "empty": "Aucun paiement enregistré.",
+    "paid": "Payé",
+    "pending": "En attente",
+    "editPayment": "Modifier le paiement du {date}",
+    "saveError": "Impossible d’enregistrer l’échéancier.",
+    "loadError": "Impossible de charger ce paiement.",
+    "saved": "Échéancier enregistré.",
+    "saving": "Enregistrement…"
   }
 }

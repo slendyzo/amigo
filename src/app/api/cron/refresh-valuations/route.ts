@@ -245,6 +245,7 @@ export async function POST(request: Request) {
         termMonths: l.termMonths,
         monthlyPayment: l.monthlyPayment ? Number(l.monthlyPayment) : null,
         startDate: l.startDate,
+        firstPaymentAtStart: l.type === "INSTALLMENT",
       });
 
       const { amountEur } = await convertToEur(balance.currentBalance, l.currency);

@@ -699,7 +699,7 @@ function LoanCard({ loan }: { loan: Liability }) {
             <Wallet className="h-4 w-4" />
           </div>
           <div>
-            <p className="text-sm font-medium">{loan.name}</p>
+            <Link href={`/dashboard/networth/debt/${loan.id}`} className="text-sm font-medium text-primary underline underline-offset-4">{loan.name}</Link>
             <p className="text-xs text-muted-foreground">
               {paidOff ? (
                 <span className="inline-flex items-center gap-1 text-emerald-500">

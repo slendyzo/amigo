@@ -1,3 +1,4 @@
+import { hasRecordedSalary } from "@/lib/income-classification";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
@@ -179,6 +180,7 @@ export default async function DashboardPage({
         date: true,
         isRecurring: true,
         dayOfMonth: true,
+        bankAccountId: true,
         createdAt: true,
       },
     }),
@@ -198,6 +200,7 @@ export default async function DashboardPage({
         date: true,
         isRecurring: true,
         dayOfMonth: true,
+        bankAccountId: true,
         createdAt: true,
       },
     }),
@@ -272,7 +275,7 @@ export default async function DashboardPage({
   const LATE_MONTH_THRESHOLD = 25;
   const currentMonthIncomeIds = new Set(monthlyIncomes.map((i) => i.id));
   const virtualRecurringIncomes = recurringIncomes
-    .filter((i) => !currentMonthIncomeIds.has(i.id) && i.date < startOfMonth)
+    .filter((i) => !currentMonthIncomeIds.has(i.id) && i.date < startOfMonth && !hasRecordedSalary(i, monthlyIncomes))
     .map((i) => {
       const dayOfMonth = i.dayOfMonth || 1;
       const isLateMonthPay = dayOfMonth >= LATE_MONTH_THRESHOLD;
@@ -301,10 +304,13 @@ export default async function DashboardPage({
     });
 
   // Merge actual incomes with virtual recurring entries
-  const allMonthlyIncomes = [...monthlyIncomes, ...virtualRecurringIncomes];
+  const allMonthlyIncomes = [...monthlyIncomes.filter(i => !i.isRecurring || !hasRecordedSalary(i, monthlyIncomes)), ...virtualRecurringIncomes];
 
   const monthlyIncome = allMonthlyIncomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
-  const expectedMonthlyIncome = recurringIncomes.reduce((sum, i) => sum + Number(i.amountEur), 0);
+  const expectedMonthlyIncome = recurringIncomes.filter(i => !hasRecordedSalary(i, monthlyIncomes))
+    .reduce((sum, i) => sum + Number(i.amountEur), 0)
+    + monthlyIncomes.filter(i => i.type === "SALARY" && !i.isRecurring)
+      .reduce((sum, i) => sum + Number(i.amountEur), 0);
 
   // Transform expenses for client component
   const transformExpense = (e: typeof expenses[0]) => ({

@@ -301,7 +301,7 @@ export default function RecurringTemplatesPage() {
 
     return (
       <div key={template.id} className="py-[11px]" style={{ borderBottom: idx < count - 1 ? "1px solid var(--line)" : "none" }}>
-        <div className="flex items-center gap-3">
+        <div className={`finance-recurring-row flex items-center gap-3 ${selectionMode ? "finance-recurring-selected" : ""}`}>
           {selectionMode ? (
             <button
               type="button"
@@ -321,7 +321,7 @@ export default function RecurringTemplatesPage() {
             </div>
             <div className="truncate text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>{subtitle}</div>
           </button>
-          <div className="flex items-center gap-2.5">
+          <div className="finance-recurring-amount flex items-center gap-2.5">
             <span className="text-[13.5px] font-semibold tabular-nums" style={{ color: paused ? "var(--ink-subtle)" : "var(--ink)" }}>
               {amountNode}
             </span>
@@ -361,7 +361,7 @@ export default function RecurringTemplatesPage() {
 
   if (isLoading) {
     return (
-      <div className="flex flex-col gap-4 md:max-w-[640px]">
+      <div className="finance-list-page flex flex-col gap-4 md:max-w-[640px]">
         <MoneyHubTabs active="recurring" />
         <div className="h-24 animate-pulse rounded-[20px]" style={{ background: "var(--surface-2)" }} />
         <div className="h-64 animate-pulse rounded-[20px]" style={{ background: "var(--surface-2)" }} />
@@ -370,15 +370,15 @@ export default function RecurringTemplatesPage() {
   }
 
   return (
-    <div className="flex flex-col gap-4 md:max-w-[640px]" style={{ color: "var(--ink)" }}>
+    <div className="finance-list-page flex flex-col gap-4 md:max-w-[640px]" style={{ color: "var(--ink)" }}>
       <MoneyHubTabs active="recurring" />
 
       {/* Summary card */}
       <motion.div {...sectionMotion(1)}>
-        <div className="flex items-center justify-between rounded-[20px] px-[18px] py-4" style={{ background: "var(--surface)", ...cardShadow }}>
-          <div>
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 rounded-[20px] px-[18px] py-4" style={{ background: "var(--surface)", ...cardShadow }}>
+          <div className="min-w-0">
             <div className="text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("monthlyCommitments")}</div>
-            <div className="text-[24px] font-bold tracking-[-0.02em] tabular-nums">{formatCurrency(monthlyTotal, "EUR")}</div>
+            <div className="break-words text-[24px] font-bold tracking-[-0.02em] tabular-nums">{formatCurrency(monthlyTotal, "EUR")}</div>
           </div>
           <div className="text-right text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
             {t("activeCountLabel", { count: activeTemplates.length })}
@@ -387,7 +387,7 @@ export default function RecurringTemplatesPage() {
       </motion.div>
 
       {/* Action row */}
-      <motion.div {...sectionMotion(2)} className="flex items-center gap-2">
+      <motion.div {...sectionMotion(2)} className="flex flex-wrap items-stretch gap-2 [&>button]:min-h-11">
         {selectionMode ? (
           <>
             <button onClick={selectAll} className="tap-none rounded-[12px] px-3 py-2 text-[12.5px] font-medium" style={{ background: "var(--surface)", color: "var(--ink-muted)", ...cardShadow }}>{tCommon("selectAll")}</button>

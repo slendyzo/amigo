@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
+import { debtSchedule } from "@/lib/debt-schedule";
 import { computeLoanBalance } from "@/lib/loan-amortization";
 import {
   createMonthlyTemplateForLoan,
@@ -124,6 +125,7 @@ export async function POST(request: Request) {
       termMonths: typeof termMonths === "number" ? termMonths : null,
       monthlyPayment: typeof monthlyPayment === "number" ? monthlyPayment : null,
       startDate: start,
+      firstPaymentAtStart: type === "INSTALLMENT",
     });
 
     const { amountEur: currentBalanceEur } = await convertToEur(balance.currentBalance, String(currency));
@@ -155,7 +157,7 @@ export async function POST(request: Request) {
         // endDate = startDate + termMonths. Open-ended loans leave it null.
         const term = typeof termMonths === "number" && termMonths > 0 ? termMonths : null;
         const endDate = term
-          ? new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + term, start.getUTCDate()))
+          ? debtSchedule(start, term).endDate
           : null;
         const isInstallment = type === "INSTALLMENT";
         const tmpl = await createMonthlyTemplateForLoan(prisma, {

@@ -325,8 +325,8 @@ export default function EditExpenseModal({
             />
 
             {/* Amount + Currency */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 flex items-baseline gap-1">
+            <div className="money-entry-row">
+              <div className="money-entry-value flex min-w-0 items-baseline gap-1">
                 <span className="text-[var(--ink-subtle)] text-2xl font-light">{getCurrencySymbol(currency)}</span>
                 <AmountInput
                   value={amount}
@@ -335,8 +335,8 @@ export default function EditExpenseModal({
                   currency={currency}
                   required
                   hideCurrencySymbol
-                  className="flex-1"
-                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[28px] font-bold tabular-nums !text-[var(--ink)] !placeholder-[var(--ink-subtle)]"
+                  className="min-w-0 flex-1"
+                  inputClassName="!border-0 !ring-0 !shadow-none !py-0 text-[24px] font-bold tabular-nums !text-[var(--ink)] !placeholder-[var(--ink-subtle)]"
                 />
               </div>
               <select
@@ -560,15 +560,15 @@ export default function EditExpenseModal({
               className="w-full rounded-[18px] border border-[var(--line)] px-4 py-3 text-left"
               style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
             >
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-[var(--ink-subtle)]">{tCommon("details")}</span>
-                <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="shrink-0 text-sm text-[var(--ink-subtle)]">{tCommon("details")}</span>
+                <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                   <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "#E7F5EE", color: "var(--positive)" }}>{categoryLabel}</span>
                   {bankAccounts.length > 0 && (
                     <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--surface-2)", color: "var(--accent)" }}>{accountLabel}</span>
                   )}
                   <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--surface-2)", color: "var(--ink-muted)" }}>{typeLabel}</span>
-                  <svg className="w-4 h-4 text-[var(--ink-subtle)] ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 shrink-0 text-[var(--ink-subtle)] ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </div>

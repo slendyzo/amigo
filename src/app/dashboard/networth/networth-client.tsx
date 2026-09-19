@@ -530,7 +530,8 @@ function LiabilityRow({
     meta.push(`${formatCurrency(liability.monthlyPayment, liability.currency)}${t("monthlySuffix")}`);
 
   return (
-    <div
+    <Link
+      href={`/dashboard/networth/debt/${liability.id}`}
       className="flex items-center gap-3 py-[11px]"
       style={divider ? { borderBottom: "1px solid var(--line)" } : undefined}
     >
@@ -553,6 +554,7 @@ function LiabilityRow({
       <div className="text-[13.5px] font-semibold tabular-nums" style={{ color: "var(--negative)" }}>
         −{formatCurrency(liability.currentBalanceEur, "EUR")}
       </div>
-    </div>
+      <ChevronRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+    </Link>
   );
 }

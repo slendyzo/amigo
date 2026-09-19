@@ -7,6 +7,7 @@
 // waiting for the dashboard's on-open generator. Scoped to one template by
 // design: it never touches other templates (e.g. a manually-set-up mortgage).
 
+import type { Prisma } from "@prisma/client";
 import { prisma } from "./db";
 import { convertToEur } from "./currency";
 import { installmentAmount, monthIdxUtc as monthIdx } from "./installment-math";
@@ -14,8 +15,9 @@ import { installmentAmount, monthIdxUtc as monthIdx } from "./installment-math";
 export async function generateDueForTemplate(
   templateId: string,
   opts?: { startDate?: Date; now?: Date },
+  db: Prisma.TransactionClient = prisma,
 ): Promise<number> {
-  const template = await prisma.recurringTemplate.findUnique({
+  const template = await db.recurringTemplate.findUnique({
     where: { id: templateId },
     include: { projects: { select: { id: true } } },
   });
@@ -28,11 +30,11 @@ export async function generateDueForTemplate(
   const endIdx = template.endDate ? monthIdx(template.endDate) : Infinity;
 
   // Default category (mirrors the dashboard generator).
-  let defaultCategory = await prisma.category.findFirst({
+  let defaultCategory = await db.category.findFirst({
     where: { workspaceId: template.workspaceId, name: "Uncategorized" },
   });
   if (!defaultCategory) {
-    defaultCategory = await prisma.category.create({
+    defaultCategory = await db.category.create({
       data: { workspaceId: template.workspaceId, name: "Uncategorized", isSystem: true },
     });
   }
@@ -59,7 +61,7 @@ export async function generateDueForTemplate(
     const monthStart = new Date(Date.UTC(y, m, 1));
     const monthEnd = new Date(Date.UTC(y, m + 1, 0, 23, 59, 59));
 
-    const existing = await prisma.expense.count({
+    const existing = await db.expense.count({
       where: { recurringTemplateId: templateId, date: { gte: monthStart, lte: monthEnd } },
     });
     if (existing > 0) continue;
@@ -68,7 +70,7 @@ export async function generateDueForTemplate(
     const day = Math.min(template.dayOfMonth || 1, lastDay);
     const date = new Date(Date.UTC(y, m, day));
 
-    await prisma.expense.create({
+    await db.expense.create({
       data: {
         workspaceId: template.workspaceId,
         categoryId: template.categoryId || defaultCategory.id,
@@ -94,7 +96,7 @@ export async function generateDueForTemplate(
   }
 
   if (created > 0) {
-    await prisma.recurringTemplate.update({
+    await db.recurringTemplate.update({
       where: { id: templateId },
       data: { lastGenerated: now },
     });
