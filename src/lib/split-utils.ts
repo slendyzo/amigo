@@ -172,3 +172,15 @@ export function preserveRepayments(oldJson: string | null, newJson: string | nul
     return { ...rest, ...(index > 0 && source?.label === person.label && source.repayment ? { repayment: source.repayment } : {}) };
   })) : null;
 }
+
+/** Repayment progress concerns the other people, never the user's own share. */
+export function getRepaymentSummary(splitCount: number | null | undefined, splitData: string | null | undefined) {
+  if (!splitCount || !Number.isInteger(splitCount) || splitCount < 2 || splitCount > 20) return null;
+  const parsed = parseSplitData(splitData);
+  const rows = parsed?.length === splitCount ? parsed : null;
+  const people = Array.from({ length: splitCount - 1 }, (_, index) => ({
+    label: rows?.[index + 1]?.label,
+    paid: rows?.[index + 1]?.repayment?.paid === true,
+  }));
+  return { people, paid: people.filter(person => person.paid).length, total: people.length };
+}

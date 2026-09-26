@@ -1,5 +1,7 @@
 "use client";
 
+import { SplitRepaymentStatus } from "@/components/split-repayment-status";
+
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -421,14 +423,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                         <div className="min-w-0">
                           <p className="flex items-center gap-1.5 text-[14px] font-medium" style={{ color: "var(--ink)" }}>
                             <span className="truncate">{expense.name}</span>
-                            {expense.splitCount && expense.splitCount > 1 && (
-                              <span
-                                className="shrink-0 rounded-[6px] px-1 py-0.5 text-[10px] font-medium tabular-nums"
-                                style={{ background: "var(--accent-fainter)", color: "var(--accent)" }}
-                              >
-                                ÷{expense.splitCount}
-                              </span>
-                            )}
+                            <SplitRepaymentStatus splitCount={expense.splitCount} splitData={expense.splitData} />
                             {expense.imageUrls && (
                               <ImageIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} style={{ color: "var(--ink-subtle)" }} />
                             )}

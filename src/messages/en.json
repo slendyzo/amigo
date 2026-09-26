@@ -424,7 +424,9 @@
       "placeholder": "Cash, bank transfer, where they paid…",
       "failed": "Could not save repayment. Please try again.",
       "conflict": "This expense changed. Close and reopen it before trying again.",
-      "me": "Me"
+      "me": "Me",
+      "summary": "{paid}/{total} paid back",
+      "person": "Person {number}"
     }
   },
   "incomes": {

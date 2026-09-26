@@ -1,5 +1,7 @@
 "use client";
 
+import { SplitRepaymentStatus } from "@/components/split-repayment-status";
+
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -627,7 +629,7 @@ export default function ExpensesPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center truncate text-[13.5px] font-semibold">
                           <span className="truncate">{expense.name}</span>
-                          {expense.splitCount && expense.splitCount > 1 ? badge(`÷${expense.splitCount}`, "split") : null}
+                          <SplitRepaymentStatus splitCount={expense.splitCount} splitData={expense.splitData} />
                           {isInstallment ? badge(`${expense.installmentNumber}/${expense.recurringTemplate!.installmentMonths}`, "inst") : null}
                         </div>
                         <div className="flex items-center truncate text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>

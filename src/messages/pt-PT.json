@@ -424,7 +424,9 @@
       "placeholder": "Dinheiro, transferência bancária, onde pagou…",
       "failed": "Não foi possível guardar o reembolso. Tenta novamente.",
       "conflict": "Esta despesa foi alterada. Fecha e volta a abrir antes de tentar novamente.",
-      "me": "Eu"
+      "me": "Eu",
+      "summary": "{paid}/{total} reembolsaram",
+      "person": "Pessoa {number}"
     }
   },
   "incomes": {

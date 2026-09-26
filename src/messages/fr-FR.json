@@ -424,7 +424,9 @@
       "placeholder": "Espèces, virement bancaire, lieu du paiement…",
       "failed": "Impossible d’enregistrer le remboursement. Réessaie.",
       "conflict": "Cette dépense a été modifiée. Ferme-la et rouvre-la avant de réessayer.",
-      "me": "Moi"
+      "me": "Moi",
+      "summary": "{paid}/{total} ont remboursé",
+      "person": "Personne {number}"
     }
   },
   "incomes": {

@@ -1,5 +1,7 @@
 "use client";
 
+import { SplitRepaymentStatus } from "@/components/split-repayment-status";
+
 import { useState, useEffect, useMemo, lazy, Suspense, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -901,7 +903,7 @@ export default function DashboardOverview({
                     >
                       <MerchantAvatar name={tx.name} category={rawCategory} />
                       <div className="min-w-0 flex-1">
-                        <div className="truncate text-[13.5px] font-semibold">{tx.name}</div>
+                        <div className="flex min-w-0 items-center text-[13.5px] font-semibold"><span className="truncate">{tx.name}</span>{!isIncome && <SplitRepaymentStatus splitCount={tx.splitCount} splitData={tx.splitData} />}</div>
                         <div className="truncate text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
                           {categoryLabel} · {whenLabel(tx.date)}
                         </div>

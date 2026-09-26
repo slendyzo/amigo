@@ -101,3 +101,20 @@ test('ordinary expense PUT cannot erase newer repayments or change protected par
   assert.equal((await put({splitCount:2,splitData:JSON.stringify(stale)})).status,400);
   assert.equal(writes,1);
 });
+test('inline summary excludes own share and reflects mark/undo without changing money', () => {
+  const rows = utils.initializeSplit(120, 4);
+  rows[1].repayment = {paid:true}; rows[2].repayment = {paid:false};
+  let summary = utils.getRepaymentSummary(4, JSON.stringify(rows));
+  assert.equal(summary.total, 3); assert.equal(summary.paid, 1);
+  assert.deepEqual(summary.people.map(p => p.paid), [true, false, false]);
+  rows[1].repayment = {paid:false};
+  assert.equal(utils.getRepaymentSummary(4, JSON.stringify(rows)).paid, 0);
+});
+test('inline summary supports legacy count-only splits and safely bounds invalid data', () => {
+  assert.equal(utils.getRepaymentSummary(3, null).total, 2);
+  assert.equal(utils.getRepaymentSummary(3, null).paid, 0);
+  assert.equal(utils.getRepaymentSummary(20, null).total, 19);
+  for(const count of [null, 0, 1, 2.5, 21]) assert.equal(utils.getRepaymentSummary(count, null), null);
+  assert.equal(utils.getRepaymentSummary(3, '{}').paid, 0);
+  assert.equal(utils.getRepaymentSummary(3, JSON.stringify(paid)).paid, 0);
+});
