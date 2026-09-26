@@ -25,7 +25,9 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
           command_timeout: 20m
-          script_stop: true
+          # Use native set -e below; script_stop rewrites else/fi lines and
+          # incorrectly aborts when a conditional test returns false.
+          script_stop: false
           script: |
             set -eo pipefail
 
