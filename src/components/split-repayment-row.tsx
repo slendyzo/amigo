@@ -49,8 +49,8 @@ export function SplitRepaymentRow({ person, index, expense, onSaved }: {
     {editing && <form className="mt-2 space-y-2 rounded-xl border border-[var(--line)] p-3" onSubmit={event => {
       event.preventDefault(); save({ paid: true, ...(date ? { date } : {}), ...(note.trim() ? { note: note.trim() } : {}) });
     }}>
-      <label className="block">{t("date")}<input type="date" value={date} disabled={busy} onChange={event => setDate(event.target.value)} className="mt-1 block w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] p-2" /></label>
-      <label className="block">{t("note")}<textarea value={note} maxLength={1000} disabled={busy} onChange={event => setNote(event.target.value)} placeholder={t("placeholder")} className="mt-1 block w-full rounded-lg border border-[var(--line)] bg-[var(--surface)] p-2" /></label>
+      <label className="block">{t("date")}<input type="date" value={date} disabled={busy} onChange={event => setDate(event.target.value)} className="mt-1 block min-h-11 w-full rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] p-2 text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]" /></label>
+      <label className="block">{t("note")}<textarea value={note} maxLength={1000} disabled={busy} onChange={event => setNote(event.target.value)} placeholder={t("placeholder")} className="mt-1 block min-h-11 w-full rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] p-2 text-[var(--ink)] placeholder:text-[var(--ink-muted)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]" /></label>
       <div className="flex gap-3"><button type="submit" disabled={busy} className="rounded-lg bg-[var(--accent)] px-3 py-2 text-[var(--accent-fg)] disabled:opacity-50">{common("save")}</button><button type="button" disabled={busy} onClick={() => setEditing(false)}>{common("cancel")}</button></div>
     </form>}
     {error && <p role="alert" className="mt-2 text-[var(--negative)]">{error}</p>}
