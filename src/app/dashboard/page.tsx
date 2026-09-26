@@ -1,3 +1,4 @@
+import { spendingEur } from "@/lib/expense-spending";
 import { hasRecordedSalary } from "@/lib/income-classification";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -129,6 +130,8 @@ export default async function DashboardPage({
         amountEur: true,
         amountExpression: true,
         excludeFromBudget: true,
+        fullyReimbursed: true,
+        projectTotalMode: true,
         splitCount: true,
         splitData: true,
         installmentNumber: true,
@@ -155,6 +158,8 @@ export default async function DashboardPage({
         amountEur: true,
         amountExpression: true,
         excludeFromBudget: true,
+        fullyReimbursed: true,
+        projectTotalMode: true,
         splitCount: true,
         splitData: true,
         installmentNumber: true,
@@ -325,6 +330,8 @@ export default async function DashboardPage({
     categoryName: e.category?.name || "Uncategorized",
     projects: e.projects.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })),
     excludeFromBudget: e.excludeFromBudget,
+    fullyReimbursed: e.fullyReimbursed,
+    projectTotalMode: e.projectTotalMode,
     splitCount: e.splitCount,
     splitData: e.splitData,
     installmentNumber: e.installmentNumber,
@@ -399,7 +406,7 @@ export default async function DashboardPage({
   for (const e of expenses) {
     if (e.type === "PROJECT") continue;
     const name = e.category?.name ?? "Uncategorized";
-    categoryTotals.set(name, (categoryTotals.get(name) ?? 0) + Number(e.amountEur));
+    categoryTotals.set(name, (categoryTotals.get(name) ?? 0) + spendingEur(e));
   }
   const topCategories = Array.from(categoryTotals.entries())
     .map(([name, amountEur]) => ({ name, amountEur }))

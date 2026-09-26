@@ -1,5 +1,8 @@
 "use client";
 
+import { countsAsSpending } from "@/lib/expense-spending";
+import type { ProjectCounting } from "@/lib/project-expense-totals";
+
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -100,7 +103,7 @@ function normalizeSource(s: string): ValuePointSource {
   return (KNOWN_SOURCES as string[]).includes(s) ? (s as ValuePointSource) : "heuristic";
 }
 
-type ExpenseRow = {
+type ExpenseRow = ProjectCounting & {
   id: string;
   name: string;
   amount: number;
@@ -197,7 +200,7 @@ export default function VehicleDetailClient({ asset, vehicle, liabilities, valua
       ? "no_data"
       : "done";
 
-  const linkedExpensesTotal = expenses.reduce((s, e) => s + e.amountEur, 0);
+  const linkedExpensesTotal = expenses.reduce((s, e) => s + (countsAsSpending(e) ? e.amountEur : 0), 0);
   const monthlyTCO = monthsOwned > 0 ? linkedExpensesTotal / monthsOwned : 0;
 
   const handleDelete = async () => {

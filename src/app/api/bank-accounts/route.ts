@@ -1,3 +1,4 @@
+import { spendingWhere } from "@/lib/expense-spending";
 import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { convertToEur } from "@/lib/currency";
@@ -27,7 +28,7 @@ export async function GET() {
         where: { workspaceId: workspace.id, bankAccountId: { not: null }, date: { lte: now } },
         _sum: { amount: true, amountEur: true } }),
       prisma.expense.groupBy({ by: ["bankAccountId", "currency"],
-        where: { workspaceId: workspace.id, bankAccountId: { not: null }, status: "PAID", date: { lte: now } },
+        where: { workspaceId: workspace.id, bankAccountId: { not: null }, status: "PAID", ...spendingWhere, date: { lte: now } },
         _sum: { amount: true, amountEur: true } }),
     ]);
     const accountsWithBalances = await Promise.all(bankAccounts.map(async account => {

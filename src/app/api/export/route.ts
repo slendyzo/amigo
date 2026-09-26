@@ -1,3 +1,4 @@
+import { spendingEur } from "@/lib/expense-spending";
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
@@ -161,6 +162,7 @@ export async function GET(request: NextRequest) {
         { header: "Projects", key: "projects", width: 25 },
         { header: "Status", key: "status", width: 10 },
         { header: "Notes", key: "notes", width: 30 },
+        { header: "Net spending (EUR)", key: "netSpending", width: 20 },
       ];
 
       // Style header row
@@ -192,16 +194,17 @@ export async function GET(request: NextRequest) {
           projects: expense.projects.map((p: { name: string }) => p.name).join(", "),
           status: expense.status,
           notes: expense.description || "",
+          netSpending: spendingEur(expense).toFixed(2),
         });
       }
 
       // Add summary row
-      const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amountEur), 0);
+      const totalExpenses = expenses.reduce((sum, e) => sum + spendingEur(e), 0);
       expensesSheet.addRow({});
       expensesSheet.addRow({
         date: "TOTAL",
         name: "",
-        amount: totalExpenses.toFixed(2),
+        netSpending: totalExpenses.toFixed(2),
       });
       const lastRow = expensesSheet.lastRow;
       if (lastRow) {
@@ -275,7 +278,7 @@ export async function GET(request: NextRequest) {
         if (!byType[label]) {
           byType[label] = { total: 0, count: 0 };
         }
-        byType[label].total += Number(e.amountEur);
+        byType[label].total += spendingEur(e);
         byType[label].count++;
       }
 
@@ -321,7 +324,7 @@ export async function GET(request: NextRequest) {
     const csvRows: string[] = [];
 
     // Header
-    csvRows.push("Date,Name,Amount (EUR),Type,Category,Bank Account,Projects,Status,Notes");
+    csvRows.push("Date,Name,Amount (EUR),Type,Category,Bank Account,Projects,Status,Notes,Net spending (EUR)");
 
     // Data rows
     for (const expense of expenses) {
@@ -342,14 +345,15 @@ export async function GET(request: NextRequest) {
         `"${expense.projects.map((p: { name: string }) => p.name).join(", ").replace(/"/g, '""')}"`,
         expense.status,
         `"${(expense.description || "").replace(/"/g, '""')}"`,
+        spendingEur(expense).toFixed(2),
       ];
       csvRows.push(row.join(","));
     }
 
     // Add total
-    const totalExpenses = expenses.reduce((sum, e) => sum + Number(e.amountEur), 0);
+    const totalExpenses = expenses.reduce((sum, e) => sum + spendingEur(e), 0);
     csvRows.push("");
-    csvRows.push(`TOTAL,,${totalExpenses.toFixed(2)}`);
+    csvRows.push(["TOTAL", "", "", "", "", "", "", "", "", totalExpenses.toFixed(2)].join(","));
 
     const csvContent = csvRows.join("\n");
     const filename = `amigo-export-${new Date().toISOString().split("T")[0]}.csv`;

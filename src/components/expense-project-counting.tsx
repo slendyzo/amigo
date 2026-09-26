@@ -1,5 +1,6 @@
 "use client";
 
+import { countsAsSpending } from "@/lib/expense-spending";
 import { useTranslations } from "next-intl";
 import { countsInProjectTotal, PROJECT_TOTAL_MODES, type ProjectCounting, type ProjectTotalMode } from "@/lib/project-expense-totals";
 
@@ -31,7 +32,13 @@ export function ProjectExpenseStatus({ expense }: { expense: ProjectCounting }) 
   const t = useTranslations("modals.projectCounting");
   if (!expense.fullyReimbursed && (!expense.projectTotalMode || expense.projectTotalMode === "AUTO")) return null;
   return <span className="mt-1 flex flex-wrap gap-x-2 text-[11px] text-[var(--ink-muted)]">
+    <NetZeroExpenseStatus expense={expense} />
     {expense.fullyReimbursed && <span>{t("reimbursed")}</span>}
     <span>{t(countsInProjectTotal(expense) ? "counted" : "notCounted")}</span>
   </span>;
+}
+
+export function NetZeroExpenseStatus({ expense }: { expense: ProjectCounting }) {
+  const t = useTranslations("modals.projectCounting");
+  return countsAsSpending(expense) ? null : <span className="ml-2 shrink-0 rounded-md bg-[var(--surface-2)] px-1.5 py-0.5 text-[11px] font-medium text-[var(--ink-muted)]">{t("netZero")}</span>;
 }

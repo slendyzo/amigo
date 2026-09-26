@@ -1,5 +1,7 @@
 "use client";
 
+import { spendingEur, countsAsSpending } from "@/lib/expense-spending";
+import type { ProjectCounting } from "@/lib/project-expense-totals";
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -29,7 +31,10 @@ type Insight = {
   generatedAt: string;
 };
 
-type ExpenseLite = {
+type ExpenseLite = ProjectCounting & {
+  amount: number;
+  splitCount?: number | null;
+  splitData?: string | null;
   amountEur: number;
   type: "SURVIVAL_FIXED" | "SURVIVAL_VARIABLE" | "LIFESTYLE" | "PROJECT";
   date: string;
@@ -89,10 +94,10 @@ export default function InsightsPage() {
       };
     });
     for (const e of expenses) {
-      if (e.type === "PROJECT" || e.excludeFromBudget) continue;
+      if (e.type === "PROJECT" || e.excludeFromBudget || !countsAsSpending(e)) continue;
       const d = new Date(e.date);
       const idx = arr.findIndex((m) => m.year === d.getFullYear() && m.month === d.getMonth());
-      if (idx >= 0) arr[idx].total += e.amountEur;
+      if (idx >= 0) arr[idx].total += spendingEur(e);
     }
     return arr;
   }, [expenses, intlLocale]);
@@ -118,11 +123,11 @@ export default function InsightsPage() {
   const categories = useMemo(() => {
     const map = new Map<string, number>();
     for (const e of expenses) {
-      if (e.type === "PROJECT" || e.excludeFromBudget) continue;
+      if (e.type === "PROJECT" || e.excludeFromBudget || !countsAsSpending(e)) continue;
       const d = new Date(e.date);
       if (d.getFullYear() !== focusMonth.year || d.getMonth() !== focusMonth.month) continue;
       const name = e.category?.parent?.name || e.category?.name || t("overview.uncategorized");
-      map.set(name, (map.get(name) || 0) + e.amountEur);
+      map.set(name, (map.get(name) || 0) + spendingEur(e));
     }
     return Array.from(map.entries())
       .map(([name, total]) => ({ name, total }))
@@ -141,9 +146,9 @@ export default function InsightsPage() {
   const cumulativeToDay = (year: number, month: number, day: number) => {
     let sum = 0;
     for (const e of expenses) {
-      if (e.type === "PROJECT" || e.excludeFromBudget) continue;
+      if (e.type === "PROJECT" || e.excludeFromBudget || !countsAsSpending(e)) continue;
       const d = new Date(e.date);
-      if (d.getFullYear() === year && d.getMonth() === month && d.getDate() <= day) sum += e.amountEur;
+      if (d.getFullYear() === year && d.getMonth() === month && d.getDate() <= day) sum += spendingEur(e);
     }
     return sum;
   };

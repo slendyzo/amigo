@@ -1,3 +1,4 @@
+import { spendingWhere } from "./expense-spending";
 /**
  * AI Advisor pre-aggregation layer.
  *
@@ -58,7 +59,7 @@ export async function aggregateMonth(
 
   // ── Total + count ───────────────────────────────────────────────────────────
   const totalAgg = await prisma.expense.aggregate({
-    where: { workspaceId, date: bounds },
+    where: { workspaceId, ...spendingWhere, date: bounds },
     _sum: { amountEur: true },
     _count: { id: true },
   });
@@ -68,7 +69,7 @@ export async function aggregateMonth(
   // ── By type (groupBy type, sum amountEur) ──────────────────────────────────
   const byTypeRows = await prisma.expense.groupBy({
     by: ["type"],
-    where: { workspaceId, date: bounds },
+    where: { workspaceId, ...spendingWhere, date: bounds },
     _sum: { amountEur: true },
   });
 
@@ -86,7 +87,7 @@ export async function aggregateMonth(
   // ── By category (groupBy categoryId, join names) ───────────────────────────
   const byCatRows = await prisma.expense.groupBy({
     by: ["categoryId"],
-    where: { workspaceId, date: bounds, categoryId: { not: null } },
+    where: { workspaceId, ...spendingWhere, date: bounds, categoryId: { not: null } },
     _sum: { amountEur: true },
     _count: { id: true },
     orderBy: { _sum: { amountEur: "desc" } },
@@ -114,7 +115,7 @@ export async function aggregateMonth(
 
   // ── Top merchants (load name+merchant+amountEur, group in JS) ─────────────
   const merchantRows = await prisma.expense.findMany({
-    where: { workspaceId, date: bounds },
+    where: { workspaceId, ...spendingWhere, date: bounds },
     select: { merchant: true, name: true, amountEur: true },
   });
 
@@ -138,7 +139,7 @@ export async function aggregateMonth(
 
   // ── Untagged count ─────────────────────────────────────────────────────────
   const untaggedCount = await prisma.expense.count({
-    where: { workspaceId, date: bounds, categoryId: null },
+    where: { workspaceId, ...spendingWhere, date: bounds, categoryId: null },
   });
 
   // ── MoM diff ───────────────────────────────────────────────────────────────
@@ -147,7 +148,7 @@ export async function aggregateMonth(
   const prevBounds = monthBounds(prevYear, prevMonth);
 
   const prevTotalAgg = await prisma.expense.aggregate({
-    where: { workspaceId, date: prevBounds },
+    where: { workspaceId, ...spendingWhere, date: prevBounds },
     _sum: { amountEur: true },
   });
   const prevTotal = Number(prevTotalAgg._sum.amountEur ?? 0);
@@ -159,7 +160,7 @@ export async function aggregateMonth(
 
   const prevByCatRows = await prisma.expense.groupBy({
     by: ["categoryId"],
-    where: { workspaceId, date: prevBounds, categoryId: { not: null } },
+    where: { workspaceId, ...spendingWhere, date: prevBounds, categoryId: { not: null } },
     _sum: { amountEur: true },
   });
 

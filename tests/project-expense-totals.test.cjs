@@ -76,3 +76,36 @@ test('project list, detail and wrapped agree while preserving historical expense
   assert.equal(wrapped.expenseCount,2);assert.equal(wrapped.averageExpense,19.5);
   assert.equal(wrapped.highestExpense.amount,32);assert.equal(wrapped.monthlyBreakdown[0].total,39);
 });
+const spending = load('src/lib/expense-spending.ts', {'./split-utils':split});
+test('bookkeeping expenses contribute zero overall even with a project Include override', () => {
+  for(const projectTotalMode of totals.PROJECT_TOTAL_MODES) {
+    assert.equal(spending.spendingEur({...bill,fullyReimbursed:true,projectTotalMode}),0);
+  }
+  assert.equal(spending.spendingEur({...bill,projectTotalMode:'EXCLUDE'}),0);
+  assert.equal(spending.spendingEur({...bill,projectTotalMode:'INCLUDE'}),32);
+  assert.equal(spending.spendingEur(bill),32,'all participants repaid still leaves own share');
+  const history=[bill,{...bill,fullyReimbursed:true},{...bill,projectTotalMode:'EXCLUDE'}];
+  assert.equal(history.reduce((sum,e)=>sum+spending.spendingEur(e),0),32);
+  assert.equal(history.length,3,'bookkeeping history retained');
+  assert.equal(totals.projectContributionEur({...bill,fullyReimbursed:true,projectTotalMode:'INCLUDE'}),32);
+});
+test('account activity excludes net-zero records without excluding budget-only expenses',async()=>{
+  let checked=false;
+  const route=load('src/app/api/bank-accounts/route.ts',{...baseMocks,
+    '@/lib/expense-spending':spending,'@/lib/account-balance':{trackedAccountBalance:()=>100},
+    '@/lib/db':{prisma:{bankAccount:{findMany:async()=>[]},income:{groupBy:async()=>[]},expense:{groupBy:async({where})=>{
+      assert.equal(where.fullyReimbursed,false);assert.deepEqual(where.projectTotalMode,{not:'EXCLUDE'});
+      assert.equal(where.excludeFromBudget,undefined);assert.equal(where.status,'PAID');checked=true;return [];
+    }}}}});
+  assert.equal((await route.GET()).status,200);assert.equal(checked,true);
+});
+test('advisor current and previous month aggregates omit bookkeeping-only activity',async()=>{
+  let queries=0;
+  const check=({where})=>{assert.equal(where.fullyReimbursed,false);assert.deepEqual(where.projectTotalMode,{not:'EXCLUDE'});queries++;};
+  const advisor=load('src/lib/insight-aggregator.ts',{
+    './expense-spending':spending,'@prisma/client':{InsightType:{}},
+    '@/lib/db':{prisma:{expense:{aggregate:async q=>{check(q);return {_sum:{amountEur:0},_count:{id:0}};},
+      groupBy:async q=>{check(q);return [];},findMany:async q=>{check(q);return [];},count:async q=>{check(q);return 0;}}}}
+  });
+  assert.equal((await advisor.aggregateMonth('ws',2026,9)).total,0);assert.equal(queries,7);
+});

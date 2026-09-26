@@ -1,5 +1,6 @@
 "use client";
 
+import { NetZeroExpenseStatus } from "@/components/expense-project-counting";
 import { SplitRepaymentStatus } from "@/components/split-repayment-status";
 
 import { useState, useEffect, useMemo, lazy, Suspense, useCallback, useRef } from "react";
@@ -12,6 +13,7 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import type { ProjectCounting } from "@/lib/project-expense-totals";
 import type { Expense as FullExpense } from "@/types/models";
+import { spendingEur } from "@/lib/expense-spending";
 import { getUserShare } from "@/lib/split-utils";
 import MerchantAvatar from "@/components/ui/merchant-avatar";
 import TidyUpNudge from "@/components/dashboard/tidy-up-nudge";
@@ -398,26 +400,13 @@ export default function DashboardOverview({
     });
   }, [expenses, incomes]);
 
-  // Get effective EUR amount for an expense (user's share if split)
-  const effectiveEur = (e: Expense) => {
-    if (e.splitCount && e.splitCount > 1) {
-      const share = getUserShare(e.splitCount, e.splitData);
-      if (share !== null && e.amount !== 0) {
-        // Proportional EUR: user's share in original currency → scale EUR by same ratio
-        return e.amountEur * (share / e.amount);
-      }
-      return e.amountEur / e.splitCount;
-    }
-    return e.amountEur;
-  };
-
   // Budget "spent" — exact same math as the old ring gauge: every expense not
   // explicitly marked excludeFromBudget counts (PENDING included), at the
   // user's share when split.
   const budgetSpent = useMemo(() => {
     return expenses
       .filter((e) => !e.excludeFromBudget)
-      .reduce((sum, e) => sum + effectiveEur(e), 0);
+      .reduce((sum, e) => sum + spendingEur(e), 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expenses]);
 
@@ -904,7 +893,7 @@ export default function DashboardOverview({
                     >
                       <MerchantAvatar name={tx.name} category={rawCategory} />
                       <div className="min-w-0 flex-1">
-                        <div className="flex min-w-0 items-center text-[13.5px] font-semibold"><span className="truncate">{tx.name}</span>{!isIncome && <SplitRepaymentStatus splitCount={tx.splitCount} splitData={tx.splitData} />}</div>
+                        <div className="flex min-w-0 items-center text-[13.5px] font-semibold"><span className="truncate">{tx.name}</span>{!isIncome && <><SplitRepaymentStatus splitCount={tx.splitCount} splitData={tx.splitData} /><NetZeroExpenseStatus expense={tx} /></>}</div>
                         <div className="truncate text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
                           {categoryLabel} · {whenLabel(tx.date)}
                         </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { NetZeroExpenseStatus } from "@/components/expense-project-counting";
 import { SplitRepaymentStatus } from "@/components/split-repayment-status";
 
 import { useState, useEffect, useMemo, useRef } from "react";
@@ -14,6 +15,7 @@ import ExpenseDetailModal from "@/components/expense-detail-modal";
 import AssetLinkPicker from "@/components/asset-link-picker";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
+import { spendingEur } from "@/lib/expense-spending";
 import { effectiveEur, getUserShare } from "@/lib/split-utils";
 import ExportModal from "@/components/export-modal";
 import NudgeCategorizeCard from "@/components/nudge-categorize-card";
@@ -318,7 +320,7 @@ export default function ExpensesPage() {
   }, [expenses, searchQuery, categoryFilter, sortBy, sortOrder, selectedMonthFilter]);
 
   const monthTotal = useMemo(
-    () => sortedExpenses.reduce((sum, e) => sum + effectiveEur({ ...e, amountEur: e.amountEur ?? e.amount }), 0),
+    () => sortedExpenses.reduce((sum, e) => sum + spendingEur({ ...e, amountEur: e.amountEur ?? e.amount }), 0),
     [sortedExpenses]
   );
 
@@ -353,7 +355,7 @@ export default function ExpensesPage() {
       dayKey,
       label: dayLabel(list[0].date),
       expenses: list,
-      total: list.reduce((s, e) => s + effectiveEur({ ...e, amountEur: e.amountEur ?? e.amount }), 0),
+      total: list.reduce((s, e) => s + spendingEur({ ...e, amountEur: e.amountEur ?? e.amount }), 0),
     }));
     result.sort((a, b) => (sortOrder === "desc" ? b.dayKey.localeCompare(a.dayKey) : a.dayKey.localeCompare(b.dayKey)));
     return result;
@@ -629,7 +631,7 @@ export default function ExpensesPage() {
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center truncate text-[13.5px] font-semibold">
                           <span className="truncate">{expense.name}</span>
-                          <SplitRepaymentStatus splitCount={expense.splitCount} splitData={expense.splitData} />
+                          <SplitRepaymentStatus splitCount={expense.splitCount} splitData={expense.splitData} /><NetZeroExpenseStatus expense={expense} />
                           {isInstallment ? badge(`${expense.installmentNumber}/${expense.recurringTemplate!.installmentMonths}`, "inst") : null}
                         </div>
                         <div className="flex items-center truncate text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>

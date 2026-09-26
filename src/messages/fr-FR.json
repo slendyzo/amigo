@@ -1274,18 +1274,19 @@
       "noResults": "Aucun résultat"
     },
     "projectCounting": {
+      "netZero": "Solde nul",
       "reimbursed": "Entièrement remboursée",
       "reimbursedHint": "La dépense entière a été remboursée. Le paiement des parts des autres participants ne marque pas toute la dépense comme remboursée.",
-      "title": "Compter dans les totaux des projets",
+      "title": "Compter dans les totaux",
       "AUTO": "Automatique",
       "INCLUDE": "Inclure",
       "EXCLUDE": "Exclure",
       "AUTOHint": "Les dépenses entièrement remboursées comptent pour zéro ; sinon, votre part est comptée.",
       "INCLUDEHint": "Toujours compter votre part, même si toute la dépense est remboursée.",
-      "EXCLUDEHint": "Ne jamais compter cette dépense dans les totaux des projets, remboursée ou non.",
+      "EXCLUDEHint": "Conserver cette dépense uniquement pour le suivi, sans impact sur les dépenses, les totaux des projets ou les mouvements des comptes.",
       "counted": "Votre part compte dans les totaux des projets",
       "notCounted": "Non comptée dans les totaux des projets",
-      "scope": "Seuls les totaux des projets changent. Les budgets et soldes des comptes restent inchangés."
+      "scope": "Les dépenses remboursées ou exclues comptent pour zéro dans les dépenses mensuelles, les totaux généraux et les mouvements des comptes. Inclure ne modifie que les totaux des projets."
     }
   },
   "install": {
