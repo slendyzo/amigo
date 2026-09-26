@@ -20,7 +20,7 @@ import NudgeCategorizeCard from "@/components/nudge-categorize-card";
 import NudgeCategorizeModal from "@/components/nudge-categorize-modal";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 
-type Expense = {
+type Expense = import("@/lib/project-expense-totals").ProjectCounting & {
   id: string;
   name: string;
   amount: number;
@@ -779,7 +779,7 @@ export default function ExpensesPage() {
         onClose={() => setViewingExpense(null)}
         expense={viewingExpense}
         onRepaymentSaved={fetchData}
-        onEdit={(updated) => { if (viewingExpense) setEditingExpense({ ...viewingExpense, splitData: updated.splitData, splitCount: updated.splitCount }); setViewingExpense(null); }}
+        onEdit={(updated) => { if (viewingExpense) setEditingExpense({ ...viewingExpense, splitData: updated.splitData, splitCount: updated.splitCount, fullyReimbursed: updated.fullyReimbursed, projectTotalMode: updated.projectTotalMode }); setViewingExpense(null); }}
         onDelete={() => { if (viewingExpense) { setDeleteId(viewingExpense.id); setViewingExpense(null); } }}
       />
       <ExportModal

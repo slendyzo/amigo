@@ -51,10 +51,11 @@ test('repayment validation enforces boolean status, real dates, bounded notes an
   for (const input of [{paid:false},{paid:true},{paid:true,date:'2024-02-29',note:'Transfer'}]) assert.equal(utils.validRepayment(input),true);
 });
 function fixture({authorized=true,conflict=false,splitData=JSON.stringify(legacy)}={}) {
-  const expense = {id:'ours',workspaceId:'ws',splitCount:2,splitData,amount:60,amountEur:60,status:'PENDING',paidAt:null,updatedAt:new Date()};
+  const expense = {id:'ours',workspaceId:'ws',splitCount:2,splitData,amount:60,amountEur:60,status:'PENDING',paidAt:null,fullyReimbursed:false,projectTotalMode:'AUTO',updatedAt:new Date()};
   let writes = 0;
   const route = load('src/app/api/expenses/[id]/repayments/route.ts', {
     'next/server':{NextResponse:Response}, '@/lib/split-utils':utils,
+    '@/lib/project-expense-totals':load('src/lib/project-expense-totals.ts', {'./split-utils':utils}),
     '@/lib/workspace':{getActiveWorkspace:async()=> authorized ? {workspace:{id:'ws'}} : null},
     '@/lib/db':{prisma:{expense:{
       findFirst:async({where})=>where.id === expense.id && where.workspaceId === expense.workspaceId ? {...expense} : null,
@@ -70,6 +71,7 @@ test('mark, edit optional details, clear details and undo leave expense status a
     assert.deepEqual(JSON.parse(f.expense.splitData)[1].repayment,repayment);
   }
   assert.equal(f.expense.status,'PENDING'); assert.equal(f.expense.paidAt,null); assert.equal(f.expense.amount,60);
+  assert.equal(f.expense.fullyReimbursed,false); assert.equal(f.expense.projectTotalMode,'AUTO');
 });
 test('count-only legacy expenses acquire rows and stable IDs on first save',async()=>{
   const f=fixture({splitData:null}); assert.equal((await f.patch({})).status,200);
@@ -89,6 +91,7 @@ test('ordinary expense PUT cannot erase newer repayments or change protected par
   let writes = 0;
   const route = load('src/app/api/expenses/[id]/route.ts', {
     'next/server':{NextResponse:Response}, '@/lib/split-utils':utils,
+    '@/lib/project-expense-totals':load('src/lib/project-expense-totals.ts', {'./split-utils':utils}),
     '@/lib/workspace':{getActiveWorkspace:async()=>({workspace:{id:'ws'}})}, '@/lib/currency':{},
     '@/lib/db':{prisma:{expense:{findFirst:async()=>({...state}),update:async({data,where})=>{assert.ok(where.updatedAt);writes++;Object.assign(state,data);return state;}}}},
   });

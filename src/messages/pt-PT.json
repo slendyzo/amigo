@@ -1272,6 +1272,20 @@
       "close": "Concluído",
       "searchLabel": "Pesquisar {label}",
       "noResults": "Sem resultados"
+    },
+    "projectCounting": {
+      "reimbursed": "Totalmente reembolsada",
+      "reimbursedHint": "Toda a despesa foi reembolsada. O pagamento das partes dos outros participantes não marca toda a despesa como reembolsada.",
+      "title": "Contar nos totais dos projetos",
+      "AUTO": "Automático",
+      "INCLUDE": "Incluir",
+      "EXCLUDE": "Excluir",
+      "AUTOHint": "Despesas totalmente reembolsadas contam zero; nas restantes, conta a tua parte.",
+      "INCLUDEHint": "Contar sempre a tua parte, mesmo que toda a despesa seja reembolsada.",
+      "EXCLUDEHint": "Nunca contar esta despesa nos totais dos projetos, reembolsada ou não.",
+      "counted": "A tua parte conta nos totais dos projetos",
+      "notCounted": "Não conta nos totais dos projetos",
+      "scope": "Só altera os totais dos projetos. Não afeta orçamentos nem saldos das contas."
     }
   },
   "install": {

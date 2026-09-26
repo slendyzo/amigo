@@ -6,6 +6,7 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
 import { parseSplitData, getUserShare, initializeSplit } from "@/lib/split-utils";
+import { ProjectExpenseStatus } from "./expense-project-counting";
 import { SplitRepaymentRow } from "./split-repayment-row";
 import type { Expense } from "@/types/models";
 
@@ -270,6 +271,8 @@ export default function ExpenseDetailModal({
               </p>
             </div>
           )}
+
+          <ProjectExpenseStatus expense={e} />
 
           {/* Split info */}
           {e.splitCount && e.splitCount > 1 && (

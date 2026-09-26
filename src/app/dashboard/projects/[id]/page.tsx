@@ -13,6 +13,8 @@ import ExpenseDetailModal from "@/components/expense-detail-modal";
 import ProjectWrappedModal from "@/components/project-wrapped-modal";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
+import { projectContributionEur, type ProjectCounting } from "@/lib/project-expense-totals";
+import { ProjectExpenseStatus } from "@/components/expense-project-counting";
 import { effectiveEur, getUserShare } from "@/lib/split-utils";
 import { formatCurrency } from "@/lib/currencies";
 
@@ -31,7 +33,7 @@ type ProjectItem = {
   name: string;
 };
 
-type Expense = {
+type Expense = ProjectCounting & {
   id: string;
   name: string;
   amount: number;
@@ -124,16 +126,20 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const fetchExpenses = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch(`/api/expenses?projectId=${id}&limit=500`);
-      if (response.ok) {
+      // Load every page so history and monthly totals match the project APIs.
+      const allExpenses: Expense[] = [];
+      let expectedTotal = Infinity;
+      while (allExpenses.length < expectedTotal) {
+        const response = await fetch(`/api/expenses?projectId=${id}&limit=500&offset=${allExpenses.length}`);
+        if (!response.ok) throw new Error("Failed to fetch project expenses");
         const data = await response.json();
-        setExpenses(data.expenses || []);
-        const total = (data.expenses || []).reduce(
-          (sum: number, exp: Expense) => sum + effectiveEur(exp),
-          0
-        );
-        setTotalSpent(total);
+        const page: Expense[] = data.expenses || [];
+        if (page.length === 0) break;
+        allExpenses.push(...page);
+        expectedTotal = data.total ?? allExpenses.length;
       }
+      setExpenses(allExpenses);
+      setTotalSpent(allExpenses.reduce((sum, exp) => sum + projectContributionEur(exp), 0));
     } catch (error) {
       console.error("Failed to fetch expenses:", error);
     } finally {
@@ -189,7 +195,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         const newExpenses = expenses.filter((e) => e.id !== id);
         setExpenses(newExpenses);
         const newTotal = newExpenses.reduce(
-          (sum: number, exp: Expense) => sum + effectiveEur(exp),
+          (sum: number, exp: Expense) => sum + projectContributionEur(exp),
           0
         );
         setTotalSpent(newTotal);
@@ -219,7 +225,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       groups[key] = { label, expenses: [], total: 0 };
     }
     groups[key].expenses.push(expense);
-    groups[key].total += effectiveEur(expense);
+    groups[key].total += projectContributionEur(expense);
     return groups;
   }, {} as Record<string, { label: string; expenses: Expense[]; total: number }>);
 
@@ -428,6 +434,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
                               <ImageIcon className="h-3.5 w-3.5 shrink-0" strokeWidth={1.8} style={{ color: "var(--ink-subtle)" }} />
                             )}
                           </p>
+                          <ProjectExpenseStatus expense={expense} />
                           <div className="mt-0.5 flex items-center gap-2">
                             <span
                               className="rounded-[6px] px-1.5 py-0.5 text-[11px] font-medium"
@@ -530,7 +537,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         onRepaymentSaved={fetchExpenses}
         onEdit={(updated) => {
           if (viewingExpense) {
-            setEditingExpense({ ...viewingExpense, splitData: updated.splitData, splitCount: updated.splitCount });
+            setEditingExpense({ ...viewingExpense, splitData: updated.splitData, splitCount: updated.splitCount, fullyReimbursed: updated.fullyReimbursed, projectTotalMode: updated.projectTotalMode });
             setIsEditModalOpen(true);
             setViewingExpense(null);
           }

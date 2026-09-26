@@ -10,6 +10,7 @@ import Link from "next/link";
 import { useSwipe } from "@/hooks/use-swipe";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
+import type { ProjectCounting } from "@/lib/project-expense-totals";
 import type { Expense as FullExpense } from "@/types/models";
 import { getUserShare } from "@/lib/split-utils";
 import MerchantAvatar from "@/components/ui/merchant-avatar";
@@ -26,7 +27,7 @@ const OnboardingModal = lazy(() => import("@/components/onboarding-modal"));
 const AnnouncementModal = lazy(() => import("@/components/announcement-modal"));
 const RetrospectiveModal = lazy(() => import("@/components/retrospective-modal"));
 
-type Expense = {
+type Expense = ProjectCounting & {
   id: string;
   name: string;
   date: string;
@@ -201,7 +202,7 @@ export default function DashboardOverview({
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   // Edit state
-  const [editingExpense, setEditingExpense] = useState<{
+  const [editingExpense, setEditingExpense] = useState<ProjectCounting & {
     id: string;
     name: string;
     amount: number;
@@ -1038,6 +1039,8 @@ export default function DashboardOverview({
                 status: exp.status || "PAID",
                 splitCount: exp.splitCount || null,
                 splitData: exp.splitData || null,
+                fullyReimbursed: exp.fullyReimbursed,
+                projectTotalMode: exp.projectTotalMode,
                 description: exp.description || undefined,
               });
             }}

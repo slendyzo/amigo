@@ -44,6 +44,8 @@ export type Expense = {
   category: Category | null;
   bankAccount: BankAccount | null;
   projects: Project[];
+  fullyReimbursed?: boolean;
+  projectTotalMode?: import("@/lib/project-expense-totals").ProjectTotalMode;
   excludeFromBudget?: boolean;
   description?: string;
   rawInput?: string;

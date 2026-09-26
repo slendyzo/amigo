@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { stripHtmlTags } from "@/lib/utils";
-import { effectiveEur } from "@/lib/split-utils";
+import { projectContributionEur } from "@/lib/project-expense-totals";
 
 // GET - List projects
 export async function GET(request: Request) {
@@ -33,11 +33,11 @@ export async function GET(request: Request) {
     const projectsWithTotals = await Promise.all(
       projects.map(async (project) => {
         const projectExpenses = await prisma.expense.findMany({
-          where: { projects: { some: { id: project.id } } },
-          select: { amount: true, amountEur: true, splitCount: true, splitData: true },
+          where: { workspaceId: workspace.id, projects: { some: { id: project.id } } },
+          select: { amount: true, amountEur: true, splitCount: true, splitData: true, fullyReimbursed: true, projectTotalMode: true },
         });
         const totalSpent = projectExpenses.reduce(
-          (sum, exp) => sum + effectiveEur(exp),
+          (sum, exp) => sum + projectContributionEur(exp),
           0
         );
         return {

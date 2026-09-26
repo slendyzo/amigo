@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { ExpenseProjectCounting } from "./expense-project-counting";
+import type { ProjectTotalMode } from "@/lib/project-expense-totals";
 import ProjectTagSelector from "./project-tag-selector";
 import AssetLinkPicker from "./asset-link-picker";
 import { AmountInput } from "./ui/amount-input";
@@ -57,6 +59,8 @@ export default function EditExpenseModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
   const [localCategories, setLocalCategories] = useState<Category[]>(categories);
+  const [fullyReimbursed, setFullyReimbursed] = useState(false);
+  const [projectTotalMode, setProjectTotalMode] = useState<ProjectTotalMode>("AUTO");
   const [excludeFromBudget, setExcludeFromBudget] = useState(false);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [description, setDescription] = useState("");
@@ -143,6 +147,8 @@ export default function EditExpenseModal({
       setSelectedProjectIds(expense.projects?.map(p => p.id) || []);
       setExpenseType(expense.type === "PROJECT" ? "LIFESTYLE" : expense.type);
       setDate(expense.date.split("T")[0]);
+      setFullyReimbursed(expense.fullyReimbursed ?? false);
+      setProjectTotalMode(expense.projectTotalMode ?? "AUTO");
       setExcludeFromBudget(expense.excludeFromBudget || false);
       setStatus(expense.status || "PAID");
       setImageUrls(expense.imageUrls ? JSON.parse(expense.imageUrls) : []);
@@ -246,6 +252,8 @@ export default function EditExpenseModal({
           projectIds: selectedProjectIds,
           date,
           excludeFromBudget,
+          fullyReimbursed,
+          projectTotalMode,
           description: description || null,
           imageUrls: imageUrls.length > 0 ? JSON.stringify(imageUrls) : null,
           status,
@@ -671,6 +679,8 @@ export default function EditExpenseModal({
               </div>
             </button>
           )}
+
+          <ExpenseProjectCounting fullyReimbursed={fullyReimbursed} projectTotalMode={projectTotalMode} onReimbursedChange={setFullyReimbursed} onModeChange={setProjectTotalMode} />
 
           {/* ── Exclude from budget (shown when project selected) ── */}
           {selectedProjectIds.length > 0 && (

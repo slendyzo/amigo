@@ -1272,6 +1272,20 @@
       "close": "Terminé",
       "searchLabel": "Rechercher {label}",
       "noResults": "Aucun résultat"
+    },
+    "projectCounting": {
+      "reimbursed": "Entièrement remboursée",
+      "reimbursedHint": "La dépense entière a été remboursée. Le paiement des parts des autres participants ne marque pas toute la dépense comme remboursée.",
+      "title": "Compter dans les totaux des projets",
+      "AUTO": "Automatique",
+      "INCLUDE": "Inclure",
+      "EXCLUDE": "Exclure",
+      "AUTOHint": "Les dépenses entièrement remboursées comptent pour zéro ; sinon, votre part est comptée.",
+      "INCLUDEHint": "Toujours compter votre part, même si toute la dépense est remboursée.",
+      "EXCLUDEHint": "Ne jamais compter cette dépense dans les totaux des projets, remboursée ou non.",
+      "counted": "Votre part compte dans les totaux des projets",
+      "notCounted": "Non comptée dans les totaux des projets",
+      "scope": "Seuls les totaux des projets changent. Les budgets et soldes des comptes restent inchangés."
     }
   },
   "install": {

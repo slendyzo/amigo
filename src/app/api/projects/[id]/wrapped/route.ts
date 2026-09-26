@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
-import { effectiveEur } from "@/lib/split-utils";
+import { projectContributionEur, countsInProjectTotal } from "@/lib/project-expense-totals";
 
 // GET - Get project wrapped stats
 export async function GET(
@@ -26,8 +26,9 @@ export async function GET(
     }
 
     // Get all expenses for this project
-    const expenses = await prisma.expense.findMany({
+    const history = await prisma.expense.findMany({
       where: {
+        workspaceId: workspace.id,
         projects: { some: { id } },
       },
       include: {
@@ -36,6 +37,8 @@ export async function GET(
       orderBy: { date: "asc" },
     });
 
+    // History stays visible; spending statistics describe counted expenses only.
+    const expenses = history.filter(countsInProjectTotal);
     if (expenses.length === 0) {
       return NextResponse.json({
         wrapped: {
@@ -53,7 +56,7 @@ export async function GET(
     }
 
     // All totals use the user's share on split expenses, not the full bill.
-    const shares = new Map(expenses.map((exp) => [exp.id, effectiveEur(exp)]));
+    const shares = new Map(expenses.map((exp) => [exp.id, projectContributionEur(exp)]));
     const shareOf = (id: string) => shares.get(id) ?? 0;
 
     const totalSpent = expenses.reduce((sum, exp) => sum + shareOf(exp.id), 0);

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
+import { projectCountingUpdate } from "@/lib/project-expense-totals";
 import { preserveRepayments } from "@/lib/split-utils";
 
 const LEARNING_THRESHOLD = 3;
@@ -192,9 +193,13 @@ export async function PUT(
       updateData.exchangeRate = exchangeRate;
     }
 
+    let projectCounting;
+    try { projectCounting = projectCountingUpdate(body); }
+    catch (error) { return NextResponse.json({ error: (error as Error).message }, { status: 400 }); }
+
     const expense = await prisma.expense.update({
       where: { id, updatedAt: existing.updatedAt },
-      data: updateData,
+      data: { ...updateData, ...projectCounting },
       include: {
         category: { include: { parent: true } },
         bankAccount: true,

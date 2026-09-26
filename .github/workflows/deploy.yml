@@ -122,6 +122,10 @@ jobs:
             docker exec -i amigo-db psql -U amigo -d amigo -v ON_ERROR_STOP=1 --single-transaction < prisma/migrations/20260926000000_remember_expense_currency/migration.sql
             docker exec amigo-db psql -U amigo -d amigo -c "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'workspaces' AND column_name IN ('rememberExpenseCurrency', 'lastExpenseCurrency') ORDER BY column_name;"
 
+            echo "=== Applying project reimbursement migration ==="
+            docker exec -i amigo-db psql -U amigo -d amigo -v ON_ERROR_STOP=1 --single-transaction < prisma/migrations/20260926010000_project_reimbursement/migration.sql
+            docker exec amigo-db psql -U amigo -d amigo -c "SELECT column_name, data_type, column_default FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'expenses' AND column_name IN ('fullyReimbursed', 'projectTotalMode') ORDER BY column_name;"
+
             # Restart with new image — docker compose up -d already fails the
             # script (via set -e) if containers can't start, so no extra health
             # check is needed. Keeping the final command fast + quiet avoids a

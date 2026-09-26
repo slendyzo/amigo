@@ -77,6 +77,8 @@ export async function GET(request: Request) {
           recurringTemplateId: true,
           installmentNumber: true,
           recurringTemplate: { select: { installmentMonths: true } },
+          fullyReimbursed: true,
+          projectTotalMode: true,
           excludeFromBudget: true,
           imageUrls: true,
           splitCount: true,

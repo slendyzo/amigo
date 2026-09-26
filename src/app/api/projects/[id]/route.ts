@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
+import { projectContributionEur } from "@/lib/project-expense-totals";
 import { prisma } from "@/lib/db";
 
 // GET - Get single project
@@ -28,15 +29,15 @@ export async function GET(
     }
 
     // Calculate total spent (many-to-many)
-    const result = await prisma.expense.aggregate({
-      where: { projects: { some: { id: project.id } } },
-      _sum: { amountEur: true },
+    const result = await prisma.expense.findMany({
+      where: { workspaceId: workspace.id, projects: { some: { id: project.id } } },
+      select: { amount: true, amountEur: true, splitCount: true, splitData: true, fullyReimbursed: true, projectTotalMode: true },
     });
 
     return NextResponse.json({
       project: {
         ...project,
-        totalSpent: result._sum.amountEur || 0,
+        totalSpent: result.reduce((sum, expense) => sum + projectContributionEur(expense), 0),
       },
     });
   } catch (error) {

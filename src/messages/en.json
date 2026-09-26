@@ -1272,6 +1272,20 @@
       "close": "Done",
       "searchLabel": "Search {label}",
       "noResults": "No matches"
+    },
+    "projectCounting": {
+      "reimbursed": "Fully reimbursed",
+      "reimbursedHint": "The whole expense was reimbursed. Split participants paying their own shares does not mark the whole expense reimbursed.",
+      "title": "Count toward project totals",
+      "AUTO": "Automatic",
+      "INCLUDE": "Include",
+      "EXCLUDE": "Exclude",
+      "AUTOHint": "Fully reimbursed expenses contribute zero; other expenses count your share.",
+      "INCLUDEHint": "Always count your share, even when the whole expense is reimbursed.",
+      "EXCLUDEHint": "Never count this expense toward project totals, whether reimbursed or not.",
+      "counted": "Your share counts toward project totals",
+      "notCounted": "Not counted toward project totals",
+      "scope": "Only project totals change. Budgets and account balances are unaffected."
     }
   },
   "install": {
