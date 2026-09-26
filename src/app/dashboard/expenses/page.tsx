@@ -776,7 +776,8 @@ export default function ExpensesPage() {
         isOpen={!!viewingExpense}
         onClose={() => setViewingExpense(null)}
         expense={viewingExpense}
-        onEdit={() => { if (viewingExpense) { setEditingExpense(viewingExpense); setViewingExpense(null); } }}
+        onRepaymentSaved={fetchData}
+        onEdit={(updated) => { if (viewingExpense) setEditingExpense({ ...viewingExpense, splitData: updated.splitData, splitCount: updated.splitCount }); setViewingExpense(null); }}
         onDelete={() => { if (viewingExpense) { setDeleteId(viewingExpense.id); setViewingExpense(null); } }}
       />
       <ExportModal

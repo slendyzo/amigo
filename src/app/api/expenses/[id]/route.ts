@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
 import { convertToEur } from "@/lib/currency";
+import { preserveRepayments } from "@/lib/split-utils";
 
 const LEARNING_THRESHOLD = 3;
 
@@ -157,7 +158,15 @@ export async function PUT(
     if (imageUrls !== undefined) updateData.imageUrls = imageUrls || null;
     if (categorizedAt !== undefined) updateData.categorizedAt = categorizedAt ? new Date(categorizedAt) : null;
     if (splitCount !== undefined) updateData.splitCount = splitCount || null;
-    if (splitData !== undefined) updateData.splitData = splitData || null;
+    if (splitData !== undefined || splitCount !== undefined) {
+      try {
+        updateData.splitData = preserveRepayments(existing.splitData, splitData !== undefined ? splitData || null : existing.splitData,
+          splitCount !== undefined ? splitCount || null : existing.splitCount);
+        if (splitCount === null && updateData.splitData) throw new Error("Invalid split data");
+      } catch (error) {
+        return NextResponse.json({ error: (error as Error).message }, { status: 400 });
+      }
+    }
     if (description !== undefined) updateData.description = description || null;
     if (realAssetId !== undefined) updateData.realAssetId = realAssetId || null;
     if (status !== undefined) {
@@ -184,7 +193,7 @@ export async function PUT(
     }
 
     const expense = await prisma.expense.update({
-      where: { id },
+      where: { id, updatedAt: existing.updatedAt },
       data: updateData,
       include: {
         category: { include: { parent: true } },
@@ -203,6 +212,7 @@ export async function PUT(
 
     return NextResponse.json({ expense });
   } catch (error) {
+    if ((error as { code?: string }).code === "P2025") return NextResponse.json({ error: "Expense changed. Reopen and try again." }, { status: 409 });
     console.error("Update expense error:", error);
     return NextResponse.json({ error: "Failed to update expense" }, { status: 500 });
   }

@@ -412,7 +412,20 @@
     "perPersonUnit": "personne",
     "fixed": "fixe",
     "yourShare": "Votre part",
-    "photos": "Photos"
+    "photos": "Photos",
+    "repayment": {
+      "paid": "Remboursé",
+      "unpaid": "À rembourser",
+      "mark": "Marquer comme remboursé",
+      "edit": "Modifier le remboursement",
+      "undo": "Annuler le remboursement",
+      "date": "Date du remboursement (facultatif)",
+      "note": "Note du paiement (facultatif)",
+      "placeholder": "Espèces, virement bancaire, lieu du paiement…",
+      "failed": "Impossible d’enregistrer le remboursement. Réessaie.",
+      "conflict": "Cette dépense a été modifiée. Ferme-la et rouvre-la avant de réessayer.",
+      "me": "Moi"
+    }
   },
   "incomes": {
     "title": "Revenus",
@@ -941,7 +954,9 @@
     "manageCategories": "Catégories et Règles",
     "manageCategoriesDescription": "Catégories et règles de catégorisation automatique",
     "theme": "Thème",
-    "workspaceSuffix": "espace de travail"
+    "workspaceSuffix": "espace de travail",
+    "rememberExpenseCurrency": "Mémoriser la devise des dépenses",
+    "rememberExpenseCurrencyHint": "Utiliser la devise de la dernière dépense enregistrée dans cet espace pour les nouvelles dépenses. Désactivez pour utiliser la devise par défaut."
   },
   "imports": {
     "title": "Historique des Importations",
@@ -1225,7 +1240,12 @@
       "meLabel": "Moi",
       "yourShare": "Votre part",
       "youTag": "Vous",
-      "ofTotal": "sur {total}"
+      "ofTotal": "sur {total}",
+      "fewerPeople": "Moins de personnes",
+      "morePeople": "Plus de personnes",
+      "personName": "Nom de la personne {number}",
+      "personAmount": "Montant pour {name}",
+      "repaymentProtected": "Annule les remboursements avant de supprimer ou renommer des personnes, ou de désactiver le partage."
     },
     "installments": {
       "title": "Payer en plusieurs fois",
@@ -1243,7 +1263,14 @@
     "invalidAmount": "Montant invalide",
     "amountLabel": "MONTANT",
     "nameLabel": "C'ÉTAIT POUR QUOI ?",
-    "namePlaceholder": "ex. Vols Grèce 2026"
+    "namePlaceholder": "ex. Vols Grèce 2026",
+    "choices": {
+      "currency": "Devise",
+      "all": "Choisir une autre",
+      "close": "Terminé",
+      "searchLabel": "Rechercher {label}",
+      "noResults": "Aucun résultat"
+    }
   },
   "install": {
     "title": "Installer Amigo",

@@ -1019,8 +1019,8 @@ export default function DashboardOverview({
             isOpen={!!viewingExpense}
             onClose={() => setViewingExpense(null)}
             expense={viewingExpense}
-            onEdit={() => {
-              const exp = viewingExpense;
+            onRepaymentSaved={() => router.refresh()}
+            onEdit={(exp) => {
               setViewingExpense(null);
               setEditingExpense({
                 id: exp.id,

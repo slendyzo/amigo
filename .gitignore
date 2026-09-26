@@ -67,3 +67,6 @@ Expenses.xlsx
 # Local database backups
 *.sql
 *.dump
+
+# Versioned schema migrations are source, not database backups
+!prisma/migrations/**/migration.sql

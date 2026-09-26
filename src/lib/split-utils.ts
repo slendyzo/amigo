@@ -1,4 +1,6 @@
 export type SplitPerson = {
+  id?: string;
+  repayment?: { paid: boolean; date?: string; note?: string };
   label: string;
   amount: number;
   locked: boolean;
@@ -32,6 +34,8 @@ export function initializeSplit(
 ): SplitPerson[] {
   const amounts = calculateEqualSplit(total, count);
   return amounts.map((amt, i) => ({
+    ...previous?.[i],
+    id: previous?.[i]?.id || crypto.randomUUID(),
     label: previous?.[i]?.label || (i === 0 ? meLabel : `Person ${i + 1}`),
     amount: amt,
     locked: false,
@@ -86,7 +90,14 @@ export function recalculateSplit(
 export function parseSplitData(json: string | null | undefined): SplitPerson[] | null {
   if (!json) return null;
   try {
-    return JSON.parse(json);
+    const people: unknown = JSON.parse(json);
+    if (!Array.isArray(people) || people.length < 2 || people.length > 20 ||
+      !people.every(p => p && typeof p.label === "string" && typeof p.amount === "number" && Number.isFinite(p.amount) && typeof p.locked === "boolean" &&
+        (p.id === undefined || (typeof p.id === "string" && p.id.length > 0 && p.id.length <= 100)) &&
+        (p.repayment === undefined || validRepayment(p.repayment)))) return null;
+    const ids = people.filter(p => p.id).map(p => p.id);
+    if (new Set(ids).size !== ids.length || people[0].repayment) return null;
+    return people;
   } catch {
     return null;
   }
@@ -128,4 +139,36 @@ export function effectiveEur(expense: {
     return amountEur * (share / amount);
   }
   return amountEur / expense.splitCount;
+}
+
+/** Date-only values avoid timezone shifts for a date the user chose. */
+export function validRepayment(value: unknown): value is NonNullable<SplitPerson["repayment"]> {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const r = value as Record<string, unknown>;
+  if (Object.keys(r).some(k => !["paid", "date", "note"].includes(k)) || typeof r.paid !== "boolean") return false;
+  if (r.note !== undefined && (typeof r.note !== "string" || r.note.length > 1000)) return false;
+  if (r.date !== undefined && (typeof r.date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(r.date) ||
+    !Number.isFinite(Date.parse(r.date)) || new Date(r.date).toISOString().slice(0, 10) !== r.date)) return false;
+  return r.paid || (r.date === undefined && r.note === undefined);
+}
+
+/** Expense editing cannot overwrite repayment state from a stale modal. */
+export function preserveRepayments(oldJson: string | null, newJson: string | null, count: number | null): string | null {
+  if (count !== null && (!Number.isInteger(count) || count < 2 || count > 20)) throw new Error("Invalid split count");
+  const old = parseSplitData(oldJson) || [];
+  const next = parseSplitData(newJson);
+  if (newJson && (!next || next.length !== count)) throw new Error("Invalid split data");
+  for (const [index, person] of old.entries()) {
+    if (!person.repayment?.paid) continue;
+    const match = person.id ? next?.find(p => p.id === person.id) : next?.[index];
+    if (!match || next?.[0] === match || match.label !== person.label) throw new Error("REPAYMENT_PROTECTED");
+  }
+  return next ? JSON.stringify(next.map((person, index) => {
+    const prior = person.id ? old.find(p => p.id === person.id) : (!old[index]?.id ? old[index] : undefined);
+    // Legacy rows are matched only at their original position and with the same label.
+    const legacy = !prior && !old[index]?.id && old[index]?.label === person.label ? old[index] : undefined;
+    const source = prior || legacy;
+    const { repayment: _ignored, ...rest } = person;
+    return { ...rest, ...(index > 0 && source?.label === person.label && source.repayment ? { repayment: source.repayment } : {}) };
+  })) : null;
 }

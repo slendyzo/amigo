@@ -17,9 +17,10 @@ type SplitAmountInputProps = {
   amount: number;
   locked: boolean;
   onCommit: (numValue: number) => void;
+  label: string;
 };
 
-function SplitAmountInput({ amount, locked, onCommit }: SplitAmountInputProps) {
+function SplitAmountInput({ amount, locked, onCommit, label }: SplitAmountInputProps) {
   const [localValue, setLocalValue] = useState(amount.toFixed(2));
   const isFocused = useRef(false);
 
@@ -29,6 +30,7 @@ function SplitAmountInput({ amount, locked, onCommit }: SplitAmountInputProps) {
 
   return (
     <input
+      aria-label={label}
       type="text"
       inputMode="decimal"
       value={localValue}
@@ -50,7 +52,7 @@ function SplitAmountInput({ amount, locked, onCommit }: SplitAmountInputProps) {
           (e.currentTarget as HTMLInputElement).blur();
         }
       }}
-      className={`w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent ${
+      className={`min-h-11 w-full rounded-md border px-2.5 py-1.5 text-xs text-right font-mono focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent ${
         locked
           ? "border-[var(--accent)] bg-[var(--accent-tint)]"
           : "border-[var(--line-strong)] bg-[var(--surface)]"
@@ -179,9 +181,10 @@ export default function ExpenseSplitSection({
         <div className="flex items-center gap-2">
           <button
             type="button"
+            aria-label={t("fewerPeople")}
             onClick={() => handleCountChange(splitCount - 1)}
             disabled={splitCount <= 2}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+            className="w-11 h-11 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
           >
             −
           </button>
@@ -190,9 +193,10 @@ export default function ExpenseSplitSection({
           </span>
           <button
             type="button"
+            aria-label={t("morePeople")}
             onClick={() => handleCountChange(splitCount + 1)}
             disabled={splitCount >= 20}
-            className="w-7 h-7 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
+            className="w-11 h-11 flex items-center justify-center rounded-md border border-[var(--accent-soft)] bg-[var(--surface)] text-[var(--accent)] hover:bg-[var(--accent-tint)] disabled:opacity-40 disabled:cursor-not-allowed text-sm font-medium"
           >
             +
           </button>
@@ -226,8 +230,9 @@ export default function ExpenseSplitSection({
       {/* Customize toggle */}
       <button
         type="button"
+        aria-expanded={showCustomize}
         onClick={() => setShowCustomize(!showCustomize)}
-        className="flex items-center gap-1.5 text-xs text-[var(--accent)] hover:text-[var(--accent-strong)] transition-colors"
+        className="min-h-11 flex items-center gap-1.5 text-xs text-[var(--accent)] hover:text-[var(--accent-strong)] transition-colors"
       >
         <svg
           className={`w-3.5 h-3.5 transition-transform ${
@@ -254,7 +259,7 @@ export default function ExpenseSplitSection({
             <div key={i} className="flex items-center gap-2">
               {/* Label */}
               {i === 0 ? (
-                <div className="flex-1 min-w-0 rounded-md border border-[var(--accent)] bg-[var(--accent-tint)] px-2.5 py-1.5 text-xs text-[var(--accent-strong)] font-semibold flex items-center gap-1.5">
+                <div className="min-h-11 flex-1 min-w-0 rounded-md border border-[var(--accent)] bg-[var(--accent-tint)] px-2.5 py-1.5 text-xs text-[var(--accent-strong)] font-semibold flex items-center gap-1.5">
                   <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
@@ -263,15 +268,17 @@ export default function ExpenseSplitSection({
                 </div>
               ) : (
                 <input
+                  aria-label={t("personName", { number: i + 1 })}
                   type="text"
                   value={person.label}
                   onChange={(e) => handleLabelChange(i, e.target.value)}
-                  className="flex-1 min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-xs text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent"
+                  className="min-h-11 flex-1 min-w-0 rounded-md border border-[var(--line-strong)] bg-[var(--surface)] px-2.5 py-1.5 text-xs text-[var(--ink-muted)] focus:outline-none focus:ring-1 focus:ring-[var(--accent)] focus:border-transparent"
                 />
               )}
               {/* Amount */}
               <div className="relative w-24">
                 <SplitAmountInput
+                  label={t("personAmount", { name: person.label })}
                   amount={person.amount}
                   locked={person.locked}
                   onCommit={(n) => handleAmountChange(i, n.toString())}
@@ -281,11 +288,13 @@ export default function ExpenseSplitSection({
               <button
                 type="button"
                 onClick={() => handleToggleLock(i)}
-                className={`w-7 h-7 flex items-center justify-center rounded-md transition-colors ${
+                className={`w-11 h-11 shrink-0 flex items-center justify-center rounded-md transition-colors ${
                   person.locked
                     ? "bg-[var(--accent-tint)] text-[var(--accent)] hover:bg-[var(--accent-soft)]"
                     : "bg-[var(--surface-2)] text-[var(--ink-subtle)] hover:bg-[var(--surface-3)]"
                 }`}
+                aria-pressed={person.locked}
+                aria-label={person.locked ? t("unlockAmount") : t("lockAmount")}
                 title={person.locked ? t("unlockAmount") : t("lockAmount")}
               >
                 {person.locked ? (

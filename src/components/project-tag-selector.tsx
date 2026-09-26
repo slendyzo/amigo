@@ -16,6 +16,7 @@ type ProjectTagSelectorProps = {
   onCancelNewTag: () => void;
   isCreating?: boolean;
   showSelectedCount?: boolean;
+  fillRows?: boolean;
 };
 
 /**
@@ -35,16 +36,18 @@ export default function ProjectTagSelector({
   onCancelNewTag,
   isCreating = false,
   showSelectedCount = true,
+  fillRows = false,
 }: ProjectTagSelectorProps) {
   const t = useTranslations("modals");
   const tCommon = useTranslations("common");
 
   return (
     <div>
-      <div className="flex flex-wrap gap-2">
+      <div className={fillRows ? "grid grid-cols-2 gap-2 [&>button:last-child:nth-child(odd)]:col-span-2 [&>button]:h-11 [&>button]:min-w-0 [&>button]:w-full [&>button]:truncate [&>button]:rounded-[12px] [&>button]:text-[13px] [&>button]:justify-center" : "flex flex-wrap gap-2"}>
         {/* Clear all tags option */}
         <button
           type="button"
+          aria-pressed={selectedIds.length === 0}
           onClick={onClearAll}
           className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
             selectedIds.length === 0
@@ -62,6 +65,8 @@ export default function ProjectTagSelector({
             <button
               key={project.id}
               type="button"
+              aria-pressed={isSelected}
+              title={project.name}
               onClick={() => onToggle(project.id)}
               className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                 isSelected
@@ -97,7 +102,7 @@ export default function ProjectTagSelector({
             value={newTagName}
             onChange={(e) => onNewTagNameChange(e.target.value)}
             placeholder={t("tagPlaceholder")}
-            className="flex-1 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
+            className="min-w-0 flex-1 rounded-lg border border-[var(--line-strong)] bg-[var(--surface)] px-3 py-2 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
             onKeyDown={(e) => {
               if (e.key === "Enter") {
                 e.preventDefault();

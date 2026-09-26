@@ -5,14 +5,16 @@ import { useTranslations } from "next-intl";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
-import { parseSplitData, getUserShare } from "@/lib/split-utils";
+import { parseSplitData, getUserShare, initializeSplit } from "@/lib/split-utils";
+import { SplitRepaymentRow } from "./split-repayment-row";
 import type { Expense } from "@/types/models";
 
 type ExpenseDetailModalProps = {
   isOpen: boolean;
   onClose: () => void;
   expense: Expense | null;
-  onEdit?: () => void;
+  onEdit?: (expense: Expense) => void;
+  onRepaymentSaved?: () => void;
   onDelete?: () => void;
 };
 
@@ -30,6 +32,7 @@ export default function ExpenseDetailModal({
   expense,
   onEdit,
   onDelete,
+  onRepaymentSaved,
 }: ExpenseDetailModalProps) {
   const t = useTranslations("expenses");
   const tCommon = useTranslations("common");
@@ -40,6 +43,7 @@ export default function ExpenseDetailModal({
 
   // Fetch full expense data when modal opens (for fields not in list endpoint)
   useEffect(() => {
+    let active = true;
     if (isOpen && expense?.id) {
       setShowMetadata(false);
       setFullExpense(null);
@@ -47,19 +51,20 @@ export default function ExpenseDetailModal({
       fetch(`/api/expenses/${expense.id}`)
         .then((res) => (res.ok ? res.json() : null))
         .then((data) => {
-          if (data?.expense) {
+          if (active && data?.expense) {
             setFullExpense(data.expense);
           }
         })
         .catch(() => {})
-        .finally(() => setIsLoadingFull(false));
+        .finally(() => { if (active) setIsLoadingFull(false); });
     }
+    return () => { active = false; };
   }, [isOpen, expense?.id]);
 
   if (!isOpen || !expense) return null;
 
   // Merge: prefer full data if available, fall back to prop data
-  const e = fullExpense || expense;
+  const e = fullExpense?.id === expense.id ? fullExpense : expense;
 
   const amount = Number(e.amount);
   const amountEur = e.amountEur != null ? Number(e.amountEur) : null;
@@ -70,7 +75,7 @@ export default function ExpenseDetailModal({
   const displayAmount = userShare !== null ? userShare : amount;
   // A split is "customized" when any row is locked or any amount diverges
   // from the equal share — in that case the "X/per person × N" hint is a lie.
-  const splitPeople = parseSplitData(e.splitData);
+  const splitPeople = parseSplitData(e.splitData) || (!e.splitData && e.splitCount && e.splitCount > 1 && e.splitCount <= 20 ? initializeSplit(amount, e.splitCount, t("repayment.me")) : null);
   const perPerson = e.splitCount && e.splitCount > 0 ? Math.abs(amount) / e.splitCount : 0;
   const isSplitCustomized =
     !!splitPeople &&
@@ -288,12 +293,15 @@ export default function ExpenseDetailModal({
               {splitPeople && (
                 <div className="mt-2 space-y-1">
                   {splitPeople.map((p, i) => (
-                    <div key={i} className="flex justify-between text-xs">
+                    <div key={i} className="py-1 text-xs">
+                    <div className="flex justify-between gap-2">
                       <span className="text-[var(--ink-muted)]">{p.label}</span>
                       <span className="font-medium tabular-nums" style={{ color: p.locked ? "var(--accent)" : "var(--ink)" }}>
                         {formatCurrency(p.amount, e.currency || "EUR")}
                         {p.locked && ` (${t("fixed")})`}
                       </span>
+                    </div>
+                    {i > 0 && !isLoadingFull && <SplitRepaymentRow person={p} index={i} expense={e} onSaved={updated => { setFullExpense(updated); onRepaymentSaved?.(); }} />}
                     </div>
                   ))}
                 </div>
@@ -509,7 +517,7 @@ export default function ExpenseDetailModal({
             {onEdit && (
               <button
                 onClick={() => {
-                  onEdit();
+                  onEdit(e);
                   onClose();
                 }}
                 className="flex-1 py-2 rounded-[18px] text-sm font-semibold transition-colors"

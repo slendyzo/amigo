@@ -8,6 +8,8 @@ type ModalData = {
   projects: Project[];
   bankAccounts: BankAccount[];
   defaultCurrency: string;
+  lastExpenseCurrency: string | null;
+  rememberExpenseCurrency: boolean;
   defaultBankAccountId: string | null;
   isLoading: boolean;
   error: string | null;
@@ -51,6 +53,8 @@ export function useModalData(
   const [categories, setCategories] = useState<Category[]>(propCategories || []);
   const [projects, setProjects] = useState<Project[]>(propProjects || []);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(propBankAccounts || []);
+  const [lastExpenseCurrency, setLastExpenseCurrency] = useState<string | null>(null);
+  const [rememberExpenseCurrency, setRememberExpenseCurrency] = useState(false);
   const [defaultCurrency, setDefaultCurrency] = useState("EUR");
   const [defaultBankAccountId, setDefaultBankAccountId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -100,6 +104,7 @@ export function useModalData(
 
     if (!needsAnyFetch) return;
 
+    let cancelled = false;
     setIsLoading(true);
     setError(null);
 
@@ -119,6 +124,7 @@ export function useModalData(
           workspaceRes ? workspaceRes.json() : null,
         ]);
 
+        if (cancelled) return;
         const [catData, projData, bankData, workspaceData] = results;
 
         if (catData?.categories) setCategories(catData.categories);
@@ -128,6 +134,8 @@ export function useModalData(
           setDefaultCurrency(workspaceData.workspace.defaultCurrency);
         }
         if (workspaceData?.workspace) {
+          setLastExpenseCurrency(workspaceData.workspace.lastExpenseCurrency || null);
+          setRememberExpenseCurrency(workspaceData.workspace.rememberExpenseCurrency === true);
           setDefaultBankAccountId(workspaceData.workspace.defaultBankAccountId || null);
         }
       })
@@ -135,7 +143,8 @@ export function useModalData(
         console.error("Failed to load modal data:", err);
         setError("Failed to load data");
       })
-      .finally(() => setIsLoading(false));
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
   }, [isOpen, propCategories, propProjects, propBankAccounts, options]);
 
   return {
@@ -143,6 +152,8 @@ export function useModalData(
     projects,
     bankAccounts,
     defaultCurrency,
+    lastExpenseCurrency,
+    rememberExpenseCurrency,
     defaultBankAccountId,
     isLoading,
     error,

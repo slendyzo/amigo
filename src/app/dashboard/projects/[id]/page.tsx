@@ -532,9 +532,10 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         isOpen={!!viewingExpense}
         onClose={() => setViewingExpense(null)}
         expense={viewingExpense}
-        onEdit={() => {
+        onRepaymentSaved={fetchExpenses}
+        onEdit={(updated) => {
           if (viewingExpense) {
-            setEditingExpense(viewingExpense);
+            setEditingExpense({ ...viewingExpense, splitData: updated.splitData, splitCount: updated.splitCount });
             setIsEditModalOpen(true);
             setViewingExpense(null);
           }

@@ -97,6 +97,7 @@ export default function SettingsPage() {
 
   // Budget form
   const [monthlyBudget, setMonthlyBudget] = useState("");
+  const [rememberExpenseCurrency, setRememberExpenseCurrency] = useState(false);
   const [currency, setCurrency] = useState("EUR");
   const [defaultBankAccountId, setDefaultBankAccountId] = useState("");
   const [language, setLanguage] = useState("en");
@@ -174,6 +175,7 @@ export default function SettingsPage() {
         const data = await workspaceRes.json();
         setWorkspace(data.workspace);
         setMonthlyBudget(data.workspace.monthlyBudget?.toString() || "");
+        setRememberExpenseCurrency(data.workspace.rememberExpenseCurrency === true);
         setCurrency(data.workspace.defaultCurrency || "EUR");
         setDefaultBankAccountId(data.workspace.defaultBankAccountId || "");
         setLanguage(data.workspace.language || "en");
@@ -241,6 +243,7 @@ export default function SettingsPage() {
           defaultBankAccountId: defaultBankAccountId || null,
           language,
           currencyDisplayMode,
+          rememberExpenseCurrency,
         }),
       });
 
@@ -620,6 +623,14 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
+
+            <label className={rowCls} style={{ borderColor: "var(--line)", cursor: "pointer", minHeight: 56 }}>
+              <span className="pr-4">
+                <span className="block text-[13px] font-medium">{t("rememberExpenseCurrency")}</span>
+                <span className="block text-[12px] text-[var(--ink-muted)]">{t("rememberExpenseCurrencyHint")}</span>
+              </span>
+              <input type="checkbox" checked={rememberExpenseCurrency} onChange={(e) => setRememberExpenseCurrency(e.target.checked)} className="h-5 w-5 shrink-0 accent-[var(--accent)]" />
+            </label>
 
             {/* Currency display mode */}
             <div className={rowCls} style={{ borderColor: "var(--line)" }}>

@@ -257,7 +257,7 @@ export default function EditExpenseModal({
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "Failed to update expense");
+        throw new Error(data.error === "REPAYMENT_PROTECTED" ? t("split.repaymentProtected") : data.error || "Failed to update expense");
       }
 
       // Notify parent to refresh data, then close

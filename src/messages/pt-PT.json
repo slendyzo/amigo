@@ -412,7 +412,20 @@
     "perPersonUnit": "pessoa",
     "fixed": "fixo",
     "yourShare": "A tua parte",
-    "photos": "Fotos"
+    "photos": "Fotos",
+    "repayment": {
+      "paid": "Reembolsado",
+      "unpaid": "Por reembolsar",
+      "mark": "Marcar como reembolsado",
+      "edit": "Editar reembolso",
+      "undo": "Anular reembolso",
+      "date": "Data do reembolso (opcional)",
+      "note": "Nota do pagamento (opcional)",
+      "placeholder": "Dinheiro, transferência bancária, onde pagou…",
+      "failed": "Não foi possível guardar o reembolso. Tenta novamente.",
+      "conflict": "Esta despesa foi alterada. Fecha e volta a abrir antes de tentar novamente.",
+      "me": "Eu"
+    }
   },
   "incomes": {
     "title": "Receitas",
@@ -941,7 +954,9 @@
     "manageCategories": "Categorias e Regras",
     "manageCategoriesDescription": "Categorias e regras de categorização automática",
     "theme": "Tema",
-    "workspaceSuffix": "workspace"
+    "workspaceSuffix": "workspace",
+    "rememberExpenseCurrency": "Lembrar moeda das despesas",
+    "rememberExpenseCurrencyHint": "Iniciar novas despesas com a moeda da última despesa guardada neste espaço. Desative para usar a moeda predefinida."
   },
   "imports": {
     "title": "Histórico de Importações",
@@ -1225,7 +1240,12 @@
       "meLabel": "Eu",
       "yourShare": "A tua parte",
       "youTag": "Tu",
-      "ofTotal": "de {total}"
+      "ofTotal": "de {total}",
+      "fewerPeople": "Menos pessoas",
+      "morePeople": "Mais pessoas",
+      "personName": "Nome da pessoa {number}",
+      "personAmount": "Valor de {name}",
+      "repaymentProtected": "Anula os reembolsos antes de remover ou renomear pessoas, ou desativar a divisão."
     },
     "installments": {
       "title": "Pagar em parcelas",
@@ -1243,7 +1263,14 @@
     "invalidAmount": "Valor inválido",
     "amountLabel": "VALOR",
     "nameLabel": "O QUE FOI?",
-    "namePlaceholder": "ex. Voos Grécia 2026"
+    "namePlaceholder": "ex. Voos Grécia 2026",
+    "choices": {
+      "currency": "Moeda",
+      "all": "Escolher outra",
+      "close": "Concluído",
+      "searchLabel": "Pesquisar {label}",
+      "noResults": "Sem resultados"
+    }
   },
   "install": {
     "title": "Instalar Amigo",

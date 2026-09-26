@@ -217,6 +217,8 @@ model Workspace {
   // Budget settings
   monthlyBudget        Decimal? @db.Decimal(12, 2) // Target monthly spending limit
   monthlySalary        Decimal? @db.Decimal(12, 2) // Monthly income for budgeting
+  rememberExpenseCurrency Boolean @default(false)
+  lastExpenseCurrency String? @db.VarChar(3)
   defaultCurrency      String   @default("EUR") @db.VarChar(3)
   defaultBankAccountId String? // Default bank account for new expenses
   language             String   @default("en") @db.VarChar(10) // User's preferred language (en, pt-PT, fr-FR)

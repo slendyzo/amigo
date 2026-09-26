@@ -412,7 +412,20 @@
     "perPersonUnit": "person",
     "fixed": "fixed",
     "yourShare": "Your share",
-    "photos": "Photos"
+    "photos": "Photos",
+    "repayment": {
+      "paid": "Paid back",
+      "unpaid": "Not paid back",
+      "mark": "Mark paid back",
+      "edit": "Edit repayment",
+      "undo": "Undo repayment",
+      "date": "Date paid back (optional)",
+      "note": "Payment note (optional)",
+      "placeholder": "Cash, bank transfer, where they paid…",
+      "failed": "Could not save repayment. Please try again.",
+      "conflict": "This expense changed. Close and reopen it before trying again.",
+      "me": "Me"
+    }
   },
   "incomes": {
     "title": "Incomes",
@@ -941,7 +954,9 @@
     "manageCategories": "Categories & Rules",
     "manageCategoriesDescription": "Categories and auto-categorization rules",
     "theme": "Theme",
-    "workspaceSuffix": "workspace"
+    "workspaceSuffix": "workspace",
+    "rememberExpenseCurrency": "Remember expense currency",
+    "rememberExpenseCurrencyHint": "Start new expenses with the currency of the last saved expense in this workspace. Turn off to use the default currency."
   },
   "imports": {
     "title": "Import History",
@@ -1225,7 +1240,12 @@
       "meLabel": "Me",
       "yourShare": "Your share",
       "youTag": "You",
-      "ofTotal": "of {total}"
+      "ofTotal": "of {total}",
+      "fewerPeople": "Fewer people",
+      "morePeople": "More people",
+      "personName": "Person {number} name",
+      "personAmount": "Amount for {name}",
+      "repaymentProtected": "Undo repayments before removing or renaming people, or turning off the split."
     },
     "installments": {
       "title": "Split into installments",
@@ -1243,7 +1263,14 @@
     "invalidAmount": "Invalid amount",
     "amountLabel": "AMOUNT",
     "nameLabel": "WHAT WAS IT FOR?",
-    "namePlaceholder": "e.g. Flights to Greece 2026"
+    "namePlaceholder": "e.g. Flights to Greece 2026",
+    "choices": {
+      "currency": "Currency",
+      "all": "Choose another",
+      "close": "Done",
+      "searchLabel": "Search {label}",
+      "noResults": "No matches"
+    }
   },
   "install": {
     "title": "Install Amigo",

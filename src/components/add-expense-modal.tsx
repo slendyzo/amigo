@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { motion } from "framer-motion";
+import { useLocale } from "next-intl";
+import ExpenseChoicePicker from "./expense-choice-picker";
 import ProjectTagSelector from "./project-tag-selector";
 import AssetLinkPicker from "./asset-link-picker";
 import { savePendingExpense, isOfflineStorageAvailable } from "@/lib/offline-storage";
@@ -14,7 +15,7 @@ import { useProjectTags } from "@/hooks/use-project-tags";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { getTodayDateString } from "@/lib/utils";
 import { parseQuickAdd, CATEGORY_VARIANTS } from "@/lib/parser";
-import { buildCategoryTree, type FlatCategory } from "@/lib/category-utils";
+
 import ExpenseImageUpload from "./expense-image-upload";
 import ExpenseSplitSection from "./expense-split-section";
 import { useSplitSync } from "@/hooks/use-split-sync";
@@ -40,7 +41,7 @@ type AddExpenseModalProps = {
   defaultBankAccountId?: string;
 };
 
-const EASE = [0.16, 1, 0.3, 1] as const;
+
 
 const TYPE_CHIPS: { value: ExpenseType; chip: string }[] = [
   { value: "SURVIVAL_FIXED", chip: "fixed" },
@@ -89,7 +90,8 @@ export default function AddExpenseModal({
   const inputRef = useRef<HTMLInputElement>(null);
   const t = useTranslations("modals");
   const te = useTranslations("expenses");
-  const tCommon = useTranslations("common");
+  const locale = useLocale();
+  const currencyNames = useMemo(() => new Intl.DisplayNames([locale], { type: "currency" }), [locale]);
   const { translateCategory } = useCategoryTranslation();
 
 
@@ -98,6 +100,8 @@ export default function AddExpenseModal({
     projects: fetchedProjects,
     bankAccounts: localBankAccounts,
     defaultCurrency,
+    lastExpenseCurrency,
+    rememberExpenseCurrency,
     defaultBankAccountId: workspaceDefaultBankAccountId,
   } = useModalData(isOpen, propCategories, propProjects, propBankAccounts);
 
@@ -129,7 +133,7 @@ export default function AddExpenseModal({
   const parsed = useMemo(() => parseQuickAdd(rawInput), [rawInput]);
   const amountValue = useMemo(() => evalAmount(amountInput), [amountInput]);
   const amountExpression = /[+\-*/]/.test(amountInput.trim()) && amountValue > 0 ? amountInput.trim() : null;
-  const hasParse = amountValue > 0 && !!rawInput.trim();
+
 
   // Type chip (auto until user overrides)
   const [expenseType, setExpenseType] = useState<ExpenseType>("LIFESTYLE");
@@ -139,6 +143,7 @@ export default function AddExpenseModal({
   const [categoryId, setCategoryId] = useState("");
   const [categoryOverridden, setCategoryOverridden] = useState(false);
 
+  const currencyChosen = useRef(false);
   const [currency, setCurrency] = useState("EUR");
   const [date, setDate] = useState(getTodayDateString());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -158,8 +163,7 @@ export default function AddExpenseModal({
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Split recalculation lives here, not in ExpenseSplitSection — that section
-  // unmounts when "More options" is collapsed, which used to freeze the shares.
+  // Keep split recalculation in the form so it also runs while details are hidden.
   const { splitError, setSplitError } = useSplitSync({
     amount: amountValue,
     splitEnabled,
@@ -191,7 +195,9 @@ export default function AddExpenseModal({
 
   // Focus the amount field when modal opens
   useEffect(() => {
-    if (isOpen) setTimeout(() => amountRef.current?.focus(), 120);
+    if (!isOpen) return;
+    const timer = setTimeout(() => amountRef.current?.focus(), 120);
+    return () => clearTimeout(timer);
   }, [isOpen]);
 
   // Reset on open
@@ -205,7 +211,9 @@ export default function AddExpenseModal({
       setTypeOverridden(false);
       setCategoryId("");
       setCategoryOverridden(false);
-      setCurrency(defaultCurrency);
+      currencyChosen.current = false;
+      setCurrency(rememberExpenseCurrency && lastExpenseCurrency ? lastExpenseCurrency : defaultCurrency);
+      setLinkedRealAssetId(null);
       setDate(getTodayDateString());
       setShowDatePicker(false);
       setBankAccountId(resolvedDefaultBankAccountId);
@@ -226,6 +234,20 @@ export default function AddExpenseModal({
     prevIsOpenRef.current = isOpen;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
+
+  // Apply asynchronously loaded defaults only until the user makes a choice.
+  useEffect(() => {
+    if (isOpen && !currencyChosen.current) {
+      setCurrency(rememberExpenseCurrency && lastExpenseCurrency ? lastExpenseCurrency : defaultCurrency);
+    }
+  }, [isOpen, defaultCurrency, lastExpenseCurrency, rememberExpenseCurrency]);
+
+  const rememberSavedCurrency = async () => {
+    if (rememberExpenseCurrency) await fetch("/api/workspace", {
+      method: "PUT", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ lastExpenseCurrency: currency }),
+    }).catch(() => {});
+  };
 
   // Resolve category id from parser suggestion (until user overrides)
   const resolvedCategory = useMemo(() => {
@@ -251,6 +273,7 @@ export default function AddExpenseModal({
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
+    if (isLoading) return;
     if (!canSubmit) {
       setError(blockedReason);
       return;
@@ -279,6 +302,7 @@ export default function AddExpenseModal({
           const data = await response.json();
           throw new Error(data.error || "Failed to create installment plan");
         }
+        await rememberSavedCurrency();
         router.refresh();
         onClose();
         return;
@@ -321,6 +345,7 @@ export default function AddExpenseModal({
             createdAt: typeof exp.createdAt === "string" ? exp.createdAt : new Date(exp.createdAt).toISOString(),
           });
         }
+        await rememberSavedCurrency();
         router.refresh();
         onClose();
       } else {
@@ -355,9 +380,6 @@ export default function AddExpenseModal({
   };
 
   // Preview display values
-  const previewInitial = (rawInput.trim().charAt(0) || "?").toUpperCase();
-  const previewCategoryName = resolvedCategory ? translateCategory(resolvedCategory.name) : (parsed.category || "—");
-  const typeChipLabel = te(`chips.${TYPE_CHIPS.find((c) => c.value === expenseType)?.chip ?? "lifestyle"}`);
   const dateLabel = isToday ? t("today") : new Date(date).toLocaleDateString(undefined, { day: "numeric", month: "short", timeZone: "UTC" });
 
   if (!isOpen) return null;
@@ -388,9 +410,12 @@ export default function AddExpenseModal({
             <div className="text-[11px] font-semibold uppercase tracking-[0.06em]" style={{ color: "var(--ink-subtle)" }}>
               {t("amountLabel")}
             </div>
-            <div className="mt-1 flex items-center gap-1.5">
+            <div className="mt-1 flex items-center gap-3">
               <span className="text-[24px] font-bold" style={{ color: amountValue > 0 ? "var(--ink)" : "var(--ink-subtle)" }}>{getCurrencySymbol(currency)}</span>
               <input
+                aria-label={t("amountLabel")}
+                enterKeyHint="next"
+                onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); inputRef.current?.focus(); } }}
                 ref={amountRef}
                 type="text"
                 inputMode="decimal"
@@ -399,11 +424,24 @@ export default function AddExpenseModal({
                 onFocus={() => setAmountFocused(true)}
                 onBlur={() => setAmountFocused(false)}
                 placeholder="0.00"
-                className="w-full bg-transparent text-[24px] font-bold tabular-nums outline-none placeholder:text-[var(--ink-subtle)]"
+                className="min-w-0 flex-1 bg-transparent text-[24px] font-bold tabular-nums outline-none placeholder:text-[var(--ink-subtle)]"
                 style={{ color: "var(--ink)" }}
               />
-              {amountExpression && <span className="flex-none text-[13px] tabular-nums" style={{ color: "var(--ink-subtle)" }}>= {getCurrencySymbol(currency)}{amountValue.toFixed(2)}</span>}
+              <div className="relative w-24 shrink-0 border-l border-[var(--line)] pl-3">
+                <select
+                  aria-label={t("choices.currency")}
+                  value={currency}
+                  onChange={(e) => { currencyChosen.current = true; setCurrency(e.target.value); }}
+                  className="h-11 w-full appearance-none rounded-[10px] bg-transparent pl-1 pr-6 text-[15px] font-semibold text-[var(--ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                >
+                  {[...new Set([currency, lastExpenseCurrency || defaultCurrency, defaultCurrency, ...CURRENCIES])].map(code => (
+                    <option key={code} value={code} title={currencyNames.of(code)}>{code}</option>
+                  ))}
+                </select>
+                <svg aria-hidden="true" className="pointer-events-none absolute right-1 top-1/2 -translate-y-1/2 text-[var(--ink-subtle)]" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
+              </div>
             </div>
+            {amountExpression && <p className="mt-1 text-[13px] tabular-nums text-[var(--ink-subtle)]">= {getCurrencySymbol(currency)}{amountValue.toFixed(2)}</p>}
           </div>
 
           {/* Name — free text, numbers and dates allowed */}
@@ -415,6 +453,7 @@ export default function AddExpenseModal({
               {t("nameLabel")}
             </div>
             <input
+              aria-label={t("nameLabel")}
               ref={inputRef}
               type="text"
               value={rawInput}
@@ -427,34 +466,8 @@ export default function AddExpenseModal({
             />
           </div>
 
-          {/* Parse preview */}
-          {hasParse && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.3, ease: EASE }}
-              className="flex items-center gap-3 rounded-[18px] px-4 py-3.5"
-              style={{ background: "var(--surface-2)" }}
-            >
-              <div className="flex h-[38px] w-[38px] flex-none items-center justify-center rounded-[12px] text-[14px] font-semibold" style={{ background: "var(--surface)", color: "var(--accent)" }}>
-                {previewInitial}
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-[13.5px] font-semibold">
-                  {rawInput} — {getCurrencySymbol(currency)}{amountValue.toFixed(2)}
-                </div>
-                <div className="truncate text-[11.5px]" style={{ color: "var(--hero-ink)" }}>
-                  {previewCategoryName} · {typeChipLabel} · {dateLabel}
-                </div>
-              </div>
-              <div className="flex-none rounded-[14px] px-2.5 py-1 text-[11px] font-semibold" style={{ background: "var(--surface)", color: "var(--accent)" }}>
-                {t("auto")}
-              </div>
-            </motion.div>
-          )}
-
           {/* Type chips */}
-          <div className="flex gap-2">
+          <div className="grid grid-cols-4 gap-2">
             {TYPE_CHIPS.map((c) => {
               const active = expenseType === c.value;
               return (
@@ -462,7 +475,8 @@ export default function AddExpenseModal({
                   key={c.value}
                   type="button"
                   onClick={() => { setExpenseType(c.value); setTypeOverridden(true); }}
-                  className="tap-none flex-1 rounded-[14px] py-[9px] text-center text-[12px]"
+                  aria-pressed={active}
+                  className="tap-none h-11 min-w-0 rounded-[12px] px-1 text-center text-[12px]"
                   style={active ? { background: "var(--ink)", color: "var(--accent-fg)", fontWeight: 600 } : { background: "var(--surface)", color: "var(--ink-muted)", fontWeight: 500, boxShadow: "var(--shadow-card)" }}
                 >
                   {te(`chips.${c.chip}`)}
@@ -471,42 +485,27 @@ export default function AddExpenseModal({
             })}
           </div>
 
-          {/* Category + Date */}
+          <ExpenseChoicePicker label={t("category")} value={categoryId}
+            choices={[{ value: "", label: t("auto") }, ...localCategories.map(c => ({ value: c.id, label: translateCategory(c.name) }))]}
+            onChange={(id) => { setCategoryId(id); setCategoryOverridden(id !== ""); }} />
+
+          {/* Date */}
           <div className="flex gap-2">
-            <div className="relative flex-1">
-              <select
-                value={categoryId}
-                onChange={(e) => { setCategoryId(e.target.value); setCategoryOverridden(true); }}
-                className="w-full appearance-none rounded-[14px] px-3.5 py-[11px] text-[12.5px] font-medium outline-none"
-                style={{ background: "var(--surface)", color: categoryId ? "var(--ink)" : "var(--ink-muted)", boxShadow: "var(--shadow-card)" }}
-              >
-                <option value="">{t("auto")}</option>
-                {buildCategoryTree(localCategories as FlatCategory[]).map((parent) =>
-                  parent.children.length > 0 ? (
-                    <optgroup key={parent.id} label={translateCategory(parent.name)}>
-                      {parent.children.map((child) => (
-                        <option key={child.id} value={child.id}>{translateCategory(child.name)}</option>
-                      ))}
-                    </optgroup>
-                  ) : (
-                    <option key={parent.id} value={parent.id}>{translateCategory(parent.name)}</option>
-                  )
-                )}
-              </select>
-              <svg className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-subtle)" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
-            </div>
             <button
               type="button"
+              aria-expanded={showDatePicker}
               onClick={() => setShowDatePicker((s) => !s)}
-              className="tap-none relative flex flex-1 items-center justify-between rounded-[14px] px-3.5 py-[11px] text-[12.5px] font-medium"
+              className="tap-none relative flex min-h-11 flex-1 items-center justify-between rounded-[14px] px-3.5 py-[11px] text-[12.5px] font-medium"
               style={{ background: "var(--surface)", color: isFutureDate ? "var(--accent)" : "var(--ink)", boxShadow: "var(--shadow-card)" }}
             >
-              <span>{dateLabel}</span>
+              <span>{t("date")} · {dateLabel}</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--ink-subtle)" strokeWidth="2"><path d="M6 9l6 6 6-6" /></svg>
             </button>
           </div>
           {showDatePicker && (
             <input
+              aria-label={t("date")}
+              required
               type="date"
               value={date}
               onChange={(e) => {
@@ -535,14 +534,13 @@ export default function AddExpenseModal({
           <div className="flex flex-col gap-3 rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
             {localBankAccounts.length > 0 && (
               <div>
-                <label className="mb-1 block text-[12px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("bankAccount")}</label>
-                <select value={bankAccountId} onChange={(e) => setBankAccountId(e.target.value)} className="w-full rounded-[12px] px-3 py-2 text-[13px] outline-none" style={{ background: "var(--app-bg)", color: "var(--ink)", border: "1px solid var(--line)" }}>
-                  <option value="">{t("none")}</option>
-                  {localBankAccounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                </select>
+                <ExpenseChoicePicker label={t("bankAccount")} value={bankAccountId}
+                  choices={[{ value: "", label: t("none") }, ...localBankAccounts.map(acc => ({ value: acc.id, label: acc.name }))]}
+                  onChange={setBankAccountId} />
               </div>
             )}
             <ProjectTagSelector
+              fillRows
               projects={localProjects}
               selectedIds={selectedProjectIds}
               onToggle={toggleProject}
@@ -565,9 +563,29 @@ export default function AddExpenseModal({
             )}
           </div>
 
+              {/* Split */}
+              {!installmentsEnabled && (
+                <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
+                  <button type="button" role="switch" aria-checked={splitEnabled} onClick={() => setSplitEnabled((s) => !s)} className="tap-none flex min-h-11 w-full items-center justify-between gap-3 text-left">
+                    <span className="text-[13px] font-medium" style={{ color: splitEnabled ? "var(--ink)" : "var(--ink-muted)" }}>{t("split.splitExpense")}</span>
+                    <span aria-hidden="true" className="relative shrink-0" style={{ width: 40, height: 24, borderRadius: 12, background: splitEnabled ? "var(--accent)" : "var(--surface-3)" }}>
+                      <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white" style={{ left: splitEnabled ? "18px" : "2px", transition: "left .2s var(--ease)" }} />
+                    </span>
+                  </button>
+                  {splitEnabled && amountValue > 0 && (
+                    <div className="mt-3">
+                      <ExpenseSplitSection amount={amountValue} currency={currency} splitEnabled={splitEnabled} onSplitEnabledChange={setSplitEnabled} splitCount={splitCount} onSplitCountChange={setSplitCount} splitPeople={splitPeople} onSplitPeopleChange={setSplitPeople} hideToggle error={splitError} onErrorChange={setSplitError} />
+                    </div>
+                  )}
+                  {splitEnabled && amountValue <= 0 && <p className="mt-2 text-[11px]" style={{ color: "var(--ink-subtle)" }}>{t("splitAmountHint")}</p>}
+                </div>
+              )}
+
+
           {/* More options disclosure */}
           <button
             type="button"
+            aria-expanded={showMore}
             onClick={() => setShowMore((s) => !s)}
             className="tap-none flex items-center justify-between rounded-[14px] px-4 py-3 text-left"
             style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
@@ -578,55 +596,27 @@ export default function AddExpenseModal({
 
           {showMore && (
             <div className="flex flex-col gap-2.5">
-              {/* Currency + Account */}
-              <div className="flex flex-col gap-3 rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
-                <div>
-                  <label className="mb-1 block text-[12px] font-medium" style={{ color: "var(--ink-muted)" }}>{t("amount")}</label>
-                  <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="w-full rounded-[12px] px-3 py-2 text-[13px] outline-none" style={{ background: "var(--app-bg)", color: "var(--ink)", border: "1px solid var(--line)" }}>
-                    {CURRENCIES.map((curr) => <option key={curr} value={curr}>{curr}</option>)}
-                  </select>
-                </div>
-              </div>
-
               {/* Link to a real-world asset (advanced) */}
               <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
                 <AssetLinkPicker value={linkedRealAssetId} onChange={setLinkedRealAssetId} />
               </div>
 
-              {/* Split */}
-              {!installmentsEnabled && (
-                <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-[13px] font-medium" style={{ color: splitEnabled ? "var(--ink)" : "var(--ink-muted)" }}>{t("split.splitExpense")}</span>
-                    <button type="button" onClick={() => setSplitEnabled((s) => !s)} className="relative tap-none" style={{ width: 40, height: 24, borderRadius: 12, background: splitEnabled ? "var(--accent)" : "var(--surface-3)" }}>
-                      <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white" style={{ left: splitEnabled ? "18px" : "2px", transition: "left .2s var(--ease)" }} />
-                    </button>
-                  </div>
-                  {splitEnabled && amountValue > 0 && (
-                    <div className="mt-3">
-                      <ExpenseSplitSection amount={amountValue} currency={currency} splitEnabled={splitEnabled} onSplitEnabledChange={setSplitEnabled} splitCount={splitCount} onSplitCountChange={setSplitCount} splitPeople={splitPeople} onSplitPeopleChange={setSplitPeople} hideToggle error={splitError} onErrorChange={setSplitError} />
-                    </div>
-                  )}
-                  {splitEnabled && amountValue <= 0 && <p className="mt-2 text-[11px]" style={{ color: "var(--ink-subtle)" }}>{t("splitAmountHint")}</p>}
-                </div>
-              )}
-
               {/* Installments */}
               {!splitEnabled && (
                 <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
-                  <div className="flex items-center justify-between">
+                  <button type="button" role="switch" aria-checked={installmentsEnabled} onClick={() => setInstallmentsEnabled((s) => !s)} className="tap-none flex min-h-11 w-full items-center justify-between gap-3 text-left">
                     <span className="text-[13px] font-medium" style={{ color: installmentsEnabled ? "var(--ink)" : "var(--ink-muted)" }}>{t("installments.title")}</span>
-                    <button type="button" onClick={() => setInstallmentsEnabled((s) => !s)} className="relative tap-none" style={{ width: 40, height: 24, borderRadius: 12, background: installmentsEnabled ? "var(--accent)" : "var(--surface-3)" }}>
+                    <span aria-hidden="true" className="relative shrink-0" style={{ width: 40, height: 24, borderRadius: 12, background: installmentsEnabled ? "var(--accent)" : "var(--surface-3)" }}>
                       <span className="absolute top-0.5 h-5 w-5 rounded-full bg-white" style={{ left: installmentsEnabled ? "18px" : "2px", transition: "left .2s var(--ease)" }} />
-                    </button>
-                  </div>
+                    </span>
+                  </button>
                   {installmentsEnabled && (
                     <>
-                      <div className="mt-3 flex items-center gap-1.5">
+                      <div className="mt-3 grid grid-cols-5 gap-2">
                         {[3, 6, 12, 24].map((m) => (
-                          <button key={m} type="button" onClick={() => setInstallmentMonths(m)} className="tap-none rounded-[10px] px-3 py-1.5 text-[13px] font-medium" style={installmentMonths === m ? { background: "var(--accent)", color: "#fff" } : { background: "var(--surface-2)", color: "var(--accent)" }}>{m}x</button>
+                          <button key={m} type="button" onClick={() => setInstallmentMonths(m)} className="tap-none h-11 min-w-0 rounded-[12px] text-[13px] font-medium" style={installmentMonths === m ? { background: "var(--accent)", color: "#fff" } : { background: "var(--surface-2)", color: "var(--accent)" }}>{m}x</button>
                         ))}
-                        <input type="number" min={2} max={120} value={installmentMonths} onChange={(e) => { const v = parseInt(e.target.value, 10); setInstallmentMonths(isNaN(v) ? 2 : Math.max(2, Math.min(120, v))); }} className="w-16 rounded-[10px] px-2 py-1.5 text-center text-[13px] outline-none" style={{ background: "var(--app-bg)", color: "var(--ink)", border: "1px solid var(--line)" }} />
+                        <input type="number" min={2} max={120} value={installmentMonths} onChange={(e) => { const v = parseInt(e.target.value, 10); setInstallmentMonths(isNaN(v) ? 2 : Math.max(2, Math.min(120, v))); }} aria-label={t("installments.title")} className="h-11 w-full min-w-0 rounded-[12px] px-1 text-center text-[13px] outline-none" style={{ background: "var(--app-bg)", color: "var(--ink)", border: "1px solid var(--line)" }} />
                       </div>
                       {amountValue > 0 ? (
                         <p className="mt-2 text-[13px] font-medium" style={{ color: "var(--accent-strong)" }}>

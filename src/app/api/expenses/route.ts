@@ -1,3 +1,4 @@
+import { preserveRepayments } from "@/lib/split-utils";
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { createQuickAddExpense } from "@/lib/quick-add";
@@ -109,6 +110,9 @@ export async function POST(request: Request) {
 
     const body = await request.json();
     const { quickAdd, name, amount, amountExpression, type, categoryId, bankAccountId, projectId, projectIds, date, currency, excludeFromBudget, status, dueDate, imageUrls, splitCount, splitData, description, realAssetId } = body;
+    let validatedSplitData: string | null;
+    try { validatedSplitData = preserveRepayments(null, splitData || null, splitCount || null); }
+    catch { return NextResponse.json({ error: "Invalid split data" }, { status: 400 }); }
 
     // Support both single projectId (legacy) and projectIds array
     const projectIdsToConnect: string[] = projectIds || (projectId ? [projectId] : []);
@@ -134,7 +138,7 @@ export async function POST(request: Request) {
         amountExpression: amountExpression || null,
         imageUrls: imageUrls || null,
         splitCount: splitCount || null,
-        splitData: splitData || null,
+        splitData: validatedSplitData,
         realAssetId: typeof realAssetId === "string" && realAssetId ? realAssetId : null,
       });
       return NextResponse.json({ expense }, { status: 201 });
@@ -228,7 +232,7 @@ export async function POST(request: Request) {
         excludeFromBudget: excludeFromBudget || false,
         imageUrls: imageUrls || null,
         splitCount: splitCount || null,
-        splitData: splitData || null,
+        splitData: validatedSplitData,
         description: description || null,
         realAssetId: typeof realAssetId === "string" && realAssetId ? realAssetId : null,
         projects: projectIdsToConnect.length > 0

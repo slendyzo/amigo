@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
+import { CURRENCIES } from "@/lib/currencies";
 import { prisma } from "@/lib/db";
 
 // GET /api/workspace - Get current workspace settings
@@ -11,8 +12,13 @@ export async function GET() {
     }
     const { workspace } = context;
 
+    const currencyPreferences = await prisma.workspace.findUnique({
+      where: { id: workspace.id },
+      select: { rememberExpenseCurrency: true, lastExpenseCurrency: true },
+    });
     return NextResponse.json({
       workspace: {
+        ...currencyPreferences,
         id: workspace.id,
         name: workspace.name,
         monthlyBudget: workspace.monthlyBudget,
@@ -43,9 +49,24 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     const { monthlyBudget, defaultCurrency, defaultBankAccountId, name, language, resetOnboarding, currencyDisplayMode } = body;
 
+    if (body.rememberExpenseCurrency !== undefined && typeof body.rememberExpenseCurrency !== "boolean") {
+      return NextResponse.json({ error: "Invalid currency preference" }, { status: 400 });
+    }
+    if (body.lastExpenseCurrency !== undefined && !CURRENCIES.includes(body.lastExpenseCurrency)) {
+      return NextResponse.json({ error: "Invalid currency" }, { status: 400 });
+    }
+
     // Build update object
     const updateData: Record<string, unknown> = {};
 
+    if (body.rememberExpenseCurrency !== undefined) updateData.rememberExpenseCurrency = body.rememberExpenseCurrency;
+    if (body.lastExpenseCurrency !== undefined) {
+      // A saved expense may remember its currency only while the option is enabled.
+      await prisma.workspace.updateMany({
+        where: { id: workspace.id, rememberExpenseCurrency: true },
+        data: { lastExpenseCurrency: body.lastExpenseCurrency },
+      });
+    }
     if (name !== undefined) updateData.name = name;
     if (monthlyBudget !== undefined) {
       updateData.monthlyBudget = monthlyBudget === "" || monthlyBudget === null ? null : parseFloat(monthlyBudget);
@@ -71,6 +92,8 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       workspace: {
+        rememberExpenseCurrency: updatedWorkspace.rememberExpenseCurrency,
+        lastExpenseCurrency: updatedWorkspace.lastExpenseCurrency,
         id: updatedWorkspace.id,
         name: updatedWorkspace.name,
         monthlyBudget: updatedWorkspace.monthlyBudget,
