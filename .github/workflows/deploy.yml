@@ -113,6 +113,13 @@ jobs:
             echo "=== Building Docker image ==="
             docker compose build
 
+            # Apply the additive preference columns before the new app starts.
+            # This SQL is repeat-safe because every main push reruns this workflow.
+            # Any SQL failure aborts deployment while the previous app keeps running.
+            echo "=== Applying expense currency preference migration ==="
+            docker exec -i amigo-db psql -U amigo -d amigo -v ON_ERROR_STOP=1 --single-transaction < prisma/migrations/20260926000000_remember_expense_currency/migration.sql
+            docker exec amigo-db psql -U amigo -d amigo -c "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'workspaces' AND column_name IN ('rememberExpenseCurrency', 'lastExpenseCurrency') ORDER BY column_name;"
+
             # Restart with new image — docker compose up -d already fails the
             # script (via set -e) if containers can't start, so no extra health
             # check is needed. Keeping the final command fast + quiet avoids a
