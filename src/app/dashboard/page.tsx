@@ -1,3 +1,5 @@
+import { annualSummary, yearToDateBounds } from "@/lib/dashboard-totals";
+import { getActiveWorkspace } from "@/lib/workspace";
 import { spendingEur } from "@/lib/expense-spending";
 import { hasRecordedSalary } from "@/lib/income-classification";
 import { auth } from "@/lib/auth";
@@ -26,30 +28,15 @@ export default async function DashboardPage({
 
   const params = await searchParams;
 
-  // Fetch user + workspace in parallel instead of sequentially
-  const [user, workspace] = await Promise.all([
-    prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: { username: true, name: true, seenAnnouncements: true },
-    }),
-    prisma.workspace.findFirst({
-      where: {
-        members: {
-          some: {
-            userId: session.user.id,
-          },
-        },
-      },
-      select: {
-        id: true,
-        monthlyBudget: true,
-        monthlySalary: true,
-        onboardingCompleted: true,
-        currencyDisplayMode: true,
-        defaultCurrency: true,
-      },
-    }),
+  // Resolve active workspace consistently with the mutation APIs.
+  const [user, context] = await Promise.all([
+    prisma.user.findUnique({ where: { id: session.user.id }, select: { username: true, name: true, seenAnnouncements: true } }),
+    getActiveWorkspace(),
   ]);
+  const workspace = context ? await prisma.workspace.findUnique({
+    where: { id: context.workspace.id },
+    select: { id: true, monthlyBudget: true, monthlySalary: true, onboardingCompleted: true, currencyDisplayMode: true, defaultCurrency: true },
+  }) : null;
 
   const tUserWorkspace = performance.now();
 
@@ -94,6 +81,9 @@ export default async function DashboardPage({
     realAssets,
     liabilities,
     recurringTemplates,
+    annualIncomes,
+    annualExpenses,
+    linkedDeposits,
   ] = await Promise.all([
     // Projects for filter dropdown
     prisma.project.findMany({
@@ -267,12 +257,27 @@ export default async function DashboardPage({
       where: { workspaceId: workspace.id, isActive: true, interval: "MONTHLY" },
       select: { id: true, name: true, amount: true, currency: true, dayOfMonth: true, endDate: true },
     }),
+    // Annual actuals are separate from the monthly recurring-income forecast.
+    prisma.income.findMany({
+      where: { workspaceId: workspace.id, isRecurring: false, date: yearToDateBounds(now) },
+      select: { amountEur: true, date: true, isRecurring: true },
+    }),
+    prisma.expense.findMany({
+      where: { workspaceId: workspace.id, status: "PAID", date: yearToDateBounds(now), type: { not: "INVESTMENT" } },
+      select: { id: true, amount: true, amountEur: true, date: true, status: true, type: true, splitCount: true, splitData: true, fullyReimbursed: true, projectTotalMode: true },
+    }),
+    prisma.exchangeDeposit.findMany({
+      where: { exchangeConnection: { workspaceId: workspace.id }, linkedExpenseId: { not: null } },
+      select: { linkedExpenseId: true },
+    }),
   ]);
+
+  const annual = annualSummary(annualIncomes, annualExpenses, now, linkedDeposits.flatMap(row => row.linkedExpenseId ? [row.linkedExpenseId] : []));
 
   const tQueries = performance.now();
 
   console.log(
-    `[PERF] Dashboard: auth=${(tAuth - t0).toFixed(0)}ms | user+workspace=${(tUserWorkspace - tAuth).toFixed(0)}ms | 7 queries=${(tQueries - tUserWorkspace).toFixed(0)}ms | total=${(tQueries - t0).toFixed(0)}ms | expenses=${expenses.length} | prevExpenses=${previousMonthExpenses.length}`
+    `[PERF] Dashboard: auth=${(tAuth - t0).toFixed(0)}ms | user+workspace=${(tUserWorkspace - tAuth).toFixed(0)}ms | dashboard queries=${(tQueries - tUserWorkspace).toFixed(0)}ms | total=${(tQueries - t0).toFixed(0)}ms | expenses=${expenses.length} | prevExpenses=${previousMonthExpenses.length}`
   );
 
   // Include recurring incomes from previous months that should apply to current month
@@ -478,7 +483,9 @@ export default async function DashboardPage({
       categories={categories}
       bankAccounts={bankAccounts}
       initialMonth={now.getMonth()}
-      initialYear={now.getFullYear()}
+      initialYear={now.getUTCFullYear()}
+      asOf={now.toISOString()}
+      annual={annual}
       monthlyBudget={workspace.monthlyBudget ? Number(workspace.monthlyBudget) : null}
       monthlySalary={workspace.monthlySalary ? Number(workspace.monthlySalary) : null}
       monthlyIncome={monthlyIncome}

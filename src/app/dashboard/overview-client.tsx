@@ -17,6 +17,8 @@ import { spendingEur } from "@/lib/expense-spending";
 import { getUserShare } from "@/lib/split-utils";
 import MerchantAvatar from "@/components/ui/merchant-avatar";
 import TidyUpNudge from "@/components/dashboard/tidy-up-nudge";
+import BudgetOverview from "@/components/dashboard/budget-overview";
+import type { AnnualSummary } from "@/lib/dashboard-totals";
 import RailPortfolio from "@/components/dashboard/rail-portfolio";
 import RailRwa from "@/components/dashboard/rail-rwa";
 import RailCategories from "@/components/dashboard/rail-categories";
@@ -117,6 +119,8 @@ type Props = {
   bankAccounts: BankAccount[];
   initialMonth: number;
   initialYear: number;
+  annual: AnnualSummary;
+  asOf: string;
   monthlyBudget: number | null;
   monthlySalary: number | null;
   monthlyIncome: number;
@@ -141,12 +145,6 @@ type Props = {
 // Current announcement IDs - add new ones here when releasing new features
 const CURRENT_ANNOUNCEMENTS = ["unified-transactions-v1", "workspaces-v1", "scheduled-expenses-v1", "category-groups-v1"];
 
-// Month keys for i18n
-const MONTH_KEYS = [
-  "january", "february", "march", "april", "may", "june",
-  "july", "august", "september", "october", "november", "december"
-] as const;
-
 // Helper to check if a transaction is an income
 const isIncomeTransaction = (t: Transaction): t is Income => {
   return "isIncome" in t && t.isIncome === true;
@@ -164,12 +162,13 @@ const cardShadow = { boxShadow: "var(--shadow-card)" };
 
 export default function DashboardOverview({
   userName,
+  annual,
+  asOf,
   initialExpenses,
   initialIncomes,
   projects,
   categories,
   bankAccounts,
-  initialMonth,
   monthlyBudget,
   monthlySalary,
   expectedMonthlyIncome,
@@ -179,7 +178,6 @@ export default function DashboardOverview({
   exchangeConnections,
   portfolioAssets,
   netWorthEur,
-  netWorthDeltaEur,
   portfolioTotalEur,
   portfolioDeltaEur,
   rwaEquityEur,
@@ -410,23 +408,6 @@ export default function DashboardOverview({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [expenses]);
 
-  // Budget value: workspace budget, falling back to expected recurring income
-  // (existing behavior). Null → "Set a budget" CTA.
-  const effectiveBudget = monthlyBudget ?? (expectedMonthlyIncome > 0 ? expectedMonthlyIncome : null);
-  const budgetLeft = (effectiveBudget ?? 0) - budgetSpent;
-
-  const now = new Date();
-  const daysInMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
-  const dayOfMonth = now.getDate();
-  // Today still counts as a spending day, so the allowance divides by the
-  // remaining days *including* today — never zero, even on the 31st.
-  const daysLeftInclusive = Math.max(daysInMonth - dayOfMonth + 1, 1);
-  const dailyAllowance = Math.max(Math.floor(budgetLeft / daysLeftInclusive), 0);
-  // Pace = where an evenly-spread budget would have you by end of today.
-  // Positive delta → under pace (good), negative → over pace.
-  const paceDelta = (effectiveBudget ?? 0) * (dayOfMonth / daysInMonth) - budgetSpent;
-  const monthName = tTime(`months.${MONTH_KEYS[initialMonth]}`);
-
   // Whole-euro currency formatting for hero/budget numbers (locale-aware)
   const fmtEur0 = useCallback(
     (v: number) =>
@@ -438,8 +419,6 @@ export default function DashboardOverview({
   const portfolioFallback = portfolioAssets.reduce((sum, a) => sum + a.currentValueEur, 0);
   const heroNetWorth = netWorthEur ?? portfolioFallback;
   const heroInvested = portfolioTotalEur ?? portfolioFallback;
-  const heroAssets = rwaEquityEur ?? 0;
-  const heroDebt = rwaLinkedDebtEur ?? 0;
 
   // Upcoming: next occurrence of each active monthly template from dayOfMonth
   const upcoming = useMemo(() => {
@@ -472,6 +451,7 @@ export default function DashboardOverview({
       if (response.ok) {
         setExpenses((prev) => prev.filter((e) => e.id !== id));
         setConfirmDeleteId(null);
+        router.refresh();
       }
     } catch (error) {
       console.error("Failed to delete expense:", error);
@@ -664,142 +644,8 @@ export default function DashboardOverview({
             </div>
           </motion.section>
 
-          {/* 2 — Net-worth hero card */}
           <motion.section {...sectionMotion(1)}>
-            <Link
-              href="/dashboard/networth"
-              className="block rounded-[24px] px-[22px] py-5 transition-transform active:scale-[.98]"
-              style={{ background: "var(--hero-gradient)" }}
-            >
-              <div className="flex items-start justify-between">
-                <div className="text-[13px] font-medium" style={{ color: "var(--hero-ink)" }}>
-                  {t("statNetWorth")}
-                </div>
-                {netWorthDeltaEur != null && (
-                  <div
-                    className="rounded-[20px] bg-white/55 px-[10px] py-1 text-[12px] font-semibold tabular-nums dark:bg-white/10"
-                    style={{ color: "var(--accent-strong)" }}
-                  >
-                    {netWorthDeltaEur >= 0 ? "▲" : "▼"} {fmtEur0(Math.abs(netWorthDeltaEur))} {t("thisMonthLower")}
-                  </div>
-                )}
-              </div>
-              <div className="mt-1.5 text-[34px] font-bold tracking-[-0.03em] tabular-nums dark:text-white">
-                {fmtEur0(heroNetWorth)}
-              </div>
-              <div className="mt-3.5 flex flex-wrap gap-x-4 gap-y-1 text-[12px] tabular-nums" style={{ color: "var(--hero-ink)" }}>
-                <span>
-                  <span className="mr-[5px] inline-block h-2 w-2 rounded-[2px]" style={{ background: "var(--accent)" }} />
-                  {t("heroInvested")} {fmtEur0(heroInvested)}
-                </span>
-                <span>
-                  <span className="mr-[5px] inline-block h-2 w-2 rounded-[2px]" style={{ background: "var(--accent-soft)" }} />
-                  {t("heroAssets")} {fmtEur0(heroAssets)}
-                </span>
-                <span>
-                  <span className="mr-[5px] inline-block h-2 w-2 rounded-[2px]" style={{ background: "var(--accent-faint)" }} />
-                  {t("heroDebt")} −{fmtEur0(heroDebt)}
-                </span>
-              </div>
-            </Link>
-          </motion.section>
-
-          {/* 3 — Budget card */}
-          <motion.section {...sectionMotion(2)}>
-            <div className="rounded-[20px] px-[18px] py-[18px]" style={{ background: "var(--surface)", ...cardShadow }}>
-              {effectiveBudget !== null ? (
-                <>
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-[13px] font-semibold">
-                      {budgetLeft < 0 ? t("budgetOverLabel") : t("safeToSpendToday")}
-                    </span>
-                    <span className="text-[12px]" style={{ color: "var(--ink-muted)" }}>{monthName}</span>
-                  </div>
-
-                  <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
-                    <span
-                      className="text-[34px] font-bold leading-[1.05] tracking-[-0.03em] tabular-nums"
-                      style={budgetLeft < 0 ? { color: "var(--negative)" } : undefined}
-                    >
-                      {fmtEur0(budgetLeft < 0 ? Math.abs(budgetLeft) : dailyAllowance)}
-                    </span>
-                    <span className="text-[12px]" style={{ color: "var(--ink-muted)" }}>
-                      {budgetLeft < 0
-                        ? t("budgetOverSuffix", { month: monthName })
-                        : t("perDayFor", { days: daysLeftInclusive })}
-                    </span>
-                  </div>
-
-                  {/* Day strip — one bar per day, today accented and taller */}
-                  {/* max-w keeps the bars slim ticks on the wide desktop column
-                      instead of inflating into squares; the gaps absorb the space. */}
-                  <div className="mt-4 flex items-end justify-between gap-[3px]">
-                    {Array.from({ length: daysInMonth }, (_, i) => {
-                      const day = i + 1;
-                      const isToday = day === dayOfMonth;
-                      return (
-                        <motion.span
-                          key={day}
-                          className={`max-w-[16px] flex-1 rounded-[3px] ${
-                            isToday ? "h-[26px] md:h-[36px]" : "h-[20px] md:h-[28px]"
-                          }`}
-                          style={{
-                            transformOrigin: "bottom",
-                            background: isToday
-                              ? "var(--accent)"
-                              : day < dayOfMonth
-                                ? "var(--accent-faint)"
-                                : "var(--surface-2)",
-                          }}
-                          initial={{ scaleY: 0, opacity: 0 }}
-                          animate={{ scaleY: 1, opacity: 1 }}
-                          transition={{ duration: 0.45, ease: EASE, delay: 0.12 + i * 0.012 }}
-                        />
-                      );
-                    })}
-                  </div>
-
-                  <div className="mt-2.5 flex items-baseline justify-between gap-3">
-                    <span className="text-[11px] tabular-nums" style={{ color: "var(--ink-subtle)" }}>
-                      {t("budgetLeftOf", {
-                        left: fmtEur0(Math.max(budgetLeft, 0)),
-                        budget: fmtEur0(effectiveBudget),
-                      })}
-                    </span>
-                    <span
-                      className="whitespace-nowrap text-[11px] font-semibold tabular-nums"
-                      style={{
-                        color:
-                          Math.abs(paceDelta) < 1
-                            ? "var(--ink-subtle)"
-                            : paceDelta > 0
-                              ? "var(--positive)"
-                              : "var(--warning)",
-                      }}
-                    >
-                      {Math.abs(paceDelta) < 1
-                        ? t("budgetOnPace")
-                        : paceDelta > 0
-                          ? t("budgetUnderPace", { amount: fmtEur0(paceDelta) })
-                          : t("budgetOverPace", { amount: fmtEur0(-paceDelta) })}
-                    </span>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="flex items-baseline justify-between gap-3">
-                    <span className="text-[13px] font-semibold">{t("monthBudget", { month: monthName })}</span>
-                  </div>
-                  <Link
-                    href="/dashboard/settings"
-                    className="mt-2.5 block text-[13px] font-semibold"
-                    style={{ color: "var(--accent)" }}
-                  >
-                    {t("setBudgetCta")} →
-                  </Link>
-                </>
-              )}
-            </div>
+            <BudgetOverview monthlyBudget={monthlyBudget} expectedIncome={expectedMonthlyIncome} spent={budgetSpent} annual={annual} asOf={asOf} netWorth={heroNetWorth} />
           </motion.section>
 
           {/* Tidy-up nudge — only renders when there are uncategorized expenses */}
