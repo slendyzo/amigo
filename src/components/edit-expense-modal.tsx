@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { ExpenseProjectCounting } from "./expense-project-counting";
 import type { ProjectTotalMode } from "@/lib/project-expense-totals";
+import { ExpenseFormSection } from "./expense-form-section";
+import ExpenseChoicePicker from "./expense-choice-picker";
 import ProjectTagSelector from "./project-tag-selector";
 import AssetLinkPicker from "./asset-link-picker";
 import { AmountInput } from "./ui/amount-input";
@@ -295,8 +297,6 @@ export default function EditExpenseModal({
   // Derive display values for collapsed details card
   const selectedCategory = localCategories.find((c) => c.id === categoryId);
   const categoryLabel = selectedCategory ? translateCategory(selectedCategory.name) : t("uncategorized");
-  const selectedAccount = bankAccounts.find((a) => a.id === bankAccountId);
-  const accountLabel = selectedAccount ? selectedAccount.name : t("none");
   const typeLabel = t(`types.${expenseType.toLowerCase().replace("survival_", "")}`);
 
   if (!isOpen || !expense) return null;
@@ -450,9 +450,16 @@ export default function EditExpenseModal({
             </div>
           )}
 
-          {/* ── CARD 3: Tags ── */}
-          <div className="rounded-[18px] border border-[var(--line)] px-4 py-3" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
+          {bankAccounts.length > 0 && (
+            <ExpenseFormSection kind="account" title={t("bankAccount")} hint={t("sections.accountHint")}>
+              <ExpenseChoicePicker hideLabel label={t("bankAccount")} value={bankAccountId}
+                choices={[{ value: "", label: t("none") }, ...bankAccounts.map(acc => ({ value: acc.id, label: acc.name }))]}
+                onChange={setBankAccountId} />
+            </ExpenseFormSection>
+          )}
+          <ExpenseFormSection kind="projects" title={t("sections.projects")} hint={t("sections.projectsHint")}>
             <ProjectTagSelector
+              fillRows
               projects={localProjects}
               selectedIds={selectedProjectIds}
               onToggle={toggleProject}
@@ -469,7 +476,7 @@ export default function EditExpenseModal({
               onChange={setLinkedRealAssetId}
               className="mt-3 border-t border-[var(--line)] pt-3"
             />
-          </div>
+          </ExpenseFormSection>
 
           {/* ── CARD 4: Details (collapsed/expanded) ── */}
           {showDetails ? (
@@ -515,26 +522,6 @@ export default function EditExpenseModal({
                 </select>
               </div>
 
-              {/* Bank Account */}
-              {bankAccounts.length > 0 && (
-                <div>
-                  <label className="text-xs font-medium text-[var(--ink-muted)] mb-1 block">{t("bankAccount")}</label>
-                  <select
-                    value={bankAccountId}
-                    onChange={(e) => setBankAccountId(e.target.value)}
-                    className="w-full rounded-[14px] border border-[var(--line)] px-3 py-2.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--accent)] focus:border-transparent"
-                    style={{ background: "var(--surface)" }}
-                  >
-                    <option value="">{t("none")}</option>
-                    {bankAccounts.map((acc) => (
-                      <option key={acc.id} value={acc.id}>
-                        {acc.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              )}
-
               {/* Expense Type */}
               <div>
                 <label className="text-xs font-medium text-[var(--ink-muted)] mb-1.5 block">{t("expenseType")}</label>
@@ -572,9 +559,6 @@ export default function EditExpenseModal({
                 <span className="shrink-0 text-sm text-[var(--ink-subtle)]">{tCommon("details")}</span>
                 <div className="flex min-w-0 flex-wrap items-center gap-1.5">
                   <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "#E7F5EE", color: "var(--positive)" }}>{categoryLabel}</span>
-                  {bankAccounts.length > 0 && (
-                    <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--surface-2)", color: "var(--accent)" }}>{accountLabel}</span>
-                  )}
                   <span className="text-[11px] px-2 py-0.5 rounded-md font-medium" style={{ background: "var(--surface-2)", color: "var(--ink-muted)" }}>{typeLabel}</span>
                   <svg className="w-4 h-4 shrink-0 text-[var(--ink-subtle)] ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />

@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useLocale } from "next-intl";
 import ExpenseChoicePicker from "./expense-choice-picker";
+import { expenseCurrencyPreference } from "@/lib/expense-currency-preference";
+import { ExpenseFormSection } from "./expense-form-section";
 import ProjectTagSelector from "./project-tag-selector";
 import AssetLinkPicker from "./asset-link-picker";
 import { savePendingExpense, isOfflineStorageAvailable } from "@/lib/offline-storage";
@@ -100,6 +102,7 @@ export default function AddExpenseModal({
     projects: fetchedProjects,
     bankAccounts: localBankAccounts,
     defaultCurrency,
+    workspaceId,
     lastExpenseCurrency,
     rememberExpenseCurrency,
     defaultBankAccountId: workspaceDefaultBankAccountId,
@@ -144,6 +147,7 @@ export default function AddExpenseModal({
   const [categoryOverridden, setCategoryOverridden] = useState(false);
 
   const currencyChosen = useRef(false);
+  const currencySelectionVersion = useRef(0);
   const [currency, setCurrency] = useState("EUR");
   const [date, setDate] = useState(getTodayDateString());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -212,7 +216,7 @@ export default function AddExpenseModal({
       setCategoryId("");
       setCategoryOverridden(false);
       currencyChosen.current = false;
-      setCurrency(rememberExpenseCurrency && lastExpenseCurrency ? lastExpenseCurrency : defaultCurrency);
+      setCurrency(rememberExpenseCurrency && workspaceId ? expenseCurrencyPreference.read(workspaceId, lastExpenseCurrency || defaultCurrency) : defaultCurrency);
       setLinkedRealAssetId(null);
       setDate(getTodayDateString());
       setShowDatePicker(false);
@@ -238,15 +242,25 @@ export default function AddExpenseModal({
   // Apply asynchronously loaded defaults only until the user makes a choice.
   useEffect(() => {
     if (isOpen && !currencyChosen.current) {
-      setCurrency(rememberExpenseCurrency && lastExpenseCurrency ? lastExpenseCurrency : defaultCurrency);
+      setCurrency(rememberExpenseCurrency && workspaceId ? expenseCurrencyPreference.read(workspaceId, lastExpenseCurrency || defaultCurrency) : defaultCurrency);
     }
-  }, [isOpen, defaultCurrency, lastExpenseCurrency, rememberExpenseCurrency]);
+  }, [isOpen, defaultCurrency, lastExpenseCurrency, rememberExpenseCurrency, workspaceId]);
 
-  const rememberSavedCurrency = async () => {
-    if (rememberExpenseCurrency) await fetch("/api/workspace", {
-      method: "PUT", headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ lastExpenseCurrency: currency }),
-    }).catch(() => {});
+  const chooseCurrency = (next: string) => {
+    const version = ++currencySelectionVersion.current;
+    currencyChosen.current = true;
+    setCurrency(next);
+    // Persist even if the form is closed without saving. The fallback handles
+    // a selection made before workspace preferences finish loading.
+    if (workspaceId) {
+      if (rememberExpenseCurrency) void expenseCurrencyPreference.choose(workspaceId, next);
+    } else {
+      void fetch("/api/workspace").then(res => res.ok ? res.json() : null).then(data => {
+        if (version === currencySelectionVersion.current && data?.workspace?.rememberExpenseCurrency) {
+          return expenseCurrencyPreference.choose(data.workspace.id, next);
+        }
+      }).catch(() => {});
+    }
   };
 
   // Resolve category id from parser suggestion (until user overrides)
@@ -302,7 +316,6 @@ export default function AddExpenseModal({
           const data = await response.json();
           throw new Error(data.error || "Failed to create installment plan");
         }
-        await rememberSavedCurrency();
         router.refresh();
         onClose();
         return;
@@ -345,7 +358,6 @@ export default function AddExpenseModal({
             createdAt: typeof exp.createdAt === "string" ? exp.createdAt : new Date(exp.createdAt).toISOString(),
           });
         }
-        await rememberSavedCurrency();
         router.refresh();
         onClose();
       } else {
@@ -431,7 +443,7 @@ export default function AddExpenseModal({
                 <select
                   aria-label={t("choices.currency")}
                   value={currency}
-                  onChange={(e) => { currencyChosen.current = true; setCurrency(e.target.value); }}
+                  onChange={(e) => chooseCurrency(e.target.value)}
                   className="h-11 w-full appearance-none rounded-[10px] bg-transparent pl-1 pr-6 text-[15px] font-semibold text-[var(--ink)] outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
                 >
                   {[...new Set([currency, lastExpenseCurrency || defaultCurrency, defaultCurrency, ...CURRENCIES])].map(code => (
@@ -530,15 +542,14 @@ export default function AddExpenseModal({
             </label>
           )}
 
-          {/* Account + Projects — always visible (Nuno feedback: don't bury these) */}
-          <div className="flex flex-col gap-3 rounded-[18px] p-4" style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}>
-            {localBankAccounts.length > 0 && (
-              <div>
-                <ExpenseChoicePicker label={t("bankAccount")} value={bankAccountId}
-                  choices={[{ value: "", label: t("none") }, ...localBankAccounts.map(acc => ({ value: acc.id, label: acc.name }))]}
-                  onChange={setBankAccountId} />
-              </div>
-            )}
+          {localBankAccounts.length > 0 && (
+            <ExpenseFormSection kind="account" title={t("bankAccount")} hint={t("sections.accountHint")}>
+              <ExpenseChoicePicker hideLabel label={t("bankAccount")} value={bankAccountId}
+                choices={[{ value: "", label: t("none") }, ...localBankAccounts.map(acc => ({ value: acc.id, label: acc.name }))]}
+                onChange={setBankAccountId} />
+            </ExpenseFormSection>
+          )}
+          <ExpenseFormSection kind="projects" title={t("sections.projects")} hint={t("sections.projectsHint")}>
             <ProjectTagSelector
               fillRows
               projects={localProjects}
@@ -561,7 +572,7 @@ export default function AddExpenseModal({
                 </div>
               </label>
             )}
-          </div>
+          </ExpenseFormSection>
 
               {/* Split */}
               {!installmentsEnabled && (

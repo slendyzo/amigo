@@ -958,7 +958,7 @@
     "theme": "Thème",
     "workspaceSuffix": "espace de travail",
     "rememberExpenseCurrency": "Mémoriser la devise des dépenses",
-    "rememberExpenseCurrencyHint": "Utiliser la devise de la dernière dépense enregistrée dans cet espace pour les nouvelles dépenses. Désactivez pour utiliser la devise par défaut."
+    "rememberExpenseCurrencyHint": "Utilise la dernière devise sélectionnée dans cet espace, même sans enregistrer la dépense. Désactivez pour utiliser la devise par défaut."
   },
   "imports": {
     "title": "Historique des Importations",
@@ -1272,6 +1272,11 @@
       "close": "Terminé",
       "searchLabel": "Rechercher {label}",
       "noResults": "Aucun résultat"
+    },
+    "sections": {
+      "accountHint": "Compte utilisé pour payer cette dépense.",
+      "projects": "Projets et étiquettes",
+      "projectsHint": "Classez cette dépense dans un ou plusieurs projets."
     },
     "projectCounting": {
       "netZero": "Solde nul",

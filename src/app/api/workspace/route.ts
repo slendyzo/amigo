@@ -56,12 +56,16 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Invalid currency" }, { status: 400 });
     }
 
+    if (body.workspaceId !== undefined && body.workspaceId !== workspace.id) {
+      return NextResponse.json({ error: "Workspace changed" }, { status: 409 });
+    }
+
     // Build update object
     const updateData: Record<string, unknown> = {};
 
     if (body.rememberExpenseCurrency !== undefined) updateData.rememberExpenseCurrency = body.rememberExpenseCurrency;
     if (body.lastExpenseCurrency !== undefined) {
-      // A saved expense may remember its currency only while the option is enabled.
+      // Explicit currency selections are remembered only while the option is enabled.
       await prisma.workspace.updateMany({
         where: { id: workspace.id, rememberExpenseCurrency: true },
         data: { lastExpenseCurrency: body.lastExpenseCurrency },

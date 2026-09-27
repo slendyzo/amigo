@@ -6,8 +6,9 @@ import { useTranslations } from "next-intl";
 type Choice = { value: string; label: string; shortLabel?: string };
 
 /** Direct choices for the common case; a searchable, keyboard-native list for the rest. */
-export default function ExpenseChoicePicker({ label, value, choices, quickValues, onChange }: {
+export default function ExpenseChoicePicker({ label, value, choices, quickValues, onChange, hideLabel = false }: {
   label: string;
+  hideLabel?: boolean;
   value: string;
   choices: Choice[];
   quickValues?: string[];
@@ -25,7 +26,7 @@ export default function ExpenseChoicePicker({ label, value, choices, quickValues
   const buttonClass = "h-11 min-w-0 w-full truncate rounded-[12px] px-3 text-[13px] font-medium text-center focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)]";
   const style = (selected: boolean) => ({ background: selected ? "var(--accent)" : "var(--surface-2)", color: selected ? "var(--accent-fg)" : "var(--ink-muted)" });
   return <fieldset className="min-w-0">
-    <legend className="mb-2 text-[12px] font-medium text-[var(--ink-muted)]">{label}</legend>
+    <legend className={hideLabel ? "sr-only" : "mb-2 text-[12px] font-medium text-[var(--ink-muted)]"}>{label}</legend>
     <div className={`grid gap-2 ${quick.length + (choices.length > quick.length ? 1 : 0) > 3 ? "grid-cols-2" : quick.length === 3 ? "grid-cols-3" : "grid-cols-2"}`}>
       {quick.map(c => <button key={c.value} type="button" title={c.label} aria-pressed={value === c.value} className={buttonClass} style={style(value === c.value)} onClick={() => onChange(c.value)}>{c.shortLabel || c.label}</button>)}
       {choices.length > quick.length && <button ref={trigger} type="button" aria-expanded={expanded} className={buttonClass} style={style(false)} onClick={() => { setExpanded(!expanded); setQuery(""); }}>{expanded ? t("close") : t("all")}</button>}

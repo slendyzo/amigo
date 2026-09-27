@@ -958,7 +958,7 @@
     "theme": "Theme",
     "workspaceSuffix": "workspace",
     "rememberExpenseCurrency": "Remember expense currency",
-    "rememberExpenseCurrencyHint": "Start new expenses with the currency of the last saved expense in this workspace. Turn off to use the default currency."
+    "rememberExpenseCurrencyHint": "Start new expenses with the last currency you selected in this workspace, even without saving. Turn off to use the default currency."
   },
   "imports": {
     "title": "Import History",
@@ -1272,6 +1272,11 @@
       "close": "Done",
       "searchLabel": "Search {label}",
       "noResults": "No matches"
+    },
+    "sections": {
+      "accountHint": "Payment account for this expense.",
+      "projects": "Projects & tags",
+      "projectsHint": "Group this expense into projects. Select one or more."
     },
     "projectCounting": {
       "netZero": "Net zero",

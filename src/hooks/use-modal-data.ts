@@ -1,9 +1,11 @@
 "use client";
 
+import { expenseCurrencyPreference } from "@/lib/expense-currency-preference";
 import { useState, useEffect } from "react";
 import type { Category, BankAccount, Project } from "@/types/models";
 
 type ModalData = {
+  workspaceId: string | null;
   categories: Category[];
   projects: Project[];
   bankAccounts: BankAccount[];
@@ -50,6 +52,7 @@ export function useModalData(
   propBankAccounts?: BankAccount[],
   options: UseModalDataOptions = defaultOptions
 ): ModalData {
+  const [workspaceId, setWorkspaceId] = useState<string | null>(null);
   const [categories, setCategories] = useState<Category[]>(propCategories || []);
   const [projects, setProjects] = useState<Project[]>(propProjects || []);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>(propBankAccounts || []);
@@ -59,6 +62,12 @@ export function useModalData(
   const [defaultBankAccountId, setDefaultBankAccountId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => expenseCurrencyPreference.subscribe(() => {
+    if (workspaceId && rememberExpenseCurrency) {
+      setLastExpenseCurrency(expenseCurrencyPreference.read(workspaceId, defaultCurrency));
+    }
+  }), [workspaceId, rememberExpenseCurrency, defaultCurrency]);
 
   // Update state when props change
   useEffect(() => {
@@ -134,7 +143,14 @@ export function useModalData(
           setDefaultCurrency(workspaceData.workspace.defaultCurrency);
         }
         if (workspaceData?.workspace) {
-          setLastExpenseCurrency(workspaceData.workspace.lastExpenseCurrency || null);
+          const workspace = workspaceData.workspace;
+          setWorkspaceId(workspace.id);
+          if (!workspace.rememberExpenseCurrency) expenseCurrencyPreference.clear(workspace.id);
+          const remembered = expenseCurrencyPreference.read(workspace.id, workspace.lastExpenseCurrency || workspace.defaultCurrency);
+          setLastExpenseCurrency(remembered);
+          if (workspace.rememberExpenseCurrency && remembered !== workspace.lastExpenseCurrency) {
+            void expenseCurrencyPreference.choose(workspace.id, remembered);
+          }
           setRememberExpenseCurrency(workspaceData.workspace.rememberExpenseCurrency === true);
           setDefaultBankAccountId(workspaceData.workspace.defaultBankAccountId || null);
         }
@@ -148,6 +164,7 @@ export function useModalData(
   }, [isOpen, propCategories, propProjects, propBankAccounts, options]);
 
   return {
+    workspaceId,
     categories,
     projects,
     bankAccounts,

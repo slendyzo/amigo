@@ -958,7 +958,7 @@
     "theme": "Tema",
     "workspaceSuffix": "workspace",
     "rememberExpenseCurrency": "Lembrar moeda das despesas",
-    "rememberExpenseCurrencyHint": "Iniciar novas despesas com a moeda da última despesa guardada neste espaço. Desative para usar a moeda predefinida."
+    "rememberExpenseCurrencyHint": "Usa a última moeda selecionada neste espaço, mesmo sem guardar a despesa. Desativa para usar a moeda predefinida."
   },
   "imports": {
     "title": "Histórico de Importações",
@@ -1272,6 +1272,11 @@
       "close": "Concluído",
       "searchLabel": "Pesquisar {label}",
       "noResults": "Sem resultados"
+    },
+    "sections": {
+      "accountHint": "Conta usada para pagar esta despesa.",
+      "projects": "Projetos e etiquetas",
+      "projectsHint": "Agrupa esta despesa em projetos. Podes selecionar vários."
     },
     "projectCounting": {
       "netZero": "Saldo zero",
