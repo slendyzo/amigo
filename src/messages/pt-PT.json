@@ -161,9 +161,9 @@
       "totalSpent": "Total gasto",
       "overspent": "Gastaste mais do que recebeste",
       "kept": "Rendimentos após os gastos",
-      "received": "Rendimentos recebidos",
+      "received": "Rendimentos até hoje",
       "paidSpending": "Despesas pagas",
-      "actualHint": "Rendimentos registados menos despesas pagas. Exclui rendimentos previstos e transferências para corretoras.",
+      "actualHint": "Inclui rendimentos registados e pagamentos recorrentes até hoje, às taxas de câmbio guardadas. O salário registado substitui a estimativa mensal. Exclui rendimentos futuros e transferências para corretoras.",
       "wealth": "O teu património"
     },
     "greetingMorning": "Bom dia, {name}",

@@ -161,9 +161,9 @@
       "totalSpent": "Total dépensé",
       "overspent": "Dépenses supérieures aux revenus",
       "kept": "Revenus après dépenses",
-      "received": "Revenus reçus",
+      "received": "Revenus à ce jour",
       "paidSpending": "Dépenses payées",
-      "actualHint": "Revenus enregistrés moins dépenses payées. Exclut les prévisions et les virements vers les courtiers.",
+      "actualHint": "Inclut les revenus enregistrés et les échéances récurrentes à ce jour, aux taux de change enregistrés. Le salaire enregistré remplace son estimation mensuelle. Exclut les revenus futurs et les virements vers les courtiers.",
       "wealth": "Votre patrimoine"
     },
     "greetingMorning": "Bonjour, {name}",

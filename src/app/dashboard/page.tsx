@@ -1,4 +1,4 @@
-import { annualSummary, yearToDateBounds } from "@/lib/dashboard-totals";
+import { annualIncomeWhere, annualSummary, yearToDateBounds } from "@/lib/dashboard-totals";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { spendingEur } from "@/lib/expense-spending";
 import { hasRecordedSalary } from "@/lib/income-classification";
@@ -257,10 +257,10 @@ export default async function DashboardPage({
       where: { workspaceId: workspace.id, isActive: true, interval: "MONTHLY" },
       select: { id: true, name: true, amount: true, currency: true, dayOfMonth: true, endDate: true },
     }),
-    // Annual actuals are separate from the monthly recurring-income forecast.
+    // Include schedules that started in prior years; expand only elapsed paydays.
     prisma.income.findMany({
-      where: { workspaceId: workspace.id, isRecurring: false, date: yearToDateBounds(now) },
-      select: { amountEur: true, date: true, isRecurring: true },
+      where: annualIncomeWhere(workspace.id, now),
+      select: { amountEur: true, date: true, isRecurring: true, type: true, bankAccountId: true, interval: true, dayOfMonth: true },
     }),
     prisma.expense.findMany({
       where: { workspaceId: workspace.id, status: "PAID", date: yearToDateBounds(now), type: { not: "INVESTMENT" } },

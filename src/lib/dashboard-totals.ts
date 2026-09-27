@@ -1,7 +1,11 @@
 import { spendingEur } from "./expense-spending";
 
 type SpendingRow = Parameters<typeof spendingEur>[0] & { id: string; date: Date | string; status: string; type: string };
-type IncomeRow = { amountEur: unknown; date: Date | string; isRecurring: boolean };
+type IncomeRow = {
+  amountEur: unknown; date: Date | string; isRecurring: boolean;
+  type?: string; bankAccountId?: string | null;
+  interval?: string | null; dayOfMonth?: number | null;
+};
 export type AnnualSummary = { income: number; spent: number; net: number };
 const round = (value: number) => Math.round((value + Number.EPSILON) * 100) / 100;
 
@@ -9,12 +13,60 @@ export function yearToDateBounds(asOf: Date) {
   return { gte: new Date(Date.UTC(asOf.getUTCFullYear(), 0, 1)), lte: asOf };
 }
 
-/** Actual cash flow only: templates, future/pending items and broker transfers aren't spending. */
+// Recurring income is stored once; the income screen synthesizes later paydays.
+// Query schedules starting before this year too, but never another workspace.
+export function annualIncomeWhere(workspaceId: string, asOf: Date) {
+  return { workspaceId, OR: [
+    { isRecurring: false, date: yearToDateBounds(asOf) },
+    { isRecurring: true, date: { lte: asOf } },
+  ] };
+}
+
+function incomeThroughDate(incomes: IncomeRow[], asOf: Date): number {
+  const { gte } = yearToDateBounds(asOf);
+  const recorded = incomes.filter(row => !row.isRecurring && +new Date(row.date) >= +gte && +new Date(row.date) <= +asOf);
+  let total = recorded.reduce((sum, row) => sum + Number(row.amountEur), 0);
+  for (const row of incomes.filter(row => row.isRecurring)) {
+    const start = new Date(row.date);
+    if (!Number.isFinite(+start) || start > asOf) continue;
+    const interval = row.interval ?? "MONTHLY";
+    const add = (payday: Date) => {
+      if (payday < start || payday < gte || payday > asOf) return;
+      // Same replacement rule as the monthly income view: actual salary for
+      // this account/month replaces its recurring estimate, even if FX varies.
+      const replaced = row.type === "SALARY" && recorded.some(actual => {
+        const date = new Date(actual.date);
+        return actual.type === "SALARY" && (actual.bankAccountId ?? null) === (row.bankAccountId ?? null)
+          && date.getUTCFullYear() === payday.getUTCFullYear() && date.getUTCMonth() === payday.getUTCMonth();
+      });
+      if (!replaced) total += Number(row.amountEur);
+    };
+    if (interval === "WEEKLY") {
+      const week = 7 * 86400000;
+      for (let time = +start + Math.max(0, Math.ceil((+gte - +start) / week)) * week; time <= +asOf; time += week) add(new Date(time));
+    } else {
+      const step = interval === "MONTHLY" ? 1 : interval === "QUARTERLY" ? 3 : interval === "YEARLY" ? 12 : 0;
+      if (!step) { add(start); continue; }
+      const startMonth = start.getUTCFullYear() * 12 + start.getUTCMonth();
+      const firstMonth = Math.max(startMonth, gte.getUTCFullYear() * 12);
+      const lastMonth = asOf.getUTCFullYear() * 12 + asOf.getUTCMonth();
+      for (let month = startMonth + Math.ceil((firstMonth - startMonth) / step) * step; month <= lastMonth; month += step) {
+        const year = Math.floor(month / 12), index = month % 12;
+        // The stored date is the first receipt; later dates follow the schedule.
+        const day = Math.min(Math.max(1, row.dayOfMonth ?? start.getUTCDate()), new Date(Date.UTC(year, index + 1, 0)).getUTCDate());
+        add(month === startMonth ? start : new Date(Date.UTC(year, index, day)));
+      }
+    }
+  }
+  return round(total);
+}
+
+/** Income through today, including elapsed configured paydays; spending is paid only. */
 export function annualSummary(incomes: IncomeRow[], expenses: SpendingRow[], asOf: Date, transferExpenseIds: Iterable<string> = []): AnnualSummary {
   const bounds = yearToDateBounds(asOf);
   const inPeriod = (date: Date | string) => { const value = new Date(date).getTime(); return value >= +bounds.gte && value <= +bounds.lte; };
   const transfers = new Set(transferExpenseIds);
-  const income = round(incomes.filter(row => !row.isRecurring && inPeriod(row.date)).reduce((sum, row) => sum + Number(row.amountEur), 0));
+  const income = incomeThroughDate(incomes, asOf);
   const spent = round(expenses.filter(row => row.status === "PAID" && row.type !== "INVESTMENT" && !transfers.has(row.id) && inPeriod(row.date)).reduce((sum, row) => sum + spendingEur(row), 0));
   return { income, spent, net: round(income - spent) };
 }
