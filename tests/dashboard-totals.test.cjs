@@ -62,5 +62,22 @@ test('annual query keeps active workspace and prior-year schedules without fetch
  // reintroduce the isRecurring:false filter before the calculator sees rows.
  const page=fs.readFileSync('src/app/dashboard/page.tsx','utf8');
  assert.match(page,/where: annualIncomeWhere\(workspace.id, now\)/);
- assert.match(page,/select: \{ amountEur: true, date: true, isRecurring: true, type: true, bankAccountId: true, interval: true, dayOfMonth: true \}/);
+ assert.match(page,/select: \{ amountEur: true, date: true, isRecurring: true, type: true, name: true, currency: true, bankAccountId: true, interval: true, dayOfMonth: true \}/);
+});
+test('unrelated one-off income and another job on same account do not suppress salary',()=>{
+ const asOf=new Date('2026-01-31T12:00Z');
+ const otherJob={...salary,name:'Second job',amountEur:500};
+ const paid={...otherJob,isRecurring:false,date:'2026-01-30',amountEur:550};
+ const unrelated={...salary,type:'OTHER',isRecurring:false,date:'2026-01-02',amountEur:800};
+ assert.equal(annualSummary([salary,otherJob,paid,unrelated],[],asOf).income,5220);
+});
+test('a bonus and a differently denominated salary do not replace another salary source',()=>{
+ const asOf=new Date('2026-01-31T12:00Z');
+ const bonus={...salary,name:'Bonus',isRecurring:false,date:'2026-01-30',amountEur:800};
+ const euroPay={...salary,currency:'EUR',isRecurring:false,date:'2026-01-30',amountEur:100};
+ assert.equal(annualSummary([salary,bonus,euroPay],[],asOf).income,4770);
+});
+test('one actual receipt cannot suppress two indistinguishable schedules',()=>{
+ const actual={...salary,isRecurring:false,date:'2026-01-30',amountEur:4000};
+ assert.equal(annualSummary([salary,{...salary},actual],[],new Date('2026-01-31T12:00Z')).income,7870);
 });

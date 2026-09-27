@@ -163,7 +163,7 @@
       "kept": "Income kept after spending",
       "received": "Income to date",
       "paidSpending": "Paid spending",
-      "actualHint": "Includes recorded income and recurring paydays through today at saved exchange rates. Recorded salary replaces its monthly estimate. Excludes future income and broker transfers.",
+      "actualHint": "Includes recorded income and recurring paydays through today at saved exchange rates. Matching recorded income replaces its scheduled estimate. Excludes future income and broker transfers.",
       "wealth": "Your wealth"
     },
     "greetingMorning": "Good morning, {name}",

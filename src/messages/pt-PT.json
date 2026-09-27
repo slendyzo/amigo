@@ -163,7 +163,7 @@
       "kept": "Rendimentos após os gastos",
       "received": "Rendimentos até hoje",
       "paidSpending": "Despesas pagas",
-      "actualHint": "Inclui rendimentos registados e pagamentos recorrentes até hoje, às taxas de câmbio guardadas. O salário registado substitui a estimativa mensal. Exclui rendimentos futuros e transferências para corretoras.",
+      "actualHint": "Inclui rendimentos registados e pagamentos recorrentes até hoje, às taxas de câmbio guardadas. O rendimento registado correspondente substitui a estimativa recorrente. Exclui rendimentos futuros e transferências para corretoras.",
       "wealth": "O teu património"
     },
     "greetingMorning": "Bom dia, {name}",

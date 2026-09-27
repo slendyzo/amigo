@@ -163,7 +163,7 @@
       "kept": "Revenus après dépenses",
       "received": "Revenus à ce jour",
       "paidSpending": "Dépenses payées",
-      "actualHint": "Inclut les revenus enregistrés et les échéances récurrentes à ce jour, aux taux de change enregistrés. Le salaire enregistré remplace son estimation mensuelle. Exclut les revenus futurs et les virements vers les courtiers.",
+      "actualHint": "Inclut les revenus enregistrés et les échéances récurrentes à ce jour, aux taux de change enregistrés. Le revenu enregistré correspondant remplace son estimation récurrente. Exclut les revenus futurs et les virements vers les courtiers.",
       "wealth": "Votre patrimoine"
     },
     "greetingMorning": "Bonjour, {name}",

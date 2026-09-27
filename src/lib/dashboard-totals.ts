@@ -3,7 +3,7 @@ import { spendingEur } from "./expense-spending";
 type SpendingRow = Parameters<typeof spendingEur>[0] & { id: string; date: Date | string; status: string; type: string };
 type IncomeRow = {
   amountEur: unknown; date: Date | string; isRecurring: boolean;
-  type?: string; bankAccountId?: string | null;
+  type?: string; name?: string; currency?: string; bankAccountId?: string | null;
   interval?: string | null; dayOfMonth?: number | null;
 };
 export type AnnualSummary = { income: number; spent: number; net: number };
@@ -25,6 +25,8 @@ export function annualIncomeWhere(workspaceId: string, asOf: Date) {
 function incomeThroughDate(incomes: IncomeRow[], asOf: Date): number {
   const { gte } = yearToDateBounds(asOf);
   const recorded = incomes.filter(row => !row.isRecurring && +new Date(row.date) >= +gte && +new Date(row.date) <= +asOf);
+  const usedReceipts = new Set<number>();
+  const sourceName = (name?: string) => name?.trim().toLocaleLowerCase("en-US");
   let total = recorded.reduce((sum, row) => sum + Number(row.amountEur), 0);
   for (const row of incomes.filter(row => row.isRecurring)) {
     const start = new Date(row.date);
@@ -32,13 +34,21 @@ function incomeThroughDate(incomes: IncomeRow[], asOf: Date): number {
     const interval = row.interval ?? "MONTHLY";
     const add = (payday: Date) => {
       if (payday < start || payday < gte || payday > asOf) return;
-      // Same replacement rule as the monthly income view: actual salary for
-      // this account/month replaces its recurring estimate, even if FX varies.
-      const replaced = row.type === "SALARY" && recorded.some(actual => {
+      // There is no occurrence/source foreign key. Only replace an estimate
+      // when the explicit source identity matches; never guess from amount or
+      // account alone. A receipt group can replace just one schedule.
+      const matches = recorded.flatMap((actual, index) => {
         const date = new Date(actual.date);
-        return actual.type === "SALARY" && (actual.bankAccountId ?? null) === (row.bankAccountId ?? null)
-          && date.getUTCFullYear() === payday.getUTCFullYear() && date.getUTCMonth() === payday.getUTCMonth();
+        const samePeriod = date.getUTCFullYear() === payday.getUTCFullYear()
+          && date.getUTCMonth() === payday.getUTCMonth()
+          && (interval !== "WEEKLY" || date.getUTCDate() === payday.getUTCDate());
+        return !usedReceipts.has(index) && row.name?.trim() && row.type && row.currency
+          && actual.type === row.type && sourceName(actual.name) === sourceName(row.name)
+          && actual.currency === row.currency
+          && (actual.bankAccountId ?? null) === (row.bankAccountId ?? null) && samePeriod ? [index] : [];
       });
+      matches.forEach(index => usedReceipts.add(index));
+      const replaced = matches.length > 0;
       if (!replaced) total += Number(row.amountEur);
     };
     if (interval === "WEEKLY") {

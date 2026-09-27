@@ -260,7 +260,7 @@ export default async function DashboardPage({
     // Include schedules that started in prior years; expand only elapsed paydays.
     prisma.income.findMany({
       where: annualIncomeWhere(workspace.id, now),
-      select: { amountEur: true, date: true, isRecurring: true, type: true, bankAccountId: true, interval: true, dayOfMonth: true },
+      select: { amountEur: true, date: true, isRecurring: true, type: true, name: true, currency: true, bankAccountId: true, interval: true, dayOfMonth: true },
     }),
     prisma.expense.findMany({
       where: { workspaceId: workspace.id, status: "PAID", date: yearToDateBounds(now), type: { not: "INVESTMENT" } },
