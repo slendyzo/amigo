@@ -10,6 +10,7 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import NudgeRecurringCard from "@/components/nudge-recurring-card";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
+import { MAX_RECURRING_MONTHS, recurringMonthKey } from "@/lib/recurring-months";
 
 type Category = { id: string; name: string };
 type BankAccount = { id: string; name: string };
@@ -106,10 +107,14 @@ export default function RecurringTemplatesPage() {
   const [aiEnabled, setAiEnabled] = useState(false);
 
   const [showGenerateModal, setShowGenerateModal] = useState(false);
-  const [generateMonth, setGenerateMonth] = useState(new Date().getMonth());
-  const [generateYear, setGenerateYear] = useState(new Date().getFullYear());
+  const [generateMonth, setGenerateMonth] = useState(new Date().getUTCMonth());
+  const [generateYear, setGenerateYear] = useState(new Date().getUTCFullYear());
+  const [generateMode, setGenerateMode] = useState<"single" | "months" | "from">("single");
+  const [selectedMonths, setSelectedMonths] = useState<string[]>([]);
+  const [fromMonth, setFromMonth] = useState("");
+  const [generateTemplateId, setGenerateTemplateId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
-  const [generateResult, setGenerateResult] = useState<string | null>(null);
+  const [generateResult, setGenerateResult] = useState<{ error: boolean; message: string } | null>(null);
   const [templateOverrides, setTemplateOverrides] = useState<Record<string, { selected: boolean; day: string }>>({});
 
   const [formData, setFormData] = useState({
@@ -235,23 +240,58 @@ export default function RecurringTemplatesPage() {
     } catch (error) { console.error("Failed to toggle template:", error); }
   };
 
+  const now = new Date();
+  const currentMonthKey = recurringMonthKey(now);
+  const fromMonthIndex = /^\d{4}-(0[1-9]|1[0-2])$/.test(fromMonth)
+    ? Number(fromMonth.slice(0, 4)) * 12 + Number(fromMonth.slice(5)) - 1 : NaN;
+  const rangeCount = now.getUTCFullYear() * 12 + now.getUTCMonth() - fromMonthIndex + 1;
+  const validYear = Number.isInteger(generateYear) && generateYear >= 1900 && generateYear <= 9999;
+  const validMonths = generateMode === "single" ? validYear
+    : generateMode === "months" ? selectedMonths.length > 0 && selectedMonths.length <= MAX_RECURRING_MONTHS
+    : Number(fromMonth.slice(0, 4)) >= 1900 && rangeCount > 0 && rangeCount <= MAX_RECURRING_MONTHS;
+  const monthCount = generateMode === "single" ? 1 : generateMode === "months" ? selectedMonths.length : validMonths ? rangeCount : 0;
+  const selectedTemplateCount = Object.values(templateOverrides).filter((o) => o.selected).length;
+  const validDays = Object.values(templateOverrides).every((o) => !o.selected || !o.day || (Number.isInteger(Number(o.day)) && Number(o.day) >= 1 && Number(o.day) <= 31));
+  const selectedTemplate = templates.find((tpl) => tpl.id === generateTemplateId);
+
+  const openGenerate = (template?: Template) => {
+    setTemplateOverrides(Object.fromEntries(templates.filter((tpl) => tpl.isActive).map((tpl) => [tpl.id, {
+      selected: !template || tpl.id === template.id, day: tpl.dayOfMonth?.toString() || "",
+    }])));
+    setGenerateTemplateId(template?.id ?? null);
+    setGenerateMode(template ? "from" : "single");
+    setGenerateMonth(now.getUTCMonth());
+    setGenerateYear(now.getUTCFullYear());
+    setFromMonth(currentMonthKey);
+    setSelectedMonths([]);
+    setGenerateResult(null);
+    setShowGenerateModal(true);
+  };
+
   const handleGenerate = async () => {
+    if (isGenerating || !validMonths || !validDays || !selectedTemplateCount) return;
     setIsGenerating(true);
     setGenerateResult(null);
     try {
       const selectedTemplates = Object.entries(templateOverrides)
         .filter(([, o]) => o.selected)
-        .map(([id, o]) => ({ id, dayOverride: o.day ? parseInt(o.day) : null }));
+        .map(([id, o]) => ({ id, dayOverride: o.day ? Number(o.day) : null }));
       const response = await fetch("/api/recurring-templates/generate", {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ month: generateMonth, year: generateYear, templateOverrides: selectedTemplates }),
+        body: JSON.stringify({
+          ...(generateMode === "single" ? { month: generateMonth, year: generateYear }
+            : generateMode === "months" ? { months: selectedMonths } : { fromMonth }),
+          templateOverrides: selectedTemplates,
+        }),
       });
       const data = await response.json();
-      setGenerateResult(data.message || "Done!");
-      fetchTemplates();
+      if (!response.ok) throw new Error(data.error || "Generation failed");
+      setGenerateResult({ error: false, message: t("backfillResult", { generated: data.generated, skipped: data.skipped }) });
+      await fetchTemplates();
+      router.refresh();
     } catch (error) {
       console.error("Failed to generate expenses:", error);
-      setGenerateResult("Failed to generate expenses");
+      setGenerateResult({ error: true, message: t("backfillFailed") });
     } finally { setIsGenerating(false); }
   };
 
@@ -403,15 +443,10 @@ export default function RecurringTemplatesPage() {
               <button onClick={() => setSelectionMode(true)} className="tap-none rounded-[12px] px-3 py-2 text-[12.5px] font-medium" style={{ background: "var(--surface)", color: "var(--ink-muted)", ...cardShadow }}>{t("select")}</button>
             )}
             <button
-              onClick={() => {
-                const overrides: Record<string, { selected: boolean; day: string }> = {};
-                templates.filter((tpl) => tpl.isActive).forEach((tpl) => { overrides[tpl.id] = { selected: true, day: tpl.dayOfMonth?.toString() || "" }; });
-                setTemplateOverrides(overrides);
-                setShowGenerateModal(true);
-              }}
+              onClick={() => openGenerate()}
               className="tap-none rounded-[12px] px-3 py-2 text-[12.5px] font-medium" style={{ background: "var(--surface)", color: "var(--ink)", ...cardShadow }}
             >
-              {t("generateForMonth")}
+              {t("generateExpenses")}
             </button>
             <button onClick={startCreating} className="tap-none ml-auto flex items-center gap-1.5 rounded-[12px] px-3.5 py-2 text-[12.5px] font-semibold text-white" style={{ background: "var(--accent)", boxShadow: "var(--shadow-fab)" }}>
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2"><path d="M12 5v14M5 12h14" /></svg>
@@ -521,6 +556,18 @@ export default function RecurringTemplatesPage() {
               </div>
             </label>
           </div>
+          {editingId && (
+            <div className="mt-4 border-t pt-3" style={{ borderColor: "var(--line)" }}>
+              <button type="button" onClick={() => { const template = templates.find((tpl) => tpl.id === editingId); if (template) openGenerate(template); }} disabled={!templates.find((tpl) => tpl.id === editingId)?.isActive}
+                className="tap-none min-h-11 rounded-[12px] px-3 text-[13px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50"
+                style={{ background: "var(--accent-tint)", color: "var(--accent)" }}>
+                {t("addPastMonths")}
+              </button>
+              <p className="mt-1 text-[12px]" style={{ color: "var(--ink-muted)" }}>
+                {templates.find((tpl) => tpl.id === editingId)?.isActive ? t("extendExistingHint") : t("resumeToBackfill")}
+              </p>
+            </div>
+          )}
           <div className="mt-4 flex gap-2">
             <button
               onClick={() => (editingId ? handleUpdate(editingId) : handleCreate())}
@@ -593,75 +640,137 @@ export default function RecurringTemplatesPage() {
       {/* Generate Modal */}
       <Modal
         isOpen={showGenerateModal}
-        onClose={() => { setShowGenerateModal(false); setGenerateResult(null); }}
+        onClose={() => { if (!isGenerating) { setShowGenerateModal(false); setGenerateResult(null); } }}
+        dismissable={!isGenerating}
         variant="dialog"
         size="xl"
+        className="[color-scheme:light] dark:[color-scheme:dark]"
         zIndexClassName="z-50"
       >
         <ModalHeader showClose={false} className="px-6 pt-6">
-          <h2 className="mb-2 text-[17px] font-bold">{t("generateExpenses")}</h2>
-          <p className="mb-4 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("generateDescription")}</p>
-          <div className="mb-4 grid grid-cols-2 gap-3">
-            <div>
-              <label className={labelCls} style={{ color: "var(--ink-muted)" }}>{tTime("thisMonth").split(" ")[0]}</label>
-              <select value={generateMonth} onChange={(e) => setGenerateMonth(parseInt(e.target.value))} className={inputCls} style={inputStyle}>
-                {MONTHS.map((month, index) => <option key={index} value={index}>{month}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls} style={{ color: "var(--ink-muted)" }}>{tTime("thisYear").split(" ")[0]}</label>
-              <input type="number" value={generateYear} onChange={(e) => setGenerateYear(parseInt(e.target.value))} className={inputCls} style={inputStyle} />
-            </div>
-          </div>
+          <h2 className="text-[17px] font-bold">{selectedTemplate ? t("addPastMonths") : t("generateExpenses")}</h2>
+          <p className="mt-1 text-[13px]" style={{ color: "var(--ink-muted)" }}>
+            {selectedTemplate ? selectedTemplate.name : t("backfillDescription")}
+          </p>
         </ModalHeader>
-
         <ModalBody className="px-6 pb-0">
-            <div className="overflow-hidden rounded-[12px]" style={{ border: "1px solid var(--line)" }}>
-              <div className="flex items-center justify-between px-4 py-2" style={{ background: "var(--app-bg)", borderBottom: "1px solid var(--line)" }}>
-                <span className="text-[13px] font-medium">{t("templates")} ({Object.values(templateOverrides).filter((o) => o.selected).length} {t("selected")})</span>
-                <div className="flex gap-3">
-                  <button onClick={() => setTemplateOverrides(Object.fromEntries(Object.entries(templateOverrides).map(([id, o]) => [id, { ...o, selected: true }])))} className="text-[12px] font-medium" style={{ color: "var(--accent)" }}>{tCommon("selectAll")}</button>
-                  <button onClick={() => setTemplateOverrides(Object.fromEntries(Object.entries(templateOverrides).map(([id, o]) => [id, { ...o, selected: false }])))} className="text-[12px]" style={{ color: "var(--ink-muted)" }}>{tCommon("deselectAll")}</button>
+          <fieldset disabled={isGenerating} className="min-w-0 space-y-4 pb-2" onChange={() => setGenerateResult(null)}>
+            <legend className="sr-only">{t("generateExpenses")}</legend>
+            <div className="grid grid-cols-3 gap-1 rounded-[12px] p-1" style={{ background: "var(--app-bg)" }}>
+              {(["single", "months", "from"] as const).map((mode) => (
+                <button key={mode} type="button" aria-pressed={generateMode === mode}
+                  onClick={() => { setGenerateMode(mode); setGenerateResult(null); }}
+                  className="min-h-11 rounded-[10px] px-2 py-2 text-[12px] font-semibold outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                  style={{ background: generateMode === mode ? "var(--surface)" : "transparent", color: generateMode === mode ? "var(--accent)" : "var(--ink-muted)", boxShadow: generateMode === mode ? "var(--shadow-card)" : "none" }}>
+                  {mode === "single" ? t("oneMonth") : mode === "months" ? t("chooseMonths") : t("fromMonthOnwards")}
+                </button>
+              ))}
+            </div>
+            {generateMode === "single" && (
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="generate-month" className={labelCls} style={{ color: "var(--ink-muted)" }}>{t("monthLabel")}</label>
+                  <select id="generate-month" value={generateMonth} onChange={(e) => setGenerateMonth(Number(e.target.value))} className={inputCls} style={inputStyle}>
+                    {MONTHS.map((month, index) => <option key={index} value={index}>{month}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label htmlFor="generate-year" className={labelCls} style={{ color: "var(--ink-muted)" }}>{t("yearLabel")}</label>
+                  <input id="generate-year" type="number" min="1900" max="9999" value={Number.isNaN(generateYear) ? "" : generateYear} onChange={(e) => setGenerateYear(e.target.valueAsNumber)} className={inputCls} style={inputStyle} />
                 </div>
               </div>
+            )}
+            {generateMode === "from" && (
               <div>
-                {templates.filter((tpl) => tpl.isActive).map((template) => {
-                  const override = templateOverrides[template.id] || { selected: true, day: "" };
-                  return (
-                    <div key={template.id} className="flex items-center gap-3 p-3" style={{ borderBottom: "1px solid var(--line)", opacity: override.selected ? 1 : 0.5 }}>
-                      <input type="checkbox" checked={override.selected} onChange={(e) => setTemplateOverrides({ ...templateOverrides, [template.id]: { ...override, selected: e.target.checked } })} className="h-4 w-4 accent-[var(--accent)]" />
-                      <div className="min-w-0 flex-1">
-                        <div className="truncate text-[13px] font-semibold">{template.name}</div>
-                        <div className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
-                          {template.amount ? formatCurrency(Number(template.amount), template.currency) : t("variable")}
-                          {template.dayOfMonth ? ` · ${t("default")}: ${t("dayShort", { day: template.dayOfMonth })}` : ""}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>{t("day")}:</span>
-                        <input type="number" min="1" max="31" value={override.day} onChange={(e) => setTemplateOverrides({ ...templateOverrides, [template.id]: { ...override, day: e.target.value } })} placeholder={t("first")} disabled={!override.selected} className="w-16 rounded-[10px] px-2 py-1 text-[13px] outline-none" style={inputStyle} />
-                      </div>
-                    </div>
-                  );
-                })}
-                {templates.filter((tpl) => tpl.isActive).length === 0 && (
-                  <div className="p-8 text-center text-[13px]" style={{ color: "var(--ink-subtle)" }}>{t("noActiveTemplates")}</div>
+                <label htmlFor="generate-from" className={labelCls} style={{ color: "var(--ink-muted)" }}>{t("startMonth")}</label>
+                <input id="generate-from" type="month" min="1900-01" max={currentMonthKey} value={fromMonth} onChange={(e) => setFromMonth(e.target.value)} className={inputCls + " min-h-11 [color-scheme:light] dark:[color-scheme:dark]"} style={inputStyle} aria-describedby="generate-range-hint" />
+                <p id="generate-range-hint" className="mt-2 text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("rangeHint", { month: MONTHS[now.getUTCMonth()], year: now.getUTCFullYear() })}</p>
+                {!validMonths && <p role="alert" className="mt-2 text-[12px]" style={{ color: "var(--negative)" }}>{t("invalidRange")}</p>}
+              </div>
+            )}
+            {generateMode === "months" && (
+              <div>
+                <label htmlFor="months-year" className={labelCls} style={{ color: "var(--ink-muted)" }}>{t("yearLabel")}</label>
+                <input id="months-year" type="number" min="1900" max={now.getUTCFullYear()} value={Number.isNaN(generateYear) ? "" : generateYear} onChange={(e) => setGenerateYear(e.target.valueAsNumber)} className={inputCls + " mb-3"} style={inputStyle} />
+                <div className="grid grid-cols-3 gap-2" role="group" aria-label={t("chooseMonths")}>
+                  {MONTHS.map((month, index) => {
+                    const key = String(generateYear) + "-" + String(index + 1).padStart(2, "0");
+                    const selected = selectedMonths.includes(key);
+                    return (
+                      <button key={index} type="button" aria-pressed={selected} disabled={!validYear || key > currentMonthKey || (!selected && selectedMonths.length >= MAX_RECURRING_MONTHS)}
+                        onClick={() => { setSelectedMonths((prev) => selected ? prev.filter((m) => m !== key) : [...prev, key].sort()); setGenerateResult(null); }}
+                        className="min-h-11 rounded-[10px] px-1 py-2 text-[12px] font-medium outline-none transition-colors duration-200 focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-35"
+                        style={{ border: "1px solid " + (selected ? "var(--accent)" : "var(--line-strong)"), background: selected ? "var(--accent-tint)" : "transparent", color: selected ? "var(--accent)" : "var(--ink)" }}>
+                        {month}
+                      </button>
+                    );
+                  })}
+                </div>
+                <p className="mt-2 text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("selectedMonthsHint")}</p>
+                {selectedMonths.length > 0 && (
+                  <div className="mt-2 flex flex-wrap gap-1" aria-label={t("selectedMonthsLabel")}>
+                    {selectedMonths.map((key) => {
+                      const label = MONTHS[Number(key.slice(5)) - 1] + " " + key.slice(0, 4);
+                      return <button key={key} type="button" aria-label={t("removeMonth", { month: label })}
+                        onClick={() => { setSelectedMonths((prev) => prev.filter((m) => m !== key)); setGenerateResult(null); }}
+                        className="min-h-11 rounded-[10px] px-2 text-[12px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]"
+                        style={{ background: "var(--surface-2)", color: "var(--ink)" }}>{label} <span aria-hidden="true">×</span></button>;
+                    })}
+                  </div>
                 )}
               </div>
+            )}
+            {generateMode === "single" && !validYear && <p role="alert" className="text-[12px]" style={{ color: "var(--negative)" }}>{t("invalidYear")}</p>}
+            <div className="overflow-hidden rounded-[12px]" style={{ border: "1px solid var(--line)" }}>
+              {!selectedTemplate && (
+                <div className="flex flex-wrap items-center justify-between gap-x-3 px-3 py-1" style={{ background: "var(--app-bg)", borderBottom: "1px solid var(--line)" }}>
+                  <span className="text-[12px] font-medium">{t("templates")} ({selectedTemplateCount})</span>
+                  <div className="flex gap-3">
+                    <button type="button" onClick={() => { setTemplateOverrides(Object.fromEntries(Object.entries(templateOverrides).map(([id, o]) => [id, { ...o, selected: true }]))); setGenerateResult(null); }} className="min-h-11 text-[12px] font-medium" style={{ color: "var(--accent)" }}>{tCommon("selectAll")}</button>
+                    <button type="button" onClick={() => { setTemplateOverrides(Object.fromEntries(Object.entries(templateOverrides).map(([id, o]) => [id, { ...o, selected: false }]))); setGenerateResult(null); }} className="min-h-11 text-[12px]" style={{ color: "var(--ink-muted)" }}>{tCommon("deselectAll")}</button>
+                  </div>
+                </div>
+              )}
+              {templates.filter((tpl) => tpl.isActive && (!generateTemplateId || tpl.id === generateTemplateId)).map((template) => {
+                const override = templateOverrides[template.id] || { selected: false, day: "" };
+                return (
+                  <div key={template.id} className="flex items-center gap-2 p-3" style={{ borderBottom: "1px solid var(--line)", opacity: override.selected ? 1 : 0.5 }}>
+                    {!selectedTemplate && <label className="flex min-h-11 min-w-11 items-center justify-center">
+                      <input type="checkbox" aria-label={template.name} checked={override.selected} onChange={(e) => setTemplateOverrides({ ...templateOverrides, [template.id]: { ...override, selected: e.target.checked } })} className="h-4 w-4 accent-[var(--accent)]" />
+                    </label>}
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-[13px] font-semibold">{template.name}</div>
+                      <div className="text-[12px]" style={{ color: "var(--ink-muted)" }}>{template.amount != null ? formatCurrency(Number(template.amount), template.currency) : t("variable")}</div>
+                    </div>
+                    <label className="flex items-center gap-2 text-[12px]" style={{ color: "var(--ink-muted)" }}>
+                      {t("day")}
+                      <input type="number" min="1" max="31" aria-label={t("paymentDayFor", { name: template.name })} value={override.day} onChange={(e) => setTemplateOverrides({ ...templateOverrides, [template.id]: { ...override, day: e.target.value } })} placeholder={t("first")} disabled={!override.selected} className="min-h-11 w-16 rounded-[10px] px-2 text-[13px] outline-none focus:ring-2 focus:ring-[var(--accent)]" style={inputStyle} />
+                    </label>
+                  </div>
+                );
+              })}
+              {activeTemplates.length === 0 && <p className="p-6 text-[13px]" style={{ color: "var(--ink-muted)" }}>{t("noActiveTemplates")}</p>}
             </div>
+            {!validDays && <p role="alert" className="text-[12px]" style={{ color: "var(--negative)" }}>{t("invalidDay")}</p>}
+            <p className="text-[12px] leading-relaxed" style={{ color: "var(--ink-muted)" }}>{t("backfillSafetyHint")}</p>
+            <p className="text-[12px] leading-relaxed" style={{ color: "var(--ink-muted)" }}>
+              {selectedTemplate ? (selectedTemplate.autoGenerate ? t("futureAutomatic") : t("futureManual")) : t("futureUnchanged")}
+            </p>
+          </fieldset>
         </ModalBody>
-
         <ModalFooter className="flex-col gap-0 px-6 pb-6 pt-4 md:px-6 md:pb-6">
-          {generateResult && (
-            <div className="mb-4 w-full rounded-[12px] p-3 text-[13px]" style={generateResult.includes("Failed") ? { background: "color-mix(in srgb, var(--negative) 12%, transparent)", color: "var(--negative)" } : { background: "color-mix(in srgb, var(--positive) 14%, transparent)", color: "var(--positive)" }}>
-              {generateResult}
-            </div>
+          {generateResult ? (
+            <p role={generateResult.error ? "alert" : "status"} className="mb-3 w-full text-[13px]" style={{ color: generateResult.error ? "var(--negative)" : "var(--ink)" }}>{generateResult.message}</p>
+          ) : (
+            <p aria-live="polite" className="mb-3 w-full text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("backfillSummary", { payments: selectedTemplateCount, months: monthCount })}</p>
           )}
           <div className="flex w-full gap-3">
-            <button onClick={handleGenerate} disabled={isGenerating || Object.values(templateOverrides).filter((o) => o.selected).length === 0} className="tap-none flex-1 rounded-[14px] px-4 py-2.5 text-[13.5px] font-semibold text-white disabled:opacity-50" style={{ background: "var(--accent)", boxShadow: "var(--shadow-fab)" }}>
-              {isGenerating ? t("generating") : t("generateCount", { count: Object.values(templateOverrides).filter((o) => o.selected).length })}
+            <button onClick={handleGenerate} disabled={isGenerating || !validMonths || !validDays || selectedTemplateCount === 0 || generateResult?.error === false}
+              className="tap-none min-h-11 flex-1 rounded-[14px] px-3 py-2.5 text-[13px] font-semibold outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-2 disabled:opacity-50"
+              style={{ background: "var(--accent)", color: "var(--accent-fg)", boxShadow: "var(--shadow-fab)" }}>
+              {isGenerating ? t("generating") : t("addExpenses")}
             </button>
-            <button onClick={() => { setShowGenerateModal(false); setGenerateResult(null); }} className="px-4 py-2.5 text-[13.5px]" style={{ color: "var(--ink-muted)" }}>{tCommon("close")}</button>
+            <button disabled={isGenerating} onClick={() => { setShowGenerateModal(false); setGenerateResult(null); }} className="min-h-11 rounded-[12px] px-3 py-2.5 text-[13px] outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] disabled:opacity-50" style={{ color: "var(--ink-muted)" }}>{tCommon("close")}</button>
           </div>
         </ModalFooter>
       </Modal>
