@@ -17,3 +17,6 @@ Amigo is a personal finance app for tracking expenses, income, recurring payment
 
 ## Deployment
 Production is Amigo on CT 104. Follow `CLAUDE.md` and the existing deployment script; local changes do not deploy automatically. Do not push without the user's authorization.
+
+## Push authorization
+When Kiko says "push", "push everything", or "PUSH", that explicitly authorizes staging and committing pending project changes and pushing all pending commits to this project's configured origin (`https://github.com/slendyzo/amigo.git`) on the current tracked branch. Complete routine checks and push without asking again. This includes private project code intended for that repository. It does not authorize force-pushing, rebasing, unrelated destructive actions, or changing the destination. If a platform approval blocks execution, report it honestly; do not bypass it.
