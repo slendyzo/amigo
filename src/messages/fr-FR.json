@@ -2256,6 +2256,11 @@
     "nameRequired": "Saisissez un nom ou choisissez une personne enregistrée pour chaque part.",
     "duplicate": "Choisissez une personne différente pour chaque part.",
     "conflict": "Cette dépense a changé. Rechargez pour obtenir les parts et paiements actuels.",
-    "invalidData": "Cette dépense contient des parts incomplètes ou invalides. Modifiez-la avant l’export."
+    "invalidData": "Cette dépense contient des parts incomplètes ou invalides. Modifiez-la avant l’export.",
+    "discount": "Remise sur le ticket",
+    "discountHint": "Uniquement pour le ticket de cette personne. Les parts et paiements enregistrés restent inchangés.",
+    "discountCurrency": "Remise ({currency})",
+    "discountLimit": "Maximum {amount}",
+    "invalidDiscount": "Saisissez un montant positif avec deux décimales maximum, sans dépasser le solde restant."
   }
 }

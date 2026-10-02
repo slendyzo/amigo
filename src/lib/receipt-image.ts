@@ -24,9 +24,9 @@ export async function renderReceiptImages(receipt: Receipt, mimeType = 'image/jp
     if (current) lines.push(current);
     return lines.length ? lines : [''];
   }
-  function draw(value: string, size = 28, bold = false) {
+  function draw(value: string, size = 28, bold = false, color = '#222222') {
     const lines = wrapped(value, size, bold);
-    context.fillStyle = '#222222'; context.textBaseline = 'top';
+    context.fillStyle = color; context.textBaseline = 'top';
     for (const line of lines) { context.fillText(line, 72, y); y += size * 1.4; }
     y += 16;
   }
@@ -59,9 +59,11 @@ export async function renderReceiptImages(receipt: Receipt, mimeType = 'image/jp
   for (const total of receipt.totals) {
     const totalText = `${receipt.labels.total}: ${receiptMoney(total.total, total.currency, receipt.locale)}`;
     const paidText = `${receipt.labels.paid}: ${receiptMoney(total.paid, total.currency, receipt.locale)}`;
+    const discountText = `${receipt.labels.discount}: ${receiptMoney(-total.discount, total.currency, receipt.locale)}`;
     const balanceText = receiptMoney(total.owed, total.currency, receipt.locale);
-    await ensure(measure(totalText) + measure(paidText) + measure(receipt.labels.balance, 26) + measure(balanceText, 58, true) + 36);
+    await ensure(measure(totalText) + measure(paidText) + (total.discount > 0 ? measure(discountText, 28, true) : 0) + measure(receipt.labels.balance, 26) + measure(balanceText, 58, true) + 36);
     draw(totalText); draw(paidText);
+    if (total.discount > 0) draw(discountText, 28, true, '#b42332');
     draw(receipt.labels.balance, 26); draw(balanceText, 58, true); rule();
   }
   if (receipt.mode === 'eur') { await ensure(100); draw(receipt.labels.conversion, 22); }

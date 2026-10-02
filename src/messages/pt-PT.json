@@ -2254,6 +2254,11 @@
     "nameRequired": "Introduz um nome ou escolhe uma pessoa guardada para cada parte.",
     "duplicate": "Escolhe uma pessoa diferente para cada parte.",
     "conflict": "Esta despesa foi alterada. Recarrega para obter os valores e pagamentos atuais.",
-    "invalidData": "Esta despesa tem valores de divisão incompletos ou inválidos. Edita-a antes de exportar."
+    "invalidData": "Esta despesa tem valores de divisão incompletos ou inválidos. Edita-a antes de exportar.",
+    "discount": "Desconto no talão",
+    "discountHint": "Apenas para o talão desta pessoa. As partes e os pagamentos registados não são alterados.",
+    "discountCurrency": "Desconto ({currency})",
+    "discountLimit": "Máximo {amount}",
+    "invalidDiscount": "Introduz um valor positivo com até duas casas decimais, sem ultrapassar o saldo por pagar."
   }
 }

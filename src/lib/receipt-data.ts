@@ -1,15 +1,15 @@
 export type ReceiptExpense = { id: string; description: string; date: string; amount: number; amountEur: number; currency: string; splitCount: number | null; splitData: string | null; updatedAt: string };
 export type ReceiptPerson = { id: string; name: string };
 export type ReceiptContext = { title: string; people: ReceiptPerson[]; expenses: ReceiptExpense[] };
-export type ReceiptTotals = { currency: string; total: number; paid: number; owed: number };
-export type ReceiptLine = ReceiptTotals & { expenseId: string; description: string; date: string };
+export type ReceiptTotals = { currency: string; total: number; paid: number; discount: number; owed: number };
+export type ReceiptLine = Omit<ReceiptTotals, 'discount'> & { expenseId: string; description: string; date: string };
 export type Receipt = { title: string; recipient: ReceiptPerson; mode: 'eur' | 'original'; locale: string; lines: ReceiptLine[]; totals: ReceiptTotals[]; labels: ReturnType<typeof getReceiptLabels> };
 
 export function getReceiptLabels(locale: string) {
   const dictionaries = {
-    en: { receipt: 'Expense ticket', for: 'Prepared for', share: 'Your share', paid: 'Paid', owed: 'Remaining', total: 'Total share', balance: 'Balance due', footer: 'Personal expense summary · Not a tax receipt', conversion: 'EUR values use the saved expense exchange rates.', continued: 'Continued', page: 'Page' },
-    pt: { receipt: 'Talão de despesas', for: 'Preparado para', share: 'A tua parte', paid: 'Pago', owed: 'Por pagar', total: 'Total da tua parte', balance: 'Saldo em dívida', footer: 'Resumo de despesas pessoais · Não é um recibo fiscal', conversion: 'Valores em EUR às taxas guardadas nas despesas.', continued: 'Continuação', page: 'Página' },
-    fr: { receipt: 'Ticket de dépenses', for: 'Préparé pour', share: 'Votre part', paid: 'Payé', owed: 'Restant', total: 'Total de votre part', balance: 'Solde à régler', footer: 'Résumé de dépenses personnelles · Sans valeur fiscale', conversion: 'Montants en EUR aux taux enregistrés des dépenses.', continued: 'Suite', page: 'Page' },
+    en: { receipt: 'Expense ticket', for: 'Prepared for', share: 'Your share', paid: 'Paid', owed: 'Remaining', total: 'Total share', discount: 'Ticket discount', balance: 'Balance due', footer: 'Personal expense summary · Not a tax receipt', conversion: 'EUR values use the saved expense exchange rates.', continued: 'Continued', page: 'Page' },
+    pt: { receipt: 'Talão de despesas', for: 'Preparado para', share: 'A tua parte', paid: 'Pago', owed: 'Por pagar', total: 'Total da tua parte', discount: 'Desconto no talão', balance: 'Saldo em dívida', footer: 'Resumo de despesas pessoais · Não é um recibo fiscal', conversion: 'Valores em EUR às taxas guardadas nas despesas.', continued: 'Continuação', page: 'Página' },
+    fr: { receipt: 'Ticket de dépenses', for: 'Préparé pour', share: 'Votre part', paid: 'Payé', owed: 'Restant', total: 'Total de votre part', discount: 'Remise sur le ticket', balance: 'Solde à régler', footer: 'Résumé de dépenses personnelles · Sans valeur fiscale', conversion: 'Montants en EUR aux taux enregistrés des dépenses.', continued: 'Suite', page: 'Page' },
   };
   return dictionaries[locale.split('-')[0] as keyof typeof dictionaries] || dictionaries.en;
 }
@@ -19,7 +19,9 @@ function cents(value: number) {
   return Math.round((value + Number.EPSILON) * 100);
 }
 
-export function buildReceipt(context: ReceiptContext, personId: string, mode: 'eur' | 'original', locale: string): Receipt {
+export function buildReceipt(context: ReceiptContext, personId: string, mode: 'eur' | 'original', locale: string, discounts: Record<string, number> = {}): Receipt {
+  if (!discounts || typeof discounts !== 'object' || Array.isArray(discounts) ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(discounts)) || Object.getOwnPropertySymbols(discounts).length) throw new Error('INVALID_RECEIPT_DISCOUNT');
   const person = context.people.find(p => p.id === personId);
   if (!person || !person.name.trim()) throw new Error('RECEIPT_PERSON_NOT_FOUND');
   if (mode !== 'eur' && mode !== 'original') throw new Error('INVALID_RECEIPT_CURRENCY_MODE');
@@ -51,12 +53,25 @@ export function buildReceipt(context: ReceiptContext, personId: string, mode: 'e
   lines.sort((a, b) => a.date.localeCompare(b.date) || a.expenseId.localeCompare(b.expenseId));
   const groups = new Map<string, ReceiptTotals>();
   for (const line of lines) {
-    const group = groups.get(line.currency) || { currency: line.currency, total: 0, paid: 0, owed: 0 };
+    const group = groups.get(line.currency) || { currency: line.currency, total: 0, paid: 0, discount: 0, owed: 0 };
     group.total += cents(line.total); group.paid += cents(line.paid); group.owed += cents(line.owed);
     if (![group.total, group.paid, group.owed].every(Number.isSafeInteger)) throw new Error('INVALID_RECEIPT_AMOUNT');
     groups.set(line.currency, group);
   }
-  return { title: context.title, recipient: { id: person.id, name: person.name }, mode, locale, lines, totals: [...groups.values()].map(g => ({ currency: g.currency, total: g.total / 100, paid: g.paid / 100, owed: g.owed / 100 })), labels: getReceiptLabels(locale) };
+  for (const currency of Object.getOwnPropertyNames(discounts)) {
+    const descriptor = Object.getOwnPropertyDescriptor(discounts, currency);
+    const amount: unknown = descriptor?.value;
+    const group = groups.get(currency);
+    // Ticket adjustments are explicit cent amounts; do not silently round user input.
+    if (!group || !descriptor || !('value' in descriptor) || typeof amount !== 'number' ||
+      !Number.isFinite(amount) || amount < 0 || Number(amount.toFixed(2)) !== amount ||
+      !Number.isSafeInteger(Math.round(amount * 100))) throw new Error('INVALID_RECEIPT_DISCOUNT');
+    const discount = cents(amount);
+    if (discount > group.owed) throw new Error('RECEIPT_DISCOUNT_EXCEEDS_BALANCE');
+    group.discount = discount;
+    group.owed -= discount;
+  }
+  return { title: context.title, recipient: { id: person.id, name: person.name }, mode, locale, lines, totals: [...groups.values()].map(g => ({ currency: g.currency, total: g.total / 100, paid: g.paid / 100, discount: g.discount / 100, owed: g.owed / 100 })), labels: getReceiptLabels(locale) };
 }
 
 export function receiptMoney(amount: number, currency: string, locale: string) {

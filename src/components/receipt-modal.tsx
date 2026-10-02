@@ -38,6 +38,7 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
   const [preview, setPreview] = useState(false);
   const [active, setActive] = useState("");
   const [mode, setMode] = useState<"eur" | "original">("eur");
+  const [discountValues, setDiscountValues] = useState<Record<string, string>>({});
   const [images, setImages] = useState<{ jpg: Blob[]; png: Blob[]; urls: string[] } | null>(null);
   const [imagePage, setImagePage] = useState(0);
   const scope = expenseId ? `expenseId=${encodeURIComponent(expenseId)}` : `projectId=${encodeURIComponent(projectId || "")}`;
@@ -52,7 +53,7 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
   useEffect(() => {
     if (!isOpen) return;
     const abort = new AbortController();
-    setLoading(true); setError(""); setContext(null); setPreview(false); setSelected([]); setNotice("");
+    setLoading(true); setError(""); setContext(null); setPreview(false); setSelected([]); setNotice(""); setDiscountValues({});
     fetch(`/api/receipts/context?${scope}`, { signal: abort.signal, cache: "no-store" })
       .then(async response => { if (!response.ok) throw new Error(); return response.json(); })
       .then(setContext)
@@ -69,11 +70,21 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
     headingRef.current?.focus();
   }, [current?.id]);
   const eligible = context?.people.filter(person => context.expenses.some(expense => splitRows(expense).slice(1).some(row => row.personId === person.id))) || [];
-  const receiptResult = useMemo(() => {
+  const baseReceiptResult = useMemo(() => {
     if (!context || !preview || !active) return { receipt: null, failed: false };
     try { return { receipt: buildReceipt(context, active, mode, locale), failed: false }; }
     catch { return { receipt: null, failed: true }; }
   }, [context, preview, active, mode, locale]);
+  const receiptResult = useMemo(() => {
+    if (!baseReceiptResult.receipt || !context) return baseReceiptResult;
+    try {
+      const discounts = Object.fromEntries(baseReceiptResult.receipt.totals.map(total => {
+        const raw = discountValues[`${active}:${mode}:${total.currency}`] || "";
+        return [total.currency, raw.trim() === "" ? 0 : Number(raw.replace(",", "."))];
+      }));
+      return { receipt: buildReceipt(context, active, mode, locale, discounts), failed: false };
+    } catch { return { receipt: null, failed: true }; }
+  }, [baseReceiptResult, context, active, mode, locale, discountValues]);
   const receipt = receiptResult.receipt;
 
   useEffect(() => {
@@ -133,7 +144,8 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
     if (!receipt) return;
     setBusy(true); setError("");
     try {
-      const response = await fetch(`/api/receipts/export?${scope}&personId=${encodeURIComponent(active)}&mode=${mode}&locale=${encodeURIComponent(locale)}`);
+      const discounts = Object.fromEntries(receipt.totals.map(total => [total.currency, total.discount]));
+      const response = await fetch(`/api/receipts/export?${scope}&personId=${encodeURIComponent(active)}&mode=${mode}&locale=${encodeURIComponent(locale)}&discounts=${encodeURIComponent(JSON.stringify(discounts))}`);
       if (!response.ok) throw new Error();
       download(await response.blob(), receiptFilename(receipt, "pdf"));
     } catch { setError(t("exportError")); }
@@ -195,7 +207,19 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
               <div><label htmlFor="receipt-currency" className="text-xs text-[var(--ink-muted)]">{t("currency")}</label><select id="receipt-currency" value={mode} onChange={e => { setMode(e.target.value as "eur" | "original"); setError(""); }} className={`${control} mt-1 w-full bg-[var(--surface)] text-[var(--ink)]`}><option value="eur">{t("eur")}</option><option value="original">{t("original")}</option></select></div>
             </div>
             {mode === "eur" && <p className="text-xs text-[var(--ink-muted)] mb-4">{t("conversion")}</p>}
-            {receiptResult.failed && <p role="alert" className="text-[var(--negative)]">{t("invalidData")}</p>}
+            {baseReceiptResult.receipt && <fieldset className="mb-5 border-t border-[var(--line)] pt-4">
+              <legend className="px-1 text-sm font-medium">{t("discount")}</legend>
+              <p className="mb-3 text-xs text-[var(--ink-muted)]">{t("discountHint")}</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">{baseReceiptResult.receipt.totals.map(total => {
+                const key = `${active}:${mode}:${total.currency}`;
+                return <div key={key}>
+                  <label htmlFor={`receipt-discount-${total.currency}`} className="block text-xs text-[var(--ink-muted)] mb-1">{t("discountCurrency", { currency: total.currency })}</label>
+                  <input id={`receipt-discount-${total.currency}`} type="text" inputMode="decimal" maxLength={16} placeholder="0.00" value={discountValues[key] || ""} onChange={event => { setDiscountValues(values => ({ ...values, [key]: event.target.value })); setError(""); }} className={`${control} w-full bg-[var(--surface)] text-[var(--negative)]`} aria-invalid={receiptResult.failed} aria-describedby={`receipt-discount-limit-${total.currency}`} />
+                  <p id={`receipt-discount-limit-${total.currency}`} className="mt-1 text-xs text-[var(--ink-muted)]">{t("discountLimit", { amount: new Intl.NumberFormat(locale, { style: "currency", currency: total.currency }).format(total.owed) })}</p>
+                </div>;
+              })}</div>
+            </fieldset>}
+            {receiptResult.failed && <p role="alert" className="text-[var(--negative)]">{t(baseReceiptResult.failed ? "invalidData" : "invalidDiscount")}</p>}
             {images ? <div>
               {images.urls.length > 1 && <label className="block text-sm mb-3">{t("page")} <select value={imagePage} onChange={e => setImagePage(Number(e.target.value))} className={`${control} bg-[var(--surface)]`}>{images.urls.map((_, index) => <option key={index} value={index}>{index + 1} / {images.urls.length}</option>)}</select><span className="block mt-2 text-xs text-[var(--ink-muted)]">{t("pagesHint")}</span></label>}
               {/* The preview is the actual exported image, so saved output matches exactly. */}
@@ -203,7 +227,7 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
               <img src={images.urls[imagePage]} alt={t("imageAlt", { name: receipt?.recipient.name || "" })} className="mx-auto w-full max-w-[380px] shadow-lg" />
               <section className="sr-only" aria-label={t("imageAlt", { name: receipt?.recipient.name || "" })}>
                 {receipt?.lines.map(line => <p key={line.expenseId}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(line.date))}. {line.description}: {line.total} {line.currency}, {line.paid} {t("paid")}, {line.owed} {t("owed")}</p>)}
-                {receipt?.totals.map(total => <p key={total.currency}>{receipt.labels.total}: {total.total} {total.currency}. {receipt.labels.paid}: {total.paid} {total.currency}. {receipt.labels.balance}: {total.owed} {total.currency}.</p>)}
+                {receipt?.totals.map(total => <p key={total.currency}>{receipt.labels.total}: {total.total} {total.currency}. {receipt.labels.paid}: {total.paid} {total.currency}. {total.discount > 0 && <>{receipt.labels.discount}: −{total.discount} {total.currency}. </>}{receipt.labels.balance}: {total.owed} {total.currency}.</p>)}
                 {receipt?.mode === "eur" && <p>{receipt.labels.conversion}</p>}
               </section>
             </div> : receipt && <div role="status" className="mx-auto h-72 max-w-[380px] animate-pulse bg-[var(--surface-2)] rounded-xl"><span className="sr-only">{t("loading")}</span></div>}

@@ -33,7 +33,13 @@ export async function GET(request: Request) {
       orderBy: [{ date: "asc" }, { id: "asc" }],
     });
     let receipt;
-    try { receipt = buildReceipt({ title: scope.name, people: [person], expenses: expenses.map(serializeReceiptExpense) }, person.id, mode as "eur" | "original", locale); }
+    try {
+      const rawDiscounts = query.get("discounts") || "{}";
+      if (rawDiscounts.length > 2000) throw new Error("Invalid discounts");
+      const discounts: unknown = JSON.parse(rawDiscounts);
+      if (!discounts || typeof discounts !== "object" || Array.isArray(discounts) || Object.values(discounts).some(value => typeof value !== "number")) throw new Error("Invalid discounts");
+      receipt = buildReceipt({ title: scope.name, people: [person], expenses: expenses.map(serializeReceiptExpense) }, person.id, mode as "eur" | "original", locale, discounts as Record<string, number>);
+    }
     catch { return NextResponse.json({ error: "Check expense splits before exporting" }, { status: 422 }); }
     const pdf = await renderReceiptPdf(receipt);
     return new NextResponse(new Uint8Array(pdf), { headers: {

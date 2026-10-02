@@ -14,8 +14,8 @@ export async function renderReceiptPdf(receipt: Receipt): Promise<Buffer> {
       doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(size);
       return doc.heightOfString(value, { width, lineGap: 3 }) + 7;
     };
-    const text = (value: string, size = 10, bold = false) => {
-      doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(size).fillColor('#222222');
+    const text = (value: string, size = 10, bold = false, color = '#222222') => {
+      doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(size).fillColor(color);
       const height = doc.heightOfString(value, { width, lineGap: 3 });
       doc.text(value, 28, y, { width, lineGap: 3 }); y += height + 7;
     };
@@ -53,10 +53,12 @@ export async function renderReceiptPdf(receipt: Receipt): Promise<Buffer> {
     for (const total of receipt.totals) {
       const totalText = `${receipt.labels.total} · ${receiptMoney(total.total, total.currency, receipt.locale)}`;
       const paidText = `${receipt.labels.paid} · ${receiptMoney(total.paid, total.currency, receipt.locale)}`;
+      const discountText = `${receipt.labels.discount} · ${receiptMoney(-total.discount, total.currency, receipt.locale)}`;
       const balanceText = receiptMoney(total.owed, total.currency, receipt.locale);
-      ensure(measure(totalText, 11) + measure(paidText, 11) + measure(receipt.labels.balance, 10) + measure(balanceText, 24, true) + 16);
+      ensure(measure(totalText, 11) + measure(paidText, 11) + (total.discount > 0 ? measure(discountText, 11, true) : 0) + measure(receipt.labels.balance, 10) + measure(balanceText, 24, true) + 16);
       text(totalText, 11);
       text(paidText, 11);
+      if (total.discount > 0) text(discountText, 11, true, '#b42332');
       text(receipt.labels.balance, 10);
       text(balanceText, 24, true); rule();
     }

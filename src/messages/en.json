@@ -2285,6 +2285,11 @@
     "nameRequired": "Enter a name or choose a saved person for every share.",
     "duplicate": "Choose a different person for each share.",
     "conflict": "This expense changed. Reload to use its latest shares and payments.",
-    "invalidData": "This expense has incomplete or invalid split amounts. Edit the expense before exporting."
+    "invalidData": "This expense has incomplete or invalid split amounts. Edit the expense before exporting.",
+    "discount": "Ticket discount",
+    "discountHint": "Only for this person’s ticket. Recorded shares and payments stay unchanged.",
+    "discountCurrency": "Discount ({currency})",
+    "discountLimit": "Maximum {amount}",
+    "invalidDiscount": "Enter a positive amount with up to two decimal places, no higher than the remaining balance."
   }
 }

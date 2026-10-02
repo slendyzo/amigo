@@ -9,7 +9,24 @@ function add(id: string, currency: string, paid = false) {
 }
 add('a', 'USD', true); add('b', 'GBP');
 const eur = buildReceipt(context, 'alice', 'eur', 'en');
-assert.deepEqual(eur.totals, [{ currency: 'EUR', total: 17.34, paid: 8.67, owed: 8.67 }]);
+assert.deepEqual(eur.totals, [{ currency: 'EUR', total: 17.34, paid: 8.67, discount: 0, owed: 8.67 }]);
+const beforeDiscount = JSON.stringify(context);
+const discounts = Object.freeze({ EUR: 2.35 });
+const discounted = buildReceipt(context, 'alice', 'eur', 'en', discounts);
+assert.deepEqual(discounted.totals, [{ currency: 'EUR', total: 17.34, paid: 8.67, discount: 2.35, owed: 6.32 }]);
+assert.deepEqual(discounted.lines, eur.lines);
+assert.equal(JSON.stringify(context), beforeDiscount);
+assert.deepEqual(discounts, { EUR: 2.35 });
+assert.equal(buildReceipt(context, 'alice', 'eur', 'en', { EUR: 8.67 }).totals[0].owed, 0);
+assert.deepEqual(buildReceipt(context, 'alice', 'eur', 'en', {}).totals, eur.totals);
+for (const invalid of [null, [], 1, 'discount', new Date(), { EUR: NaN }, { EUR: Infinity }, { EUR: -1 }, { EUR: 0.001 }, { EUR: '1' }, { EUR: Number.MAX_SAFE_INTEGER }, { USD: 1 }, { NOT: 0 }]) {
+  assert.throws(() => buildReceipt(context, 'alice', 'eur', 'en', invalid as unknown as Record<string, number>), /INVALID_RECEIPT_DISCOUNT/);
+}
+assert.throws(() => buildReceipt(context, 'alice', 'eur', 'en', { EUR: 8.68 }), /EXCEEDS_BALANCE/);
+assert.throws(() => buildReceipt(context, 'alice', 'original', 'en', { USD: 0.01 }), /EXCEEDS_BALANCE/);
+const mixedDiscount = buildReceipt(context, 'alice', 'original', 'en', { USD: 0, GBP: 3.25 });
+assert.deepEqual(mixedDiscount.totals, [{ currency: 'USD', total: 10, paid: 10, discount: 0, owed: 0 }, { currency: 'GBP', total: 10, paid: 0, discount: 3.25, owed: 6.75 }]);
+assert.equal(buildReceipt(context, 'bob', 'original', 'en').totals[1].owed, 10);
 const original = buildReceipt(context, 'alice', 'original', 'pt');
 assert.equal(original.totals.length, 2);
 assert.equal(original.totals[0].total, 10);
@@ -24,6 +41,7 @@ const zero = structuredClone(context); zero.expenses = [zero.expenses[0]]; zero.
 assert.equal(buildReceipt(zero, 'alice', 'eur', 'fr').totals[0].owed, 0);
 zero.expenses[0].amountEur = 5; assert.throws(() => buildReceipt(zero, 'alice', 'eur', 'en'), /CONVERSION/);
 const pdf = await renderReceiptPdf(eur); assert(pdf.subarray(0, 4).toString() === '%PDF');
+assert((await renderReceiptPdf(discounted)).subarray(0, 4).toString() === '%PDF');
 const long = { ...eur, lines: Array.from({length: 100}, (_, i) => ({...eur.lines[0], expenseId: String(i), description: 'Very long dinner description '.repeat(20)})) };
 const longPdf = await renderReceiptPdf(long); assert(longPdf.length > pdf.length);
 console.log('Receipt data and PDF tests passed.');
