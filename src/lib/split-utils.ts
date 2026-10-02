@@ -1,5 +1,6 @@
 export type SplitPerson = {
   id?: string;
+  personId?: string;
   repayment?: { paid: boolean; date?: string; note?: string };
   label: string;
   amount: number;
@@ -94,9 +95,11 @@ export function parseSplitData(json: string | null | undefined): SplitPerson[] |
     if (!Array.isArray(people) || people.length < 2 || people.length > 20 ||
       !people.every(p => p && typeof p.label === "string" && typeof p.amount === "number" && Number.isFinite(p.amount) && typeof p.locked === "boolean" &&
         (p.id === undefined || (typeof p.id === "string" && p.id.length > 0 && p.id.length <= 100)) &&
+        (p.personId === undefined || (typeof p.personId === "string" && /^[a-zA-Z0-9_-]{1,100}$/.test(p.personId))) &&
         (p.repayment === undefined || validRepayment(p.repayment)))) return null;
     const ids = people.filter(p => p.id).map(p => p.id);
-    if (new Set(ids).size !== ids.length || people[0].repayment) return null;
+    const personIds = people.filter(p => p.personId).map(p => p.personId);
+    if (new Set(ids).size !== ids.length || new Set(personIds).size !== personIds.length || people[0].personId || people[0].repayment) return null;
     return people;
   } catch {
     return null;
@@ -168,8 +171,11 @@ export function preserveRepayments(oldJson: string | null, newJson: string | nul
     // Legacy rows are matched only at their original position and with the same label.
     const legacy = !prior && !old[index]?.id && old[index]?.label === person.label ? old[index] : undefined;
     const source = prior || legacy;
-    const { repayment: _ignored, ...rest } = person;
-    return { ...rest, ...(index > 0 && source?.label === person.label && source.repayment ? { repayment: source.repayment } : {}) };
+    // Only the workspace-validated naming endpoint may assign a saved person.
+    // Unchanged labels retain identity; renaming an unpaid row requires explicit
+    // reassignment so a different person's share cannot leak into old receipts.
+    const { repayment: _ignored, personId: _untrustedPersonId, ...rest } = person;
+    return { ...rest, ...(index > 0 && source?.label === person.label && source.personId ? { personId: source.personId } : {}), ...(index > 0 && source?.label === person.label && source.repayment ? { repayment: source.repayment } : {}) };
   })) : null;
 }
 

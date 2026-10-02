@@ -239,11 +239,24 @@ model Workspace {
   liabilities         Liability[]
   insights            Insight[]
   apiTokens           ApiToken[]
+  receiptPeople       ReceiptPerson[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@map("workspaces")
+}
+
+model ReceiptPerson {
+  id          String    @id @default(cuid())
+  name        String    @db.VarChar(100)
+  workspaceId String
+  workspace   Workspace @relation(fields: [workspaceId], references: [id], onDelete: Cascade)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([workspaceId])
+  @@map("receipt_people")
 }
 
 model WorkspaceMember {

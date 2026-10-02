@@ -8,6 +8,7 @@ import { formatCurrency, getCurrencySymbol } from "@/lib/currencies";
 import { parseSplitData, getUserShare, initializeSplit } from "@/lib/split-utils";
 import { ProjectExpenseStatus } from "./expense-project-counting";
 import { SplitRepaymentRow } from "./split-repayment-row";
+import ReceiptModal from "@/components/receipt-modal";
 import type { Expense } from "@/types/models";
 
 type ExpenseDetailModalProps = {
@@ -37,10 +38,15 @@ export default function ExpenseDetailModal({
 }: ExpenseDetailModalProps) {
   const t = useTranslations("expenses");
   const tCommon = useTranslations("common");
+  const tReceipts = useTranslations("receipts");
   const { translateCategory } = useCategoryTranslation();
   const [showMetadata, setShowMetadata] = useState(false);
   const [fullExpense, setFullExpense] = useState<Expense | null>(null);
   const [isLoadingFull, setIsLoadingFull] = useState(false);
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [receiptSaveVersion, setReceiptSaveVersion] = useState(0);
+
+  useEffect(() => { setIsReceiptOpen(false); }, [isOpen, expense?.id]);
 
   // Fetch full expense data when modal opens (for fields not in list endpoint)
   useEffect(() => {
@@ -60,7 +66,7 @@ export default function ExpenseDetailModal({
         .finally(() => { if (active) setIsLoadingFull(false); });
     }
     return () => { active = false; };
-  }, [isOpen, expense?.id]);
+  }, [isOpen, expense?.id, receiptSaveVersion]);
 
   if (!isOpen || !expense) return null;
 
@@ -81,6 +87,20 @@ export default function ExpenseDetailModal({
   const isSplitCustomized =
     !!splitPeople &&
     splitPeople.some((p) => p.locked || Math.abs(p.amount - perPerson) > 0.01);
+
+  if (isReceiptOpen) {
+    return (
+      <ReceiptModal
+        isOpen
+        expenseId={expense.id}
+        onClose={() => setIsReceiptOpen(false)}
+        onSaved={() => {
+          setReceiptSaveVersion((version) => version + 1);
+          onRepaymentSaved?.();
+        }}
+      />
+    );
+  }
 
   const typeLabels: Record<string, string> = {
     SURVIVAL_FIXED: t("types.fixed"),
@@ -309,6 +329,14 @@ export default function ExpenseDetailModal({
                   ))}
                 </div>
               )}
+              <button
+                type="button"
+                onClick={() => setIsReceiptOpen(true)}
+                className="mt-3 min-h-11 w-full rounded-[14px] px-4 text-sm font-semibold transition-colors hover:bg-[var(--surface-3)]"
+                style={{ background: "var(--surface)", color: "var(--accent)", border: "1px solid var(--line-strong)" }}
+              >
+                {tReceipts("create")}
+              </button>
             </div>
           )}
 

@@ -11,6 +11,7 @@ import EditExpenseModal from "@/components/edit-expense-modal";
 import AddExpenseModal from "@/components/add-expense-modal";
 import ExpenseDetailModal from "@/components/expense-detail-modal";
 import ProjectWrappedModal from "@/components/project-wrapped-modal";
+import ReceiptModal from "@/components/receipt-modal";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { projectContributionEur, type ProjectCounting } from "@/lib/project-expense-totals";
@@ -84,6 +85,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const t = useTranslations("projects");
   const tExpenses = useTranslations("expenses");
   const tCommon = useTranslations("common");
+  const tReceipts = useTranslations("receipts");
+  const [isReceiptOpen, setIsReceiptOpen] = useState(false);
   const { translateCategory } = useCategoryTranslation();
   const [project, setProject] = useState<Project | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
@@ -379,10 +382,20 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Expenses List by Month */}
       <motion.div {...sectionMotion(4)} className="overflow-hidden rounded-[20px]" style={{ background: "var(--surface)", ...cardShadow }}>
-        <div className="border-b px-5 py-4" style={{ borderColor: "var(--line)" }}>
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b px-5 py-4" style={{ borderColor: "var(--line)" }}>
           <h2 className="text-[15px] font-semibold" style={{ color: "var(--ink)" }}>
             {t("expenses")} ({expenses.length})
           </h2>
+          {expenses.some((expense) => (expense.splitCount ?? 0) > 1) && (
+            <button
+              type="button"
+              onClick={() => setIsReceiptOpen(true)}
+              className="min-h-11 rounded-[14px] px-3 text-[13px] font-semibold transition-colors hover:bg-[var(--surface-3)]"
+              style={{ background: "var(--surface-2)", color: "var(--accent)" }}
+            >
+              {tReceipts("create")}
+            </button>
+          )}
         </div>
 
         {expenses.length === 0 ? (
@@ -581,6 +594,12 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       </Modal>
 
       {/* Project Wrapped Modal */}
+      <ReceiptModal
+        isOpen={isReceiptOpen}
+        onClose={() => setIsReceiptOpen(false)}
+        projectId={id}
+        onSaved={fetchExpenses}
+      />
       <ProjectWrappedModal
         isOpen={isWrappedOpen}
         onClose={() => setIsWrappedOpen(false)}
