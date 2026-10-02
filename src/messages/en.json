@@ -2291,7 +2291,7 @@
     "discountCurrency": "Discount ({currency})",
     "discountLimit": "Maximum {amount}",
     "invalidDiscount": "Enter a positive amount with up to two decimal places, no higher than the remaining balance.",
-    "paidBadge": "Paid",
+    "paidBadge": "Already paid",
     "remainingAmount": "Remaining: {amount}"
   }
 }

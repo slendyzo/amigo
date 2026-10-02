@@ -2262,7 +2262,7 @@
     "discountCurrency": "Remise ({currency})",
     "discountLimit": "Maximum {amount}",
     "invalidDiscount": "Saisissez un montant positif avec deux décimales maximum, sans dépasser le solde restant.",
-    "paidBadge": "Payé",
+    "paidBadge": "Déjà payé",
     "remainingAmount": "Restant : {amount}"
   }
 }

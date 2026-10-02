@@ -2260,7 +2260,7 @@
     "discountCurrency": "Desconto ({currency})",
     "discountLimit": "Máximo {amount}",
     "invalidDiscount": "Introduz um valor positivo com até duas casas decimais, sem ultrapassar o saldo por pagar.",
-    "paidBadge": "Pago",
+    "paidBadge": "Já pago",
     "remainingAmount": "Por pagar: {amount}"
   }
 }
