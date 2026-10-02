@@ -8,6 +8,7 @@ import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { initializeSplit, parseSplitData } from "@/lib/split-utils";
 import { buildReceipt, receiptFilename, type ReceiptContext, type ReceiptExpense } from "@/lib/receipt-data";
 import { renderReceiptImages } from "@/lib/receipt-image";
+import { isPlaceholderReceiptName, normalizeReceiptPersonName } from "@/lib/receipt-person-name";
 
 /* Private paper tickets inside Amigo's existing Calm Violet controls. Naming is
  * sequential and persistent; selection leads to one recipient's preview at a time. */
@@ -26,6 +27,8 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
   const locale = useLocale();
   const reduced = useReducedMotion();
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const savedRef = useRef(onSaved);
+  useEffect(() => { savedRef.current = onSaved; }, [onSaved]);
   const [context, setContext] = useState<ReceiptContext | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
@@ -54,10 +57,16 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
     if (!isOpen) return;
     const abort = new AbortController();
     setLoading(true); setError(""); setContext(null); setPreview(false); setSelected([]); setNotice(""); setDiscountValues({});
-    fetch(`/api/receipts/context?${scope}`, { signal: abort.signal, cache: "no-store" })
+    fetch("/api/receipts/resolve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new URLSearchParams(scope))), signal: abort.signal })
+      .then(async response => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error === "AMBIGUOUS_RECEIPT_PEOPLE" || result.code === "AMBIGUOUS_RECEIPT_PEOPLE" ? t("ambiguousNames") : t("loadError"));
+        if (result.resolved > 0) savedRef.current?.();
+        return fetch(`/api/receipts/context?${scope}`, { signal: abort.signal, cache: "no-store" });
+      })
       .then(async response => { if (!response.ok) throw new Error(); return response.json(); })
       .then(setContext)
-      .catch(e => { if (e.name !== "AbortError") setError(t("loadError")); })
+      .catch(e => { if (e.name !== "AbortError") setError(e.message || t("loadError")); })
       .finally(() => { if (!abort.signal.aborted) setLoading(false); });
     return () => abort.abort();
   }, [isOpen, scope, reload, t]);
@@ -108,18 +117,23 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
       const chosen: { index: number; personId: string }[] = [];
       for (let index = 1; index < people.length; index++) {
         const value = assignments[index] ?? people[index].personId ?? "new";
-        if (value === "new" && !(names[index] ?? (/^(Person|Pessoa|Personne)\s+\d+$/i.test(people[index].label) ? "" : people[index].label)).trim()) throw new Error(t("nameRequired"));
+        if (value === "new" && !(names[index] ?? (isPlaceholderReceiptName(people[index].label) ? "" : people[index].label)).trim()) throw new Error(t("nameRequired"));
       }
       for (let index = 1; index < people.length; index++) {
         let personId = assignments[index] ?? people[index].personId ?? "";
         if (!personId || personId === "new") {
-          const name = (names[index] ?? (people[index].label.match(/^(Person|Pessoa|Personne)\s+\d+$/i) ? "" : people[index].label)).trim();
+          const name = (names[index] ?? (isPlaceholderReceiptName(people[index].label) ? "" : people[index].label)).trim();
           if (!name) throw new Error(t("nameRequired"));
-          const response = await fetch("/api/receipts/people", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
-          if (!response.ok) throw new Error(t("saveError"));
-          const person = await response.json();
+          let person = context.people.find(p => normalizeReceiptPersonName(p.name) === normalizeReceiptPersonName(name));
+          if (!person) {
+            const response = await fetch("/api/receipts/people", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name }) });
+            if (!response.ok) throw new Error(t("saveError"));
+            person = await response.json();
+          }
+          if (!person) throw new Error(t("saveError"));
           personId = person.id;
-          setContext(previous => previous ? { ...previous, people: [...previous.people.filter(p => p.id !== person.id), person] } : previous);
+          const savedPerson = person;
+          setContext(previous => previous ? { ...previous, people: [...previous.people.filter(p => p.id !== savedPerson.id), savedPerson] } : previous);
           setAssignments(previous => ({ ...previous, [index]: personId }));
         }
         chosen.push({ index, personId });
@@ -187,6 +201,8 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
             <div className="space-y-5">{people.slice(1).map((person, offset) => {
               const index = offset + 1;
               const value = assignments[index] ?? person.personId ?? "new";
+              const draftName = names[index] ?? (isPlaceholderReceiptName(person.label) ? "" : person.label);
+              const recognized = value === "new" ? context.people.find(p => normalizeReceiptPersonName(p.name) === normalizeReceiptPersonName(draftName)) : undefined;
               return <div key={index}>
                 <label htmlFor={`receipt-person-${index}`} className="mb-2 flex flex-wrap items-center gap-2 text-sm font-semibold">
                   {person.repayment?.paid && <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1.5" style={{ background: "color-mix(in srgb, var(--positive) 14%, var(--surface))", color: "color-mix(in srgb, var(--positive) 60%, var(--ink))" }}><Check size={16} strokeWidth={2.5} aria-hidden="true" />{t("paidBadge")}</span>}
@@ -198,7 +214,8 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
                   <option value="new">{t("newPerson")}</option>
                   {context.people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
-                {value === "new" && <input maxLength={100} aria-label={t("personName")} placeholder={t("personName")} value={names[index] ?? (/^(Person|Pessoa|Personne)\s+\d+$/i.test(person.label) ? "" : person.label)} onChange={e => setNames(p => ({ ...p, [index]: e.target.value }))} disabled={busy} className={`${control} mt-2 w-full bg-[var(--surface)]`} />}
+                {value === "new" && <input maxLength={100} aria-label={t("personName")} placeholder={t("personName")} value={draftName} onChange={e => setNames(p => ({ ...p, [index]: e.target.value }))} disabled={busy} className={`${control} mt-2 w-full bg-[var(--surface)]`} />}
+                {recognized && <p className="mt-2 text-xs font-medium text-[var(--ink-muted)]" role="status">{t("recognizedName", { name: recognized.name })}</p>}
                 {person.repayment?.paid && <p className="mt-1 text-xs text-[var(--ink-muted)]">{t("paidPreserved")}</p>}
               </div>;
             })}</div>

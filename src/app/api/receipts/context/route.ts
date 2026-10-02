@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { serializeReceiptExpense } from "@/lib/receipt-context";
+import { canonicalReceiptPeople } from "@/lib/receipt-people";
 
 export async function GET(request: Request) {
   try {
@@ -23,7 +24,7 @@ export async function GET(request: Request) {
       }),
       prisma.receiptPerson.findMany({ where: { workspaceId }, select: { id: true, name: true }, orderBy: [{ name: "asc" }, { id: "asc" }] }),
     ]);
-    return NextResponse.json({ title: scope.name, people, expenses: expenses.map(serializeReceiptExpense) }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({ title: scope.name, people: canonicalReceiptPeople(people), expenses: expenses.map(serializeReceiptExpense) }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("Receipt context error:", error);
     return NextResponse.json({ error: "Failed to load receipt" }, { status: 500 });

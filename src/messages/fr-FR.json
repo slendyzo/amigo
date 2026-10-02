@@ -2222,7 +2222,7 @@
     "loadError": "Impossible de charger les dépenses. Réessayez.",
     "reload": "Recharger",
     "loading": "Préparation du ticket",
-    "namingHint": "Choisissez une personne enregistrée ou ajoutez un nom pour chaque part. Votre progression est enregistrée après chaque dépense.",
+    "namingHint": "Les noms existants sont reconnus automatiquement. Complétez seulement les noms manquants ; les noms identiques utilisent la même personne.",
     "remaining": "Encore {count}",
     "share": "Personne {index}",
     "newPerson": "Ajouter une personne",
@@ -2263,6 +2263,8 @@
     "discountLimit": "Maximum {amount}",
     "invalidDiscount": "Saisissez un montant positif avec deux décimales maximum, sans dépasser le solde restant.",
     "paidBadge": "Déjà payé",
-    "remainingAmount": "Restant : {amount}"
+    "remainingAmount": "Restant : {amount}",
+    "recognizedName": "Reconnu : {name}. Les dépenses figureront sur le même ticket.",
+    "ambiguousNames": "Deux parts de la même dépense portent le même nom. Donnez-leur des noms distincts avant de créer un ticket."
   }
 }

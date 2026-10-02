@@ -2220,7 +2220,7 @@
     "loadError": "Não foi possível carregar as despesas. Tenta novamente.",
     "reload": "Recarregar",
     "loading": "A preparar o talão",
-    "namingHint": "Escolhe uma pessoa guardada ou adiciona um nome a cada parte. O progresso é guardado após cada despesa.",
+    "namingHint": "Os nomes existentes são reconhecidos automaticamente. Preenche apenas os nomes em falta; nomes iguais usam a mesma pessoa.",
     "remaining": "Faltam {count}",
     "share": "Pessoa {index}",
     "newPerson": "Adicionar nova pessoa",
@@ -2261,6 +2261,8 @@
     "discountLimit": "Máximo {amount}",
     "invalidDiscount": "Introduz um valor positivo com até duas casas decimais, sem ultrapassar o saldo por pagar.",
     "paidBadge": "Já pago",
-    "remainingAmount": "Por pagar: {amount}"
+    "remainingAmount": "Por pagar: {amount}",
+    "recognizedName": "Reconhecido: {name}. As despesas ficam no mesmo talão.",
+    "ambiguousNames": "Duas partes da mesma despesa têm o mesmo nome. Usa nomes distintos na despesa antes de criar o talão."
   }
 }

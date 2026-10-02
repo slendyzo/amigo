@@ -2251,7 +2251,7 @@
     "loadError": "Could not load the expenses. Please try again.",
     "reload": "Reload",
     "loading": "Preparing your receipt",
-    "namingHint": "Choose a saved person or add a name for each share. Your progress is saved after each expense.",
+    "namingHint": "Existing names are recognized automatically. Add names only for the missing people; matching names reuse the same person.",
     "remaining": "{count} left to name",
     "share": "Person {index}",
     "newPerson": "Add a new person",
@@ -2292,6 +2292,8 @@
     "discountLimit": "Maximum {amount}",
     "invalidDiscount": "Enter a positive amount with up to two decimal places, no higher than the remaining balance.",
     "paidBadge": "Already paid",
-    "remainingAmount": "Remaining: {amount}"
+    "remainingAmount": "Remaining: {amount}",
+    "recognizedName": "Recognized: {name}. Their expenses will go on the same ticket.",
+    "ambiguousNames": "Two shares in the same expense have the same name. Give them distinct names in the expense before creating a receipt."
   }
 }
