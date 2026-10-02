@@ -2227,7 +2227,7 @@
     "share": "Personne {index}",
     "newPerson": "Ajouter une personne",
     "personName": "Nom",
-    "paidPreserved": "Déjà payé — ce paiement sera conservé.",
+    "paidPreserved": "Déjà payé. Non inclus dans le solde à régler.",
     "saveNext": "Enregistrer et continuer",
     "saving": "Enregistrement…",
     "privacy": "Choisissez les destinataires. Chaque ticket affiche uniquement les parts et paiements de cette personne.",
@@ -2261,6 +2261,8 @@
     "discountHint": "Uniquement pour le ticket de cette personne. Les parts et paiements enregistrés restent inchangés.",
     "discountCurrency": "Remise ({currency})",
     "discountLimit": "Maximum {amount}",
-    "invalidDiscount": "Saisissez un montant positif avec deux décimales maximum, sans dépasser le solde restant."
+    "invalidDiscount": "Saisissez un montant positif avec deux décimales maximum, sans dépasser le solde restant.",
+    "paidBadge": "Payé",
+    "remainingAmount": "Restant : {amount}"
   }
 }

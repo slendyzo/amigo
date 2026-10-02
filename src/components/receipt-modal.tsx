@@ -188,7 +188,11 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
               const index = offset + 1;
               const value = assignments[index] ?? person.personId ?? "new";
               return <div key={index}>
-                <label htmlFor={`receipt-person-${index}`} className="block mb-2 text-sm font-medium">{t("share", { index: index + 1 })} · {new Intl.NumberFormat(locale, { style: "currency", currency: current.currency }).format(person.amount)}</label>
+                <label htmlFor={`receipt-person-${index}`} className="block mb-2 text-sm font-medium">
+                  {t("share", { index: index + 1 })} · <span className={person.repayment?.paid ? "line-through text-[var(--ink-muted)]" : ""}>{new Intl.NumberFormat(locale, { style: "currency", currency: current.currency }).format(person.amount)}</span>
+                  {person.repayment?.paid && <span className="ml-2 inline-flex items-center gap-1 text-[var(--positive)]"><Check size={14} aria-hidden="true" />{t("paidBadge")}</span>}
+                </label>
+                <p className="mb-2 text-sm font-semibold">{t("remainingAmount", { amount: new Intl.NumberFormat(locale, { style: "currency", currency: current.currency }).format(person.repayment?.paid ? 0 : person.amount) })}</p>
                 <select id={`receipt-person-${index}`} value={value} onChange={e => setAssignments(p => ({ ...p, [index]: e.target.value }))} disabled={busy || (!!person.personId && !!person.repayment?.paid)} className={`${control} w-full bg-[var(--surface)]`}>
                   <option value="new">{t("newPerson")}</option>
                   {context.people.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}

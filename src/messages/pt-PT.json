@@ -2225,7 +2225,7 @@
     "share": "Pessoa {index}",
     "newPerson": "Adicionar nova pessoa",
     "personName": "Nome",
-    "paidPreserved": "Já pago — este pagamento será mantido.",
+    "paidPreserved": "Já pago. Não entra no saldo em dívida.",
     "saveNext": "Guardar e continuar",
     "saving": "A guardar…",
     "privacy": "Escolhe quem recebe um talão. Cada talão mostra apenas as partes e os pagamentos dessa pessoa.",
@@ -2259,6 +2259,8 @@
     "discountHint": "Apenas para o talão desta pessoa. As partes e os pagamentos registados não são alterados.",
     "discountCurrency": "Desconto ({currency})",
     "discountLimit": "Máximo {amount}",
-    "invalidDiscount": "Introduz um valor positivo com até duas casas decimais, sem ultrapassar o saldo por pagar."
+    "invalidDiscount": "Introduz um valor positivo com até duas casas decimais, sem ultrapassar o saldo por pagar.",
+    "paidBadge": "Pago",
+    "remainingAmount": "Por pagar: {amount}"
   }
 }

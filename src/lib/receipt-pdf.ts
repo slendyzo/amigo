@@ -14,10 +14,10 @@ export async function renderReceiptPdf(receipt: Receipt): Promise<Buffer> {
       doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(size);
       return doc.heightOfString(value, { width, lineGap: 3 }) + 7;
     };
-    const text = (value: string, size = 10, bold = false, color = '#222222') => {
+    const text = (value: string, size = 10, bold = false, color = '#222222', strike = false) => {
       doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(size).fillColor(color);
       const height = doc.heightOfString(value, { width, lineGap: 3 });
-      doc.text(value, 28, y, { width, lineGap: 3 }); y += height + 7;
+      doc.text(value, 28, y, { width, lineGap: 3, strike }); y += height + 7;
     };
     const rule = () => { doc.save().strokeColor('#999999').lineWidth(0.5).dash(2, { space: 3 }).moveTo(28, y).lineTo(292, y).stroke().restore(); y += 16; };
     const header = () => { page++; text('AMIGO', 12, true); text(receipt.labels.receipt, 22, true); text(`${receipt.labels.for} ${receipt.recipient.name}`, 12, true); text(receipt.title, 10); rule(); };
@@ -25,6 +25,8 @@ export async function renderReceiptPdf(receipt: Receipt): Promise<Buffer> {
     const ensure = (height: number) => { if (y + height > 690) { footer(); doc.addPage(); y = 28; header(); } };
     header();
     for (const line of receipt.lines) {
+      const settled = line.paid > 0 && line.owed === 0;
+      const itemColor = settled ? '#626262' : '#222222';
       doc.font('Helvetica-Bold').fontSize(11);
       // Bound long descriptions into independently paginated paragraphs.
       const words: string[] = [];
@@ -43,16 +45,16 @@ export async function renderReceiptPdf(receipt: Receipt): Promise<Buffer> {
       const detailHeight = measure(date, 9) + measure(share, 11, true) + measure(settlement, 8) + 16;
       const rowHeight = words.reduce((height, fragment) => height + measure(fragment, 11, true), detailHeight);
       if (rowHeight < 380) ensure(rowHeight);
-      for (const fragment of words) { ensure(measure(fragment, 11, true)); text(fragment, 11, true); }
+      for (const fragment of words) { ensure(measure(fragment, 11, true)); text(fragment, 11, true, itemColor, settled); }
       ensure(detailHeight);
       text(date, 9);
-      text(share, 11, true);
+      text(share, 11, true, itemColor, settled);
       text(settlement, 8);
       rule();
     }
     for (const total of receipt.totals) {
       const totalText = `${receipt.labels.total} · ${receiptMoney(total.total, total.currency, receipt.locale)}`;
-      const paidText = `${receipt.labels.paid} · ${receiptMoney(total.paid, total.currency, receipt.locale)}`;
+      const paidText = `${receipt.labels.paid} · ${receiptMoney(total.paid > 0 ? -total.paid : 0, total.currency, receipt.locale)}`;
       const discountText = `${receipt.labels.discount} · ${receiptMoney(-total.discount, total.currency, receipt.locale)}`;
       const balanceText = receiptMoney(total.owed, total.currency, receipt.locale);
       ensure(measure(totalText, 11) + measure(paidText, 11) + (total.discount > 0 ? measure(discountText, 11, true) : 0) + measure(receipt.labels.balance, 10) + measure(balanceText, 24, true) + 16);

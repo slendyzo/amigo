@@ -10,6 +10,10 @@ function add(id: string, currency: string, paid = false) {
 add('a', 'USD', true); add('b', 'GBP');
 const eur = buildReceipt(context, 'alice', 'eur', 'en');
 assert.deepEqual(eur.totals, [{ currency: 'EUR', total: 17.34, paid: 8.67, discount: 0, owed: 8.67 }]);
+assert.equal(eur.lines.length, 2, 'Paid expenses remain itemized');
+assert.equal(eur.lines[0].owed, 0, 'Paid expense contributes no balance due');
+assert.equal(eur.lines[0].paid, eur.lines[0].total);
+assert.equal(eur.totals[0].owed, eur.lines[1].owed, 'Only the unpaid expense contributes to balance');
 const beforeDiscount = JSON.stringify(context);
 const discounts = Object.freeze({ EUR: 2.35 });
 const discounted = buildReceipt(context, 'alice', 'eur', 'en', discounts);

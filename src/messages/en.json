@@ -2256,7 +2256,7 @@
     "share": "Person {index}",
     "newPerson": "Add a new person",
     "personName": "Name",
-    "paidPreserved": "Already paid — this payment will be kept.",
+    "paidPreserved": "Already paid. Not included in the balance due.",
     "saveNext": "Save & continue",
     "saving": "Saving…",
     "privacy": "Choose who gets a ticket. Each ticket shows only that person’s shares and payments.",
@@ -2290,6 +2290,8 @@
     "discountHint": "Only for this person’s ticket. Recorded shares and payments stay unchanged.",
     "discountCurrency": "Discount ({currency})",
     "discountLimit": "Maximum {amount}",
-    "invalidDiscount": "Enter a positive amount with up to two decimal places, no higher than the remaining balance."
+    "invalidDiscount": "Enter a positive amount with up to two decimal places, no higher than the remaining balance.",
+    "paidBadge": "Paid",
+    "remainingAmount": "Remaining: {amount}"
   }
 }

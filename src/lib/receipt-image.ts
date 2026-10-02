@@ -24,10 +24,17 @@ export async function renderReceiptImages(receipt: Receipt, mimeType = 'image/jp
     if (current) lines.push(current);
     return lines.length ? lines : [''];
   }
-  function draw(value: string, size = 28, bold = false, color = '#222222') {
+  function draw(value: string, size = 28, bold = false, color = '#222222', strike = false) {
     const lines = wrapped(value, size, bold);
     context.fillStyle = color; context.textBaseline = 'top';
-    for (const line of lines) { context.fillText(line, 72, y); y += size * 1.4; }
+    for (const line of lines) {
+      context.fillText(line, 72, y);
+      if (strike && line) {
+        context.save(); context.strokeStyle = color; context.lineWidth = Math.max(1, size / 20);
+        context.beginPath(); context.moveTo(72, y + size * 0.56); context.lineTo(72 + context.measureText(line).width, y + size * 0.56); context.stroke(); context.restore();
+      }
+      y += size * 1.4;
+    }
     y += 16;
   }
   function measure(value: string, size = 28, bold = false) { return wrapped(value, size, bold).length * size * 1.4 + 16; }
@@ -44,6 +51,8 @@ export async function renderReceiptImages(receipt: Receipt, mimeType = 'image/jp
   async function ensure(height: number) { if (y + height > 3260) { await finish(); page++; start(); } }
   start();
   for (const line of receipt.lines) {
+    const settled = line.paid > 0 && line.owed === 0;
+    const itemColor = settled ? '#626262' : '#222222';
     const fragments = wrapped(line.description, 32, true);
     const date = new Intl.DateTimeFormat(receipt.locale, { dateStyle: 'medium', timeZone: 'UTC' }).format(new Date(line.date));
     const share = `${receipt.labels.share}: ${receiptMoney(line.total, line.currency, receipt.locale)}`;
@@ -52,13 +61,13 @@ export async function renderReceiptImages(receipt: Receipt, mimeType = 'image/jp
     const detailHeight = measure(date, 23) + measure(share, 30, true) + measure(paid, 25) + measure(owed, 25) + 36;
     const rowHeight = fragments.length * (32 * 1.4 + 16) + detailHeight;
     if (rowHeight < 1800) await ensure(rowHeight);
-    for (const fragment of fragments) { await ensure(70); draw(fragment, 32, true); }
+    for (const fragment of fragments) { await ensure(70); draw(fragment, 32, true, itemColor, settled); }
     await ensure(detailHeight);
-    draw(date, 23); draw(share, 30, true); draw(paid, 25); draw(owed, 25); rule();
+    draw(date, 23); draw(share, 30, true, itemColor, settled); draw(paid, 25); draw(owed, 25); rule();
   }
   for (const total of receipt.totals) {
     const totalText = `${receipt.labels.total}: ${receiptMoney(total.total, total.currency, receipt.locale)}`;
-    const paidText = `${receipt.labels.paid}: ${receiptMoney(total.paid, total.currency, receipt.locale)}`;
+    const paidText = `${receipt.labels.paid}: ${receiptMoney(total.paid > 0 ? -total.paid : 0, total.currency, receipt.locale)}`;
     const discountText = `${receipt.labels.discount}: ${receiptMoney(-total.discount, total.currency, receipt.locale)}`;
     const balanceText = receiptMoney(total.owed, total.currency, receipt.locale);
     await ensure(measure(totalText) + measure(paidText) + (total.discount > 0 ? measure(discountText, 28, true) : 0) + measure(receipt.labels.balance, 26) + measure(balanceText, 58, true) + 36);
