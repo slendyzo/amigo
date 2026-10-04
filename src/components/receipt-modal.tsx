@@ -42,6 +42,7 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
   const [active, setActive] = useState("");
   const [mode, setMode] = useState<"eur" | "original">("eur");
   const [discountValues, setDiscountValues] = useState<Record<string, string>>({});
+  const [extraValues, setExtraValues] = useState<Record<string, { enabled: boolean; amount: string; reason: string }>>({});
   const [images, setImages] = useState<{ jpg: Blob[]; png: Blob[]; urls: string[] } | null>(null);
   const [imagePage, setImagePage] = useState(0);
   const scope = expenseId ? `expenseId=${encodeURIComponent(expenseId)}` : `projectId=${encodeURIComponent(projectId || "")}`;
@@ -56,7 +57,7 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
   useEffect(() => {
     if (!isOpen) return;
     const abort = new AbortController();
-    setLoading(true); setError(""); setContext(null); setPreview(false); setSelected([]); setNotice(""); setDiscountValues({});
+    setLoading(true); setError(""); setContext(null); setPreview(false); setSelected([]); setNotice(""); setDiscountValues({}); setExtraValues({});
     fetch("/api/receipts/resolve", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(Object.fromEntries(new URLSearchParams(scope))), signal: abort.signal })
       .then(async response => {
         const result = await response.json();
@@ -80,9 +81,9 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
   }, [current?.id]);
   const eligible = context?.people.filter(person => context.expenses.some(expense => splitRows(expense).slice(1).some(row => row.personId === person.id))) || [];
   const baseReceiptResult = useMemo(() => {
-    if (!context || !preview || !active) return { receipt: null, failed: false };
-    try { return { receipt: buildReceipt(context, active, mode, locale), failed: false }; }
-    catch { return { receipt: null, failed: true }; }
+    if (!context || !preview || !active) return { receipt: null, failed: false, validation: "invalidData" };
+    try { return { receipt: buildReceipt(context, active, mode, locale), failed: false, validation: "invalidData" }; }
+    catch { return { receipt: null, failed: true, validation: "invalidData" }; }
   }, [context, preview, active, mode, locale]);
   const receiptResult = useMemo(() => {
     if (!baseReceiptResult.receipt || !context) return baseReceiptResult;
@@ -91,9 +92,13 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
         const raw = discountValues[`${active}:${mode}:${total.currency}`] || "";
         return [total.currency, raw.trim() === "" ? 0 : Number(raw.replace(",", "."))];
       }));
-      return { receipt: buildReceipt(context, active, mode, locale, discounts), failed: false };
-    } catch { return { receipt: null, failed: true }; }
-  }, [baseReceiptResult, context, active, mode, locale, discountValues]);
+      const extras = Object.fromEntries(baseReceiptResult.receipt.totals.flatMap(total => {
+        const value = extraValues[`${active}:${mode}:${total.currency}`];
+        return value?.enabled ? [[total.currency, { amount: Number(value.amount.replace(",", ".")), reason: value.reason }]] : [];
+      }));
+      return { receipt: buildReceipt(context, active, mode, locale, discounts, extras), failed: false, validation: "invalidData" };
+    } catch (e) { return { receipt: null, failed: true, validation: e instanceof Error && e.message === "INVALID_RECEIPT_EXTRA" ? "invalidExtra" : "invalidDiscount" }; }
+  }, [baseReceiptResult, context, active, mode, locale, discountValues, extraValues]);
   const receipt = receiptResult.receipt;
 
   useEffect(() => {
@@ -159,11 +164,12 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
     setBusy(true); setError("");
     try {
       const discounts = Object.fromEntries(receipt.totals.map(total => [total.currency, total.discount]));
+      const extras = Object.fromEntries(receipt.totals.flatMap(total => total.extra ? [[total.currency, total.extra]] : []));
       const rateQuery = context?.ratesToken ? `&ratesToken=${encodeURIComponent(context.ratesToken)}` : "";
-      const response = await fetch(`/api/receipts/export?${scope}&personId=${encodeURIComponent(active)}&mode=${mode}&locale=${encodeURIComponent(locale)}&discounts=${encodeURIComponent(JSON.stringify(discounts))}${rateQuery}`);
+      const response = await fetch(`/api/receipts/export?${scope}&personId=${encodeURIComponent(active)}&mode=${mode}&locale=${encodeURIComponent(locale)}&discounts=${encodeURIComponent(JSON.stringify(discounts))}&extras=${encodeURIComponent(JSON.stringify(extras))}${rateQuery}`);
       if (!response.ok) {
         const result = await response.json().catch(() => ({}));
-        throw new Error(result.code === "INVALID_RECEIPT_RATES_TOKEN" ? t("ratesExpired") : t("exportError"));
+        throw new Error(result.code === "INVALID_RECEIPT_RATES_TOKEN" ? t("ratesExpired") : result.code === "INVALID_RECEIPT_EXTRA" ? t("invalidExtra") : t("exportError"));
       }
       download(await response.blob(), receiptFilename(receipt, "pdf"));
     } catch (e) { setError(e instanceof Error && e.message ? e.message : t("exportError")); }
@@ -245,7 +251,23 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
                 </div>;
               })}</div>
             </fieldset>}
-            {receiptResult.failed && <p role="alert" className="text-[var(--negative)]">{t(baseReceiptResult.failed ? "invalidData" : "invalidDiscount")}</p>}
+            {baseReceiptResult.receipt && <fieldset className="mb-5 border-t border-[var(--line)] pt-4">
+              <legend className="px-1 text-sm font-medium">{t("extraTitle")}</legend>
+              <p className="mb-3 text-xs text-[var(--ink-muted)]">{t("extraHint")}</p>
+              <div className="space-y-4">{baseReceiptResult.receipt.totals.map(total => {
+                const key = `${active}:${mode}:${total.currency}`;
+                const value = extraValues[key] || { enabled: false, amount: "", reason: "" };
+                function update(patch: Partial<typeof value>) { setExtraValues(previous => ({ ...previous, [key]: { ...value, ...patch } })); setError(""); }
+                return <div key={key}>
+                  <label className="flex min-h-11 items-center gap-3 text-sm"><input type="checkbox" className="h-5 w-5 accent-[var(--accent)]" checked={value.enabled} onChange={event => update({ enabled: event.target.checked })} />{t("extraEnable", { currency: total.currency })}</label>
+                  {value.enabled && <div className="grid gap-3 sm:grid-cols-2">
+                    <div><label htmlFor={`receipt-extra-${total.currency}`} className="mb-1 block text-xs text-[var(--ink-muted)]">{t("extraAmount", { currency: total.currency })}</label><input id={`receipt-extra-${total.currency}`} inputMode="decimal" maxLength={16} placeholder="0.00" value={value.amount} onChange={event => update({ amount: event.target.value })} className={`${control} w-full bg-[var(--surface)]`} /></div>
+                    <div><label htmlFor={`receipt-reason-${total.currency}`} className="mb-1 block text-xs text-[var(--ink-muted)]">{t("extraReason")}</label><input id={`receipt-reason-${total.currency}`} maxLength={200} value={value.reason} onChange={event => update({ reason: event.target.value })} className={`${control} w-full bg-[var(--surface)]`} /></div>
+                  </div>}
+                </div>;
+              })}</div>
+            </fieldset>}
+            {receiptResult.failed && <p role="alert" className="text-[var(--negative)]">{t(receiptResult.validation)}</p>}
             {images ? <div>
               {images.urls.length > 1 && <label className="block text-sm mb-3">{t("page")} <select value={imagePage} onChange={e => setImagePage(Number(e.target.value))} className={`${control} bg-[var(--surface)]`}>{images.urls.map((_, index) => <option key={index} value={index}>{index + 1} / {images.urls.length}</option>)}</select><span className="block mt-2 text-xs text-[var(--ink-muted)]">{t("pagesHint")}</span></label>}
               {/* The preview is the actual exported image, so saved output matches exactly. */}
@@ -254,6 +276,7 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
               <section className="sr-only" aria-label={t("imageAlt", { name: receipt?.recipient.name || "" })}>
                 {receipt?.lines.map(line => <p key={line.expenseId}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(line.date))}. {line.description}: {line.total} {line.currency}, {line.paid} {t("paid")}, {line.owed} {t("owed")}</p>)}
                 {receipt?.totals.map(total => <p key={total.currency}>{receipt.labels.total}: {total.total} {total.currency}. {receipt.labels.paid}: {total.paid} {total.currency}. {total.discount > 0 && <>{receipt.labels.discount}: −{total.discount} {total.currency}. </>}{receipt.labels.balance}: {total.owed} {total.currency}.</p>)}
+                {receipt?.totals.filter(total => total.extra).map(total => <p key={`extra-${total.currency}`}>{receipt.labels.extraPayment}: {total.extra?.amount} {total.currency}. {total.extra?.reason}</p>)}
                 {receipt?.mode === "eur" && <p>{receipt.labels.conversion}</p>}
                 {receipt?.exchange ? <p>{receipt.labels.equivalents}: {receipt.exchange.amounts.map(value => new Intl.NumberFormat(locale, { style: "currency", currency: value.currency }).format(value.amount)).join("; ")}. {receipt.labels.ratesAsOf}: {receipt.exchange.date} ({receipt.exchange.source}).</p> : receipt && <p>{receipt.labels.ratesUnavailable}</p>}
               </section>

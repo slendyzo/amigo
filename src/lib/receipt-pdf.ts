@@ -15,15 +15,17 @@ export async function renderReceiptPdf(receipt: Receipt): Promise<Buffer> {
     doc.rect(0, 0, layout.width, layout.height).fill(layout.paper);
     for (const command of layout.commands) {
       if (command.kind === 'text') {
-        doc.font(command.bold ? 'Courier-Bold' : 'Courier').fontSize(command.size).fillColor(command.color)
-          .text(command.text, command.x, command.y, { lineBreak: false });
+        doc.font(command.bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(command.size).fillColor(command.color);
+        const width = doc.widthOfString(command.text);
+        const x = command.align === 'right' ? command.x - width : command.align === 'center' ? command.x - width / 2 : command.x;
+        doc.text(command.text, x, command.y, { lineBreak: false });
         if (command.strike) {
-          doc.save().strokeColor(command.color).lineWidth(0.6).moveTo(command.x, command.y + command.size * 0.34)
-            .lineTo(command.x + Array.from(command.text).length * command.size * 0.6, command.y + command.size * 0.34).stroke().restore();
+          doc.save().strokeColor(command.color).lineWidth(0.6).moveTo(x, command.y + command.size * 0.42)
+            .lineTo(x + width, command.y + command.size * 0.42).stroke().restore();
         }
       } else if (command.kind === 'rule') {
-        doc.save().strokeColor('#77776c').lineWidth(0.5).dash(2, { space: 3 }).moveTo(24, command.y).lineTo(layout.width - 24, command.y).stroke().restore();
-      } else doc.rect(command.x, command.y, command.width, command.height).fill('#252520');
+        doc.save().strokeColor('#000000').lineWidth(0.5).dash(2, { space: 3 }).moveTo(24, command.y).lineTo(layout.width - 24, command.y).stroke().restore();
+      } else doc.rect(command.x, command.y, command.width, command.height).fill(command.color || '#000000');
     }
     doc.end();
   });

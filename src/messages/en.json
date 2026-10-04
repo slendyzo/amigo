@@ -2296,6 +2296,12 @@
     "tooTall": "This project is too long for one image. Try the PDF export or create individual expense tickets.",
     "ratesExpired": "The exchange-rate snapshot has expired. Reload this receipt before exporting.",
     "recognizedName": "Recognized: {name}. Their expenses will go on the same ticket.",
-    "ambiguousNames": "Two shares in the same expense have the same name. Give them distinct names in the expense before creating a receipt."
+    "ambiguousNames": "Two shares in the same expense have the same name. Give them distinct names in the expense before creating a receipt.",
+    "extraTitle": "Extra payment",
+    "extraHint": "Add a positive amount and explain why. Only this person’s ticket is adjusted.",
+    "extraEnable": "Add extra in {currency}",
+    "extraAmount": "Extra amount ({currency})",
+    "extraReason": "Reason (required)",
+    "invalidExtra": "Enter an amount above zero with up to two decimal places and a reason."
   }
 }

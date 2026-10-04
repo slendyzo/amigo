@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { serializeReceiptExpense } from "@/lib/receipt-context";
-import { buildReceipt, receiptFilename } from "@/lib/receipt-data";
+import { buildReceipt, receiptFilename, type ReceiptExtra } from "@/lib/receipt-data";
 import { renderReceiptPdf } from "@/lib/receipt-pdf";
 import { receiptRatesContext, verifyReceiptRates } from "@/lib/receipt-rates";
 
@@ -46,9 +46,13 @@ export async function GET(request: Request) {
       if (rawDiscounts.length > 2000) throw new Error("Invalid discounts");
       const discounts: unknown = JSON.parse(rawDiscounts);
       if (!discounts || typeof discounts !== "object" || Array.isArray(discounts) || Object.values(discounts).some(value => typeof value !== "number")) throw new Error("Invalid discounts");
-      receipt = buildReceipt({ title: scope.name, people: [person], expenses: expenses.map(serializeReceiptExpense), exchangeRates }, person.id, mode as "eur" | "original", locale, discounts as Record<string, number>);
+      const rawExtras = query.get("extras") || "{}";
+      if (rawExtras.length > 4000) throw new Error("INVALID_RECEIPT_EXTRA");
+      let extras: unknown;
+      try { extras = JSON.parse(rawExtras); } catch { throw new Error("INVALID_RECEIPT_EXTRA"); }
+      receipt = buildReceipt({ title: scope.name, people: [person], expenses: expenses.map(serializeReceiptExpense), exchangeRates }, person.id, mode as "eur" | "original", locale, discounts as Record<string, number>, extras as Record<string, ReceiptExtra>);
     }
-    catch { return NextResponse.json({ error: "Check expense splits before exporting" }, { status: 422 }); }
+    catch (error) { return NextResponse.json({ error: "Check expense splits and ticket adjustments before exporting", ...(error instanceof Error && error.message === "INVALID_RECEIPT_EXTRA" ? { code: "INVALID_RECEIPT_EXTRA" } : {}) }, { status: 422 }); }
     const pdf = await renderReceiptPdf(receipt);
     return new NextResponse(new Uint8Array(pdf), { headers: {
       "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="${receiptFilename(receipt, "pdf")}"`, "Cache-Control": "private, no-store",

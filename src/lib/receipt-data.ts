@@ -2,15 +2,16 @@ export type ReceiptExpense = { id: string; description: string; date: string; am
 export type ReceiptPerson = { id: string; name: string };
 export type ReceiptExchangeRates = { rates: Record<string, number>; source: 'live'; sourceDate: string };
 export type ReceiptContext = { title: string; people: ReceiptPerson[]; expenses: ReceiptExpense[]; exchangeRates?: ReceiptExchangeRates; ratesToken?: string };
-export type ReceiptTotals = { currency: string; total: number; paid: number; discount: number; owed: number };
-export type ReceiptLine = Omit<ReceiptTotals, 'discount'> & { expenseId: string; description: string; date: string };
+export type ReceiptExtra = { amount: number; reason: string };
+export type ReceiptTotals = { currency: string; total: number; paid: number; discount: number; owed: number; extra?: ReceiptExtra };
+export type ReceiptLine = Omit<ReceiptTotals, 'discount' | 'extra'> & { expenseId: string; description: string; date: string };
 export type Receipt = { title: string; recipient: ReceiptPerson; mode: 'eur' | 'original'; locale: string; lines: ReceiptLine[]; totals: ReceiptTotals[]; exchange?: { date: string; source: string; amounts: { currency: string; amount: number }[] }; labels: ReturnType<typeof getReceiptLabels> };
 
 export function getReceiptLabels(locale: string) {
   const dictionaries = {
-    en: { receipt: 'Expense ticket', for: 'Prepared for', share: 'Your share', paid: 'Paid', owed: 'Remaining', total: 'Total share', discount: 'Ticket discount', balance: 'Balance due', footer: 'Personal expense summary · Not a tax receipt', conversion: 'EUR values use the saved expense exchange rates.', continued: 'Continued', page: 'Page' },
-    pt: { receipt: 'Talão de despesas', for: 'Preparado para', share: 'A tua parte', paid: 'Pago', owed: 'Por pagar', total: 'Total da tua parte', discount: 'Desconto no talão', balance: 'Saldo em dívida', footer: 'Resumo de despesas pessoais · Não é um recibo fiscal', conversion: 'Valores em EUR às taxas guardadas nas despesas.', continued: 'Continuação', page: 'Página' },
-    fr: { receipt: 'Ticket de dépenses', for: 'Préparé pour', share: 'Votre part', paid: 'Payé', owed: 'Restant', total: 'Total de votre part', discount: 'Remise sur le ticket', balance: 'Solde à régler', footer: 'Résumé de dépenses personnelles · Sans valeur fiscale', conversion: 'Montants en EUR aux taux enregistrés des dépenses.', continued: 'Suite', page: 'Page' },
+    en: { receipt: 'Expense ticket', for: 'Prepared for', share: 'Your share', paid: 'Paid', owed: 'Remaining', total: 'Expenses', discount: 'Ticket discount', balance: 'Amount to pay', extraPayment: 'Pay this extra', extraCharge: 'Extra payment', footer: 'Personal expense summary · Not a tax receipt', conversion: 'EUR values use the saved expense exchange rates.', continued: 'Continued', page: 'Page' },
+    pt: { receipt: 'Talão de despesas', for: 'Preparado para', share: 'A tua parte', paid: 'Pago', owed: 'Por pagar', total: 'Despesas', discount: 'Desconto no talão', balance: 'Total a pagar', extraPayment: 'Paga este extra', extraCharge: 'Pagamento extra', footer: 'Resumo de despesas pessoais · Não é um recibo fiscal', conversion: 'Valores em EUR às taxas guardadas nas despesas.', continued: 'Continuação', page: 'Página' },
+    fr: { receipt: 'Ticket de dépenses', for: 'Préparé pour', share: 'Votre part', paid: 'Payé', owed: 'Restant', total: 'Dépenses', discount: 'Remise sur le ticket', balance: 'Total à payer', extraPayment: 'Payez ce supplément', extraCharge: 'Paiement supplémentaire', footer: 'Résumé de dépenses personnelles · Sans valeur fiscale', conversion: 'Montants en EUR aux taux enregistrés des dépenses.', continued: 'Suite', page: 'Page' },
   };
   const extras = {
     en: { equivalents: 'Approximate equivalents', ratesUnavailable: 'Current exchange rates unavailable', ratesAsOf: 'Rates as of', thankYou: 'Thank you!' },
@@ -55,9 +56,11 @@ function cents(value: number) {
   return Math.round((value + Number.EPSILON) * 100);
 }
 
-export function buildReceipt(context: ReceiptContext, personId: string, mode: 'eur' | 'original', locale: string, discounts: Record<string, number> = {}): Receipt {
+export function buildReceipt(context: ReceiptContext, personId: string, mode: 'eur' | 'original', locale: string, discounts: Record<string, number> = {}, extras: Record<string, ReceiptExtra> = {}): Receipt {
   if (!discounts || typeof discounts !== 'object' || Array.isArray(discounts) ||
     ![Object.prototype, null].includes(Object.getPrototypeOf(discounts)) || Object.getOwnPropertySymbols(discounts).length) throw new Error('INVALID_RECEIPT_DISCOUNT');
+  if (!extras || typeof extras !== 'object' || Array.isArray(extras) ||
+    ![Object.prototype, null].includes(Object.getPrototypeOf(extras)) || Object.getOwnPropertySymbols(extras).length) throw new Error('INVALID_RECEIPT_EXTRA');
   const person = context.people.find(p => p.id === personId);
   if (!person || !person.name.trim()) throw new Error('RECEIPT_PERSON_NOT_FOUND');
   if (mode !== 'eur' && mode !== 'original') throw new Error('INVALID_RECEIPT_CURRENCY_MODE');
@@ -107,7 +110,26 @@ export function buildReceipt(context: ReceiptContext, personId: string, mode: 'e
     group.discount = discount;
     group.owed -= discount;
   }
-  const totals = [...groups.values()].map(g => ({ currency: g.currency, total: g.total / 100, paid: g.paid / 100, discount: g.discount / 100, owed: g.owed / 100 }));
+  for (const currency of Object.getOwnPropertyNames(extras)) {
+    const descriptor = Object.getOwnPropertyDescriptor(extras, currency);
+    const value: unknown = descriptor?.value;
+    const group = groups.get(currency);
+    if (!group || !descriptor || !('value' in descriptor) || !value || typeof value !== 'object' || Array.isArray(value) ||
+      ![Object.prototype, null].includes(Object.getPrototypeOf(value)) || Object.getOwnPropertySymbols(value).length) throw new Error('INVALID_RECEIPT_EXTRA');
+    const amountDescriptor = Object.getOwnPropertyDescriptor(value, 'amount');
+    const reasonDescriptor = Object.getOwnPropertyDescriptor(value, 'reason');
+    const amount: unknown = amountDescriptor?.value;
+    const reason: unknown = reasonDescriptor?.value;
+    if (!amountDescriptor || !('value' in amountDescriptor) || !reasonDescriptor || !('value' in reasonDescriptor) ||
+      typeof amount !== 'number' || !Number.isFinite(amount) || amount <= 0 || Number(amount.toFixed(2)) !== amount ||
+      !Number.isSafeInteger(Math.round(amount * 100)) || typeof reason !== 'string' ||
+      !reason.trim().length || reason.trim().length > 200 || /[\u0000-\u001f\u007f-\u009f]/.test(reason)) throw new Error('INVALID_RECEIPT_EXTRA');
+    const extra = cents(amount);
+    if (!Number.isSafeInteger(group.owed + extra)) throw new Error('INVALID_RECEIPT_EXTRA');
+    group.extra = { amount: extra, reason: reason.trim() };
+    group.owed += extra;
+  }
+  const totals = [...groups.values()].map(g => ({ currency: g.currency, total: g.total / 100, paid: g.paid / 100, discount: g.discount / 100, owed: g.owed / 100, ...(g.extra ? { extra: { amount: g.extra.amount / 100, reason: g.extra.reason } } : {}) }));
   return { title: context.title, recipient: { id: person.id, name: person.name }, mode, locale, lines, totals, exchange: exchangeEquivalents(totals, context.exchangeRates), labels: getReceiptLabels(locale) };
 }
 

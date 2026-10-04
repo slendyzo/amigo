@@ -32,6 +32,22 @@ assert.throws(() => buildReceipt(context, 'alice', 'original', 'en', { USD: 0.01
 const mixedDiscount = buildReceipt(context, 'alice', 'original', 'en', { USD: 0, GBP: 3.25 });
 assert.deepEqual(mixedDiscount.totals, [{ currency: 'USD', total: 10, paid: 10, discount: 0, owed: 0 }, { currency: 'GBP', total: 10, paid: 0, discount: 3.25, owed: 6.75 }]);
 assert.equal(buildReceipt(context, 'bob', 'original', 'en').totals[1].owed, 10);
+const extras = Object.freeze({ USD: Object.freeze({ amount: 4.5, reason: '  Airport pickup  ' }), GBP: Object.freeze({ amount: 2.25, reason: 'Service charge' }) });
+const extraTicket = buildReceipt(context, 'alice', 'original', 'en', { GBP: 3.25 }, extras);
+assert.deepEqual(extraTicket.totals, [
+  { currency: 'USD', total: 10, paid: 10, discount: 0, owed: 4.5, extra: { amount: 4.5, reason: 'Airport pickup' } },
+  { currency: 'GBP', total: 10, paid: 0, discount: 3.25, owed: 9, extra: { amount: 2.25, reason: 'Service charge' } },
+], 'Extra payments can be due on paid expenses and remain separate by currency');
+assert.deepEqual(extraTicket.lines, buildReceipt(context, 'alice', 'original', 'en').lines, 'Extras never modify expense shares or paid status');
+assert.equal(JSON.stringify(context), beforeDiscount, 'Ticket extras never change the recorded ledger');
+assert.equal(extras.USD.reason, '  Airport pickup  ', 'Input adjustment objects remain untouched');
+assert(!JSON.stringify(buildReceipt(context, 'bob', 'original', 'en')).includes('Airport pickup'), 'Another recipient never receives this ticket adjustment');
+assert.throws(() => buildReceipt(context, 'alice', 'original', 'en', { GBP: 10.01 }, { GBP: { amount: 20, reason: 'Extra' } }), /EXCEEDS_BALANCE/, 'An extra cannot increase the allowable discount');
+for (const invalid of [null, [], 1, 'extra', new Date(), { EUR: { amount: 1, reason: 'Wrong currency' } }, { USD: null }, { USD: [] },
+  ...[0, -1, 0.001, NaN, Infinity, Number.MAX_SAFE_INTEGER, '1'].map(amount => ({ USD: { amount, reason: 'Extra' } })),
+  ...['', '   ', 'x'.repeat(201), 'bad\nreason', 'bad\u0000reason', 'bad\u0085reason', 1].map(reason => ({ USD: { amount: 1, reason } })),
+]) assert.throws(() => buildReceipt(context, 'alice', 'original', 'en', {}, invalid as unknown as Parameters<typeof buildReceipt>[5]), /INVALID_RECEIPT_EXTRA/);
+assert.throws(() => buildReceipt(context, 'alice', 'original', 'en', {}, { GBP: { amount: 90071992547409.9, reason: 'Too large' } }), /INVALID_RECEIPT_EXTRA/, 'The combined balance must stay within safe cents');
 const original = buildReceipt(context, 'alice', 'original', 'pt');
 assert.equal(original.totals.length, 2);
 assert.equal(original.totals[0].total, 10);
@@ -47,6 +63,12 @@ assert.deepEqual(fxTicket.exchange, { date: '2026-10-02', source: 'Frankfurter /
   { currency: 'CAD', amount: 22.77 }, { currency: 'JPY', amount: 2467 },
 ] }, 'current equivalents convert discounted remaining currency groups, rounding JPY only at the end');
 const paidFx = buildReceipt({ ...context, exchangeRates: rateSnapshot }, 'alice', 'original', 'en', { GBP: 3 });
+const extraFx = buildReceipt({ ...context, exchangeRates: rateSnapshot }, 'alice', 'original', 'en', { GBP: 3 }, { USD: { amount: 5, reason: 'Airport pickup' } });
+assert.equal(extraFx.exchange?.amounts[0].amount, 12.4, 'Currency equivalents include positive ticket extras, even for an already paid currency');
+assert.equal(extraFx.exchange?.amounts[1].amount, 15.5);
+const eurExtra = buildReceipt({ ...context, exchangeRates: rateSnapshot }, 'alice', 'eur', 'en', { EUR: 2.35 }, { EUR: { amount: 1.68, reason: 'Pickup' } });
+assert.equal(eurExtra.totals[0].owed, 8);
+assert.equal(eurExtra.exchange?.amounts[0].amount, 8);
 assert.equal(paidFx.exchange?.amounts[0].amount, 8.4, 'already paid USD balance adds no conversion');
 const allPaidFx = buildReceipt({ ...context, exchangeRates: rateSnapshot }, 'alice', 'original', 'en', { GBP: 10 });
 assert(allPaidFx.exchange?.amounts.every(value => value.amount === 0));

@@ -18,20 +18,22 @@ export async function renderReceiptImages(receipt: Receipt, mimeType = 'image/jp
     context.fillRect(0, 0, layout.width, layout.height);
     for (const command of layout.commands) {
       if (command.kind === 'text') {
-        context.font = `${command.bold ? '700' : '400'} ${command.size}px "Courier New", Courier, monospace`;
+        context.font = `${command.bold ? '700' : '400'} ${command.size}px Arial, Helvetica, sans-serif`;
         context.textBaseline = 'alphabetic';
         context.fillStyle = command.color;
-        context.fillText(command.text, command.x, command.y + command.size * 0.629);
+        const width = context.measureText(command.text).width;
+        const x = command.align === 'right' ? command.x - width : command.align === 'center' ? command.x - width / 2 : command.x;
+        context.fillText(command.text, x, command.y + command.size * 0.718);
         if (command.strike) {
           context.save(); context.strokeStyle = command.color; context.lineWidth = 0.6;
-          context.beginPath(); context.moveTo(command.x, command.y + command.size * 0.34);
-          context.lineTo(command.x + Array.from(command.text).length * command.size * 0.6, command.y + command.size * 0.34);
+          context.beginPath(); context.moveTo(x, command.y + command.size * 0.42);
+          context.lineTo(x + width, command.y + command.size * 0.42);
           context.stroke(); context.restore();
         }
       } else if (command.kind === 'rule') {
-        context.save(); context.strokeStyle = '#77776c'; context.lineWidth = 0.5; context.setLineDash([2, 3]);
+        context.save(); context.strokeStyle = '#000000'; context.lineWidth = 0.5; context.setLineDash([2, 3]);
         context.beginPath(); context.moveTo(24, command.y); context.lineTo(layout.width - 24, command.y); context.stroke(); context.restore();
-      } else { context.fillStyle = '#252520'; context.fillRect(command.x, command.y, command.width, command.height); }
+      } else { context.fillStyle = command.color || '#000000'; context.fillRect(command.x, command.y, command.width, command.height); }
     }
     const blob = await new Promise<Blob>((resolve, reject) => canvas.toBlob(value => value ? resolve(value) : reject(new Error('RECEIPT_IMAGE_FAILED')), mimeType, 0.95));
     return [blob];
