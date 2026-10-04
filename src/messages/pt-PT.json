@@ -2262,6 +2262,8 @@
     "invalidDiscount": "Introduz um valor positivo com até duas casas decimais, sem ultrapassar o saldo por pagar.",
     "paidBadge": "Já pago",
     "remainingAmount": "Por pagar: {amount}",
+    "tooTall": "Este projeto é demasiado longo para uma só imagem. Experimenta exportar em PDF ou criar talões por despesa.",
+    "ratesExpired": "As taxas de câmbio deste talão expiraram. Recarrega o talão antes de exportar.",
     "recognizedName": "Reconhecido: {name}. As despesas ficam no mesmo talão.",
     "ambiguousNames": "Duas partes da mesma despesa têm o mesmo nome. Usa nomes distintos na despesa antes de criar o talão."
   }

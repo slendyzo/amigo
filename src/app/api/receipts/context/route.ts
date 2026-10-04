@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { serializeReceiptExpense } from "@/lib/receipt-context";
 import { canonicalReceiptPeople } from "@/lib/receipt-people";
+import { receiptRatesContext } from "@/lib/receipt-rates";
 
 export async function GET(request: Request) {
   try {
@@ -17,14 +18,15 @@ export async function GET(request: Request) {
       ? await prisma.project.findFirst({ where: { id: projectId, workspaceId }, select: { name: true } })
       : await prisma.expense.findFirst({ where: { id: expenseId!, workspaceId }, select: { name: true } });
     if (!scope) return NextResponse.json({ error: "Not found" }, { status: 404 });
-    const [expenses, people] = await Promise.all([
+    const [expenses, people, rates] = await Promise.all([
       prisma.expense.findMany({
         where: { workspaceId, splitCount: { gte: 2, lte: 20 }, ...(projectId ? { projects: { some: { id: projectId } } } : { id: expenseId! }) },
         orderBy: [{ date: "asc" }, { id: "asc" }],
       }),
       prisma.receiptPerson.findMany({ where: { workspaceId }, select: { id: true, name: true }, orderBy: [{ name: "asc" }, { id: "asc" }] }),
+      receiptRatesContext(workspaceId),
     ]);
-    return NextResponse.json({ title: scope.name, people: canonicalReceiptPeople(people), expenses: expenses.map(serializeReceiptExpense) }, { headers: { "Cache-Control": "private, no-store" } });
+    return NextResponse.json({ title: scope.name, people: canonicalReceiptPeople(people), expenses: expenses.map(serializeReceiptExpense), ...rates }, { headers: { "Cache-Control": "private, no-store" } });
   } catch (error) {
     console.error("Receipt context error:", error);
     return NextResponse.json({ error: "Failed to load receipt" }, { status: 500 });

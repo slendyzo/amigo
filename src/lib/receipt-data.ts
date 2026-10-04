@@ -1,9 +1,10 @@
 export type ReceiptExpense = { id: string; description: string; date: string; amount: number; amountEur: number; currency: string; splitCount: number | null; splitData: string | null; updatedAt: string };
 export type ReceiptPerson = { id: string; name: string };
-export type ReceiptContext = { title: string; people: ReceiptPerson[]; expenses: ReceiptExpense[] };
+export type ReceiptExchangeRates = { rates: Record<string, number>; source: 'live'; sourceDate: string };
+export type ReceiptContext = { title: string; people: ReceiptPerson[]; expenses: ReceiptExpense[]; exchangeRates?: ReceiptExchangeRates; ratesToken?: string };
 export type ReceiptTotals = { currency: string; total: number; paid: number; discount: number; owed: number };
 export type ReceiptLine = Omit<ReceiptTotals, 'discount'> & { expenseId: string; description: string; date: string };
-export type Receipt = { title: string; recipient: ReceiptPerson; mode: 'eur' | 'original'; locale: string; lines: ReceiptLine[]; totals: ReceiptTotals[]; labels: ReturnType<typeof getReceiptLabels> };
+export type Receipt = { title: string; recipient: ReceiptPerson; mode: 'eur' | 'original'; locale: string; lines: ReceiptLine[]; totals: ReceiptTotals[]; exchange?: { date: string; source: string; amounts: { currency: string; amount: number }[] }; labels: ReturnType<typeof getReceiptLabels> };
 
 export function getReceiptLabels(locale: string) {
   const dictionaries = {
@@ -11,7 +12,42 @@ export function getReceiptLabels(locale: string) {
     pt: { receipt: 'Talão de despesas', for: 'Preparado para', share: 'A tua parte', paid: 'Pago', owed: 'Por pagar', total: 'Total da tua parte', discount: 'Desconto no talão', balance: 'Saldo em dívida', footer: 'Resumo de despesas pessoais · Não é um recibo fiscal', conversion: 'Valores em EUR às taxas guardadas nas despesas.', continued: 'Continuação', page: 'Página' },
     fr: { receipt: 'Ticket de dépenses', for: 'Préparé pour', share: 'Votre part', paid: 'Payé', owed: 'Restant', total: 'Total de votre part', discount: 'Remise sur le ticket', balance: 'Solde à régler', footer: 'Résumé de dépenses personnelles · Sans valeur fiscale', conversion: 'Montants en EUR aux taux enregistrés des dépenses.', continued: 'Suite', page: 'Page' },
   };
-  return dictionaries[locale.split('-')[0] as keyof typeof dictionaries] || dictionaries.en;
+  const extras = {
+    en: { equivalents: 'Approximate equivalents', ratesUnavailable: 'Current exchange rates unavailable', ratesAsOf: 'Rates as of', thankYou: 'Thank you!' },
+    pt: { equivalents: 'Equivalentes aproximados', ratesUnavailable: 'Taxas de câmbio atuais indisponíveis', ratesAsOf: 'Taxas de', thankYou: 'Obrigado!' },
+    fr: { equivalents: 'Équivalents approximatifs', ratesUnavailable: 'Taux de change actuels indisponibles', ratesAsOf: 'Taux du', thankYou: 'Merci !' },
+  };
+  const language = locale.split('-')[0] as keyof typeof dictionaries;
+  return { ...(dictionaries[language] || dictionaries.en), ...(extras[language] || extras.en) };
+}
+
+const EXCHANGE_CURRENCIES = ['EUR', 'USD', 'GBP', 'CAD', 'JPY'] as const;
+
+export function validReceiptExchangeRates(value: unknown): value is ReceiptExchangeRates {
+  if (!value || typeof value !== 'object') return false;
+  const snapshot = value as ReceiptExchangeRates;
+  return snapshot.source === 'live' && typeof snapshot.sourceDate === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(snapshot.sourceDate) && Number.isFinite(Date.parse(snapshot.sourceDate)) &&
+    new Date(snapshot.sourceDate).toISOString().slice(0, 10) === snapshot.sourceDate &&
+    !!snapshot.rates && typeof snapshot.rates === 'object' && !Array.isArray(snapshot.rates) && snapshot.rates.EUR === 1 &&
+    EXCHANGE_CURRENCIES.every(currency => Number.isFinite(snapshot.rates[currency]) && snapshot.rates[currency] > 0) &&
+    Object.entries(snapshot.rates).every(([currency, rate]) => /^[A-Z]{3}$/.test(currency) && Number.isFinite(rate) && rate > 0);
+}
+
+function exchangeEquivalents(totals: ReceiptTotals[], snapshot: ReceiptContext['exchangeRates']): Receipt['exchange'] {
+  if (!validReceiptExchangeRates(snapshot)) return undefined;
+  let remainingEur = 0;
+  for (const group of totals) {
+    // A fully paid currency needs no conversion and must not block other balances.
+    if (group.owed === 0) continue;
+    const rate = snapshot.rates[group.currency];
+    if (!Number.isFinite(rate) || rate <= 0) return undefined;
+    remainingEur += group.owed * rate;
+  }
+  if (!Number.isFinite(remainingEur) || remainingEur < 0) return undefined;
+  const amounts = EXCHANGE_CURRENCIES.map(currency => ({ currency, amount: Number((remainingEur / snapshot.rates[currency]).toFixed(currency === 'JPY' ? 0 : 2)) }));
+  if (amounts.some(item => !Number.isSafeInteger(Math.round(item.amount * (item.currency === 'JPY' ? 1 : 100))))) return undefined;
+  return { date: snapshot.sourceDate, source: 'Frankfurter / ECB', amounts };
 }
 
 function cents(value: number) {
@@ -71,7 +107,8 @@ export function buildReceipt(context: ReceiptContext, personId: string, mode: 'e
     group.discount = discount;
     group.owed -= discount;
   }
-  return { title: context.title, recipient: { id: person.id, name: person.name }, mode, locale, lines, totals: [...groups.values()].map(g => ({ currency: g.currency, total: g.total / 100, paid: g.paid / 100, discount: g.discount / 100, owed: g.owed / 100 })), labels: getReceiptLabels(locale) };
+  const totals = [...groups.values()].map(g => ({ currency: g.currency, total: g.total / 100, paid: g.paid / 100, discount: g.discount / 100, owed: g.owed / 100 }));
+  return { title: context.title, recipient: { id: person.id, name: person.name }, mode, locale, lines, totals, exchange: exchangeEquivalents(totals, context.exchangeRates), labels: getReceiptLabels(locale) };
 }
 
 export function receiptMoney(amount: number, currency: string, locale: string) {

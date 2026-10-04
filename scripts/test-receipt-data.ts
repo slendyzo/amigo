@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { buildReceipt, type ReceiptContext } from '../src/lib/receipt-data';
 import { renderReceiptPdf } from '../src/lib/receipt-pdf';
+import { signReceiptRates, verifyReceiptRates } from '../src/lib/receipt-rates';
 
 async function main() {
 const context: ReceiptContext = { title: 'New York', people: [{ id: 'alice', name: 'Alice' }, { id: 'bob', name: 'Bob' }], expenses: [] };
@@ -34,6 +35,47 @@ assert.equal(buildReceipt(context, 'bob', 'original', 'en').totals[1].owed, 10);
 const original = buildReceipt(context, 'alice', 'original', 'pt');
 assert.equal(original.totals.length, 2);
 assert.equal(original.totals[0].total, 10);
+const rateSnapshot = { source: 'live' as const, sourceDate: '2026-10-02', rates: { EUR: 1, USD: 0.8, GBP: 1.2, CAD: 0.65, JPY: 0.006 } };
+const fxContext = structuredClone(context);
+fxContext.exchangeRates = rateSnapshot;
+const fxRows = JSON.parse(fxContext.expenses[0].splitData!);
+fxRows[1].repayment.paid = false;
+fxContext.expenses[0].splitData = JSON.stringify(fxRows);
+const fxTicket = buildReceipt(fxContext, 'alice', 'original', 'en', { USD: 2, GBP: 3 });
+assert.deepEqual(fxTicket.exchange, { date: '2026-10-02', source: 'Frankfurter / ECB', amounts: [
+  { currency: 'EUR', amount: 14.8 }, { currency: 'USD', amount: 18.5 }, { currency: 'GBP', amount: 12.33 },
+  { currency: 'CAD', amount: 22.77 }, { currency: 'JPY', amount: 2467 },
+] }, 'current equivalents convert discounted remaining currency groups, rounding JPY only at the end');
+const paidFx = buildReceipt({ ...context, exchangeRates: rateSnapshot }, 'alice', 'original', 'en', { GBP: 3 });
+assert.equal(paidFx.exchange?.amounts[0].amount, 8.4, 'already paid USD balance adds no conversion');
+const allPaidFx = buildReceipt({ ...context, exchangeRates: rateSnapshot }, 'alice', 'original', 'en', { GBP: 10 });
+assert(allPaidFx.exchange?.amounts.every(value => value.amount === 0));
+const eurFx = buildReceipt({ ...context, exchangeRates: rateSnapshot }, 'alice', 'eur', 'en', { EUR: 2.35 });
+assert.equal(eurFx.exchange?.amounts[0].amount, 6.32, 'EUR mode converts its already discounted EUR balance');
+assert.equal(eurFx.exchange?.amounts[1].amount, 7.9);
+for (const invalidSnapshot of [undefined, { ...rateSnapshot, source: 'static' }, { ...rateSnapshot, sourceDate: '2026-02-30' }, { ...rateSnapshot, rates: { ...rateSnapshot.rates, USD: 0 } }, { ...rateSnapshot, rates: { ...rateSnapshot.rates, GBP: Infinity } }, { ...rateSnapshot, rates: { ...rateSnapshot.rates, JPY: -1 } }, { ...rateSnapshot, rates: { EUR: 1, USD: 0.8 } }]) {
+  assert.equal(buildReceipt({ ...context, exchangeRates: invalidSnapshot as ReceiptContext['exchangeRates'] }, 'alice', 'original', 'en').exchange, undefined);
+}
+const unsupported = structuredClone(context);
+unsupported.exchangeRates = rateSnapshot;
+unsupported.expenses[0].currency = 'XXX';
+assert(buildReceipt(unsupported, 'alice', 'original', 'en').exchange, 'zero-owed unknown currencies do not prevent conversions');
+unsupported.expenses[1].currency = 'XXX';
+assert.equal(buildReceipt(unsupported, 'alice', 'original', 'en').exchange, undefined, 'unpaid missing currency rates are never guessed');
+const priorSecret = process.env.AUTH_SECRET;
+try {
+  process.env.AUTH_SECRET = 'receipt-regression-secret-only';
+  const now = Date.parse('2026-10-02T12:00:00Z');
+  const token = signReceiptRates('workspace-a', rateSnapshot, now);
+  assert.deepEqual(verifyReceiptRates(token, 'workspace-a', now + 60000), rateSnapshot);
+  assert.throws(() => verifyReceiptRates(token, 'workspace-b', now), /INVALID_RECEIPT_RATES_TOKEN/);
+  assert.throws(() => verifyReceiptRates(token, 'workspace-a', now + 24 * 60 * 60 * 1000), /INVALID_RECEIPT_RATES_TOKEN/);
+  assert.throws(() => verifyReceiptRates(token + 'x', 'workspace-a', now), /INVALID_RECEIPT_RATES_TOKEN/);
+  assert.equal(verifyReceiptRates(signReceiptRates('workspace-a', undefined, now), 'workspace-a', now), undefined, 'unavailable snapshot remains unavailable for export');
+  delete process.env.AUTH_SECRET;
+  assert.equal(signReceiptRates('workspace-a', rateSnapshot, now), 'unavailable');
+  assert.equal(verifyReceiptRates('unavailable', 'workspace-a', now), undefined);
+} finally { if (priorSecret === undefined) delete process.env.AUTH_SECRET; else process.env.AUTH_SECRET = priorSecret; }
 const serialized = JSON.stringify(eur);
 assert(!serialized.includes('Bob')); assert(!serialized.includes('private repayment memo')); assert(!serialized.includes('splitData')); assert(!serialized.includes('amountEur'));
 assert.throws(() => buildReceipt(context, 'owner', 'eur', 'en'), /NOT_FOUND/);
@@ -47,7 +89,10 @@ zero.expenses[0].amountEur = 5; assert.throws(() => buildReceipt(zero, 'alice', 
 const pdf = await renderReceiptPdf(eur); assert(pdf.subarray(0, 4).toString() === '%PDF');
 assert((await renderReceiptPdf(discounted)).subarray(0, 4).toString() === '%PDF');
 const long = { ...eur, lines: Array.from({length: 100}, (_, i) => ({...eur.lines[0], expenseId: String(i), description: 'Very long dinner description '.repeat(20)})) };
-const longPdf = await renderReceiptPdf(long); assert(longPdf.length > pdf.length);
+await assert.rejects(renderReceiptPdf(long), /RECEIPT_TOO_TALL/);
+const project = { ...eur, lines: Array.from({length: 60}, (_, i) => ({...eur.lines[0], expenseId: String(i), description: 'Dinner in Brooklyn'})) };
+const longPdf = await renderReceiptPdf(project); assert(longPdf.length > pdf.length);
+assert.equal((longPdf.toString('latin1').match(/\/Type \/Page\b/g) || []).length, 1, 'Long projects remain one continuous PDF page');
 console.log('Receipt data and PDF tests passed.');
 }
 main().catch(error => { console.error(error); process.exitCode = 1; });

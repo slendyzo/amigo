@@ -66,7 +66,7 @@ async function getRatesWithMeta(): Promise<{
     // Frankfurter API: free, no key, no rate limits, ECB data
     const response = await fetch(
       "https://api.frankfurter.dev/v1/latest",
-      { next: { revalidate: 3600 } } // Cache for 1h in Next.js
+      { next: { revalidate: 3600 }, signal: AbortSignal.timeout(5000) } // Cache for 1h in Next.js
     );
 
     if (!response.ok) {
@@ -106,6 +106,12 @@ async function getRatesWithMeta(): Promise<{
 
 export async function getExchangeRates(): Promise<Record<string, number>> {
   return (await getRatesWithMeta()).rates;
+}
+
+/** Read rates and provenance together so one receipt never combines two fetches. */
+export async function getExchangeRatesSnapshot() {
+  const snapshot = await getRatesWithMeta();
+  return { ...snapshot, rates: { ...snapshot.rates } };
 }
 
 // For UI: get the rate snapshot's source + date (when was this rate set by the ECB?)

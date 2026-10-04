@@ -106,7 +106,7 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
         if (cancelled) return;
         urls = jpg.map(blob => URL.createObjectURL(blob));
         setImages({ jpg, png, urls });
-      }).catch(() => { if (!cancelled) setError(t("imageError")); });
+      }).catch(e => { if (!cancelled) setError(t(e instanceof Error && e.message === "RECEIPT_TOO_TALL" ? "tooTall" : "imageError")); });
     return () => { cancelled = true; urls.forEach(url => URL.revokeObjectURL(url)); };
   }, [receipt, t]);
 
@@ -159,10 +159,14 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
     setBusy(true); setError("");
     try {
       const discounts = Object.fromEntries(receipt.totals.map(total => [total.currency, total.discount]));
-      const response = await fetch(`/api/receipts/export?${scope}&personId=${encodeURIComponent(active)}&mode=${mode}&locale=${encodeURIComponent(locale)}&discounts=${encodeURIComponent(JSON.stringify(discounts))}`);
-      if (!response.ok) throw new Error();
+      const rateQuery = context?.ratesToken ? `&ratesToken=${encodeURIComponent(context.ratesToken)}` : "";
+      const response = await fetch(`/api/receipts/export?${scope}&personId=${encodeURIComponent(active)}&mode=${mode}&locale=${encodeURIComponent(locale)}&discounts=${encodeURIComponent(JSON.stringify(discounts))}${rateQuery}`);
+      if (!response.ok) {
+        const result = await response.json().catch(() => ({}));
+        throw new Error(result.code === "INVALID_RECEIPT_RATES_TOKEN" ? t("ratesExpired") : t("exportError"));
+      }
       download(await response.blob(), receiptFilename(receipt, "pdf"));
-    } catch { setError(t("exportError")); }
+    } catch (e) { setError(e instanceof Error && e.message ? e.message : t("exportError")); }
     finally { setBusy(false); }
   }
   async function copyImage() {
@@ -251,6 +255,7 @@ export default function ReceiptModal({ isOpen, onClose, expenseId, projectId, on
                 {receipt?.lines.map(line => <p key={line.expenseId}>{new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeZone: "UTC" }).format(new Date(line.date))}. {line.description}: {line.total} {line.currency}, {line.paid} {t("paid")}, {line.owed} {t("owed")}</p>)}
                 {receipt?.totals.map(total => <p key={total.currency}>{receipt.labels.total}: {total.total} {total.currency}. {receipt.labels.paid}: {total.paid} {total.currency}. {total.discount > 0 && <>{receipt.labels.discount}: −{total.discount} {total.currency}. </>}{receipt.labels.balance}: {total.owed} {total.currency}.</p>)}
                 {receipt?.mode === "eur" && <p>{receipt.labels.conversion}</p>}
+                {receipt?.exchange ? <p>{receipt.labels.equivalents}: {receipt.exchange.amounts.map(value => new Intl.NumberFormat(locale, { style: "currency", currency: value.currency }).format(value.amount)).join("; ")}. {receipt.labels.ratesAsOf}: {receipt.exchange.date} ({receipt.exchange.source}).</p> : receipt && <p>{receipt.labels.ratesUnavailable}</p>}
               </section>
             </div> : receipt && <div role="status" className="mx-auto h-72 max-w-[380px] animate-pulse bg-[var(--surface-2)] rounded-xl"><span className="sr-only">{t("loading")}</span></div>}
           </div>}

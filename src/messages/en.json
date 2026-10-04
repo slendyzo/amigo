@@ -2293,6 +2293,8 @@
     "invalidDiscount": "Enter a positive amount with up to two decimal places, no higher than the remaining balance.",
     "paidBadge": "Already paid",
     "remainingAmount": "Remaining: {amount}",
+    "tooTall": "This project is too long for one image. Try the PDF export or create individual expense tickets.",
+    "ratesExpired": "The exchange-rate snapshot has expired. Reload this receipt before exporting.",
     "recognizedName": "Recognized: {name}. Their expenses will go on the same ticket.",
     "ambiguousNames": "Two shares in the same expense have the same name. Give them distinct names in the expense before creating a receipt."
   }

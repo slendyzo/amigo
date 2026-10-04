@@ -2264,6 +2264,8 @@
     "invalidDiscount": "Saisissez un montant positif avec deux décimales maximum, sans dépasser le solde restant.",
     "paidBadge": "Déjà payé",
     "remainingAmount": "Restant : {amount}",
+    "tooTall": "Ce projet est trop long pour une seule image. Essayez le PDF ou créez des tickets par dépense.",
+    "ratesExpired": "Les taux de change de ce ticket ont expiré. Rechargez le ticket avant un nouvel export.",
     "recognizedName": "Reconnu : {name}. Les dépenses figureront sur le même ticket.",
     "ambiguousNames": "Deux parts de la même dépense portent le même nom. Donnez-leur des noms distincts avant de créer un ticket."
   }

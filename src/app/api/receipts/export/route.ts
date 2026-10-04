@@ -4,6 +4,7 @@ import { getActiveWorkspace } from "@/lib/workspace";
 import { serializeReceiptExpense } from "@/lib/receipt-context";
 import { buildReceipt, receiptFilename } from "@/lib/receipt-data";
 import { renderReceiptPdf } from "@/lib/receipt-pdf";
+import { receiptRatesContext, verifyReceiptRates } from "@/lib/receipt-rates";
 
 export const runtime = "nodejs";
 
@@ -28,6 +29,13 @@ export async function GET(request: Request) {
       prisma.receiptPerson.findFirst({ where: { id: personId, workspaceId }, select: { id: true, name: true } }),
     ]);
     if (!scope || !person) return NextResponse.json({ error: "Not found" }, { status: 404 });
+    let exchangeRates;
+    try {
+      const token = query.get("ratesToken");
+      exchangeRates = token !== null ? verifyReceiptRates(token, workspaceId) : (await receiptRatesContext(workspaceId)).exchangeRates;
+    } catch {
+      return NextResponse.json({ error: "Exchange-rate snapshot expired or invalid. Reload the receipt.", code: "INVALID_RECEIPT_RATES_TOKEN" }, { status: 422 });
+    }
     const expenses = await prisma.expense.findMany({
       where: { workspaceId, splitCount: { gte: 2, lte: 20 }, ...(projectId ? { projects: { some: { id: projectId } } } : { id: expenseId! }) },
       orderBy: [{ date: "asc" }, { id: "asc" }],
@@ -38,7 +46,7 @@ export async function GET(request: Request) {
       if (rawDiscounts.length > 2000) throw new Error("Invalid discounts");
       const discounts: unknown = JSON.parse(rawDiscounts);
       if (!discounts || typeof discounts !== "object" || Array.isArray(discounts) || Object.values(discounts).some(value => typeof value !== "number")) throw new Error("Invalid discounts");
-      receipt = buildReceipt({ title: scope.name, people: [person], expenses: expenses.map(serializeReceiptExpense) }, person.id, mode as "eur" | "original", locale, discounts as Record<string, number>);
+      receipt = buildReceipt({ title: scope.name, people: [person], expenses: expenses.map(serializeReceiptExpense), exchangeRates }, person.id, mode as "eur" | "original", locale, discounts as Record<string, number>);
     }
     catch { return NextResponse.json({ error: "Check expense splits before exporting" }, { status: 422 }); }
     const pdf = await renderReceiptPdf(receipt);
