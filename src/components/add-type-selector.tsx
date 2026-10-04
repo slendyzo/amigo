@@ -9,6 +9,7 @@ import { Modal, ModalHeader, ModalBody } from "@/components/ui/modal";
 const AddExpenseModal = lazy(() => import("./add-expense-modal"));
 const AddIncomeModal = lazy(() => import("./add-income-modal"));
 const ReceiptScannerModal = lazy(() => import("./receipt-scanner-modal"));
+const ScreenshotExpensesModal = lazy(() => import("./screenshot-expenses-modal"));
 const AddVehicleModal = lazy(() => import("./add-vehicle-modal"));
 const AddPropertyModal = lazy(() => import("./add-property-modal"));
 
@@ -40,17 +41,19 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
   const router = useRouter();
   const t = useTranslations("common");
   const tScanner = useTranslations("receiptScanner");
+  const tScreenshots = useTranslations("screenshotExpenses");
   const tRwa = useTranslations("rwa");
   const [showExpenseModal, setShowExpenseModal] = useState(false);
   const [showIncomeModal, setShowIncomeModal] = useState(false);
   const [showReceiptScanner, setShowReceiptScanner] = useState(false);
+  const [showScreenshots, setShowScreenshots] = useState(false);
   const [showVehicleModal, setShowVehicleModal] = useState(false);
   const [showPropertyModal, setShowPropertyModal] = useState(false);
 
   // Only return null if not open AND no modals are showing
   // This prevents unmounting the modals when the selector closes
-  const showSelector = isOpen && !showExpenseModal && !showIncomeModal && !showReceiptScanner && !showVehicleModal && !showPropertyModal;
-  const isActive = isOpen || showExpenseModal || showIncomeModal || showReceiptScanner || showVehicleModal || showPropertyModal;
+  const showSelector = isOpen && !showExpenseModal && !showIncomeModal && !showReceiptScanner && !showScreenshots && !showVehicleModal && !showPropertyModal;
+  const isActive = isOpen || showExpenseModal || showIncomeModal || showReceiptScanner || showScreenshots || showVehicleModal || showPropertyModal;
 
   if (!isActive) return null;
 
@@ -78,6 +81,7 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
     setShowExpenseModal(false);
     setShowIncomeModal(false);
     setShowReceiptScanner(false);
+    setShowScreenshots(false);
     setShowVehicleModal(false);
     setShowPropertyModal(false);
     onClose();
@@ -137,6 +141,23 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
                   <svg className="w-5 h-5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
+                </button>
+
+                <button
+                  onClick={() => setShowScreenshots(true)}
+                  className="w-full flex items-center gap-4 p-4 rounded-[18px] border border-[var(--line)] transition-colors duration-200 tap-none active:scale-[0.98] focus-visible:outline-2 focus-visible:outline-[var(--accent)]"
+                  style={{ background: "var(--surface)", boxShadow: "var(--shadow-card)" }}
+                >
+                  <div className="flex-shrink-0 w-12 h-12 rounded-xl flex items-center justify-center" style={{ background: "var(--surface-2)" }}>
+                    <svg className="w-6 h-6 text-[var(--accent)]" fill="none" stroke="currentColor" viewBox="0 0 24 24" strokeWidth={1.75}>
+                      <rect x="4" y="3" width="16" height="18" rx="3" /><path strokeLinecap="round" strokeLinejoin="round" d="M8 8h8M8 12h5M8 16h8" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 text-left">
+                    <h4 className="font-semibold text-[var(--ink)]">{tScreenshots("title")}</h4>
+                    <p className="text-sm text-[var(--ink-muted)]">{tScreenshots("menuDescription")}</p>
+                  </div>
+                  <svg className="w-5 h-5 text-[var(--ink-subtle)]" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                 </button>
 
                 {/* Income Option */}
@@ -268,6 +289,11 @@ export default function AddTypeSelector({ isOpen, onClose, onExpenseCreated }: A
             isOpen={showReceiptScanner}
             onClose={handleModalClose}
           />
+        </Suspense>
+      )}
+      {showScreenshots && (
+        <Suspense fallback={null}>
+          <ScreenshotExpensesModal isOpen={showScreenshots} onClose={handleModalClose} onExpenseCreated={onExpenseCreated} />
         </Suspense>
       )}
       {showVehicleModal && (
