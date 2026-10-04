@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { buildReceipt, type ReceiptContext } from '../src/lib/receipt-data';
 import { renderReceiptPdf } from '../src/lib/receipt-pdf';
+import { buildReceiptLayout } from '../src/lib/receipt-layout';
 import { signReceiptRates, verifyReceiptRates } from '../src/lib/receipt-rates';
 
 async function main() {
@@ -109,6 +110,18 @@ const zero = structuredClone(context); zero.expenses = [zero.expenses[0]]; zero.
 assert.equal(buildReceipt(zero, 'alice', 'eur', 'fr').totals[0].owed, 0);
 zero.expenses[0].amountEur = 5; assert.throws(() => buildReceipt(zero, 'alice', 'eur', 'en'), /CONVERSION/);
 const pdf = await renderReceiptPdf(eur); assert(pdf.subarray(0, 4).toString() === '%PDF');
+const paidHistory = structuredClone(context);
+paidHistory.expenses[0].amount = 3558.48;
+paidHistory.expenses[0].amountEur = 3558.48;
+paidHistory.expenses[0].currency = 'EUR';
+paidHistory.expenses[0].splitData = JSON.stringify([{ amount: 1186.16 }, { personId: 'alice', amount: 1186.16, repayment: { paid: true } }, { personId: 'bob', amount: 1186.16 }]);
+const paymentTicket = buildReceipt(paidHistory, 'alice', 'original', 'en', { GBP: 2 }, { GBP: { amount: 5, reason: 'Airport bags' } });
+const paymentText = buildReceiptLayout(paymentTicket).commands.filter(command => command.kind === 'text').map(command => command.text).join('\n');
+assert(!paymentText.includes('1,186.16'), 'Already-paid thousand-plus history must never appear as money on a payment ticket');
+assert(!paymentText.includes('Expenses'), 'Gross expense subtotals do not appear in the payment summary');
+assert(paymentText.includes('Paid') && paymentText.includes('GBP 13.00'), 'Paid status stays visible and amount due includes only unpaid balance, discount and extra');
+const noAdjustmentText = buildReceiptLayout(buildReceipt(paidHistory, 'alice', 'original', 'en')).commands.filter(command => command.kind === 'text').map(command => command.text);
+assert.equal(noAdjustmentText.filter(value => value === 'GBP 10.00').length, 2, 'Unpaid share appears as item and final due, without another subtotal');
 assert((await renderReceiptPdf(discounted)).subarray(0, 4).toString() === '%PDF');
 const long = { ...eur, lines: Array.from({length: 100}, (_, i) => ({...eur.lines[0], expenseId: String(i), description: 'Very long dinner description '.repeat(20)})) };
 await assert.rejects(renderReceiptPdf(long), /RECEIPT_TOO_TALL/);

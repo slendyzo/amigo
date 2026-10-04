@@ -86,7 +86,7 @@ export function buildReceiptLayout(receipt: Receipt): ReceiptLayout {
       return;
     }
     const lines = wrap(label, leftWidth, size, bold);
-    text(amount, WIDTH - MARGIN, y, size, bold, color, strike, 'right');
+    text(amount, WIDTH - MARGIN, y, size, bold, color, strike && amount !== receipt.labels.paid, 'right');
     for (const line of lines) { text(line, MARGIN, y, size, bold, color, strike); y += size * 1.4; }
   }
   centered('SLENDY BANK INC', 17, true);
@@ -97,22 +97,17 @@ export function buildReceiptLayout(receipt: Receipt): ReceiptLayout {
   rule();
   for (const line of receipt.lines) {
     const settled = line.paid > 0 && line.owed === 0;
-    row(line.description, money(line.total, line.currency), 10, false, settled ? MUTED : INK, settled);
+    row(line.description, settled ? receipt.labels.paid : money(line.owed, line.currency), 10, false, settled ? MUTED : INK, settled);
     const date = new Intl.DateTimeFormat(receipt.locale, { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'UTC' }).format(new Date(line.date));
-    const status = line.paid > 0 ? `${date} · ${receipt.labels.paid}: ${money(line.paid, line.currency)} · ${receipt.labels.owed}: ${money(line.owed, line.currency)}` : date;
-    for (const small of wrap(status, CONTENT, 7.5)) { text(small, MARGIN, y + 1, 7.5, false, MUTED); y += 10; }
+    for (const small of wrap(date, CONTENT, 7.5)) { text(small, MARGIN, y + 1, 7.5, false, MUTED); y += 10; }
     y += 7;
   }
   rule();
-  for (const total of receipt.totals) {
-    if (total.owed === 0 && total.total === total.paid && total.discount === 0 && !total.extra) {
-      text(total.currency + ' — ' + receipt.labels.paid, MARGIN, y, 10, true);
-      y += 23;
-      continue;
-    }
-    if (receipt.totals.length > 1) { text(total.currency, MARGIN, y, 10, true); y += 18; }
-    row(receipt.labels.total, money(total.total, total.currency));
-    if (total.paid > 0) row(receipt.labels.paid, money(-total.paid, total.currency));
+  const paymentTotals = receipt.totals.filter(total => total.total > total.paid || total.extra);
+  if (!paymentTotals.length) row(receipt.labels.balance.toLocaleUpperCase(receipt.locale), money(0, receipt.totals[0].currency), 12, true);
+  for (const total of paymentTotals) {
+    if (paymentTotals.length > 1) { text(total.currency, MARGIN, y, 10, true); y += 18; }
+    if (total.discount > 0 || total.extra) row(receipt.labels.owed, money(Math.round((total.total - total.paid) * 100) / 100, total.currency));
     if (total.discount > 0) row(receipt.labels.discount, money(-total.discount, total.currency), 10, true, RED);
     if (total.extra && total.extra.amount > 0) {
       y += 7;
