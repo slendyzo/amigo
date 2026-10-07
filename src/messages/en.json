@@ -667,6 +667,8 @@
     "description": "Description",
     "budget": "Budget",
     "totalSpent": "Total Spent",
+    "reimbursed": "Reimbursed",
+    "yourCost": "Your cost",
     "projectAdded": "Project added successfully",
     "projectUpdated": "Project updated successfully",
     "projectDeleted": "Project deleted successfully",
@@ -716,7 +718,7 @@
     "inactive": "Closed",
     "notFound": "Project not found",
     "remaining": "Remaining",
-    "totalExpenses": "Total spent"
+    "totalExpenses": "Expenses"
   },
   "recurring": {
     "addPastMonths": "Add past months",
@@ -1389,16 +1391,16 @@
       "netZero": "Net zero",
       "reimbursed": "Fully reimbursed",
       "reimbursedHint": "The whole expense was reimbursed. Split participants paying their own shares does not mark the whole expense reimbursed.",
-      "title": "Count toward totals",
+      "title": "Count toward budget",
       "AUTO": "Automatic",
       "INCLUDE": "Include",
       "EXCLUDE": "Exclude",
-      "AUTOHint": "Fully reimbursed expenses contribute zero; other expenses count your share.",
-      "INCLUDEHint": "Always count your share, even when the whole expense is reimbursed.",
+      "AUTOHint": "Reimbursed expenses count zero toward the budget. Their original cost stays visible in Total spent.",
+      "INCLUDEHint": "Count your share toward the project budget, even when reimbursed. Your cost still shows zero.",
       "EXCLUDEHint": "Keep this expense for bookkeeping only, with zero impact on spending, project totals and account activity.",
-      "counted": "Your share counts toward project totals",
-      "notCounted": "Not counted toward project totals",
-      "scope": "Fully reimbursed or excluded expenses count as zero in monthly spending, overall totals and account activity. Include overrides project totals only."
+      "counted": "Your share counts toward the project budget",
+      "notCounted": "Not counted toward the project budget",
+      "scope": "Reimbursed expenses keep their original project spend but have zero personal cost. Excluded expenses have no financial impact. Include overrides the project budget only."
     }
   },
   "install": {

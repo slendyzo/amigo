@@ -15,6 +15,23 @@ export function projectContributionEur(expense: Parameters<typeof effectiveEur>[
   return countsInProjectTotal(expense) ? effectiveEur(expense) : 0;
 }
 
+/** Original own-share cost remains visible after reimbursement; explicit exclusions stay excluded. */
+export function projectGrossContributionEur(expense: Parameters<typeof effectiveEur>[0] & ProjectCounting): number {
+  return expense.projectTotalMode === "EXCLUDE" ? 0 : effectiveEur(expense);
+}
+
+export function projectExpenseTotals(expenses: readonly (Parameters<typeof effectiveEur>[0] & ProjectCounting)[]) {
+  return expenses.reduce((totals, expense) => {
+    const gross = projectGrossContributionEur(expense);
+    totals.totalSpent += gross;
+    totals.reimbursed += expense.fullyReimbursed ? gross : 0;
+    totals.yourCost += expense.fullyReimbursed ? 0 : gross;
+    // Preserve the existing Include override for the project's budget.
+    totals.budgetSpent += projectContributionEur(expense);
+    return totals;
+  }, { totalSpent: 0, reimbursed: 0, yourCost: 0, budgetSpent: 0 });
+}
+
 /** Preserve omitted fields during partial updates; reject coercions and unknown modes. */
 export function projectCountingUpdate(body: Record<string, unknown>): ProjectCounting {
   const update: ProjectCounting = {};

@@ -14,7 +14,7 @@ import ProjectWrappedModal from "@/components/project-wrapped-modal";
 import ReceiptModal from "@/components/receipt-modal";
 import { Modal, ModalBody, ModalFooter } from "@/components/ui/modal";
 import { useCategoryTranslation } from "@/hooks/use-category-translation";
-import { projectContributionEur, type ProjectCounting } from "@/lib/project-expense-totals";
+import { projectGrossContributionEur, projectExpenseTotals, type ProjectCounting } from "@/lib/project-expense-totals";
 import { ProjectExpenseStatus } from "@/components/expense-project-counting";
 import { effectiveEur, getUserShare } from "@/lib/split-utils";
 import { formatCurrency } from "@/lib/currencies";
@@ -91,7 +91,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
   const [project, setProject] = useState<Project | null>(null);
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [totalSpent, setTotalSpent] = useState(0);
+  const { totalSpent, reimbursed, yourCost, budgetSpent } = projectExpenseTotals(expenses);
 
   // Add modal state
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -142,7 +142,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
         expectedTotal = data.total ?? allExpenses.length;
       }
       setExpenses(allExpenses);
-      setTotalSpent(allExpenses.reduce((sum, exp) => sum + projectContributionEur(exp), 0));
+
     } catch (error) {
       console.error("Failed to fetch expenses:", error);
     } finally {
@@ -197,11 +197,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       if (response.ok) {
         const newExpenses = expenses.filter((e) => e.id !== id);
         setExpenses(newExpenses);
-        const newTotal = newExpenses.reduce(
-          (sum: number, exp: Expense) => sum + projectContributionEur(exp),
-          0
-        );
-        setTotalSpent(newTotal);
+
       }
     } catch (error) {
       console.error("Failed to delete expense:", error);
@@ -228,7 +224,7 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
       groups[key] = { label, expenses: [], total: 0 };
     }
     groups[key].expenses.push(expense);
-    groups[key].total += projectContributionEur(expense);
+    groups[key].total += projectGrossContributionEur(expense);
     return groups;
   }, {} as Record<string, { label: string; expenses: Expense[]; total: number }>);
 
@@ -262,8 +258,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
     );
   }
 
-  const budgetUsedPercent = project.budget ? (totalSpent / Number(project.budget)) * 100 : 0;
-  const remaining = project.budget ? Number(project.budget) - totalSpent : 0;
+  const budgetUsedPercent = project.budget ? (budgetSpent / Number(project.budget)) * 100 : 0;
+  const remaining = project.budget ? Number(project.budget) - budgetSpent : 0;
 
   const iconBtn = "flex h-10 w-10 shrink-0 items-center justify-center rounded-full";
 
@@ -319,9 +315,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Stat tiles */}
       <motion.div {...sectionMotion(2)} className="grid grid-cols-2 gap-3 md:grid-cols-4">
-        <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>
+        <div className="col-span-2 rounded-[18px] p-4 md:col-span-1" style={{ background: "var(--surface)", ...cardShadow }}>
           <p className="mb-1 text-[12px]" style={{ color: "var(--ink-muted)" }}>{t("totalSpent")}</p>
           <p className="text-[20px] font-bold tabular-nums" style={{ color: "var(--ink)" }}>{fmtEur(totalSpent)}</p>
+          <dl className="mt-3 space-y-1 text-[12px] text-[var(--ink-muted)]">
+            <div className="flex flex-wrap justify-between gap-x-3"><dt>{t("reimbursed")}</dt><dd className="tabular-nums">{fmtEur(reimbursed)}</dd></div>
+            <div className="flex flex-wrap justify-between gap-x-3"><dt>{t("yourCost")}</dt><dd className="font-semibold tabular-nums text-[var(--ink)]">{fmtEur(yourCost)}</dd></div>
+          </dl>
         </div>
         {project.budget != null && (
           <div className="rounded-[18px] p-4" style={{ background: "var(--surface)", ...cardShadow }}>

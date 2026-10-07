@@ -8,6 +8,8 @@ import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/moda
 type WrappedData = {
   projectName: string;
   totalSpent: number;
+  reimbursed: number;
+  yourCost: number;
   expenseCount: number;
   budgetUsage: number | null;
   budget: number | null;
@@ -73,6 +75,7 @@ export default function ProjectWrappedModal({
   projectId,
 }: ProjectWrappedModalProps) {
   const t = useTranslations("projects.projectWrapped");
+  const tProjects = useTranslations("projects");
   const tCommon = useTranslations("common");
   const { translateCategory } = useCategoryTranslation();
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -242,6 +245,10 @@ export default function ProjectWrappedModal({
                   <p className="text-lg opacity-80">
                     {data.expenseCount} {data.expenseCount === 1 ? "expense" : "expenses"}
                   </p>
+                  <dl className="mx-auto mt-5 max-w-xs space-y-2 text-sm">
+                    <div className="flex flex-wrap justify-between gap-x-4"><dt>{tProjects("reimbursed")}</dt><dd className="tabular-nums">€{Number(data.reimbursed ?? 0).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</dd></div>
+                    <div className="flex flex-wrap justify-between gap-x-4"><dt>{tProjects("yourCost")}</dt><dd className="font-semibold tabular-nums">€{Number(data.yourCost ?? data.totalSpent).toLocaleString("en-GB", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</dd></div>
+                  </dl>
                   {data.budget && (
                     <div className="mt-8 w-full max-w-xs">
                       <div className="flex justify-between text-sm mb-2">

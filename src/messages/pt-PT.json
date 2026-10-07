@@ -667,6 +667,8 @@
     "description": "Descrição",
     "budget": "Orçamento",
     "totalSpent": "Total Gasto",
+    "reimbursed": "Reembolsado",
+    "yourCost": "O teu custo",
     "projectAdded": "Projeto adicionado com sucesso",
     "projectUpdated": "Projeto atualizado com sucesso",
     "projectDeleted": "Projeto eliminado com sucesso",
@@ -716,7 +718,7 @@
     "inactive": "Fechado",
     "notFound": "Projeto não encontrado",
     "remaining": "Restante",
-    "totalExpenses": "Total gasto"
+    "totalExpenses": "Despesas"
   },
   "recurring": {
     "addPastMonths": "Adicionar meses anteriores",
@@ -1389,16 +1391,16 @@
       "netZero": "Saldo zero",
       "reimbursed": "Totalmente reembolsada",
       "reimbursedHint": "Toda a despesa foi reembolsada. O pagamento das partes dos outros participantes não marca toda a despesa como reembolsada.",
-      "title": "Contar nos totais",
+      "title": "Contar no orçamento",
       "AUTO": "Automático",
       "INCLUDE": "Incluir",
       "EXCLUDE": "Excluir",
-      "AUTOHint": "Despesas totalmente reembolsadas contam zero; nas restantes, conta a tua parte.",
-      "INCLUDEHint": "Contar sempre a tua parte, mesmo que toda a despesa seja reembolsada.",
+      "AUTOHint": "Despesas reembolsadas contam zero no orçamento. O custo original continua visível no total gasto.",
+      "INCLUDEHint": "Contar a tua parte no orçamento do projeto, mesmo quando reembolsada. O teu custo continua a ser zero.",
       "EXCLUDEHint": "Guardar esta despesa apenas para registo, sem impacto nos gastos, totais dos projetos ou movimentos das contas.",
-      "counted": "A tua parte conta nos totais dos projetos",
-      "notCounted": "Não conta nos totais dos projetos",
-      "scope": "Despesas reembolsadas ou excluídas contam zero nos gastos mensais, totais gerais e movimentos das contas. Incluir só altera os totais dos projetos."
+      "counted": "A tua parte conta no orçamento do projeto",
+      "notCounted": "Não conta no orçamento do projeto",
+      "scope": "Despesas reembolsadas mantêm o gasto original do projeto, mas têm custo pessoal zero. Despesas excluídas não têm impacto financeiro. Incluir só altera o orçamento do projeto."
     }
   },
   "install": {

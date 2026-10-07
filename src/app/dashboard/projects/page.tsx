@@ -19,6 +19,9 @@ type Project = {
   isActive: boolean;
   _count?: { expenses: number };
   totalSpent?: number;
+  reimbursed?: number;
+  yourCost?: number;
+  budgetSpent?: number;
 };
 
 type NudgeCluster = {
@@ -288,7 +291,7 @@ export default function ProjectsPage() {
             const spent = project.totalSpent ?? 0;
             const count = project._count?.expenses ?? 0;
             const hasBudget = project.budget != null && Number(project.budget) > 0;
-            const pct = hasBudget ? Math.min((spent / Number(project.budget)) * 100, 100) : 0;
+            const pct = hasBudget ? Math.min(((project.budgetSpent ?? spent) / Number(project.budget)) * 100, 100) : 0;
             const isActive = project.isActive !== false;
             return (
               <motion.div
@@ -336,7 +339,8 @@ export default function ProjectsPage() {
                 )}
 
                 {/* Spent row */}
-                <div className="mt-3.5 flex items-baseline gap-2">
+                <p className="mt-3.5 text-[12px] text-[var(--ink-muted)]">{t("totalSpent")}</p>
+                <div className="mt-1 flex flex-wrap items-baseline gap-x-2">
                   <span className="text-[20px] font-bold tabular-nums" style={{ color: "var(--ink)" }}>
                     {fmtEur(spent)}
                   </span>
@@ -344,6 +348,11 @@ export default function ProjectsPage() {
                     {hasBudget ? t("ofBudget", { budget: fmtEur(Number(project.budget)) }) : t("noBudget")}
                   </span>
                 </div>
+
+                <dl className="mt-3 space-y-1 text-[12px] text-[var(--ink-muted)]">
+                  <div className="flex flex-wrap justify-between gap-x-3"><dt>{t("reimbursed")}</dt><dd className="tabular-nums">{fmtEur(project.reimbursed ?? 0)}</dd></div>
+                  <div className="flex flex-wrap justify-between gap-x-3"><dt>{t("yourCost")}</dt><dd className="font-semibold tabular-nums text-[var(--ink)]">{fmtEur(project.yourCost ?? spent)}</dd></div>
+                </dl>
 
                 {/* Progress bar */}
                 {hasBudget && (

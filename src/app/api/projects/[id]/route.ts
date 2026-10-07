@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
-import { projectContributionEur } from "@/lib/project-expense-totals";
+import { projectExpenseTotals } from "@/lib/project-expense-totals";
 import { prisma } from "@/lib/db";
 
 // GET - Get single project
@@ -37,7 +37,7 @@ export async function GET(
     return NextResponse.json({
       project: {
         ...project,
-        totalSpent: result.reduce((sum, expense) => sum + projectContributionEur(expense), 0),
+        ...projectExpenseTotals(result),
       },
     });
   } catch (error) {

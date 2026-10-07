@@ -667,6 +667,8 @@
     "description": "Description",
     "budget": "Budget",
     "totalSpent": "Total Dépensé",
+    "reimbursed": "Remboursé",
+    "yourCost": "Votre coût",
     "projectAdded": "Projet ajouté avec succès",
     "projectUpdated": "Projet mis à jour avec succès",
     "projectDeleted": "Projet supprimé avec succès",
@@ -716,7 +718,7 @@
     "inactive": "Clôturé",
     "notFound": "Projet introuvable",
     "remaining": "Restant",
-    "totalExpenses": "Total dépensé"
+    "totalExpenses": "Dépenses"
   },
   "recurring": {
     "addPastMonths": "Ajouter des mois passés",
@@ -1389,16 +1391,16 @@
       "netZero": "Solde nul",
       "reimbursed": "Entièrement remboursée",
       "reimbursedHint": "La dépense entière a été remboursée. Le paiement des parts des autres participants ne marque pas toute la dépense comme remboursée.",
-      "title": "Compter dans les totaux",
+      "title": "Compter dans le budget",
       "AUTO": "Automatique",
       "INCLUDE": "Inclure",
       "EXCLUDE": "Exclure",
-      "AUTOHint": "Les dépenses entièrement remboursées comptent pour zéro ; sinon, votre part est comptée.",
-      "INCLUDEHint": "Toujours compter votre part, même si toute la dépense est remboursée.",
+      "AUTOHint": "Les dépenses remboursées comptent pour zéro dans le budget. Leur coût initial reste visible dans le total dépensé.",
+      "INCLUDEHint": "Compter votre part dans le budget du projet, même après remboursement. Votre coût reste nul.",
       "EXCLUDEHint": "Conserver cette dépense uniquement pour le suivi, sans impact sur les dépenses, les totaux des projets ou les mouvements des comptes.",
-      "counted": "Votre part compte dans les totaux des projets",
-      "notCounted": "Non comptée dans les totaux des projets",
-      "scope": "Les dépenses remboursées ou exclues comptent pour zéro dans les dépenses mensuelles, les totaux généraux et les mouvements des comptes. Inclure ne modifie que les totaux des projets."
+      "counted": "Votre part compte dans le budget du projet",
+      "notCounted": "Non comptée dans le budget du projet",
+      "scope": "Les dépenses remboursées conservent le montant initial du projet, avec un coût personnel nul. Les dépenses exclues n’ont aucun impact financier. Inclure ne modifie que le budget du projet."
     }
   },
   "install": {

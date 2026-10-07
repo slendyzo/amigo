@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getActiveWorkspace } from "@/lib/workspace";
 import { prisma } from "@/lib/db";
-import { projectContributionEur, countsInProjectTotal } from "@/lib/project-expense-totals";
+import { projectGrossContributionEur, projectExpenseTotals } from "@/lib/project-expense-totals";
 
 // GET - Get project wrapped stats
 export async function GET(
@@ -37,13 +37,14 @@ export async function GET(
       orderBy: { date: "asc" },
     });
 
-    // History stays visible; spending statistics describe counted expenses only.
-    const expenses = history.filter(countsInProjectTotal);
+    // Spending statistics retain the original cost of reimbursed expenses.
+    const expenses = history.filter(expense => expense.projectTotalMode !== "EXCLUDE");
+    const totals = projectExpenseTotals(expenses);
     if (expenses.length === 0) {
       return NextResponse.json({
         wrapped: {
           projectName: project.name,
-          totalSpent: 0,
+          ...totals,
           expenseCount: 0,
           budgetUsage: project.budget ? 0 : null,
           topCategories: [],
@@ -56,13 +57,13 @@ export async function GET(
     }
 
     // All totals use the user's share on split expenses, not the full bill.
-    const shares = new Map(expenses.map((exp) => [exp.id, projectContributionEur(exp)]));
+    const shares = new Map(expenses.map((exp) => [exp.id, projectGrossContributionEur(exp)]));
     const shareOf = (id: string) => shares.get(id) ?? 0;
 
     const totalSpent = expenses.reduce((sum, exp) => sum + shareOf(exp.id), 0);
 
     const budgetUsage = project.budget
-      ? (totalSpent / Number(project.budget)) * 100
+      ? (totals.budgetSpent / Number(project.budget)) * 100
       : null;
 
     const categoryTotals: Record<string, { name: string; total: number; count: number }> = {};
@@ -120,7 +121,7 @@ export async function GET(
     return NextResponse.json({
       wrapped: {
         projectName: project.name,
-        totalSpent,
+        ...totals,
         expenseCount: expenses.length,
         budgetUsage,
         budget: project.budget ? Number(project.budget) : null,
