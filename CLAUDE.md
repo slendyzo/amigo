@@ -6,17 +6,9 @@ This file provides all context needed to start a new Claude Code session and con
 
 **Anything meant for Kiko to read or review — blueprints, design proposals, plans, reports, mockups — is a self-contained HTML file in `/docs`, not markdown.** For UI/design work, the doc must *render the actual UI* (real layout, colors, theme/accent toggles, interactive states), not describe it in prose. Single `.html`, inline CSS/JS, no build step, double-click to open. Exceptions that stay markdown: this file, `PRD.md`, `README`, and agent-context files. See global CLAUDE.md for the full rule.
 
-## CRITICAL: Use Plane for ALL Tasks
+## Task Tracking
 
-**NEVER skip Plane.** Every task, bug fix, and feature must be tracked in Plane. Before starting any work:
-
-1. **Check Plane** for existing issues related to the work
-2. **Create an issue** in Plane if one doesn't exist
-3. **Move to In Progress** when you start working
-4. **Comment on the issue** with what was done, files changed
-5. **Move to Done** when complete
-
-This applies to ALL work — bug fixes, features, refactors, infrastructure changes. No exceptions. Plane is the source of truth. See global CLAUDE.md for full Plane integration details.
+Plane is not required for any work. Develop and verify changes directly; do not check, create or update Plane issues unless Kiko explicitly requests it.
 
 ## CRITICAL: Deploying
 

@@ -13,7 +13,7 @@ Amigo is a personal finance app for tracking expenses, income, recurring payment
 ## References
 - `CLAUDE.md` contains existing project and deployment context.
 - `docs/artifacts/` holds finished human-facing HTML artifacts; current code is authoritative for visual styling.
-- Follow the user's global instructions. Task tracking is waived for the recurring-payment backfill work at the user's explicit request.
+- Follow the user's global instructions. Plane is not required for any work; do not use it unless Kiko explicitly requests it.
 
 ## Deployment
 Production is Amigo on CT 104. A push to `main` triggers `.github/workflows/deploy.yml`; pushing a feature branch does not update the live app. For requests to make a change available live, integrate it with the latest `origin/main`, preserve newer work, and verify the deployment and live build before reporting it available. Follow `CLAUDE.md` for manual deployment. Do not push without the user's authorization.
