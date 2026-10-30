@@ -10,7 +10,7 @@ import { useCategoryTranslation } from "@/hooks/use-category-translation";
 import { formatCurrency } from "@/lib/currencies";
 import NudgeRecurringCard from "@/components/nudge-recurring-card";
 import { Modal, ModalHeader, ModalBody, ModalFooter } from "@/components/ui/modal";
-import { MAX_RECURRING_MONTHS, recurringMonthKey } from "@/lib/recurring-months";
+import { MAX_RECURRING_MONTHS, recurringMonthKey, recurringPlanCompleted } from "@/lib/recurring-months";
 
 type Category = { id: string; name: string };
 type BankAccount = { id: string; name: string };
@@ -32,6 +32,8 @@ type Template = {
   excludeFromBudget: boolean;
   installmentMonths?: number | null;
   installmentTotal?: number | null;
+  endDate: string | null;
+  startDate: string | null;
   category: Category | null;
   bankAccount: BankAccount | null;
   projects: Project[];
@@ -312,7 +314,8 @@ export default function RecurringTemplatesPage() {
   const getTypeLabel = (type: string) => EXPENSE_TYPES.find((tp) => tp.value === type)?.label || type;
 
   const activeTemplates = templates.filter((tpl) => tpl.isActive);
-  const monthlyTotal = activeTemplates.filter((tpl) => tpl.amount).reduce((sum, tpl) => sum + parseFloat(String(tpl.amount || 0)), 0);
+  const ongoingTemplates = activeTemplates.filter((tpl) => !recurringPlanCompleted({ ...tpl, expenseCount: tpl._count.expenses }));
+  const monthlyTotal = ongoingTemplates.filter((tpl) => tpl.amount).reduce((sum, tpl) => sum + parseFloat(String(tpl.amount || 0)), 0);
 
   const bills = templates.filter((tpl) => !isSubscription(tpl));
   const subs = templates.filter((tpl) => isSubscription(tpl));
@@ -421,7 +424,7 @@ export default function RecurringTemplatesPage() {
             <div className="break-words text-[24px] font-bold tracking-[-0.02em] tabular-nums">{formatCurrency(monthlyTotal, "EUR")}</div>
           </div>
           <div className="text-right text-[11.5px]" style={{ color: "var(--ink-subtle)" }}>
-            {t("activeCountLabel", { count: activeTemplates.length })}
+            {t("activeCountLabel", { count: ongoingTemplates.length })}
           </div>
         </div>
       </motion.div>

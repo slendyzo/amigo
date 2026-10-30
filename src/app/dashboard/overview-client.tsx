@@ -14,6 +14,7 @@ import { formatCurrency } from "@/lib/currencies";
 import type { ProjectCounting } from "@/lib/project-expense-totals";
 import type { Expense as FullExpense } from "@/types/models";
 import { spendingEur } from "@/lib/expense-spending";
+import { nextRecurringOccurrence } from "@/lib/recurring-months";
 import { getUserShare } from "@/lib/split-utils";
 import MerchantAvatar from "@/components/ui/merchant-avatar";
 import TidyUpNudge from "@/components/dashboard/tidy-up-nudge";
@@ -101,7 +102,10 @@ type UpcomingTemplate = {
   amount: number | null;
   currency: string;
   dayOfMonth: number | null;
+  startDate: string | null;
   endDate: string | null;
+  installmentMonths: number | null;
+  expenseCount: number;
 };
 
 type Project = { id: string; name: string };
@@ -425,21 +429,12 @@ export default function DashboardOverview({
     const today = new Date();
     const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     return (upcomingTemplates ?? [])
-      .filter((tpl) => tpl.dayOfMonth !== null)
-      .map((tpl) => {
-        const dom = tpl.dayOfMonth as number;
-        let y = today.getFullYear();
-        let m = today.getMonth();
-        if (dom < today.getDate()) {
-          m += 1;
-          if (m > 11) { m = 0; y += 1; }
-        }
-        const lastDay = new Date(y, m + 1, 0).getDate();
-        const next = new Date(y, m, Math.min(dom, lastDay));
+      .flatMap((tpl) => {
+        const next = nextRecurringOccurrence(tpl, today);
+        if (!next) return [];
         const days = Math.round((next.getTime() - startOfToday.getTime()) / 86400000);
-        return { ...tpl, next, days };
+        return [{ ...tpl, next, days }];
       })
-      .filter((tpl) => !tpl.endDate || new Date(tpl.endDate) >= tpl.next)
       .sort((a, b) => a.days - b.days)
       .slice(0, 6);
   }, [upcomingTemplates]);

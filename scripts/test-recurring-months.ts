@@ -37,6 +37,28 @@ assert.equal(recurringMonthAllowed("2026-05", start, end), false);
 assert.equal(recurringMonthAllowed("2020-01", null, null), true);
 console.log("Recurring month regression checks passed");
 
+const plan = {
+  dayOfMonth: 3, startDate: "2026-08-03T00:00:00Z", endDate: "2026-11-03T00:00:00Z",
+  installmentMonths: 3, expenseCount: 3,
+};
+const localDate = (year: number, month: number, day: number) => new Date(year, month - 1, day, 12);
+assert.equal(monthsModule.nextRecurringOccurrence(plan, localDate(2026, 10, 30)), null, "Paid 3/3 plan must not forecast November");
+assert.equal(monthsModule.recurringPlanCompleted(plan, localDate(2026, 10, 30)), true, "Completed plan must not count as a monthly commitment");
+assert.equal(monthsModule.nextRecurringOccurrence({ ...plan, expenseCount: 2 }, localDate(2026, 10, 30)), null, "End month is exclusive even when historical payments are missing");
+assert.equal(monthsModule.nextRecurringOccurrence({ ...plan, expenseCount: 2 }, localDate(2026, 10, 1))?.getDate(), 3, "Final installment is still shown before it is recorded");
+assert.equal(monthsModule.recurringPlanCompleted({ ...plan, expenseCount: 2 }, localDate(2026, 10, 1)), false);
+assert.equal(monthsModule.nextRecurringOccurrence({ ...plan, endDate: "2026-12-03Z", expenseCount: 2 }, localDate(2026, 10, 30)), null, "Installment limit also protects legacy overflowing end dates");
+assert.equal(monthsModule.recurringPlanCompleted({ ...plan, startDate: "2026-08-31Z", endDate: "2026-12-01Z", expenseCount: 2 }, localDate(2026, 11, 5)), true, "Legacy overflow dates must not inflate ongoing commitments");
+const subscription = { dayOfMonth: 31, startDate: null, endDate: null };
+assert.equal(monthsModule.nextRecurringOccurrence(subscription, localDate(2026, 10, 30))?.getDate(), 31);
+assert.equal(monthsModule.nextRecurringOccurrence(subscription, localDate(2026, 11, 30))?.getMonth(), 10, "Clamped November payment stays in November");
+assert.equal(monthsModule.nextRecurringOccurrence(subscription, localDate(2024, 2, 29))?.getDate(), 29);
+assert.equal(monthsModule.nextRecurringOccurrence({ ...subscription, dayOfMonth: 3 }, localDate(2026, 12, 30))?.getFullYear(), 2027);
+assert.equal(monthsModule.nextRecurringOccurrence({ ...subscription, startDate: "2027-02-28Z" }, localDate(2026, 10, 30))?.getMonth(), 1, "Future plans never forecast before their start month");
+assert.equal(monthsModule.nextRecurringOccurrence({ ...subscription, dayOfMonth: null }, localDate(2026, 10, 30)), null);
+assert.equal(monthsModule.nextRecurringOccurrence({ ...subscription, endDate: "2026-11-30Z" }, localDate(2026, 11, 1)), null);
+console.log("Completed installment and upcoming payment regression checks passed");
+
 // Exercise the real route against a small transactional store. No running app,
 // network calls, credentials, or database writes are needed.
 const require = createRequire(import.meta.url);

@@ -51,6 +51,7 @@ export async function generateDueForTemplate(
       template.installmentMonths && installmentTotal != null
         ? idx - installmentAnchorIdx + 1
         : null;
+    if (installmentNumber !== null && (installmentNumber < 1 || installmentNumber > template.installmentMonths!)) continue;
     const amount =
       installmentNumber && installmentTotal != null && template.installmentMonths
         ? installmentAmount(installmentTotal, template.installmentMonths, installmentNumber)

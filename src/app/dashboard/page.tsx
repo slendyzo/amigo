@@ -255,7 +255,11 @@ export default async function DashboardPage({
     // Active monthly recurring templates (for the dashboard "Upcoming" row)
     prisma.recurringTemplate.findMany({
       where: { workspaceId: workspace.id, isActive: true, interval: "MONTHLY" },
-      select: { id: true, name: true, amount: true, currency: true, dayOfMonth: true, endDate: true },
+      select: {
+        id: true, name: true, amount: true, currency: true, dayOfMonth: true,
+        startDate: true, endDate: true, installmentMonths: true,
+        _count: { select: { expenses: { where: { status: "PAID" } } } },
+      },
     }),
     // Include schedules that started in prior years; expand only elapsed paydays.
     prisma.income.findMany({
@@ -466,7 +470,10 @@ export default async function DashboardPage({
     amount: r.amount !== null ? Number(r.amount) : null,
     currency: r.currency,
     dayOfMonth: r.dayOfMonth,
+    startDate: r.startDate ? r.startDate.toISOString() : null,
     endDate: r.endDate ? r.endDate.toISOString() : null,
+    installmentMonths: r.installmentMonths,
+    expenseCount: r._count.expenses,
   }));
 
   // Use username (nickname) if set, otherwise fall back to name or "User"

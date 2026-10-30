@@ -19,7 +19,7 @@ export async function GET() {
         category: { select: { id: true, name: true } },
         bankAccount: { select: { id: true, name: true } },
         projects: { select: { id: true, name: true } },
-        _count: { select: { expenses: true } },
+        _count: { select: { expenses: { where: { status: "PAID" } } } },
       },
     });
 

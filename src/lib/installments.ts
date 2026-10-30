@@ -37,7 +37,7 @@ export async function createInstallmentPlan(args: CreateInstallmentPlanArgs) {
   const endDate = new Date(Date.UTC(
     start.getUTCFullYear(),
     start.getUTCMonth() + args.months,
-    start.getUTCDate()
+    1
   ));
 
   const template = await prisma.recurringTemplate.create({

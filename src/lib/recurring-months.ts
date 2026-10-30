@@ -47,3 +47,38 @@ export function recurringMonthAllowed(month: string, startDate: Date | null, end
   const index = recurringMonthIndex(month);
   return (!startDate || index >= recurringMonthIndex(recurringMonthKey(startDate))) && (!endDate || index < recurringMonthIndex(recurringMonthKey(endDate)));
 }
+
+type MonthlySchedule = {
+  dayOfMonth: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  installmentMonths?: number | null;
+  expenseCount?: number;
+};
+
+export function recurringPlanCompleted(schedule: Pick<MonthlySchedule, "startDate" | "endDate" | "installmentMonths" | "expenseCount">, now = new Date()): boolean {
+  if (schedule.installmentMonths && (schedule.expenseCount ?? 0) >= schedule.installmentMonths) return true;
+  const currentMonth = now.getFullYear() * 12 + now.getMonth();
+  if (schedule.installmentMonths && schedule.startDate && currentMonth >= recurringMonthIndex(recurringMonthKey(new Date(schedule.startDate))) + schedule.installmentMonths) return true;
+  return !!schedule.endDate && currentMonth >= recurringMonthIndex(recurringMonthKey(new Date(schedule.endDate)));
+}
+
+// Preview the same exclusive end month used by the payment generators. Calendar
+// dates are local for display; stored schedule boundaries are UTC month anchors.
+export function nextRecurringOccurrence(schedule: MonthlySchedule, now = new Date()): Date | null {
+  if (schedule.dayOfMonth === null || recurringPlanCompleted(schedule, now)) return null;
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let index = today.getFullYear() * 12 + today.getMonth();
+  const startIndex = schedule.startDate ? recurringMonthIndex(recurringMonthKey(new Date(schedule.startDate))) : null;
+  if (startIndex !== null) index = Math.max(index, startIndex);
+  const dateAt = (month: number) => {
+    const year = Math.floor(month / 12);
+    const m = month % 12;
+    return new Date(year, m, Math.min(schedule.dayOfMonth!, new Date(year, m + 1, 0).getDate()));
+  };
+  let next = dateAt(index);
+  if (next < today) next = dateAt(++index);
+  if (schedule.endDate && index >= recurringMonthIndex(recurringMonthKey(new Date(schedule.endDate)))) return null;
+  if (schedule.installmentMonths && startIndex !== null && index >= startIndex + schedule.installmentMonths) return null;
+  return next;
+}

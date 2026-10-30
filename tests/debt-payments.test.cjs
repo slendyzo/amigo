@@ -40,6 +40,53 @@ test('month-end schedule has exactly six billing months and clamps next due', ()
   assert.equal(s.nextDue.toISOString(), '2026-09-30T00:00:00.000Z');
 });
 
+test('installment creation anchors the exclusive end month without date overflow', async () => {
+  let saved;
+  const {createInstallmentPlan} = load('src/lib/installments.ts', {
+    './db': {prisma: {recurringTemplate: {create: async ({data}) => { saved = data; return {id: 'plan', ...data}; }}}},
+    './recurring-generate': {generateDueForTemplate: async () => 0},
+    './installment-math': load('src/lib/installment-math.ts'),
+  });
+  await createInstallmentPlan({workspaceId:'ours', name:'Phone', totalAmount:100, months:3, currency:'EUR', startDate:new Date('2026-08-31Z')});
+  assert.equal(saved.endDate.toISOString(), '2026-11-01T00:00:00.000Z');
+});
+
+test('legacy overflowing installment end date never generates a fourth payment', async () => {
+  const payments = [];
+  const template = {id:'plan', workspaceId:'ours', isActive:true, autoGenerate:true,
+    startDate:new Date('2026-08-31Z'), endDate:new Date('2026-12-01Z'),
+    installmentMonths:3, installmentTotal:100, amount:33.33, currency:'EUR', dayOfMonth:31,
+    categoryId:'cat', name:'Phone', type:'LIFESTYLE', projects:[]};
+  const db = {
+    recurringTemplate:{findUnique:async () => template, update:async () => {}},
+    category:{findFirst:async () => ({id:'cat'})},
+    expense:{count:async () => 0, create:async ({data}) => payments.push(data)},
+  };
+  const {generateDueForTemplate} = load('src/lib/recurring-generate.ts', {
+    './db':{prisma:db}, './currency':{convertToEur:async amount => ({amountEur:amount, exchangeRate:1})},
+    './installment-math':load('src/lib/installment-math.ts'),
+  });
+  assert.equal(await generateDueForTemplate('plan', {now:new Date('2026-11-30Z')}), 3);
+  assert.deepEqual(payments.map(p => p.installmentNumber), [1,2,3]);
+  assert.deepEqual(payments.map(p => p.amount), [33.33,33.33,33.34]);
+});
+
+test('recurring list counts paid installments and leaves pending payments outstanding', async () => {
+  const {GET} = load('src/app/api/recurring-templates/route.ts', {
+    'next/server':{NextResponse:Response},
+    '@/lib/workspace':{getActiveWorkspace:async () => ({workspace:{id:'ours'}})},
+    '@/lib/db':{prisma:{recurringTemplate:{findMany:async ({where, include}) => {
+      assert.equal(where.workspaceId, 'ours');
+      const rows = [{status:'PAID'}, {status:'PAID'}, {status:'PENDING'}];
+      const status = include._count.select.expenses.where?.status;
+      return [{id:'plan', _count:{expenses:rows.filter(row => !status || row.status === status).length}}];
+    }}}},
+  });
+  const response = await GET();
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).templates[0]._count.expenses, 2);
+});
+
 function debtFixture({ deny = false, failCreate = false } = {}) {
   const { Prisma } = require('@prisma/client');
   const state = {
