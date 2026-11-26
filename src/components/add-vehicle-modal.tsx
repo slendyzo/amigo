@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { Car, Sparkles, ChevronLeft, ChevronRight, X, Loader2, Check } from "lucide-react";
 import { CURRENCIES, getCurrencySymbol } from "@/lib/currencies";
 import { cn } from "@/lib/utils";
@@ -85,6 +85,7 @@ type AddVehicleModalProps = {
 export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehicleModalProps) {
   const router = useRouter();
   const t = useTranslations("rwa");
+  const locale = useLocale();
   const tCommon = useTranslations("common");
   const currentYear = new Date().getUTCFullYear();
   const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
@@ -208,9 +209,28 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
   const canLookup = !!brand && !!model && Number.isFinite(yearNum);
   const step1Ok = canLookup;
   const step2Ok = step1Ok && parseFloat(purchasePrice) > 0 && purchaseDate;
+  // Installments (bikes) always have a fixed count — without it the plan
+  // can't stop on its own or show "installment 4 of 6".
+  const termCount = parseInt(termMonths, 10);
+  const termOk = Number.isInteger(termCount) && termCount > 0;
   const step3Ok =
     !financed ||
-    (parseFloat(monthlyPayment) > 0 && loanStart);
+    (parseFloat(monthlyPayment) > 0 && !!loanStart && (!isBike || termOk));
+
+  // Live read-back of what will be created, so the count and the last month
+  // are confirmed before saving rather than discovered on Recorrentes.
+  const financeSummary = useMemo(() => {
+    const monthly = parseFloat(monthlyPayment);
+    if (!financed || !(monthly > 0) || !termOk || !/^\d{4}-\d{2}-\d{2}$/.test(loanStart)) return null;
+    const [y, m] = loanStart.split("-").map(Number);
+    const last = new Date(Date.UTC(y, m - 1 + termCount - 1, 1));
+    const month = new Intl.DateTimeFormat(locale, { month: "long", year: "numeric", timeZone: "UTC" }).format(last);
+    const money = (n: number) =>
+      new Intl.NumberFormat(locale, { style: "currency", currency: purchaseCurrency }).format(n);
+    return isBike
+      ? t("installmentSummary", { count: termCount, amount: money(monthly), month, total: money(Math.round(monthly * termCount * 100) / 100) })
+      : t("loanSummary", { month });
+  }, [financed, monthlyPayment, termOk, termCount, loanStart, locale, purchaseCurrency, isBike, t]);
 
   const fetchSpec = async () => {
     if (!canLookup) return;
@@ -920,8 +940,10 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                     )}
                   >
                     <div>
-                      <p className="font-medium text-sm">{t("isFinanced")}</p>
-                      <p className="text-xs text-muted-foreground">{t("isFinancedDescription")}</p>
+                      <p className="font-medium text-sm">{isBike ? t("boughtInInstallments") : t("isFinanced")}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {isBike ? t("boughtInInstallmentsDescription") : t("isFinancedDescription")}
+                      </p>
                     </div>
                     <div
                       className={cn(
@@ -957,36 +979,65 @@ export default function AddVehicleModal({ isOpen, onClose, onSuccess }: AddVehic
                         </div>
                       </Field>
                       <div className="grid grid-cols-2 gap-3">
-                        <Field label={t("termMonths")}>
+                        <Field label={isBike ? t("paymentCount") : t("termMonths")}>
                           <input
                             type="number"
                             min={1}
+                            step={1}
+                            inputMode="numeric"
                             value={termMonths}
                             onChange={(e) => setTermMonths(e.target.value)}
-                            placeholder="60"
+                            placeholder={isBike ? "6" : "60"}
                             className={inputClass}
                           />
                         </Field>
-                        <Field label={t("interestRatePct")}>
-                          <input
-                            type="number"
-                            step="0.01"
-                            min={0}
-                            value={interestRate}
-                            onChange={(e) => setInterestRate(e.target.value)}
-                            placeholder="6.5"
-                            className={inputClass}
-                          />
-                        </Field>
+                        {isBike ? (
+                          <Field label={t("firstPaymentDate")}>
+                            <input
+                              type="date"
+                              value={loanStart}
+                              onChange={(e) => setLoanStart(e.target.value)}
+                              className={inputClass}
+                            />
+                          </Field>
+                        ) : (
+                          <Field label={t("interestRatePct")}>
+                            <input
+                              type="number"
+                              step="0.01"
+                              min={0}
+                              value={interestRate}
+                              onChange={(e) => setInterestRate(e.target.value)}
+                              placeholder="6.5"
+                              className={inputClass}
+                            />
+                          </Field>
+                        )}
                       </div>
-                      <Field label={t("loanStartDate")}>
-                        <input
-                          type="date"
-                          value={loanStart}
-                          onChange={(e) => setLoanStart(e.target.value)}
-                          className={inputClass}
-                        />
-                      </Field>
+                      {!isBike && (
+                        <Field label={t("loanStartDate")}>
+                          <input
+                            type="date"
+                            value={loanStart}
+                            onChange={(e) => setLoanStart(e.target.value)}
+                            className={inputClass}
+                          />
+                        </Field>
+                      )}
+                      <AnimatePresence initial={false}>
+                        {financeSummary && (
+                          <motion.p
+                            key="finance-summary"
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            transition={{ duration: 0.3, ease: EASE }}
+                            className="rounded-lg bg-primary/5 px-3 py-2 text-xs font-medium text-foreground"
+                          >
+                            {financeSummary}
+                          </motion.p>
+                        )}
+                      </AnimatePresence>
                       <p className="text-[11px] text-muted-foreground">{t("fillingHelpText")}</p>
                     </motion.div>
                   )}

@@ -69,6 +69,24 @@ export async function findCandidateTemplates(
     .slice(0, 5);
 }
 
+// A bike bought in 6x is an installment plan, not an open-ended bill. Stamping
+// the count and total is what makes Recorrentes read "installment 4 of 6" with
+// a progress bar. The total is the payments themselves (monthly x count), so
+// every generated installment matches what was typed in.
+export function installmentPlanFields(
+  type: string,
+  monthlyPayment: number | null | undefined,
+  termMonths: number | null | undefined,
+): { installmentMonths: number | null; installmentTotal: number | null } {
+  if (type !== "INSTALLMENT" || !monthlyPayment || monthlyPayment <= 0 || !termMonths || termMonths <= 0) {
+    return { installmentMonths: null, installmentTotal: null };
+  }
+  return {
+    installmentMonths: termMonths,
+    installmentTotal: Math.round(monthlyPayment * termMonths * 100) / 100,
+  };
+}
+
 export async function createMonthlyTemplateForLoan(
   tx: Pick<PrismaClient, "recurringTemplate">,
   args: {
@@ -80,6 +98,8 @@ export async function createMonthlyTemplateForLoan(
     bankAccountId?: string | null;
     // Fixed-term plans (e.g. 6× installments) stop generating after this date.
     endDate?: Date | null;
+    installmentMonths?: number | null;
+    installmentTotal?: number | null;
   }
 ): Promise<RecurringTemplate> {
   const dayOfMonth = args.startDate.getUTCDate();
@@ -99,6 +119,8 @@ export async function createMonthlyTemplateForLoan(
     isActive: true,
     nextDue,
     endDate: args.endDate ?? null,
+    installmentMonths: args.installmentMonths ?? null,
+    installmentTotal: args.installmentTotal ?? null,
   };
 
   return tx.recurringTemplate.create({ data });

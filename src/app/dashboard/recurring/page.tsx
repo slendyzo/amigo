@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
+import { useLocale, useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import MoneyHubTabs from "@/components/money-hub-tabs";
 import MerchantAvatar from "@/components/ui/merchant-avatar";
@@ -72,6 +72,7 @@ function isSubscription(tpl: Template): boolean {
 
 export default function RecurringTemplatesPage() {
   const t = useTranslations("recurring");
+  const locale = useLocale();
   const tCommon = useTranslations("common");
   const tTime = useTranslations("time");
   const { translateCategory } = useCategoryTranslation();
@@ -332,10 +333,19 @@ export default function RecurringTemplatesPage() {
     const totalInst = template.installmentMonths || 0;
     const isVariable = template.type === "SURVIVAL_VARIABLE";
     const dayPart = template.dayOfMonth ? t("dayShort", { day: template.dayOfMonth }) : t("intervals.monthly");
+    // endDate is exclusive (first day of the month after the last payment),
+    // so the final payment falls in the month before it.
+    let lastPart = "";
+    if (template.endDate) {
+      const end = new Date(template.endDate);
+      const last = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - 1, 1));
+      const month = new Intl.DateTimeFormat(locale, { month: "short", year: "numeric", timeZone: "UTC" }).format(last);
+      lastPart = ` · ${t("lastPaymentIn", { month })}`;
+    }
     let subtitle: string;
-    if (isInstallment) subtitle = `${dayPart} · ${t("installmentProgress", { current: paid, total: totalInst })}`;
+    if (isInstallment) subtitle = `${dayPart} · ${t("installmentProgress", { current: paid, total: totalInst })}${lastPart}`;
     else if (paused) subtitle = t("paused");
-    else subtitle = `${dayPart} · ${getTypeLabel(template.type)}${isVariable ? ` · ${t("varies")}` : ""}`;
+    else subtitle = `${dayPart} · ${getTypeLabel(template.type)}${isVariable ? ` · ${t("varies")}` : ""}${lastPart}`;
 
     const amountNode =
       template.amount != null

@@ -836,7 +836,8 @@
       "survivalVariable": "Bills (Variable)",
       "lifestyle": "Spending",
       "project": "Project"
-    }
+    },
+    "lastPaymentIn": "last one {month}"
   },
   "import": {
     "title": "Import",
@@ -2199,7 +2200,13 @@
       "openListing": "Open listing"
     },
     "interestRate": "Interest rate (%)",
-    "loanStart": "Loan start date"
+    "loanStart": "Loan start date",
+    "boughtInInstallments": "Bought in installments",
+    "boughtInInstallmentsDescription": "Adds a monthly payment that stops by itself after the last one.",
+    "paymentCount": "Number of payments",
+    "firstPaymentDate": "First payment date",
+    "installmentSummary": "{count} payments of {amount} · last one in {month} · {total} in total",
+    "loanSummary": "Last payment in {month}"
   },
   "aiAdvisor": {
     "title": "AI Advisor",

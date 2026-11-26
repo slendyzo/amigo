@@ -836,7 +836,8 @@
       "survivalVariable": "Factures (Variables)",
       "lifestyle": "Dépenses",
       "project": "Projet"
-    }
+    },
+    "lastPaymentIn": "dernière en {month}"
   },
   "import": {
     "title": "Importer",
@@ -2170,7 +2171,13 @@
       "openListing": "Ouvrir l'annonce"
     },
     "interestRate": "Taux d'intérêt (%)",
-    "loanStart": "Début du prêt"
+    "loanStart": "Début du prêt",
+    "boughtInInstallments": "Achetée en plusieurs fois",
+    "boughtInInstallmentsDescription": "Ajoute un paiement mensuel qui s'arrête tout seul après la dernière échéance.",
+    "paymentCount": "Nombre d'échéances",
+    "firstPaymentDate": "Date de la 1re échéance",
+    "installmentSummary": "{count} échéances de {amount} · la dernière en {month} · {total} au total",
+    "loanSummary": "Dernière échéance en {month}"
   },
   "aiAdvisor": {
     "title": "Conseiller IA",

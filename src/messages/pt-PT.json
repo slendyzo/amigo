@@ -836,7 +836,8 @@
       "survivalVariable": "Contas (Variáveis)",
       "lifestyle": "Gastos",
       "project": "Projeto"
-    }
+    },
+    "lastPaymentIn": "última em {month}"
   },
   "import": {
     "title": "Importar",
@@ -2168,7 +2169,13 @@
       "openListing": "Abrir anúncio"
     },
     "interestRate": "Taxa de juro (%)",
-    "loanStart": "Início do empréstimo"
+    "loanStart": "Início do empréstimo",
+    "boughtInInstallments": "Comprada a prestações",
+    "boughtInInstallmentsDescription": "Cria um pagamento mensal que para sozinho depois da última prestação.",
+    "paymentCount": "Número de prestações",
+    "firstPaymentDate": "Data da 1.ª prestação",
+    "installmentSummary": "{count} prestações de {amount} · a última em {month} · {total} no total",
+    "loanSummary": "Última prestação em {month}"
   },
   "aiAdvisor": {
     "title": "Consultor IA",

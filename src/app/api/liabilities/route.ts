@@ -7,6 +7,7 @@ import { computeLoanBalance } from "@/lib/loan-amortization";
 import {
   createMonthlyTemplateForLoan,
   findCandidateTemplates,
+  installmentPlanFields,
   type AutoLinkResult,
 } from "@/lib/loan-template-sync";
 import { generateDueForTemplate } from "@/lib/recurring-generate";
@@ -167,6 +168,7 @@ export async function POST(request: Request) {
           currency: String(currency),
           startDate: start,
           endDate,
+          ...installmentPlanFields(String(type), monthlyPayment, term),
         });
         resolvedTemplateId = tmpl.id;
         autoLink = { mode: "linked", templateId: tmpl.id };

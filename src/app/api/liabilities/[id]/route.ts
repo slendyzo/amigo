@@ -5,6 +5,7 @@ import { convertToEur } from "@/lib/currency";
 import { debtSchedule } from "@/lib/debt-schedule";
 import { generateDueForTemplate } from "@/lib/recurring-generate";
 import { computeLoanBalance } from "@/lib/loan-amortization";
+import { installmentPlanFields } from "@/lib/loan-template-sync";
 import {
   requireActiveWorkspace,
   requirePermission,
@@ -150,11 +151,21 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
       });
       let generatedExpenses = 0;
       if (liability.recurringTemplateId) {
-        const scheduleChanged = body.startDate !== undefined || body.termMonths !== undefined;
+        const isInstallment = liability.type === "INSTALLMENT";
+        // Linking an existing bill to an installment debt turns it into the
+        // plan: same schedule, numbering and stop date as the debt.
+        const linkedNow = typeof body.recurringTemplateId === "string";
+        const scheduleChanged = body.startDate !== undefined || body.termMonths !== undefined
+          || (isInstallment && linkedNow);
         const updates: Prisma.RecurringTemplateUpdateInput = {};
         if (typeof body.name === "string") updates.name = body.name.trim();
         if (typeof body.monthlyPayment === "number") updates.amount = body.monthlyPayment;
         if (scheduleChanged) Object.assign(updates, debtSchedule(liability.startDate, liability.termMonths));
+        if (isInstallment && (scheduleChanged || typeof body.monthlyPayment === "number")) {
+          const monthly = liability.monthlyPayment ? Number(liability.monthlyPayment) : null;
+          Object.assign(updates, installmentPlanFields(liability.type, monthly, liability.termMonths));
+          if (monthly) updates.amount = monthly;
+        }
         if (Object.keys(updates).length) {
           await tx.recurringTemplate.update({ where: { id: liability.recurringTemplateId }, data: updates });
         }
